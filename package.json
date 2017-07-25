@@ -1,0 +1,22 @@
+{
+  "name": "velux-api",
+  "version": "1.0.0",
+  "description": "velux-api",
+  "main": "app.js",
+  "author": {
+    "name": "mschroeder"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "superagent": "^3.5.2"
+  },
+  "devDependencies": {
+    "chai": "^4.1.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.4.2",
+    "nock": "^9.0.14"
+  },
+  "scripts": {
+    "test": "istanbul cover node_modules/mocha/bin/_mocha -- -R list"
+  }
+}

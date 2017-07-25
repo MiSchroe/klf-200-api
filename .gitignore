@@ -1,0 +1,13 @@
+﻿################################################################################
+# Diese .gitignore-Datei wurde von Microsoft(R) Visual Studio automatisch erstellt.
+################################################################################
+
+/node_modules
+/obj/Debug
+/bin
+/.vs
+/.vs
+/coverage
+/velux-api/TestResults
+/velux-api/.vs
+*.user
