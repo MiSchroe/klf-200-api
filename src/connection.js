@@ -30,6 +30,11 @@ function connection(host) {
     this.host = host;
 }
 
+/**
+ * Logs in to the KLF interface and provides a token for further calls to the REST API.
+ * @param {string} password The password needed for login. The factory default password is velux123.
+ * @return {Promise} Returns a promise that resolves to true on success or rejects with the errors.
+ */
 connection.prototype.loginAsync = function (password) {
     if (this.token)
         delete this.token;
@@ -45,6 +50,10 @@ connection.prototype.loginAsync = function (password) {
         });
 };
 
+/**
+ * Logs out from the KLF interface.
+ * @return {Promise} Returns a promise that resolves to true on successful logout or rejects with the errors.
+ */
 connection.prototype.logoutAsync = function () {
     return this.postAsync(urlBuilder.authentication, 'logout').then(() => {
         if (this.token)
@@ -54,6 +63,14 @@ connection.prototype.logoutAsync = function () {
     });
 };
 
+/**
+ * Calls a REST API function on the KLF interface.
+ * @param {string} functionName The name of the function interface, e.g. auth or products.
+ *                              You can use {@link urlBuilder} to get the valid function names.
+ * @param {string} action The name of the action, e.g. login, logout.
+ * @param {object} [params] The parameter data for your action, e.g. the password needed for login.
+ * @return {Promise} Returns a promise that resolves to the result of the http request.
+ */
 connection.prototype.postAsync = function (functionName, action, params = null) {
     try {
 
@@ -84,6 +101,19 @@ connection.prototype.postAsync = function (functionName, action, params = null) 
     }
 };
 
+/**
+ * @callback superAgentParserCallback
+ * @param {Error} err
+ * @param {any} body
+ */
+
+/**
+ * Cleans the http-response from invalid characters and returns a JSON object.
+ * Is implemented as a parser for {@link superagent}.
+ * @internal
+ * @param {SuperAgentStatic.response} res The response object.
+ * @param {superAgentParserCallback} fn The callback function called by the parser.
+ */
 connection.prototype.cleanJSONParse = function (res, fn) {
     res.text = '';
     res.setEncoding('utf8');

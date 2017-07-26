@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "chai": "^4.1.0",
+    "grunt": "^1.0.1",
     "istanbul": "^0.4.5",
     "mocha": "^3.4.2",
     "nock": "^9.0.14"
