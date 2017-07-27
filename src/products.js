@@ -5,6 +5,7 @@ const urlBuilder = require('./urlBuilder');
 /**
  * Create a new products object.
  * Use the products object to retrieve a list of products known to your KLF interface.
+ * @constructor
  * @param {connection} connection The connection object that handles the communication to the KLF interface.
  */
 function products(connection) {

@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.6
+VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "velux-api", "..\velux-api.njsproj", "{A57109CB-0E66-4C0B-9F01-78EDEEB9490E}"
+Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "klf-200-api", "..\klf-200-api.njsproj", "{A57109CB-0E66-4C0B-9F01-78EDEEB9490E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

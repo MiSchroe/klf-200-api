@@ -1,10 +1,10 @@
 {
-  "name": "velux-api",
+  "name": "klf-200-api",
   "version": "1.0.0",
-  "description": "velux-api",
-  "main": "app.js",
+  "description": "This module provides a wrapper to the REST API of a Velux KLF-200 interface.",
+  "main": "index.js",
   "author": {
-    "name": "mschroeder"
+    "name": "Michael Schroeder"
   },
   "dependencies": {
     "bluebird": "^3.5.0",
@@ -18,6 +18,7 @@
     "nock": "^9.0.14"
   },
   "scripts": {
-    "test": "istanbul cover node_modules/mocha/bin/_mocha -- -R list"
+    "test": "istanbul cover node_modules/mocha/bin/_mocha -- -R list",
+    "document": "jsdoc src -r -c ./.jsdoc.json -d doc"
   }
 }

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <Name>velux-api</Name>
+    <Name>klf-200-api</Name>
     <RootNamespace>velux-api</RootNamespace>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -10,7 +10,8 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>a57109cb-0e66-4c0b-9f01-78edeeb9490e</ProjectGuid>
-    <ProjectHome>.</ProjectHome>
+    <ProjectHome>
+    </ProjectHome>
     <StartupFile>index.js</StartupFile>
     <StartWebBrowser>False</StartWebBrowser>
     <SearchPath>
@@ -28,6 +29,9 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="doc\scripts\linenumber.js" />
+    <Compile Include="doc\scripts\prettify\lang-css.js" />
+    <Compile Include="doc\scripts\prettify\prettify.js" />
     <Compile Include="index.js" />
     <Compile Include="src\connection.js">
       <SubType>Code</SubType>
@@ -58,10 +62,50 @@
       <TestFramework>Mocha</TestFramework>
       <Publish>False</Publish>
     </Compile>
+    <Content Include=".jsdoc.json">
+      <SubType>Code</SubType>
+    </Content>
+    <Content Include="doc\connection.html" />
+    <Content Include="doc\connection.js.html" />
+    <Content Include="doc\fonts\OpenSans-Bold-webfont.eot" />
+    <Content Include="doc\fonts\OpenSans-Bold-webfont.svg" />
+    <Content Include="doc\fonts\OpenSans-Bold-webfont.woff" />
+    <Content Include="doc\fonts\OpenSans-BoldItalic-webfont.eot" />
+    <Content Include="doc\fonts\OpenSans-BoldItalic-webfont.svg" />
+    <Content Include="doc\fonts\OpenSans-BoldItalic-webfont.woff" />
+    <Content Include="doc\fonts\OpenSans-Italic-webfont.eot" />
+    <Content Include="doc\fonts\OpenSans-Italic-webfont.svg" />
+    <Content Include="doc\fonts\OpenSans-Italic-webfont.woff" />
+    <Content Include="doc\fonts\OpenSans-Light-webfont.eot" />
+    <Content Include="doc\fonts\OpenSans-Light-webfont.svg" />
+    <Content Include="doc\fonts\OpenSans-Light-webfont.woff" />
+    <Content Include="doc\fonts\OpenSans-LightItalic-webfont.eot" />
+    <Content Include="doc\fonts\OpenSans-LightItalic-webfont.svg" />
+    <Content Include="doc\fonts\OpenSans-LightItalic-webfont.woff" />
+    <Content Include="doc\fonts\OpenSans-Regular-webfont.eot" />
+    <Content Include="doc\fonts\OpenSans-Regular-webfont.svg" />
+    <Content Include="doc\fonts\OpenSans-Regular-webfont.woff" />
+    <Content Include="doc\global.html" />
+    <Content Include="doc\index.html" />
+    <Content Include="doc\products.html" />
+    <Content Include="doc\products.js.html" />
+    <Content Include="doc\scenes.html" />
+    <Content Include="doc\scenes.js.html" />
+    <Content Include="doc\scripts\prettify\Apache-License-2.0.txt" />
+    <Content Include="doc\styles\jsdoc-default.css" />
+    <Content Include="doc\styles\prettify-jsdoc.css" />
+    <Content Include="doc\styles\prettify-tomorrow.css" />
+    <Content Include="doc\urlBuilder.html" />
+    <Content Include="doc\urlBuilder.js.html" />
     <Content Include="package.json" />
     <Content Include="README.md" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="doc\" />
+    <Folder Include="doc\fonts\" />
+    <Folder Include="doc\scripts\" />
+    <Folder Include="doc\scripts\prettify\" />
+    <Folder Include="doc\styles\" />
     <Folder Include="src\" />
     <Folder Include="test\" />
   </ItemGroup>
