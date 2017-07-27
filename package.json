@@ -20,5 +20,15 @@
   "scripts": {
     "test": "istanbul cover node_modules/mocha/bin/_mocha -- -R list",
     "document": "jsdoc src -r -c ./.jsdoc.json -d docs"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MiSchroe/klf-200-api"
+  },
+  "keywords": [ "klf-200", "IoT", "ioBroker", "wrapper" ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MiSchroe/klf-200-api/issues"
+  },
+  "homepage": "https://mischroe.github.io/klf-200-api/"
 }
