@@ -29,9 +29,9 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="doc\scripts\linenumber.js" />
-    <Compile Include="doc\scripts\prettify\lang-css.js" />
-    <Compile Include="doc\scripts\prettify\prettify.js" />
+    <Compile Include="docs\scripts\linenumber.js" />
+    <Compile Include="docs\scripts\prettify\lang-css.js" />
+    <Compile Include="docs\scripts\prettify\prettify.js" />
     <Compile Include="index.js" />
     <Compile Include="src\connection.js">
       <SubType>Code</SubType>
@@ -65,47 +65,47 @@
     <Content Include=".jsdoc.json">
       <SubType>Code</SubType>
     </Content>
-    <Content Include="doc\connection.html" />
-    <Content Include="doc\connection.js.html" />
-    <Content Include="doc\fonts\OpenSans-Bold-webfont.eot" />
-    <Content Include="doc\fonts\OpenSans-Bold-webfont.svg" />
-    <Content Include="doc\fonts\OpenSans-Bold-webfont.woff" />
-    <Content Include="doc\fonts\OpenSans-BoldItalic-webfont.eot" />
-    <Content Include="doc\fonts\OpenSans-BoldItalic-webfont.svg" />
-    <Content Include="doc\fonts\OpenSans-BoldItalic-webfont.woff" />
-    <Content Include="doc\fonts\OpenSans-Italic-webfont.eot" />
-    <Content Include="doc\fonts\OpenSans-Italic-webfont.svg" />
-    <Content Include="doc\fonts\OpenSans-Italic-webfont.woff" />
-    <Content Include="doc\fonts\OpenSans-Light-webfont.eot" />
-    <Content Include="doc\fonts\OpenSans-Light-webfont.svg" />
-    <Content Include="doc\fonts\OpenSans-Light-webfont.woff" />
-    <Content Include="doc\fonts\OpenSans-LightItalic-webfont.eot" />
-    <Content Include="doc\fonts\OpenSans-LightItalic-webfont.svg" />
-    <Content Include="doc\fonts\OpenSans-LightItalic-webfont.woff" />
-    <Content Include="doc\fonts\OpenSans-Regular-webfont.eot" />
-    <Content Include="doc\fonts\OpenSans-Regular-webfont.svg" />
-    <Content Include="doc\fonts\OpenSans-Regular-webfont.woff" />
-    <Content Include="doc\global.html" />
-    <Content Include="doc\index.html" />
-    <Content Include="doc\products.html" />
-    <Content Include="doc\products.js.html" />
-    <Content Include="doc\scenes.html" />
-    <Content Include="doc\scenes.js.html" />
-    <Content Include="doc\scripts\prettify\Apache-License-2.0.txt" />
-    <Content Include="doc\styles\jsdoc-default.css" />
-    <Content Include="doc\styles\prettify-jsdoc.css" />
-    <Content Include="doc\styles\prettify-tomorrow.css" />
-    <Content Include="doc\urlBuilder.html" />
-    <Content Include="doc\urlBuilder.js.html" />
+    <Content Include="docs\connection.html" />
+    <Content Include="docs\connection.js.html" />
+    <Content Include="docs\fonts\OpenSans-Bold-webfont.eot" />
+    <Content Include="docs\fonts\OpenSans-Bold-webfont.svg" />
+    <Content Include="docs\fonts\OpenSans-Bold-webfont.woff" />
+    <Content Include="docs\fonts\OpenSans-BoldItalic-webfont.eot" />
+    <Content Include="docs\fonts\OpenSans-BoldItalic-webfont.svg" />
+    <Content Include="docs\fonts\OpenSans-BoldItalic-webfont.woff" />
+    <Content Include="docs\fonts\OpenSans-Italic-webfont.eot" />
+    <Content Include="docs\fonts\OpenSans-Italic-webfont.svg" />
+    <Content Include="docs\fonts\OpenSans-Italic-webfont.woff" />
+    <Content Include="docs\fonts\OpenSans-Light-webfont.eot" />
+    <Content Include="docs\fonts\OpenSans-Light-webfont.svg" />
+    <Content Include="docs\fonts\OpenSans-Light-webfont.woff" />
+    <Content Include="docs\fonts\OpenSans-LightItalic-webfont.eot" />
+    <Content Include="docs\fonts\OpenSans-LightItalic-webfont.svg" />
+    <Content Include="docs\fonts\OpenSans-LightItalic-webfont.woff" />
+    <Content Include="docs\fonts\OpenSans-Regular-webfont.eot" />
+    <Content Include="docs\fonts\OpenSans-Regular-webfont.svg" />
+    <Content Include="docs\fonts\OpenSans-Regular-webfont.woff" />
+    <Content Include="docs\global.html" />
+    <Content Include="docs\index.html" />
+    <Content Include="docs\products.html" />
+    <Content Include="docs\products.js.html" />
+    <Content Include="docs\scenes.html" />
+    <Content Include="docs\scenes.js.html" />
+    <Content Include="docs\scripts\prettify\Apache-License-2.0.txt" />
+    <Content Include="docs\styles\jsdoc-default.css" />
+    <Content Include="docs\styles\prettify-jsdoc.css" />
+    <Content Include="docs\styles\prettify-tomorrow.css" />
+    <Content Include="docs\urlBuilder.html" />
+    <Content Include="docs\urlBuilder.js.html" />
     <Content Include="package.json" />
     <Content Include="README.md" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="doc\" />
-    <Folder Include="doc\fonts\" />
-    <Folder Include="doc\scripts\" />
-    <Folder Include="doc\scripts\prettify\" />
-    <Folder Include="doc\styles\" />
+    <Folder Include="docs\" />
+    <Folder Include="docs\fonts\" />
+    <Folder Include="docs\scripts\" />
+    <Folder Include="docs\scripts\prettify\" />
+    <Folder Include="docs\styles\" />
     <Folder Include="src\" />
     <Folder Include="test\" />
   </ItemGroup>
