@@ -41,8 +41,8 @@ connection.prototype.loginAsync = function (password) {
 
     return this.postAsync(urlBuilder.authentication, 'login', { password: password })
         .then((res) => {
-            if (res.body.token)
-                this.token = res.body.token;
+            if (res.token)
+                this.token = res.token;
             else
                 throw new Error('No login token found');
 
@@ -93,7 +93,7 @@ connection.prototype.postAsync = function (functionName, action, params = null) 
                     res.body.errors && Array.isArray(res.body.errors) && res.body.errors.length > 0)
                     throw new Error(res.body.errors);
                 else
-                    return res;
+                    return res.body;
             });
 
     } catch (error) {

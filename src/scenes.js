@@ -19,14 +19,14 @@ function scenes(connection) {
 scenes.prototype.getAsync = function () {
     return this.connection.postAsync(urlBuilder.scenes, 'get', null)
         .then((res) => {
-            return res.body;
+            return res.data;
         });
 };
 
 /**
  * Runs a scene either by ID or name.
  * @param {(number|string)} sceneId The id or the name of the scene.
- * @return {Promise} Returns a promise that resolves to the result of the API call.
+ * @return {Promise} Returns a promise that resolves.
  */
 scenes.prototype.runAsync = function (sceneId) {
     if (!sceneId && sceneId !== 0)
@@ -36,15 +36,15 @@ scenes.prototype.runAsync = function (sceneId) {
     switch (sceneIdType) {
         case 'number':
             return this.connection.postAsync(urlBuilder.scenes, 'run', { id: sceneId })
-            .then((res) => {
-                return res.body;
+            .then(() => {
+                return Promise.resolve();
             });
 
         case 'string':
             return this.getAsync()
                 .then((scs) => {
                     // Convert scene name to Id
-                    let scene = scs.data.find((scene) => {
+                    let scene = scs.find((scene) => {
                         return scene.name === sceneId;
                     });
 
@@ -52,8 +52,8 @@ scenes.prototype.runAsync = function (sceneId) {
                         return Promise.reject(new Error(`Scene "${sceneId}" not found`));
 
                     return this.connection.postAsync(urlBuilder.scenes, 'run', { id: scene.id })
-                    .then((res) => {
-                        return res.body;
+                    .then(() => {
+                        return Promise.resolve();
                     });
                 });
 

@@ -14,12 +14,12 @@ function products(connection) {
 
 /**
  * Gets a list of your products.
- * @return {Promise} Returns a promise that resolves to the products list.
+ * @return {Promise} Returns a promise that resolves to the products array.
  */
 products.prototype.getAsync = function () {
     return this.connection.postAsync(urlBuilder.products, 'get', null)
         .then((res) => {
-            return res.body;
+            return res.data;
         });
 };
 

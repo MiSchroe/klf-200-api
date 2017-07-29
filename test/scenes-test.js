@@ -85,7 +85,7 @@ describe('Scenes', function () {
 
             let scen = new scenes(conn);
             return scen.getAsync().then(function (val) {
-                expect(val).to.be.deep.equal(validGetResponse);
+                expect(val).to.be.deep.equal(validGetResponse.data);
             });
         });
 
@@ -98,9 +98,7 @@ describe('Scenes', function () {
             conn.token = testToken;
 
             let scen = new scenes(conn);
-            return scen.runAsync(sceneId).then(function (val) {
-                expect(val).to.be.deep.equal(validEmptyResponse);
-            });
+            return scen.runAsync(sceneId);
         });
 
         it('successful runs a scene by name', function () {
@@ -108,9 +106,7 @@ describe('Scenes', function () {
             conn.token = testToken;
 
             let scen = new scenes(conn);
-            return scen.runAsync(sceneName).then(function (val) {
-                expect(val).to.be.deep.equal(validEmptyResponse);
-            });
+            return scen.runAsync(sceneName);
         });
 
         it('error running a non-existing scene by name', function () {

@@ -88,7 +88,7 @@ describe('Products', function () {
 
             let prod = new products(conn);
             return prod.getAsync().then(function (val) {
-                expect(val).to.be.deep.equal(validGetResponse);
+                expect(val).to.be.deep.equal(validGetResponse.data);
             });
         });
     });
