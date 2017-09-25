@@ -1,8 +1,8 @@
 ﻿'use strict';
 
 //const rp = require('request-promise');    // doesn't work, see discussion at https://github.com/request/request/issues/2047
-const request = require('superagent');
 const Promise = require('bluebird');
+const request = require('superagent');
 const urlBuilder = require('./urlBuilder');
 
 /**
@@ -85,7 +85,8 @@ connection.prototype.postAsync = function (functionName, action, params = null) 
             req = req.auth(this.token, { type: 'bearer' });
         }
 
-        return req
+        return Promise.resolve(
+            req
             .parse(this.cleanJSONParse)
             .send(data)
             .then((res) => {
@@ -94,7 +95,8 @@ connection.prototype.postAsync = function (functionName, action, params = null) 
                     throw new Error(res.body.errors);
                 else
                     return res.body;
-            });
+            })
+        );
 
     } catch (error) {
         return Promise.reject(error);

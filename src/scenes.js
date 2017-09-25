@@ -1,5 +1,6 @@
 ﻿'use strict';
 
+const Promise = require('bluebird');
 const urlBuilder = require('./urlBuilder');
 
 /**
@@ -25,17 +26,17 @@ scenes.prototype.getAsync = function () {
 
 /**
  * Runs a scene either by ID or name.
- * @param {(number|string)} sceneId The id or the name of the scene.
+ * @param {(number|string)} sceneIdOrName The id or the name of the scene.
  * @return {Promise} Returns a promise that resolves.
  */
-scenes.prototype.runAsync = function (sceneId) {
-    if (!sceneId && sceneId !== 0)
+scenes.prototype.runAsync = function (sceneIdOrName) {
+    if (!sceneIdOrName && sceneIdOrName !== 0)
         return Promise.reject(new Error('Missing sceneId parameter.'));
 
-    let sceneIdType = typeof sceneId;
+    let sceneIdType = typeof sceneIdOrName;
     switch (sceneIdType) {
         case 'number':
-            return this.connection.postAsync(urlBuilder.scenes, 'run', { id: sceneId })
+            return this.connection.postAsync(urlBuilder.scenes, 'run', { id: sceneIdOrName })
             .then(() => {
                 return Promise.resolve();
             });
@@ -45,11 +46,11 @@ scenes.prototype.runAsync = function (sceneId) {
                 .then((scs) => {
                     // Convert scene name to Id
                     let scene = scs.find((scene) => {
-                        return scene.name === sceneId;
+                        return scene.name === sceneIdOrName;
                     });
 
                     if (!scene || !scene.id && scene.id !== 0)
-                        return Promise.reject(new Error(`Scene "${sceneId}" not found`));
+                        return Promise.reject(new Error(`Scene "${sceneIdOrName}" not found`));
 
                     return this.connection.postAsync(urlBuilder.scenes, 'run', { id: scene.id })
                     .then(() => {
