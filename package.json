@@ -1,6 +1,6 @@
 {
   "name": "klf-200-api",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "This module provides a wrapper to the REST API of a Velux KLF-200 interface.",
   "main": "index.js",
   "author": {
@@ -11,8 +11,14 @@
     "superagent": "^3.5.2"
   },
   "devDependencies": {
+    "babel-eslint": "^8.0.0",
     "chai": "^4.1.0",
+    "eslint": "^4.7.1",
+    "eslint-config-defaults": "^9.0.0",
+    "eslint-plugin-react": "^7.3.0",
     "grunt": "^1.0.1",
+    "grunt-contrib-uglify": "^3.1.0",
+    "grunt-release": "^0.14.0",
     "istanbul": "^0.4.5",
     "mocha": "^3.4.2",
     "nock": "^9.0.14"
@@ -25,7 +31,12 @@
     "type": "git",
     "url": "https://github.com/MiSchroe/klf-200-api"
   },
-  "keywords": [ "klf-200", "IoT", "ioBroker", "wrapper" ],
+  "keywords": [
+    "klf-200",
+    "IoT",
+    "ioBroker",
+    "wrapper"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/MiSchroe/klf-200-api/issues"
