@@ -1,0 +1,1 @@
+"use strict";const urlBuilder=require("./urlBuilder");function products(t){this.connection=t}products.prototype.getAsync=function(){return this.connection.postAsync(urlBuilder.products,"get",null).then(t=>t.data)},module.exports=products;

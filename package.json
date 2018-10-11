@@ -16,12 +16,15 @@
     "eslint": "^4.7.1",
     "eslint-config-defaults": "^9.0.0",
     "eslint-plugin-react": "^7.3.0",
-    "grunt": "^1.0.1",
-    "grunt-contrib-uglify": "^3.1.0",
-    "grunt-release": "^0.14.0",
+    "gulp": "^4.0.0",
+    "gulp-release-it": "^2.0.14",
+    "gulp-typescript": "^5.0.0-alpha.3",
+    "gulp-uglify": "^3.0.1",
     "istanbul": "^0.4.5",
     "mocha": "^3.4.2",
-    "nock": "^9.0.14"
+    "nock": "^9.0.14",
+    "typescript": "^3.1.2",
+    "uglify-es": "^3.3.9"
   },
   "scripts": {
     "test": "istanbul cover node_modules/mocha/bin/_mocha -- -R list",
