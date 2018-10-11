@@ -13,6 +13,7 @@ gulp.task("default", function () {
     return tsProject.src()
         .pipe(tsProject())
         .js
-        .pipe(uglify())
-        .pipe(gulp.dest("dist"));
+        // .pipe(uglify())
+        .pipe(gulp.dest("dist"))
+        ;
 });

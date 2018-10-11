@@ -2,9 +2,9 @@
 
 const chai = require('chai');
 const expect = chai.expect;
-const urlBuilder = require('./../src/urlBuilder');
+const urlBuilder = require('./../dist/urlBuilder');
 
-describe('UrlBuilder', function () {
+describe.only('UrlBuilder', function () {
     it('getPath() should throw an error on empty functionName', function () {
         expect(() => urlBuilder.getPath(null)).to.throw('Parameter \'functionName\' must not be empty.');
     });
