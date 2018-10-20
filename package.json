@@ -11,6 +11,8 @@
     "superagent": "^3.5.2"
   },
   "devDependencies": {
+    "@types/chai": "^4.1.6",
+    "@types/mocha": "^5.2.5",
     "@types/node": "^10.11.7",
     "babel-eslint": "^8.0.0",
     "chai": "^4.1.0",
@@ -24,12 +26,29 @@
     "istanbul": "^0.4.5",
     "mocha": "^3.4.2",
     "nock": "^9.0.14",
+    "nyc": "^13.1.0",
+    "source-map-support": "^0.5.9",
+    "ts-mocha": "^2.0.0",
+    "ts-node": "^7.0.1",
     "typescript": "^3.1.2",
     "uglify-es": "^3.3.9"
   },
   "scripts": {
-    "test": "istanbul cover node_modules/mocha/bin/_mocha -- -R list",
+    "test": "nyc mocha",
     "document": "jsdoc src -r -c ./.jsdoc.json -d docs"
+  },
+  "nyc": {
+    "extensions": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "**/*.d.ts"
+    ],
+    "reporter": [
+      "html"
+    ],
+    "all": true
   },
   "repository": {
     "type": "git",

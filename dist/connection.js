@@ -119,3 +119,4 @@ connection.prototype.cleanJSONParse = function (res, fn) {
     });
 };
 module.exports = connection;
+//# sourceMappingURL=connection.js.map

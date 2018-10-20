@@ -54,3 +54,4 @@ scenes.prototype.runAsync = function (sceneIdOrName) {
     }
 };
 module.exports = scenes;
+//# sourceMappingURL=scenes.js.map

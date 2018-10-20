@@ -20,3 +20,4 @@ products.prototype.getAsync = function () {
     });
 };
 module.exports = products;
+//# sourceMappingURL=products.js.map

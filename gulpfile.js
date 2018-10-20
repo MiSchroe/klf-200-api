@@ -17,3 +17,12 @@ gulp.task("default", function () {
         .pipe(gulp.dest("dist"))
         ;
 });
+
+gulp.task("compress", function () {
+    return tsProject.src()
+        .pipe(tsProject())
+        .js
+        .pipe(uglify())
+        .pipe(gulp.dest("dist"))
+        ;
+});

@@ -1,4 +1,5 @@
 'use strict';
+Object.defineProperty(exports, "__esModule", { value: true });
 // Defining constants for the KLF-200 REST-API
 const API = '/api/v1/';
 /**
@@ -50,4 +51,5 @@ class urlBuilder {
         return API + functionName;
     }
 }
-module.exports = new urlBuilder();
+exports.default = new urlBuilder();
+//# sourceMappingURL=urlBuilder.js.map

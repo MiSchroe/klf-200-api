@@ -6,6 +6,7 @@
 /obj
 /bin
 /.vs
+/.nyc_output
 /coverage
 /velux-api/TestResults
 /velux-api/.vs

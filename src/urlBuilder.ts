@@ -60,4 +60,4 @@ class urlBuilder {
     }
 }
 
-export = new urlBuilder();
+export default new urlBuilder();
