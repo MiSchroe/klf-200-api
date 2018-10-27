@@ -11,7 +11,7 @@ describe("KLF200-API", function() {
             expect(1).to.be.equal(1);
         });
 
-        it("should return a valid error number.", function() {debugger;
+        it("should return a valid error number.", function() {
             const error = 7; // Busy
             const buff = Buffer.alloc(4);
             buff.writeUInt8(4, 0);

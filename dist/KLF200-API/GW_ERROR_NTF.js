@@ -17,7 +17,7 @@ class GW_ERROR_NTF extends common_1.GW_FRAME_NTF {
         this.Command = common_1.GatewayCommand.GW_ERROR_NTF;
     }
     get ErrorNumber() {
-        const errorNumber = this.Data.readUInt8(this.offset + 0);
+        const errorNumber = this.Data.readUInt8(0);
         if (errorNumber in GW_ERROR)
             return errorNumber;
         else

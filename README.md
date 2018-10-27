@@ -59,7 +59,164 @@ conn.loginAsync('velux123')
     });
 ````
 
+## Status of implemented messages
+[x] GW_ERROR_NTF                               
+[ ] GW_REBOOT_REQ                              
+[ ] GW_REBOOT_CFM                              
+[ ] GW_SET_FACTORY_DEFAULT_REQ                 
+[ ] GW_SET_FACTORY_DEFAULT_CFM                 
+[ ] GW_GET_VERSION_REQ                         
+[ ] GW_GET_VERSION_CFM                         
+[ ] GW_GET_PROTOCOL_VERSION_REQ                
+[ ] GW_GET_PROTOCOL_VERSION_CFM                
+[ ] GW_GET_STATE_REQ                           
+[ ] GW_GET_STATE_CFM                           
+[ ] GW_LEAVE_LEARN_STATE_REQ                   
+[ ] GW_LEAVE_LEARN_STATE_CFM                   
+[ ] GW_GET_NETWORK_SETUP_REQ                   
+[ ] GW_GET_NETWORK_SETUP_CFM                   
+[ ] GW_SET_NETWORK_SETUP_REQ                   
+[ ] GW_SET_NETWORK_SETUP_CFM                   
+[ ] GW_CS_GET_SYSTEMTABLE_DATA_REQ             
+[ ] GW_CS_GET_SYSTEMTABLE_DATA_CFM             
+[ ] GW_CS_GET_SYSTEMTABLE_DATA_NTF             
+[ ] GW_CS_DISCOVER_NODES_REQ                   
+[ ] GW_CS_DISCOVER_NODES_CFM                   
+[ ] GW_CS_DISCOVER_NODES_NTF                   
+[ ] GW_CS_REMOVE_NODES_REQ                     
+[ ] GW_CS_REMOVE_NODES_CFM                     
+[ ] GW_CS_VIRGIN_STATE_REQ                     
+[ ] GW_CS_VIRGIN_STATE_CFM                     
+[ ] GW_CS_CONTROLLER_COPY_REQ                  
+[ ] GW_CS_CONTROLLER_COPY_CFM                  
+[ ] GW_CS_CONTROLLER_COPY_NTF                  
+[ ] GW_CS_CONTROLLER_COPY_CANCEL_NTF           
+[ ] GW_CS_RECEIVE_KEY_REQ                      
+[ ] GW_CS_RECEIVE_KEY_CFM                      
+[ ] GW_CS_RECEIVE_KEY_NTF                      
+[ ] GW_CS_PGC_JOB_NTF                          
+[ ] GW_CS_SYSTEM_TABLE_UPDATE_NTF              
+[ ] GW_CS_GENERATE_NEW_KEY_REQ                 
+[ ] GW_CS_GENERATE_NEW_KEY_CFM                 
+[ ] GW_CS_GENERATE_NEW_KEY_NTF                 
+[ ] GW_CS_REPAIR_KEY_REQ                       
+[ ] GW_CS_REPAIR_KEY_CFM                       
+[ ] GW_CS_REPAIR_KEY_NTF                       
+[ ] GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ      
+[ ] GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM      
+[ ] GW_GET_NODE_INFORMATION_REQ                
+[ ] GW_GET_NODE_INFORMATION_CFM                
+[ ] GW_GET_NODE_INFORMATION_NTF                
+[ ] GW_GET_ALL_NODES_INFORMATION_REQ           
+[ ] GW_GET_ALL_NODES_INFORMATION_CFM           
+[ ] GW_GET_ALL_NODES_INFORMATION_NTF           
+[ ] GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF  
+[ ] GW_SET_NODE_VARIATION_REQ                  
+[ ] GW_SET_NODE_VARIATION_CFM                  
+[ ] GW_SET_NODE_NAME_REQ                       
+[ ] GW_SET_NODE_NAME_CFM                       
+[ ] GW_SET_NODE_VELOCITY_REQ                   
+[ ] GW_SET_NODE_VELOCITY_CFM                   
+[ ] GW_NODE_INFORMATION_CHANGED_NTF            
+[ ] GW_NODE_STATE_POSITION_CHANGED_NTF         
+[ ] GW_SET_NODE_ORDER_AND_PLACEMENT_REQ        
+[ ] GW_SET_NODE_ORDER_AND_PLACEMENT_CFM        
+[ ] GW_GET_GROUP_INFORMATION_REQ               
+[ ] GW_GET_GROUP_INFORMATION_CFM               
+[ ] GW_GET_GROUP_INFORMATION_NTF               
+[ ] GW_SET_GROUP_INFORMATION_REQ               
+[ ] GW_SET_GROUP_INFORMATION_CFM               
+[ ] GW_GROUP_INFORMATION_CHANGED_NTF           
+[ ] GW_DELETE_GROUP_REQ                        
+[ ] GW_DELETE_GROUP_CFM                        
+[ ] GW_NEW_GROUP_REQ                           
+[ ] GW_NEW_GROUP_CFM                           
+[ ] GW_GET_ALL_GROUPS_INFORMATION_REQ          
+[ ] GW_GET_ALL_GROUPS_INFORMATION_CFM          
+[ ] GW_GET_ALL_GROUPS_INFORMATION_NTF          
+[ ] GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF 
+[ ] GW_GROUP_DELETED_NTF                       
+[ ] GW_HOUSE_STATUS_MONITOR_ENABLE_REQ         
+[ ] GW_HOUSE_STATUS_MONITOR_ENABLE_CFM         
+[ ] GW_HOUSE_STATUS_MONITOR_DISABLE_REQ        
+[ ] GW_HOUSE_STATUS_MONITOR_DISABLE_CFM        
+[ ] GW_COMMAND_SEND_REQ                        
+[ ] GW_COMMAND_SEND_CFM                        
+[ ] GW_COMMAND_RUN_STATUS_NTF                  
+[ ] GW_COMMAND_REMAINING_TIME_NTF              
+[ ] GW_SESSION_FINISHED_NTF                    
+[ ] GW_STATUS_REQUEST_REQ                      
+[ ] GW_STATUS_REQUEST_CFM                      
+[ ] GW_STATUS_REQUEST_NTF                      
+[ ] GW_WINK_SEND_REQ                           
+[ ] GW_WINK_SEND_CFM                           
+[ ] GW_WINK_SEND_NTF                           
+[ ] GW_SET_LIMITATION_REQ                      
+[ ] GW_SET_LIMITATION_CFM                      
+[ ] GW_GET_LIMITATION_STATUS_REQ               
+[ ] GW_GET_LIMITATION_STATUS_CFM               
+[ ] GW_LIMITATION_STATUS_NTF                   
+[ ] GW_MODE_SEND_REQ                           
+[ ] GW_MODE_SEND_CFM                           
+[ ] GW_MODE_SEND_NTF                           
+[ ] GW_INITIALIZE_SCENE_REQ                    
+[ ] GW_INITIALIZE_SCENE_CFM                    
+[ ] GW_INITIALIZE_SCENE_NTF                    
+[ ] GW_INITIALIZE_SCENE_CANCEL_REQ             
+[ ] GW_INITIALIZE_SCENE_CANCEL_CFM             
+[ ] GW_RECORD_SCENE_REQ                        
+[ ] GW_RECORD_SCENE_CFM                        
+[ ] GW_RECORD_SCENE_NTF                        
+[ ] GW_DELETE_SCENE_REQ                        
+[ ] GW_DELETE_SCENE_CFM                        
+[ ] GW_RENAME_SCENE_REQ                        
+[ ] GW_RENAME_SCENE_CFM                        
+[ ] GW_GET_SCENE_LIST_REQ                      
+[ ] GW_GET_SCENE_LIST_CFM                      
+[ ] GW_GET_SCENE_LIST_NTF                      
+[ ] GW_GET_SCENE_INFOAMATION_REQ               
+[ ] GW_GET_SCENE_INFOAMATION_CFM               
+[ ] GW_GET_SCENE_INFOAMATION_NTF               
+[ ] GW_ACTIVATE_SCENE_REQ                      
+[ ] GW_ACTIVATE_SCENE_CFM                      
+[ ] GW_STOP_SCENE_REQ                          
+[ ] GW_STOP_SCENE_CFM                          
+[ ] GW_SCENE_INFORMATION_CHANGED_NTF           
+[ ] GW_ACTIVATE_PRODUCTGROUP_REQ               
+[ ] GW_ACTIVATE_PRODUCTGROUP_CFM               
+[ ] GW_ACTIVATE_PRODUCTGROUP_NTF               
+[ ] GW_GET_CONTACT_INPUT_LINK_LIST_REQ         
+[ ] GW_GET_CONTACT_INPUT_LINK_LIST_CFM         
+[ ] GW_SET_CONTACT_INPUT_LINK_REQ              
+[ ] GW_SET_CONTACT_INPUT_LINK_CFM              
+[ ] GW_REMOVE_CONTACT_INPUT_LINK_REQ           
+[ ] GW_REMOVE_CONTACT_INPUT_LINK_CFM           
+[ ] GW_GET_ACTIVATION_LOG_HEADER_REQ           
+[ ] GW_GET_ACTIVATION_LOG_HEADER_CFM           
+[ ] GW_CLEAR_ACTIVATION_LOG_REQ                
+[ ] GW_CLEAR_ACTIVATION_LOG_CFM                
+[ ] GW_GET_ACTIVATION_LOG_LINE_REQ             
+[ ] GW_GET_ACTIVATION_LOG_LINE_CFM             
+[ ] GW_ACTIVATION_LOG_UPDATED_NTF              
+[ ] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ   
+[ ] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF   
+[ ] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM   
+[ ] GW_SET_UTC_REQ                             
+[ ] GW_SET_UTC_CFM                             
+[ ] GW_RTC_SET_TIME_ZONE_REQ                   
+[ ] GW_RTC_SET_TIME_ZONE_CFM                   
+[ ] GW_GET_LOCAL_TIME_REQ                      
+[ ] GW_GET_LOCAL_TIME_CFM                      
+[x] GW_PASSWORD_ENTER_REQ                      
+[x] GW_PASSWORD_ENTER_CFM                      
+[ ] GW_PASSWORD_CHANGE_REQ                     
+[ ] GW_PASSWORD_CHANGE_CFM                     
+[ ] GW_PASSWORD_CHANGE_NTF                     
+
 ## Changelog
+### 3.0.0
+* Completely reworked to support the official VELUX Socket-API
+
 ### 2.0.0
 * Removed request header from function returns (no dependency on used
 request library any more)

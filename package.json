@@ -16,6 +16,7 @@
     "@types/node": "^10.11.7",
     "babel-eslint": "^8.0.0",
     "chai": "^4.1.0",
+    "chai-bytes": "^0.1.1",
     "eslint": "^4.7.1",
     "eslint-config-defaults": "^9.0.0",
     "eslint-plugin-react": "^7.3.0",
