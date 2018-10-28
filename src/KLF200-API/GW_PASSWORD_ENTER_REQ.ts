@@ -1,12 +1,10 @@
 'use strict';
 
-import { GW_FRAME_REQ, GatewayCommand } from "./common";
+import { GW_FRAME_REQ } from "./common";
 
 const C_MAX_PWD_LENGTH = 32;
 
 export class GW_PASSWORD_ENTER_REQ extends GW_FRAME_REQ {
-    readonly Command = GatewayCommand.GW_PASSWORD_CHANGE_REQ;
-
     constructor(password: string) {
         super();
 

@@ -1,6 +1,6 @@
 'use strict';
 
-import { GW_FRAME_NTF, GatewayCommand } from "./common";
+import { GW_FRAME_NTF } from "./common";
 
 export enum GW_ERROR {
     NotFurtherDefined           = 0,
@@ -13,8 +13,6 @@ export enum GW_ERROR {
 }
 
 export class GW_ERROR_NTF extends GW_FRAME_NTF {
-    readonly Command = GatewayCommand.GW_ERROR_NTF;
-
     get ErrorNumber(): GW_ERROR {
         const errorNumber = this.Data.readUInt8(0);
         if (errorNumber in GW_ERROR)

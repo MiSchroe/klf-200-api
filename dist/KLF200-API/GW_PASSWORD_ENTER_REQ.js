@@ -5,7 +5,6 @@ const C_MAX_PWD_LENGTH = 32;
 class GW_PASSWORD_ENTER_REQ extends common_1.GW_FRAME_REQ {
     constructor(password) {
         super();
-        this.Command = common_1.GatewayCommand.GW_PASSWORD_CHANGE_REQ;
         this.Password = password;
     }
     set Password(newPassword) {

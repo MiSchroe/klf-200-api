@@ -2,7 +2,7 @@
   "name": "klf-200-api",
   "version": "2.0.1",
   "description": "This module provides a wrapper to the REST API of a Velux KLF-200 interface.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "author": {
     "name": "Michael Schroeder"
   },

@@ -1,34 +1,29 @@
 'use strict';
 
-import { IFrameRcvFactory, IGW_FRAME_RCV_CTOR, IGW_FRAME_RCV, GatewayCommand } from "./common";
+import { IGW_FRAME_RCV_CTOR, IGW_FRAME_RCV, GatewayCommand } from "./common";
+import * as path from "path";
 
-export class FrameRcvFactory implements IFrameRcvFactory {
-    private static factory: FrameRcvFactory;
-
-    private factoryRegistry: { [Command: number]: IGW_FRAME_RCV_CTOR };
-    private constructor() {
-        this.factoryRegistry = {};
-    }
-
-    public static getFactory(): FrameRcvFactory {
-        if (!FrameRcvFactory.factory)
-        {
-            FrameRcvFactory.factory = new FrameRcvFactory();
-        }
-        return FrameRcvFactory.factory;
-    }
-
-    public registerClassForCommand(Command: GatewayCommand, FrameType: IGW_FRAME_RCV_CTOR) {
-        this.factoryRegistry[Command] = FrameType;
-    }
-
-    public CreateRcvFrame(Buff: Buffer): IGW_FRAME_RCV {
-        const Command = Buff.readUInt16BE(1);
-        const typeToCreate: IGW_FRAME_RCV_CTOR | undefined = this.factoryRegistry[Command];
+export class FrameRcvFactory {
+    public static async CreateRcvFrame(Buff: Buffer): Promise<IGW_FRAME_RCV> {
+        const CommandName = GatewayCommand[Buff.readUInt16BE(1)];
+        await this.LoadModule(CommandName);
+        const typeToCreate: IGW_FRAME_RCV_CTOR | undefined = this.modules[CommandName][CommandName];
 
         if (typeToCreate === undefined)
-            throw new Error(`Unknown command ${Command.toString(16)}.`);
+            throw new Error(`Unknown command ${CommandName}.`);
 
         return new typeToCreate(Buff);
+    }
+
+    private static modules: {
+        [index: string]: { [key: string]: IGW_FRAME_RCV_CTOR }
+    } = {};
+    private static async LoadModule(moduleName: string): Promise<void> {
+        if (!this.modules[moduleName]) {
+            const modulePath = path.resolve(__dirname, moduleName);
+            console.log(`__dirname: ${__dirname}`);
+            console.log(`modulePath: ${modulePath}`);
+            this.modules[moduleName] = await import(modulePath);
+        }
     }
 }

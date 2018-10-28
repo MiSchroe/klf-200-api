@@ -1,9 +1,5 @@
 'use strict';
 
-import { Transform, TransformCallback, PassThrough } from "stream";
-import { utils } from "mocha";
-import { promisify } from "util";
-
 export const KLF200_PORT = 51200;
 
 export enum GatewayCommand {
@@ -352,7 +348,7 @@ export interface IGW_FRAME_NTF extends IGW_FRAME_RCV {
 }
 
 export abstract class GW_FRAME implements IGW_FRAME {
-    readonly abstract Command: GatewayCommand;
+    readonly Command: GatewayCommand = GatewayCommand[<keyof typeof GatewayCommand>this.constructor.name];
     protected readonly offset = C_BUFFERLEN_SIZE + C_COMMAND_SIZE;
 
     protected constructor() {}
@@ -411,9 +407,9 @@ export abstract class GW_FRAME_RCV extends GW_FRAME implements IGW_FRAME_RCV {
     }
 
     private CheckCommand(command: GatewayCommand_Receive) {
-        const className = <keyof typeof GatewayCommand>this.constructor.name;
-        if (command !== GatewayCommand[className])
-            throw `Command from buffer doesn't match command of frame.`;
+        //const className = <keyof typeof GatewayCommand>this.constructor.name;
+        if (command !== this.Command)
+            throw `Command from buffer (${command}) doesn't match command of frame (${this.Command}).`;
     }
 }
 
@@ -422,12 +418,6 @@ export abstract class GW_FRAME_CFM extends GW_FRAME_RCV implements IGW_FRAME_CFM
 
 export abstract class GW_FRAME_NTF extends GW_FRAME_RCV implements IGW_FRAME_NTF {
 }
-
-// export interface ITransferProtocol {
-//     Encode(Data: IGW_FRAME_REQ): NodeJS.ReadableStream;
-//     Decode(Data: NodeJS.ReadableStream): IGW_FRAME_RCV;
-// }
-
 
 export class KLF200Protocol {
     static readonly ProtocolID = 0;
@@ -475,29 +465,23 @@ export class KLF200Protocol {
     }
 }
 
-const SLIP_END = 0xC0;
+export const SLIP_END = 0xC0;
 const SLIP_ESC = 0xDB;
 const SLIP_ESC_END = 0xDC;
 const SLIP_ESC_ESC = 0xDD;
 
-class SLIPEncoder extends Transform {
-    private startWritten = false;
-
-    _transform(chunk: any, encoding: string, callback: TransformCallback) {
-        const buff = chunk as Buffer;
-        const resultBuffer = Buffer.alloc(buff.byteLength * 2);
+export class SLIPProtocol {
+    static Encode(data: Buffer): Buffer {
+        const resultBuffer = Buffer.alloc(data.byteLength * 2 + 2);   // Max. possible size if all bytes have to be prefixed
         let resultLength = 0;
 
-        if (!this.startWritten)
-        {
-            // Writes SLIP_END at start
-            this.startWritten = true;
-            this.push(Buffer.alloc(1, SLIP_END));
-        }
+        // Write END mark
+        resultBuffer[resultLength++] = SLIP_END;
 
         // Mask END and ESC characters
-        for (const byte of buff) {
-            switch (byte) {
+        for (let i = 0; i < data.byteLength; i++) {
+            const dataByte = data[i];
+            switch (dataByte) {
                 case SLIP_END:
                     resultBuffer.writeUInt8(SLIP_ESC, resultLength++);
                     resultBuffer.writeUInt8(SLIP_ESC_END, resultLength++);
@@ -509,101 +493,51 @@ class SLIPEncoder extends Transform {
                     break;
             
                 default:
-                    resultBuffer.writeUInt8(byte, resultLength++);
+                    resultBuffer.writeUInt8(dataByte, resultLength++);
                     break;
             }
         }
 
-        // Send data
-        this.push(resultBuffer.slice(0, resultLength - 1));
+        // Write END mark
+        resultBuffer[resultLength++] = SLIP_END;
 
-        return callback();
+        return resultBuffer.slice(0, resultLength);
     }
 
-    _flush(callback: TransformCallback) {
-        // Send END marker at the end of the frame
-        this.push(Buffer.alloc(1, SLIP_END));
-    }
-}
+    static Decode(data: Buffer): Buffer {
+        // Check END mark at start and END
+        if (data[0] !== SLIP_END || data[data.byteLength - 1] !== SLIP_END)
+            throw "Missing END mark.";
 
-class SLIPDecoder extends Transform {
-    private startFound = false;
-    private endFound = false;
-    private lastChunk = Buffer.alloc(0);
-
-    private CheckStartEnd(): boolean {
-        return this.startFound && !this.endFound;
-    }
-
-    _transform(chunk: any, encoding: string, callback: TransformCallback) {
-        let buff = Buffer.concat([this.lastChunk, chunk]);
-        const resultBuffer = Buffer.alloc(buff.byteLength);
+        const resultBuffer = Buffer.alloc(data.byteLength - 2);     // Max. possible size without END mark at start and end
         let resultLength = 0;
 
-        for(let buffIndex = 0; buffIndex++; buffIndex < buff.byteLength) {
-            switch (buff[buffIndex]) {
-                case SLIP_END:
-                    if (!this.startFound)
-                    {
-                        this.startFound = true;
-                    }
-                    else if (!this.endFound) {
-                        this.endFound = true;
-                    } else {
-                        return callback(new Error("Unexpected END marker found."));
-                    }
-                    break;
-
+        for (let i = 1; i < data.byteLength - 1; i++) {
+            const dataByte = data[i];
+            
+            switch (dataByte) {
                 case SLIP_ESC:
-                    if (!this.CheckStartEnd())
-                        return callback(new Error("Unexpected ESC marker found."));
+                    const nextDataByte = data[++i];
+                    switch (nextDataByte) {
+                        case SLIP_ESC_ESC:
+                            resultBuffer.writeUInt8(SLIP_ESC, resultLength++);
+                            break;
 
-                    // Check for split chunk
-                    if (++buffIndex < buff.byteLength) {
-                        // Decode next byte
-                        switch (buff[buffIndex]) {
-                            case SLIP_ESC_END:
-                                resultBuffer[resultLength++] = SLIP_END;
-                                break;
-
-                            case SLIP_ESC_ESC:
-                                resultBuffer[resultLength++] = SLIP_ESC;
-                                break;
-                        
-                            default:
-                                resultBuffer[resultLength++] = buff[buffIndex];
-                                break;
-                        }
-                    }
-                    else {
-                        // Next byte is in next chunk
-                        this.lastChunk = Buffer.alloc(1, SLIP_ESC);
+                        case SLIP_ESC_END:
+                            resultBuffer.writeUInt8(SLIP_END, resultLength++);
+                            break;
+                    
+                        default:
+                            throw "Invalid SLIP special character.";
                     }
                     break;
             
                 default:
-                    if (!this.CheckStartEnd())
-                        return callback(new Error("Unexpected ESC marker found."));
-
-                    resultBuffer[resultLength++] = buff[buffIndex];
+                    resultBuffer.writeUInt8(dataByte, resultLength++);
                     break;
             }
         }
 
-        // Push data
-        this.push(resultBuffer.slice(0, resultLength - 1));
-
-        return callback();
+        return resultBuffer.slice(0, resultLength);
     }
-
-    _flush(callback: TransformCallback) {
-        if (!this.startFound || !this.endFound || this.lastChunk.byteLength !== 0)
-            return callback(new Error("Invalid SLIP frame."));
-        else
-            return callback();
-    }
-}
-
-export interface IFrameRcvFactory {
-    CreateRcvFrame(Buff: Buffer): IGW_FRAME_RCV;
 }

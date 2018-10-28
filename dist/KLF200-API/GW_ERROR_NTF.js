@@ -12,10 +12,6 @@ var GW_ERROR;
     GW_ERROR[GW_ERROR["UnknonwErrorCode"] = 255] = "UnknonwErrorCode";
 })(GW_ERROR = exports.GW_ERROR || (exports.GW_ERROR = {}));
 class GW_ERROR_NTF extends common_1.GW_FRAME_NTF {
-    constructor() {
-        super(...arguments);
-        this.Command = common_1.GatewayCommand.GW_ERROR_NTF;
-    }
     get ErrorNumber() {
         const errorNumber = this.Data.readUInt8(0);
         if (errorNumber in GW_ERROR)

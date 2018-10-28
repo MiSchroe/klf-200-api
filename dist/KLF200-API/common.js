@@ -1,6 +1,5 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-const stream_1 = require("stream");
 exports.KLF200_PORT = 51200;
 var GatewayCommand;
 (function (GatewayCommand) {
@@ -166,6 +165,7 @@ const C_COMMAND_SIZE = 2;
 const C_BUFFERLEN_SIZE = 1;
 class GW_FRAME {
     constructor() {
+        this.Command = GatewayCommand[this.constructor.name];
         this.offset = C_BUFFERLEN_SIZE + C_COMMAND_SIZE;
     }
 }
@@ -216,9 +216,9 @@ class GW_FRAME_RCV extends GW_FRAME {
         this.Data = Data.slice(C_BUFFERLEN_SIZE + C_COMMAND_SIZE);
     }
     CheckCommand(command) {
-        const className = this.constructor.name;
-        if (command !== GatewayCommand[className])
-            throw `Command from buffer doesn't match command of frame.`;
+        //const className = <keyof typeof GatewayCommand>this.constructor.name;
+        if (command !== this.Command)
+            throw `Command from buffer (${command}) doesn't match command of frame (${this.Command}).`;
     }
 }
 exports.GW_FRAME_RCV = GW_FRAME_RCV;
@@ -228,10 +228,6 @@ exports.GW_FRAME_CFM = GW_FRAME_CFM;
 class GW_FRAME_NTF extends GW_FRAME_RCV {
 }
 exports.GW_FRAME_NTF = GW_FRAME_NTF;
-// export interface ITransferProtocol {
-//     Encode(Data: IGW_FRAME_REQ): NodeJS.ReadableStream;
-//     Decode(Data: NodeJS.ReadableStream): IGW_FRAME_RCV;
-// }
 class KLF200Protocol {
     static Encode(data) {
         const result = Buffer.alloc(data.byteLength + 2); // +1 for ProtocolID and +1 for CRC byte
@@ -268,28 +264,21 @@ class KLF200Protocol {
 }
 KLF200Protocol.ProtocolID = 0;
 exports.KLF200Protocol = KLF200Protocol;
-const SLIP_END = 0xC0;
+exports.SLIP_END = 0xC0;
 const SLIP_ESC = 0xDB;
 const SLIP_ESC_END = 0xDC;
 const SLIP_ESC_ESC = 0xDD;
-class SLIPEncoder extends stream_1.Transform {
-    constructor() {
-        super(...arguments);
-        this.startWritten = false;
-    }
-    _transform(chunk, encoding, callback) {
-        const buff = chunk;
-        const resultBuffer = Buffer.alloc(buff.byteLength * 2);
+class SLIPProtocol {
+    static Encode(data) {
+        const resultBuffer = Buffer.alloc(data.byteLength * 2 + 2); // Max. possible size if all bytes have to be prefixed
         let resultLength = 0;
-        if (!this.startWritten) {
-            // Writes SLIP_END at start
-            this.startWritten = true;
-            this.push(Buffer.alloc(1, SLIP_END));
-        }
+        // Write END mark
+        resultBuffer[resultLength++] = exports.SLIP_END;
         // Mask END and ESC characters
-        for (const byte of buff) {
-            switch (byte) {
-                case SLIP_END:
+        for (let i = 0; i < data.byteLength; i++) {
+            const dataByte = data[i];
+            switch (dataByte) {
+                case exports.SLIP_END:
                     resultBuffer.writeUInt8(SLIP_ESC, resultLength++);
                     resultBuffer.writeUInt8(SLIP_ESC_END, resultLength++);
                     break;
@@ -298,85 +287,43 @@ class SLIPEncoder extends stream_1.Transform {
                     resultBuffer.writeUInt8(SLIP_ESC_ESC, resultLength++);
                     break;
                 default:
-                    resultBuffer.writeUInt8(byte, resultLength++);
+                    resultBuffer.writeUInt8(dataByte, resultLength++);
                     break;
             }
         }
-        // Send data
-        this.push(resultBuffer.slice(0, resultLength - 1));
-        return callback();
+        // Write END mark
+        resultBuffer[resultLength++] = exports.SLIP_END;
+        return resultBuffer.slice(0, resultLength);
     }
-    _flush(callback) {
-        // Send END marker at the end of the frame
-        this.push(Buffer.alloc(1, SLIP_END));
-    }
-}
-class SLIPDecoder extends stream_1.Transform {
-    constructor() {
-        super(...arguments);
-        this.startFound = false;
-        this.endFound = false;
-        this.lastChunk = Buffer.alloc(0);
-    }
-    CheckStartEnd() {
-        return this.startFound && !this.endFound;
-    }
-    _transform(chunk, encoding, callback) {
-        let buff = Buffer.concat([this.lastChunk, chunk]);
-        const resultBuffer = Buffer.alloc(buff.byteLength);
+    static Decode(data) {
+        // Check END mark at start and END
+        if (data[0] !== exports.SLIP_END || data[data.byteLength - 1] !== exports.SLIP_END)
+            throw "Missing END mark.";
+        const resultBuffer = Buffer.alloc(data.byteLength - 2); // Max. possible size without END mark at start and end
         let resultLength = 0;
-        for (let buffIndex = 0; buffIndex++; buffIndex < buff.byteLength) {
-            switch (buff[buffIndex]) {
-                case SLIP_END:
-                    if (!this.startFound) {
-                        this.startFound = true;
-                    }
-                    else if (!this.endFound) {
-                        this.endFound = true;
-                    }
-                    else {
-                        return callback(new Error("Unexpected END marker found."));
-                    }
-                    break;
+        for (let i = 1; i < data.byteLength - 1; i++) {
+            const dataByte = data[i];
+            switch (dataByte) {
                 case SLIP_ESC:
-                    if (!this.CheckStartEnd())
-                        return callback(new Error("Unexpected ESC marker found."));
-                    // Check for split chunk
-                    if (++buffIndex < buff.byteLength) {
-                        // Decode next byte
-                        switch (buff[buffIndex]) {
-                            case SLIP_ESC_END:
-                                resultBuffer[resultLength++] = SLIP_END;
-                                break;
-                            case SLIP_ESC_ESC:
-                                resultBuffer[resultLength++] = SLIP_ESC;
-                                break;
-                            default:
-                                resultBuffer[resultLength++] = buff[buffIndex];
-                                break;
-                        }
-                    }
-                    else {
-                        // Next byte is in next chunk
-                        this.lastChunk = Buffer.alloc(1, SLIP_ESC);
+                    const nextDataByte = data[++i];
+                    switch (nextDataByte) {
+                        case SLIP_ESC_ESC:
+                            resultBuffer.writeUInt8(SLIP_ESC, resultLength++);
+                            break;
+                        case SLIP_ESC_END:
+                            resultBuffer.writeUInt8(exports.SLIP_END, resultLength++);
+                            break;
+                        default:
+                            throw "Invalid SLIP special character.";
                     }
                     break;
                 default:
-                    if (!this.CheckStartEnd())
-                        return callback(new Error("Unexpected ESC marker found."));
-                    resultBuffer[resultLength++] = buff[buffIndex];
+                    resultBuffer.writeUInt8(dataByte, resultLength++);
                     break;
             }
         }
-        // Push data
-        this.push(resultBuffer.slice(0, resultLength - 1));
-        return callback();
-    }
-    _flush(callback) {
-        if (!this.startFound || !this.endFound || this.lastChunk.byteLength !== 0)
-            return callback(new Error("Invalid SLIP frame."));
-        else
-            return callback();
+        return resultBuffer.slice(0, resultLength);
     }
 }
+exports.SLIPProtocol = SLIPProtocol;
 //# sourceMappingURL=common.js.map
