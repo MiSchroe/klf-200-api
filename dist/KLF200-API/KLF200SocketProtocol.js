@@ -19,6 +19,7 @@ var KLF200SocketProtocolState;
 })(KLF200SocketProtocolState || (KLF200SocketProtocolState = {}));
 class KLF200SocketProtocol {
     constructor(socket, handler) {
+        this.socket = socket;
         this.state = KLF200SocketProtocolState.Invalid;
         this.queue = [];
         this.addHandler(handler);
@@ -69,6 +70,10 @@ class KLF200SocketProtocol {
             const frame = yield FrameRcvFactory_1.FrameRcvFactory.CreateRcvFrame(frameBuffer);
             onFrameReceived.emit(frame);
         });
+    }
+    write(data) {
+        const slipBuffer = common_1.SLIPProtocol.Encode(common_1.KLF200Protocol.Encode(data));
+        return this.socket.write(slipBuffer);
     }
 }
 exports.KLF200SocketProtocol = KLF200SocketProtocol;

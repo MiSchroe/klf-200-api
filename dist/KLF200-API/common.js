@@ -48,8 +48,8 @@ var GatewayCommand;
     GatewayCommand[GatewayCommand["GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ"] = 281] = "GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ";
     GatewayCommand[GatewayCommand["GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM"] = 282] = "GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM";
     GatewayCommand[GatewayCommand["GW_GET_NODE_INFORMATION_REQ"] = 512] = "GW_GET_NODE_INFORMATION_REQ";
-    GatewayCommand[GatewayCommand["GW_GET_NODE_INFORMATION_CFM"] = 513] = "GW_GET_NODE_INFORMATION_CFM";
-    GatewayCommand[GatewayCommand["GW_GET_NODE_INFORMATION_NTF"] = 528] = "GW_GET_NODE_INFORMATION_NTF";
+    GatewayCommand[GatewayCommand["GW_GET_NODE_INFORMATION_NTF"] = 513] = "GW_GET_NODE_INFORMATION_NTF";
+    GatewayCommand[GatewayCommand["GW_GET_NODE_INFORMATION_CFM"] = 528] = "GW_GET_NODE_INFORMATION_CFM";
     GatewayCommand[GatewayCommand["GW_GET_ALL_NODES_INFORMATION_REQ"] = 514] = "GW_GET_ALL_NODES_INFORMATION_REQ";
     GatewayCommand[GatewayCommand["GW_GET_ALL_NODES_INFORMATION_CFM"] = 515] = "GW_GET_ALL_NODES_INFORMATION_CFM";
     GatewayCommand[GatewayCommand["GW_GET_ALL_NODES_INFORMATION_NTF"] = 516] = "GW_GET_ALL_NODES_INFORMATION_NTF";
@@ -160,6 +160,7 @@ var GW_COMMON_STATUS;
 (function (GW_COMMON_STATUS) {
     GW_COMMON_STATUS[GW_COMMON_STATUS["SUCCESS"] = 0] = "SUCCESS";
     GW_COMMON_STATUS[GW_COMMON_STATUS["ERROR"] = 1] = "ERROR";
+    GW_COMMON_STATUS[GW_COMMON_STATUS["INVALID_NODE_ID"] = 2] = "INVALID_NODE_ID";
 })(GW_COMMON_STATUS = exports.GW_COMMON_STATUS || (exports.GW_COMMON_STATUS = {}));
 const C_COMMAND_SIZE = 2;
 const C_BUFFERLEN_SIZE = 1;
@@ -228,6 +229,17 @@ exports.GW_FRAME_CFM = GW_FRAME_CFM;
 class GW_FRAME_NTF extends GW_FRAME_RCV {
 }
 exports.GW_FRAME_NTF = GW_FRAME_NTF;
+/**
+ * Reads a zero-terminated string from the buffer.
+ *
+ * @export
+ * @param {Buffer} data The buffer that contains the string data.
+ * @returns {string} Returns the string data.
+ */
+function readZString(data) {
+    return data.toString("utf8").split("\0", 1)[0];
+}
+exports.readZString = readZString;
 class KLF200Protocol {
     static Encode(data) {
         const result = Buffer.alloc(data.byteLength + 2); // +1 for ProtocolID and +1 for CRC byte

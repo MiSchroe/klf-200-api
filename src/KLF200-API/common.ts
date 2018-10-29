@@ -48,8 +48,8 @@ export enum GatewayCommand {
     GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ      = 0x0119,    // Request one or more actuator to open for configuration.
     GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM      = 0x011A,    // Acknowledge to GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ.
     GW_GET_NODE_INFORMATION_REQ                = 0x0200,    // Request extended information of one specific actuator node.
-    GW_GET_NODE_INFORMATION_CFM                = 0x0201,    // Acknowledge to GW_GET_NODE_INFORMATION_REQ.
-    GW_GET_NODE_INFORMATION_NTF                = 0x0210,    // Acknowledge to GW_GET_NODE_INFORMATION_REQ.
+    GW_GET_NODE_INFORMATION_NTF                = 0x0201,    // Acknowledge to GW_GET_NODE_INFORMATION_REQ.
+    GW_GET_NODE_INFORMATION_CFM                = 0x0210,    // Acknowledge to GW_GET_NODE_INFORMATION_REQ.
     GW_GET_ALL_NODES_INFORMATION_REQ           = 0x0202,    // Request extended information of all nodes.
     GW_GET_ALL_NODES_INFORMATION_CFM           = 0x0203,    // Acknowledge to GW_GET_ALL_NODES_INFORMATION_REQ
     GW_GET_ALL_NODES_INFORMATION_NTF           = 0x0204,    // Acknowledge to GW_GET_ALL_NODES_INFORMATION_REQ. Holds node information
@@ -322,7 +322,8 @@ export type GatewayCommand_Receive = GatewayCommand_Confirmation | GatewayComman
 
 export enum GW_COMMON_STATUS {
     SUCCESS = 0,
-    ERROR   = 1
+    ERROR   = 1,
+    INVALID_NODE_ID = 2
 }
 
 const C_COMMAND_SIZE: number = 2;
@@ -417,6 +418,17 @@ export abstract class GW_FRAME_CFM extends GW_FRAME_RCV implements IGW_FRAME_CFM
 }
 
 export abstract class GW_FRAME_NTF extends GW_FRAME_RCV implements IGW_FRAME_NTF {
+}
+
+/**
+ * Reads a zero-terminated string from the buffer.
+ *
+ * @export
+ * @param {Buffer} data The buffer that contains the string data.
+ * @returns {string} Returns the string data.
+ */
+export function readZString(data: Buffer): string {
+    return data.toString("utf8").split("\0", 1)[0];
 }
 
 export class KLF200Protocol {

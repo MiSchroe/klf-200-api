@@ -13,11 +13,15 @@ export enum GW_ERROR {
 }
 
 export class GW_ERROR_NTF extends GW_FRAME_NTF {
-    get ErrorNumber(): GW_ERROR {
+    public readonly ErrorNumber: GW_ERROR;
+
+    constructor(Data: Buffer) {
+        super(Data);
+
         const errorNumber = this.Data.readUInt8(0);
         if (errorNumber in GW_ERROR)
-            return <GW_ERROR>errorNumber
+            this.ErrorNumber = <GW_ERROR>errorNumber
         else
-            return GW_ERROR.UnknonwErrorCode;
+            this.ErrorNumber = GW_ERROR.UnknonwErrorCode;
     }
 }

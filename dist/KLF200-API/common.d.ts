@@ -46,8 +46,8 @@ export declare enum GatewayCommand {
     GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ = 281,
     GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM = 282,
     GW_GET_NODE_INFORMATION_REQ = 512,
-    GW_GET_NODE_INFORMATION_CFM = 513,
-    GW_GET_NODE_INFORMATION_NTF = 528,
+    GW_GET_NODE_INFORMATION_NTF = 513,
+    GW_GET_NODE_INFORMATION_CFM = 528,
     GW_GET_ALL_NODES_INFORMATION_REQ = 514,
     GW_GET_ALL_NODES_INFORMATION_CFM = 515,
     GW_GET_ALL_NODES_INFORMATION_NTF = 516,
@@ -160,7 +160,8 @@ export declare type GatewayCommand_Notification = GatewayCommand.GW_ERROR_NTF | 
 export declare type GatewayCommand_Receive = GatewayCommand_Confirmation | GatewayCommand_Notification;
 export declare enum GW_COMMON_STATUS {
     SUCCESS = 0,
-    ERROR = 1
+    ERROR = 1,
+    INVALID_NODE_ID = 2
 }
 export interface IGW_FRAME {
     readonly Command: GatewayCommand;
@@ -211,6 +212,14 @@ export declare abstract class GW_FRAME_CFM extends GW_FRAME_RCV implements IGW_F
 }
 export declare abstract class GW_FRAME_NTF extends GW_FRAME_RCV implements IGW_FRAME_NTF {
 }
+/**
+ * Reads a zero-terminated string from the buffer.
+ *
+ * @export
+ * @param {Buffer} data The buffer that contains the string data.
+ * @returns {string} Returns the string data.
+ */
+export declare function readZString(data: Buffer): string;
 export declare class KLF200Protocol {
     static readonly ProtocolID = 0;
     static Encode(data: Buffer): Buffer;

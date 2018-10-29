@@ -46,15 +46,19 @@ var Manufacturer;
     Manufacturer[Manufacturer["OVERKIZ"] = 11] = "OVERKIZ";
     Manufacturer[Manufacturer["Atlantic_Group"] = 12] = "Atlantic_Group";
 })(Manufacturer = exports.Manufacturer || (exports.Manufacturer = {}));
+function splitActuatorType(value) {
+    return { ActuatorType: (value >>> 5), ActuatorSubType: value & 0x3F };
+}
+exports.splitActuatorType = splitActuatorType;
 class SystemTableDataEntry {
     constructor(data) {
         this.Data = data;
         this.SystemTableIndex = data.readUInt8(0);
         this.ActuatorAddress = data.readUInt8(1) * 65536 + data.readUInt8(2) * 256 + data.readUInt8(3);
         this.ActuatorType = data.readUInt16BE(4) >>> 5;
-        this.ActuatorSubType = data.readUInt8(5) && 0x3F;
+        this.ActuatorSubType = data.readUInt8(5) & 0x3F;
         const byte6 = data.readUInt8(6);
-        this.PowerSaveMode = byte6 && 0x03;
+        this.PowerSaveMode = byte6 & 0x03;
         this.ioMembership = (byte6 & 0x04) === 0x04;
         this.RFSupport = (byte6 & 0x08) === 0x08;
         switch (byte6 >>> 6) {
@@ -78,4 +82,36 @@ class SystemTableDataEntry {
     }
 }
 exports.SystemTableDataEntry = SystemTableDataEntry;
+var Velocity;
+(function (Velocity) {
+    Velocity[Velocity["Default"] = 0] = "Default";
+    Velocity[Velocity["Silent"] = 1] = "Silent";
+    Velocity[Velocity["Fast"] = 2] = "Fast";
+    Velocity[Velocity["NotAvailable"] = 255] = "NotAvailable";
+})(Velocity = exports.Velocity || (exports.Velocity = {}));
+var NodeVariation;
+(function (NodeVariation) {
+    NodeVariation[NodeVariation["NotSet"] = 0] = "NotSet";
+    NodeVariation[NodeVariation["TopHung"] = 1] = "TopHung";
+    NodeVariation[NodeVariation["Kip"] = 2] = "Kip";
+    NodeVariation[NodeVariation["FlatRoof"] = 3] = "FlatRoof";
+    NodeVariation[NodeVariation["SkyLight"] = 4] = "SkyLight";
+})(NodeVariation = exports.NodeVariation || (exports.NodeVariation = {}));
+var NodeOperatingState;
+(function (NodeOperatingState) {
+    NodeOperatingState[NodeOperatingState["NonExecuting"] = 0] = "NonExecuting";
+    NodeOperatingState[NodeOperatingState["Error"] = 1] = "Error";
+    NodeOperatingState[NodeOperatingState["NotUsed"] = 2] = "NotUsed";
+    NodeOperatingState[NodeOperatingState["WaitingForPower"] = 3] = "WaitingForPower";
+    NodeOperatingState[NodeOperatingState["Executing"] = 4] = "Executing";
+    NodeOperatingState[NodeOperatingState["Done"] = 5] = "Done";
+    NodeOperatingState[NodeOperatingState["Unknown"] = 255] = "Unknown";
+})(NodeOperatingState = exports.NodeOperatingState || (exports.NodeOperatingState = {}));
+class ActuatorAlias {
+    constructor(AliasType, AliasValue) {
+        this.AliasType = AliasType;
+        this.AliasValue = AliasValue;
+    }
+}
+exports.ActuatorAlias = ActuatorAlias;
 //# sourceMappingURL=GW_SYSTEMTABLE_DATA.js.map

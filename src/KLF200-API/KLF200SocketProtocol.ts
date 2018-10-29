@@ -18,7 +18,7 @@ export class KLF200SocketProtocol {
     private state: KLF200SocketProtocolState = KLF200SocketProtocolState.Invalid;
     private queue: Buffer[] = [];
 
-    constructor(socket: Socket, handler: Listener<IGW_FRAME_RCV>) {
+    constructor(readonly socket: Socket, handler: Listener<IGW_FRAME_RCV>) {
         this.addHandler(handler);
 
         socket.on("data", (data) =>  this.processData(data));
@@ -79,5 +79,10 @@ export class KLF200SocketProtocol {
         const frameBuffer = KLF200Protocol.Decode(SLIPProtocol.Decode(data));
         const frame = await FrameRcvFactory.CreateRcvFrame(frameBuffer);
         onFrameReceived.emit(frame);
+    }
+
+    write(data: Buffer): boolean {
+        const slipBuffer = SLIPProtocol.Encode(KLF200Protocol.Encode(data));
+        return this.socket.write(slipBuffer);
     }
 }

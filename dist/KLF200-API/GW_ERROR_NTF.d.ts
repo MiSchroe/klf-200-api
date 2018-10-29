@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { GW_FRAME_NTF } from "./common";
 export declare enum GW_ERROR {
     NotFurtherDefined = 0,
@@ -10,4 +11,5 @@ export declare enum GW_ERROR {
 }
 export declare class GW_ERROR_NTF extends GW_FRAME_NTF {
     readonly ErrorNumber: GW_ERROR;
+    constructor(Data: Buffer);
 }

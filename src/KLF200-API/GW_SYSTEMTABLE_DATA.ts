@@ -46,15 +46,19 @@ export enum Manufacturer {
     Atlantic_Group = 12
 }
 
+export function splitActuatorType(value: number): { ActuatorType: ActuatorType, ActuatorSubType: number } {
+    return { ActuatorType: <ActuatorType>(value >>> 5), ActuatorSubType: value & 0x3F };
+}
+
 export class SystemTableDataEntry {
     constructor(data: Buffer) {
         this.Data = data;
         this.SystemTableIndex = data.readUInt8(0);
         this.ActuatorAddress = data.readUInt8(1) * 65536 + data.readUInt8(2) * 256 + data.readUInt8(3);
         this.ActuatorType = data.readUInt16BE(4) >>> 5;
-        this.ActuatorSubType = data.readUInt8(5) && 0x3F;
+        this.ActuatorSubType = data.readUInt8(5) & 0x3F;
         const byte6 = data.readUInt8(6);
-        this.PowerSaveMode = byte6 && 0x03;
+        this.PowerSaveMode = byte6 & 0x03;
         this.ioMembership = (byte6 & 0x04) === 0x04;
         this.RFSupport = (byte6 & 0x08) === 0x08;
         switch (byte6 >>> 6) {
@@ -92,4 +96,33 @@ export class SystemTableDataEntry {
     readonly ActuatorTurnaroundTime: number;
     readonly Manufacturer: Manufacturer;
     readonly BackboneReferenceNumber: number;
+}
+
+export enum Velocity {
+    Default = 0,
+    Silent = 1,
+    Fast = 2,
+    NotAvailable = 255
+}
+
+export enum NodeVariation {
+    NotSet = 0,
+    TopHung = 1,
+    Kip = 2,
+    FlatRoof = 3,
+    SkyLight = 4
+}
+
+export enum NodeOperatingState {
+    NonExecuting = 0,
+    Error = 1,
+    NotUsed = 2,
+    WaitingForPower = 3,
+    Executing = 4,
+    Done = 5,
+    Unknown = 255
+}
+
+export class ActuatorAlias {
+    constructor(readonly AliasType: number, readonly AliasValue: number) {}
 }

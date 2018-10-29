@@ -42,6 +42,10 @@ export declare enum Manufacturer {
     OVERKIZ = 11,
     Atlantic_Group = 12
 }
+export declare function splitActuatorType(value: number): {
+    ActuatorType: ActuatorType;
+    ActuatorSubType: number;
+};
 export declare class SystemTableDataEntry {
     constructor(data: Buffer);
     readonly Data: Buffer;
@@ -55,4 +59,31 @@ export declare class SystemTableDataEntry {
     readonly ActuatorTurnaroundTime: number;
     readonly Manufacturer: Manufacturer;
     readonly BackboneReferenceNumber: number;
+}
+export declare enum Velocity {
+    Default = 0,
+    Silent = 1,
+    Fast = 2,
+    NotAvailable = 255
+}
+export declare enum NodeVariation {
+    NotSet = 0,
+    TopHung = 1,
+    Kip = 2,
+    FlatRoof = 3,
+    SkyLight = 4
+}
+export declare enum NodeOperatingState {
+    NonExecuting = 0,
+    Error = 1,
+    NotUsed = 2,
+    WaitingForPower = 3,
+    Executing = 4,
+    Done = 5,
+    Unknown = 255
+}
+export declare class ActuatorAlias {
+    readonly AliasType: number;
+    readonly AliasValue: number;
+    constructor(AliasType: number, AliasValue: number);
 }

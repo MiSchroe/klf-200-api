@@ -4,6 +4,7 @@ import { Socket } from "net";
 import { Listener } from "../utils/TypedEvent";
 export declare type FrameReceivedHandler = (frame: IGW_FRAME_RCV) => void;
 export declare class KLF200SocketProtocol {
+    readonly socket: Socket;
     private state;
     private queue;
     constructor(socket: Socket, handler: Listener<IGW_FRAME_RCV>);
@@ -11,4 +12,5 @@ export declare class KLF200SocketProtocol {
     addHandler(handler: Listener<IGW_FRAME_RCV>): void;
     removeHandler(handler: Listener<IGW_FRAME_RCV>): void;
     send(data: Buffer): Promise<void>;
+    write(data: Buffer): boolean;
 }
