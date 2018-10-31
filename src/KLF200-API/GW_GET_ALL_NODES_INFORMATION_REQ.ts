@@ -2,7 +2,7 @@
 
 import { GW_FRAME_REQ } from "./common";
 
-export class GW_HOUSE_STATUS_MONITOR_ENABLE_REQ extends GW_FRAME_REQ {
+export class GW_GET_ALL_NODES_INFORMATION_REQ extends GW_FRAME_REQ {
     constructor() {
         super();
     }
