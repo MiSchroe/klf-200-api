@@ -28,7 +28,7 @@ export class GW_GET_ALL_GROUPS_INFORMATION_NTF extends GW_FRAME_NTF {
         this.GroupType = this.Data.readUInt8(70);
         this.Revision = this.Data.readUInt16BE(97);
 
-        if (this.GroupType === GroupType.UserGroup) {
+        if ([GroupType.UserGroup, GroupType.All].indexOf(this.GroupType) !== -1) {
             this.Nodes = bitArrayToArray(this.Data.slice(72, 97));
         }
         else

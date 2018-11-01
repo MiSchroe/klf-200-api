@@ -22,6 +22,10 @@ export * from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF";
 export * from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_REQ";
 export * from "./KLF200-API/GW_GET_GROUP_INFORMATION_CFM";
 export * from "./KLF200-API/GW_GET_GROUP_INFORMATION_REQ";
+export * from "./KLF200-API/GW_NEW_GROUP_REQ";
+export * from "./KLF200-API/GW_NEW_GROUP_CFM";
+export * from "./KLF200-API/GW_COMMAND";
+export * from "./KLF200-API/GW_COMMAND_SEND_REQ";
 
 // const connection = require('./src/connection');
 // const scenes = require('./src/scenes');

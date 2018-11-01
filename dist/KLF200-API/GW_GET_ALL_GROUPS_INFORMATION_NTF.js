@@ -14,7 +14,7 @@ class GW_GET_ALL_GROUPS_INFORMATION_NTF extends common_1.GW_FRAME_NTF {
         this.NodeVariation = this.Data.readUInt8(69);
         this.GroupType = this.Data.readUInt8(70);
         this.Revision = this.Data.readUInt16BE(97);
-        if (this.GroupType === GW_GROUPS_1.GroupType.UserGroup) {
+        if ([GW_GROUPS_1.GroupType.UserGroup, GW_GROUPS_1.GroupType.All].indexOf(this.GroupType) !== -1) {
             this.Nodes = BitArray_1.bitArrayToArray(this.Data.slice(72, 97));
         }
         else {
