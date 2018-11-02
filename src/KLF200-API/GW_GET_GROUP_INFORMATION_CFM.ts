@@ -1,11 +1,11 @@
 'use strict';
 
-import { GW_FRAME_NTF, readZString } from "./common";
+import { GW_FRAME_NTF, readZString, GW_FRAME_CFM } from "./common";
 import { Velocity, NodeVariation } from "./GW_SYSTEMTABLE_DATA";
 import { GroupType } from "./GW_GROUPS";
 import { bitArrayToArray } from "../utils/BitArray";
 
-export class GW_GET_GROUP_INFORMATION_CFM extends GW_FRAME_NTF {
+export class GW_GET_GROUP_INFORMATION_CFM extends GW_FRAME_CFM {
     public readonly GroupID: number;
     public readonly Order: number;
     public readonly Placement: number;

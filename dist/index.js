@@ -29,4 +29,8 @@ __export(require("./KLF200-API/GW_NEW_GROUP_REQ"));
 __export(require("./KLF200-API/GW_NEW_GROUP_CFM"));
 __export(require("./KLF200-API/GW_COMMAND"));
 __export(require("./KLF200-API/GW_COMMAND_SEND_REQ"));
+__export(require("./KLF200-API/GW_COMMAND_SEND_CFM"));
+__export(require("./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF"));
+__export(require("./KLF200-API/GW_COMMAND_RUN_STATUS_NTF"));
+__export(require("./KLF200-API/GW_SESSION_FINISHED_NTF"));
 //# sourceMappingURL=index.js.map

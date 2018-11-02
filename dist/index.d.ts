@@ -24,3 +24,7 @@ export * from "./KLF200-API/GW_NEW_GROUP_REQ";
 export * from "./KLF200-API/GW_NEW_GROUP_CFM";
 export * from "./KLF200-API/GW_COMMAND";
 export * from "./KLF200-API/GW_COMMAND_SEND_REQ";
+export * from "./KLF200-API/GW_COMMAND_SEND_CFM";
+export * from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF";
+export * from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF";
+export * from "./KLF200-API/GW_SESSION_FINISHED_NTF";

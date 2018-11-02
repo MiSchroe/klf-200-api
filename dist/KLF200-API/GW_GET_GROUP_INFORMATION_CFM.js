@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./common");
 const GW_GROUPS_1 = require("./GW_GROUPS");
 const BitArray_1 = require("../utils/BitArray");
-class GW_GET_GROUP_INFORMATION_CFM extends common_1.GW_FRAME_NTF {
+class GW_GET_GROUP_INFORMATION_CFM extends common_1.GW_FRAME_CFM {
     constructor(Data) {
         super(Data);
         this.GroupID = this.Data.readUInt8(0);
