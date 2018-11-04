@@ -1,9 +1,5 @@
 import { GW_FRAME_REQ } from "./common";
-import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelLock } from "./GW_COMMAND";
-export declare type FunctionalParameter = {
-    ID: number;
-    Value: number;
-};
+import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelLock, FunctionalParameter } from "./GW_COMMAND";
 export declare class GW_COMMAND_SEND_REQ extends GW_FRAME_REQ {
     readonly Nodes: number[] | number;
     readonly MainValue: number;

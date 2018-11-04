@@ -36,6 +36,8 @@ class GW_COMMAND_SEND_REQ extends common_1.GW_FRAME_REQ {
             }
             buff.writeUInt16BE(functionalParameter.Value, 9 + 2 * functionalParameterID);
         }
+        buff.writeUInt8(FPI1, 5);
+        buff.writeUInt8(FPI2, 6);
         buff.writeUInt16BE(this.MainValue, 7);
         // Multiple nodes are provided
         if (util_1.isArray(this.Nodes)) {

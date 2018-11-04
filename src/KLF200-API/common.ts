@@ -48,8 +48,8 @@ export enum GatewayCommand {
     GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ      = 0x0119,    // Request one or more actuator to open for configuration.
     GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM      = 0x011A,    // Acknowledge to GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ.
     GW_GET_NODE_INFORMATION_REQ                = 0x0200,    // Request extended information of one specific actuator node.
-    GW_GET_NODE_INFORMATION_NTF                = 0x0201,    // Acknowledge to GW_GET_NODE_INFORMATION_REQ.
-    GW_GET_NODE_INFORMATION_CFM                = 0x0210,    // Acknowledge to GW_GET_NODE_INFORMATION_REQ.
+    GW_GET_NODE_INFORMATION_CFM                = 0x0201,    // Acknowledge to GW_GET_NODE_INFORMATION_REQ.
+    GW_GET_NODE_INFORMATION_NTF                = 0x0210,    // Acknowledge to GW_GET_NODE_INFORMATION_REQ.
     GW_GET_ALL_NODES_INFORMATION_REQ           = 0x0202,    // Request extended information of all nodes.
     GW_GET_ALL_NODES_INFORMATION_CFM           = 0x0203,    // Acknowledge to GW_GET_ALL_NODES_INFORMATION_REQ
     GW_GET_ALL_NODES_INFORMATION_NTF           = 0x0204,    // Acknowledge to GW_GET_ALL_NODES_INFORMATION_REQ. Holds node information

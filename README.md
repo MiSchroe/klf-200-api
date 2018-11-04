@@ -1,15 +1,22 @@
 # klf-200-api
-This module provides a wrapper to the REST API of a KLF-200 interface.
+This module provides a wrapper to the official API of a KLF-200 interface.
 
 ## Installation
 ```
 npm install klf-200-api --save
 ```
 
+### Generate Certificate
+```
+echo -n | openssl s_client -connect <your ip adress>:51200 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > velux-c
+ert.pem
+```
+
 ## Usage
 
 The KLF-200 interface provides a list of connected products and a list of scenarios.
-The interface is intended to be used with wired switches but by defining scenarios you can leverage the internal REST-API of the interface to run a scenario.
+The interface is intended to be used with wired switches but there is an
+official interface that works on sockets to control the connected products.
 
 To work with this module you have to complete the following tasks:
 
@@ -65,21 +72,21 @@ conn.loginAsync('velux123')
 [ ] GW_REBOOT_CFM                              
 [ ] GW_SET_FACTORY_DEFAULT_REQ                 
 [ ] GW_SET_FACTORY_DEFAULT_CFM                 
-[ ] GW_GET_VERSION_REQ                         
-[ ] GW_GET_VERSION_CFM                         
-[ ] GW_GET_PROTOCOL_VERSION_REQ                
-[ ] GW_GET_PROTOCOL_VERSION_CFM                
-[ ] GW_GET_STATE_REQ                           
-[ ] GW_GET_STATE_CFM                           
+[x] GW_GET_VERSION_REQ                         
+[x] GW_GET_VERSION_CFM                         
+[x] GW_GET_PROTOCOL_VERSION_REQ                
+[x] GW_GET_PROTOCOL_VERSION_CFM                
+[x] GW_GET_STATE_REQ                           
+[x] GW_GET_STATE_CFM                           
 [ ] GW_LEAVE_LEARN_STATE_REQ                   
 [ ] GW_LEAVE_LEARN_STATE_CFM                   
 [ ] GW_GET_NETWORK_SETUP_REQ                   
 [ ] GW_GET_NETWORK_SETUP_CFM                   
 [ ] GW_SET_NETWORK_SETUP_REQ                   
 [ ] GW_SET_NETWORK_SETUP_CFM                   
-[ ] GW_CS_GET_SYSTEMTABLE_DATA_REQ             
-[ ] GW_CS_GET_SYSTEMTABLE_DATA_CFM             
-[ ] GW_CS_GET_SYSTEMTABLE_DATA_NTF             
+[x] GW_CS_GET_SYSTEMTABLE_DATA_REQ             
+[x] GW_CS_GET_SYSTEMTABLE_DATA_CFM             
+[x] GW_CS_GET_SYSTEMTABLE_DATA_NTF             
 [ ] GW_CS_DISCOVER_NODES_REQ                   
 [ ] GW_CS_DISCOVER_NODES_CFM                   
 [ ] GW_CS_DISCOVER_NODES_NTF                   
@@ -95,7 +102,7 @@ conn.loginAsync('velux123')
 [ ] GW_CS_RECEIVE_KEY_CFM                      
 [ ] GW_CS_RECEIVE_KEY_NTF                      
 [ ] GW_CS_PGC_JOB_NTF                          
-[ ] GW_CS_SYSTEM_TABLE_UPDATE_NTF              
+[x] GW_CS_SYSTEM_TABLE_UPDATE_NTF              
 [ ] GW_CS_GENERATE_NEW_KEY_REQ                 
 [ ] GW_CS_GENERATE_NEW_KEY_CFM                 
 [ ] GW_CS_GENERATE_NEW_KEY_NTF                 
@@ -104,50 +111,48 @@ conn.loginAsync('velux123')
 [ ] GW_CS_REPAIR_KEY_NTF                       
 [ ] GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ      
 [ ] GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM      
-[ ] GW_GET_NODE_INFORMATION_REQ                
-[ ] GW_GET_NODE_INFORMATION_CFM                
-[ ] GW_GET_NODE_INFORMATION_NTF                
-[ ] GW_GET_ALL_NODES_INFORMATION_REQ           
-[ ] GW_GET_ALL_NODES_INFORMATION_CFM           
-[ ] GW_GET_ALL_NODES_INFORMATION_NTF           
-[ ] GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF  
-[ ] GW_SET_NODE_VARIATION_REQ                  
-[ ] GW_SET_NODE_VARIATION_CFM                  
-[ ] GW_SET_NODE_NAME_REQ                       
-[ ] GW_SET_NODE_NAME_CFM                       
-[ ] GW_SET_NODE_VELOCITY_REQ                   
-[ ] GW_SET_NODE_VELOCITY_CFM                   
-[ ] GW_NODE_INFORMATION_CHANGED_NTF            
-[ ] GW_NODE_STATE_POSITION_CHANGED_NTF         
-[ ] GW_SET_NODE_ORDER_AND_PLACEMENT_REQ        
-[ ] GW_SET_NODE_ORDER_AND_PLACEMENT_CFM        
-[ ] GW_GET_GROUP_INFORMATION_REQ               
-[ ] GW_GET_GROUP_INFORMATION_CFM               
-[ ] GW_GET_GROUP_INFORMATION_NTF               
-[ ] GW_SET_GROUP_INFORMATION_REQ               
-[ ] GW_SET_GROUP_INFORMATION_CFM               
-[ ] GW_GROUP_INFORMATION_CHANGED_NTF           
-[ ] GW_DELETE_GROUP_REQ                        
-[ ] GW_DELETE_GROUP_CFM                        
-[ ] GW_NEW_GROUP_REQ                           
-[ ] GW_NEW_GROUP_CFM                           
-[ ] GW_GET_ALL_GROUPS_INFORMATION_REQ          
-[ ] GW_GET_ALL_GROUPS_INFORMATION_CFM          
-[ ] GW_GET_ALL_GROUPS_INFORMATION_NTF          
-[ ] GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF 
-[ ] GW_GROUP_DELETED_NTF                       
-[ ] GW_HOUSE_STATUS_MONITOR_ENABLE_REQ         
-[ ] GW_HOUSE_STATUS_MONITOR_ENABLE_CFM         
-[ ] GW_HOUSE_STATUS_MONITOR_DISABLE_REQ        
-[ ] GW_HOUSE_STATUS_MONITOR_DISABLE_CFM        
-[ ] GW_COMMAND_SEND_REQ                        
-[ ] GW_COMMAND_SEND_CFM                        
-[ ] GW_COMMAND_RUN_STATUS_NTF                  
-[ ] GW_COMMAND_REMAINING_TIME_NTF              
-[ ] GW_SESSION_FINISHED_NTF                    
-[ ] GW_STATUS_REQUEST_REQ                      
-[ ] GW_STATUS_REQUEST_CFM                      
-[ ] GW_STATUS_REQUEST_NTF                      
+[x] GW_GET_NODE_INFORMATION_REQ                
+[x] GW_GET_NODE_INFORMATION_CFM                
+[x] GW_GET_NODE_INFORMATION_NTF                
+[x] GW_GET_ALL_NODES_INFORMATION_REQ           
+[x] GW_GET_ALL_NODES_INFORMATION_CFM           
+[x] GW_GET_ALL_NODES_INFORMATION_NTF           
+[x] GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF  
+[x] GW_SET_NODE_VARIATION_REQ                  
+[x] GW_SET_NODE_VARIATION_CFM                  
+[x] GW_SET_NODE_NAME_REQ                       
+[x] GW_SET_NODE_NAME_CFM                       
+[x] GW_NODE_INFORMATION_CHANGED_NTF            
+[x] GW_NODE_STATE_POSITION_CHANGED_NTF         
+[x] GW_SET_NODE_ORDER_AND_PLACEMENT_REQ        
+[x] GW_SET_NODE_ORDER_AND_PLACEMENT_CFM        
+[x] GW_GET_GROUP_INFORMATION_REQ               
+[x] GW_GET_GROUP_INFORMATION_CFM               
+[x] GW_GET_GROUP_INFORMATION_NTF               
+[x] GW_SET_GROUP_INFORMATION_REQ               
+[x] GW_SET_GROUP_INFORMATION_CFM               
+[x] GW_GROUP_INFORMATION_CHANGED_NTF           
+[x] GW_DELETE_GROUP_REQ                        
+[x] GW_DELETE_GROUP_CFM                        
+[x] GW_NEW_GROUP_REQ                           
+[x] GW_NEW_GROUP_CFM                           
+[x] GW_GET_ALL_GROUPS_INFORMATION_REQ          
+[x] GW_GET_ALL_GROUPS_INFORMATION_CFM          
+[x] GW_GET_ALL_GROUPS_INFORMATION_NTF          
+[x] GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF 
+[x] GW_GROUP_DELETED_NTF                       
+[x] GW_HOUSE_STATUS_MONITOR_ENABLE_REQ         
+[x] GW_HOUSE_STATUS_MONITOR_ENABLE_CFM         
+[x] GW_HOUSE_STATUS_MONITOR_DISABLE_REQ        
+[x] GW_HOUSE_STATUS_MONITOR_DISABLE_CFM        
+[x] GW_COMMAND_SEND_REQ                        
+[x] GW_COMMAND_SEND_CFM                        
+[x] GW_COMMAND_RUN_STATUS_NTF                  
+[x] GW_COMMAND_REMAINING_TIME_NTF              
+[x] GW_SESSION_FINISHED_NTF                    
+[x] GW_STATUS_REQUEST_REQ                      
+[x] GW_STATUS_REQUEST_CFM                      
+[x] GW_STATUS_REQUEST_NTF                      
 [ ] GW_WINK_SEND_REQ                           
 [ ] GW_WINK_SEND_CFM                           
 [ ] GW_WINK_SEND_NTF                           

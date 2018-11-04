@@ -1,13 +1,8 @@
 'use strict';
 
 import { GW_FRAME_REQ } from "./common";
-import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelLock, getNextSessionID, LockTime as lt } from "./GW_COMMAND";
+import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelLock, getNextSessionID, LockTime as lt, FunctionalParameter } from "./GW_COMMAND";
 import { isArray } from "util";
-
-export type FunctionalParameter = {
-    ID: number,
-    Value: number
-}
 
 export class GW_COMMAND_SEND_REQ extends GW_FRAME_REQ {
     private readonly SessionID: number;
@@ -40,7 +35,10 @@ export class GW_COMMAND_SEND_REQ extends GW_FRAME_REQ {
             }
             buff.writeUInt16BE(functionalParameter.Value, 9 + 2 * functionalParameterID);
         }
+        buff.writeUInt8(FPI1, 5);
+        buff.writeUInt8(FPI2, 6);
         buff.writeUInt16BE(this.MainValue, 7);
+
 
         // Multiple nodes are provided
         if (isArray(this.Nodes))

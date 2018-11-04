@@ -12,7 +12,7 @@ export declare class GW_GET_NODE_INFORMATION_NTF extends GW_FRAME_NTF {
     readonly ProductType: number;
     readonly NodeVariation: NodeVariation;
     readonly PowerSaveMode: PowerSaveMode;
-    readonly SerialNumber: string;
+    readonly SerialNumber: Buffer;
     readonly OperatingState: NodeOperatingState;
     readonly CurrentPosition: number;
     readonly TargetPosition: number;

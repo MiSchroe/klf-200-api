@@ -1,7 +1,7 @@
 'use strict';
 
-import { GW_FRAME_NTF, readZString } from "./common";
-import { Velocity, ActuatorType, NodeVariation, PowerSaveMode, NodeOperatingState, ActuatorAlias, splitActuatorType } from "./GW_SYSTEMTABLE_DATA";
+import { GW_FRAME_NTF } from "./common";
+import { NodeOperatingState } from "./GW_SYSTEMTABLE_DATA";
 
 export class GW_NODE_STATE_POSITION_CHANGED_NTF extends GW_FRAME_NTF {
     public readonly NodeID: number;

@@ -14,7 +14,7 @@ export class GW_GET_ALL_NODES_INFORMATION_NTF extends GW_FRAME_NTF {
     public readonly ProductType: number;
     public readonly NodeVariation: NodeVariation;
     public readonly PowerSaveMode: PowerSaveMode;
-    public readonly SerialNumber: string;
+    public readonly SerialNumber: Buffer;
     public readonly OperatingState: NodeOperatingState;
     public readonly CurrentPosition: number;
     public readonly TargetPosition: number;
@@ -40,21 +40,21 @@ export class GW_GET_ALL_NODES_INFORMATION_NTF extends GW_FRAME_NTF {
         this.ProductType = this.Data.readUInt16BE(71);
         this.NodeVariation = this.Data.readUInt8(73);
         this.PowerSaveMode = this.Data.readUInt8(74);
-        this.SerialNumber = readZString(this.Data.slice(75, 83));
-        this.OperatingState = this.Data.readUInt8(83);
-        this.CurrentPosition = this.Data.readUInt16BE(84);
-        this.TargetPosition = this.Data.readUInt16BE(86);
-        this.FunctionalPosition1CurrentPosition = this.Data.readUInt16BE(88);
-        this.FunctionalPosition2CurrentPosition = this.Data.readUInt16BE(90);
-        this.FunctionalPosition3CurrentPosition = this.Data.readUInt16BE(92);
-        this.FunctionalPosition4CurrentPosition = this.Data.readUInt16BE(94);
-        this.RemainingTime = this.Data.readUInt16BE(96);
-        this.TimeStamp = new Date(this.Data.readUInt32BE(98) * 1000);
+        this.SerialNumber = this.Data.slice(75, 83);
+        this.OperatingState = this.Data.readUInt8(84);
+        this.CurrentPosition = this.Data.readUInt16BE(85);
+        this.TargetPosition = this.Data.readUInt16BE(87);
+        this.FunctionalPosition1CurrentPosition = this.Data.readUInt16BE(89);
+        this.FunctionalPosition2CurrentPosition = this.Data.readUInt16BE(91);
+        this.FunctionalPosition3CurrentPosition = this.Data.readUInt16BE(93);
+        this.FunctionalPosition4CurrentPosition = this.Data.readUInt16BE(95);
+        this.RemainingTime = this.Data.readUInt16BE(97);
+        this.TimeStamp = new Date(this.Data.readUInt32BE(99) * 1000);
 
         // Read actuator aliases
-        const numberOfAliases = this.Data.readUInt8(102);
+        const numberOfAliases = this.Data.readUInt8(103);
         for (let index = 0; index < numberOfAliases; index++) {
-            const alias = new ActuatorAlias(this.Data.readUInt16BE(index * 4 + 103), this.Data.readUInt16BE(index * 4 + 104));
+            const alias = new ActuatorAlias(this.Data.readUInt16BE(index * 4 + 104), this.Data.readUInt16BE(index * 4 + 106));
             this.ActuatorAliases.push(alias);
         }
     }

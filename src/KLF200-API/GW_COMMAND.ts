@@ -163,3 +163,8 @@ let sessionID = 0;
 export function getNextSessionID(): number {
     return sessionID++ & 0xFFFF;
 }
+
+export type FunctionalParameter = {
+    ID: number,
+    Value: number
+}

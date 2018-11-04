@@ -128,3 +128,7 @@ export declare enum StatusType {
     RequestMainInfo = 3
 }
 export declare function getNextSessionID(): number;
+export declare type FunctionalParameter = {
+    ID: number;
+    Value: number;
+};
