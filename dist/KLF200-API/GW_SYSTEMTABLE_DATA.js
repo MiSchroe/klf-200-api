@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var ActuatorType;
 (function (ActuatorType) {
+    ActuatorType[ActuatorType["NO_TYPE"] = 0] = "NO_TYPE";
     ActuatorType[ActuatorType["VenetianBlind"] = 1] = "VenetianBlind";
     ActuatorType[ActuatorType["RollerShutter"] = 2] = "RollerShutter";
     ActuatorType[ActuatorType["Awning"] = 3] = "Awning";
@@ -47,7 +48,7 @@ var Manufacturer;
     Manufacturer[Manufacturer["Atlantic_Group"] = 12] = "Atlantic_Group";
 })(Manufacturer = exports.Manufacturer || (exports.Manufacturer = {}));
 function splitActuatorType(value) {
-    return { ActuatorType: (value >>> 5), ActuatorSubType: value & 0x3F };
+    return { ActuatorType: (value >>> 6), ActuatorSubType: value & 0x3F };
 }
 exports.splitActuatorType = splitActuatorType;
 class SystemTableDataEntry {
@@ -55,7 +56,7 @@ class SystemTableDataEntry {
         this.Data = data;
         this.SystemTableIndex = data.readUInt8(0);
         this.ActuatorAddress = data.readUInt8(1) * 65536 + data.readUInt8(2) * 256 + data.readUInt8(3);
-        this.ActuatorType = data.readUInt16BE(4) >>> 5;
+        this.ActuatorType = data.readUInt16BE(4) >>> 6;
         this.ActuatorSubType = data.readUInt8(5) & 0x3F;
         const byte6 = data.readUInt8(6);
         this.PowerSaveMode = byte6 & 0x03;

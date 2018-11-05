@@ -326,8 +326,15 @@ export enum GW_COMMON_STATUS {
     INVALID_NODE_ID = 2
 }
 
+export enum GW_INVERSE_STATUS {
+    ERROR = 0,
+    SUCCESS = 1
+}
+
 const C_COMMAND_SIZE: number = 2;
 const C_BUFFERLEN_SIZE: number = 1;
+
+export const C_MAX_PWD_LENGTH = 32;
 
 export interface IGW_FRAME {
     readonly Command: GatewayCommand;

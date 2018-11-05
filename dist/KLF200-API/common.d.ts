@@ -163,6 +163,11 @@ export declare enum GW_COMMON_STATUS {
     ERROR = 1,
     INVALID_NODE_ID = 2
 }
+export declare enum GW_INVERSE_STATUS {
+    ERROR = 0,
+    SUCCESS = 1
+}
+export declare const C_MAX_PWD_LENGTH = 32;
 export interface IGW_FRAME {
     readonly Command: GatewayCommand;
 }

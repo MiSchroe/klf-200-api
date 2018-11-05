@@ -8,7 +8,6 @@ export class GW_PASSWORD_ENTER_CFM extends GW_FRAME_CFM {
     constructor(Data: Buffer) {
         super(Data);
 
-        const status = this.Data.readUInt8(0);
-        this.Status = <GW_COMMON_STATUS>status;
+        this.Status = this.Data.readUInt8(0);
     }
 }

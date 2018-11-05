@@ -9,9 +9,7 @@ export class GW_GET_NODE_INFORMATION_CFM extends GW_FRAME_CFM {
     constructor(Data: Buffer) {
         super(Data);
 
-        const status = this.Data.readUInt8(0);
-        this.Status = <GW_COMMON_STATUS>status;
-
+        this.Status = this.Data.readUInt8(0);
         this.NodeID = this.Data.readUInt8(1);
     }
 }

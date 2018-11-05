@@ -68,28 +68,28 @@ conn.loginAsync('velux123')
 
 ## Status of implemented messages
 [x] GW_ERROR_NTF                               
-[ ] GW_REBOOT_REQ                              
-[ ] GW_REBOOT_CFM                              
-[ ] GW_SET_FACTORY_DEFAULT_REQ                 
-[ ] GW_SET_FACTORY_DEFAULT_CFM                 
+[x] GW_REBOOT_REQ                              
+[x] GW_REBOOT_CFM                              
+[x] GW_SET_FACTORY_DEFAULT_REQ                 
+[x] GW_SET_FACTORY_DEFAULT_CFM                 
 [x] GW_GET_VERSION_REQ                         
 [x] GW_GET_VERSION_CFM                         
 [x] GW_GET_PROTOCOL_VERSION_REQ                
 [x] GW_GET_PROTOCOL_VERSION_CFM                
 [x] GW_GET_STATE_REQ                           
 [x] GW_GET_STATE_CFM                           
-[ ] GW_LEAVE_LEARN_STATE_REQ                   
-[ ] GW_LEAVE_LEARN_STATE_CFM                   
-[ ] GW_GET_NETWORK_SETUP_REQ                   
-[ ] GW_GET_NETWORK_SETUP_CFM                   
-[ ] GW_SET_NETWORK_SETUP_REQ                   
-[ ] GW_SET_NETWORK_SETUP_CFM                   
+[x] GW_LEAVE_LEARN_STATE_REQ                   
+[x] GW_LEAVE_LEARN_STATE_CFM                   
+[x] GW_GET_NETWORK_SETUP_REQ                   
+[x] GW_GET_NETWORK_SETUP_CFM                   
+[x] GW_SET_NETWORK_SETUP_REQ                   
+[x] GW_SET_NETWORK_SETUP_CFM                   
 [x] GW_CS_GET_SYSTEMTABLE_DATA_REQ             
 [x] GW_CS_GET_SYSTEMTABLE_DATA_CFM             
 [x] GW_CS_GET_SYSTEMTABLE_DATA_NTF             
-[ ] GW_CS_DISCOVER_NODES_REQ                   
-[ ] GW_CS_DISCOVER_NODES_CFM                   
-[ ] GW_CS_DISCOVER_NODES_NTF                   
+[x] GW_CS_DISCOVER_NODES_REQ                   
+[x] GW_CS_DISCOVER_NODES_CFM                   
+[x] GW_CS_DISCOVER_NODES_NTF                   
 [ ] GW_CS_REMOVE_NODES_REQ                     
 [ ] GW_CS_REMOVE_NODES_CFM                     
 [ ] GW_CS_VIRGIN_STATE_REQ                     
@@ -206,17 +206,17 @@ conn.loginAsync('velux123')
 [ ] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ   
 [ ] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF   
 [ ] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM   
-[ ] GW_SET_UTC_REQ                             
-[ ] GW_SET_UTC_CFM                             
-[ ] GW_RTC_SET_TIME_ZONE_REQ                   
-[ ] GW_RTC_SET_TIME_ZONE_CFM                   
-[ ] GW_GET_LOCAL_TIME_REQ                      
-[ ] GW_GET_LOCAL_TIME_CFM                      
+[x] GW_SET_UTC_REQ                             
+[x] GW_SET_UTC_CFM                             
+[x] GW_RTC_SET_TIME_ZONE_REQ                   
+[x] GW_RTC_SET_TIME_ZONE_CFM                   
+[x] GW_GET_LOCAL_TIME_REQ                      
+[x] GW_GET_LOCAL_TIME_CFM                      
 [x] GW_PASSWORD_ENTER_REQ                      
 [x] GW_PASSWORD_ENTER_CFM                      
-[ ] GW_PASSWORD_CHANGE_REQ                     
-[ ] GW_PASSWORD_CHANGE_CFM                     
-[ ] GW_PASSWORD_CHANGE_NTF                     
+[x] GW_PASSWORD_CHANGE_REQ                     
+[x] GW_PASSWORD_CHANGE_CFM                     
+[x] GW_PASSWORD_CHANGE_NTF                     
 
 ## Changelog
 ### 3.0.0

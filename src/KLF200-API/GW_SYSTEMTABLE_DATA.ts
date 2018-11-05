@@ -1,6 +1,7 @@
 'use strict';
 
 export enum ActuatorType {
+    NO_TYPE = 0,
     VenetianBlind = 1,
     RollerShutter = 2,
     Awning = 3,
@@ -47,7 +48,7 @@ export enum Manufacturer {
 }
 
 export function splitActuatorType(value: number): { ActuatorType: ActuatorType, ActuatorSubType: number } {
-    return { ActuatorType: <ActuatorType>(value >>> 5), ActuatorSubType: value & 0x3F };
+    return { ActuatorType: <ActuatorType>(value >>> 6), ActuatorSubType: value & 0x3F };
 }
 
 export class SystemTableDataEntry {
@@ -55,7 +56,7 @@ export class SystemTableDataEntry {
         this.Data = data;
         this.SystemTableIndex = data.readUInt8(0);
         this.ActuatorAddress = data.readUInt8(1) * 65536 + data.readUInt8(2) * 256 + data.readUInt8(3);
-        this.ActuatorType = data.readUInt16BE(4) >>> 5;
+        this.ActuatorType = data.readUInt16BE(4) >>> 6;
         this.ActuatorSubType = data.readUInt8(5) & 0x3F;
         const byte6 = data.readUInt8(6);
         this.PowerSaveMode = byte6 & 0x03;

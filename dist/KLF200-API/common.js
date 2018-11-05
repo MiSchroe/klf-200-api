@@ -162,8 +162,14 @@ var GW_COMMON_STATUS;
     GW_COMMON_STATUS[GW_COMMON_STATUS["ERROR"] = 1] = "ERROR";
     GW_COMMON_STATUS[GW_COMMON_STATUS["INVALID_NODE_ID"] = 2] = "INVALID_NODE_ID";
 })(GW_COMMON_STATUS = exports.GW_COMMON_STATUS || (exports.GW_COMMON_STATUS = {}));
+var GW_INVERSE_STATUS;
+(function (GW_INVERSE_STATUS) {
+    GW_INVERSE_STATUS[GW_INVERSE_STATUS["ERROR"] = 0] = "ERROR";
+    GW_INVERSE_STATUS[GW_INVERSE_STATUS["SUCCESS"] = 1] = "SUCCESS";
+})(GW_INVERSE_STATUS = exports.GW_INVERSE_STATUS || (exports.GW_INVERSE_STATUS = {}));
 const C_COMMAND_SIZE = 2;
 const C_BUFFERLEN_SIZE = 1;
+exports.C_MAX_PWD_LENGTH = 32;
 class GW_FRAME {
     constructor() {
         this.Command = GatewayCommand[this.constructor.name];
