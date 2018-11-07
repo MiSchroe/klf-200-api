@@ -90,27 +90,27 @@ conn.loginAsync('velux123')
 [x] GW_CS_DISCOVER_NODES_REQ                   
 [x] GW_CS_DISCOVER_NODES_CFM                   
 [x] GW_CS_DISCOVER_NODES_NTF                   
-[ ] GW_CS_REMOVE_NODES_REQ                     
-[ ] GW_CS_REMOVE_NODES_CFM                     
-[ ] GW_CS_VIRGIN_STATE_REQ                     
-[ ] GW_CS_VIRGIN_STATE_CFM                     
-[ ] GW_CS_CONTROLLER_COPY_REQ                  
-[ ] GW_CS_CONTROLLER_COPY_CFM                  
-[ ] GW_CS_CONTROLLER_COPY_NTF                  
-[ ] GW_CS_CONTROLLER_COPY_CANCEL_NTF           
-[ ] GW_CS_RECEIVE_KEY_REQ                      
-[ ] GW_CS_RECEIVE_KEY_CFM                      
-[ ] GW_CS_RECEIVE_KEY_NTF                      
-[ ] GW_CS_PGC_JOB_NTF                          
+[x] GW_CS_REMOVE_NODES_REQ                     
+[x] GW_CS_REMOVE_NODES_CFM                     
+[x] GW_CS_VIRGIN_STATE_REQ                     
+[x] GW_CS_VIRGIN_STATE_CFM                     
+[x] GW_CS_CONTROLLER_COPY_REQ                  
+[x] GW_CS_CONTROLLER_COPY_CFM                  
+[x] GW_CS_CONTROLLER_COPY_NTF                  
+[x] GW_CS_CONTROLLER_COPY_CANCEL_NTF           
+[x] GW_CS_RECEIVE_KEY_REQ                      
+[x] GW_CS_RECEIVE_KEY_CFM                      
+[x] GW_CS_RECEIVE_KEY_NTF                      
+[x] GW_CS_PGC_JOB_NTF                          
 [x] GW_CS_SYSTEM_TABLE_UPDATE_NTF              
-[ ] GW_CS_GENERATE_NEW_KEY_REQ                 
-[ ] GW_CS_GENERATE_NEW_KEY_CFM                 
-[ ] GW_CS_GENERATE_NEW_KEY_NTF                 
-[ ] GW_CS_REPAIR_KEY_REQ                       
-[ ] GW_CS_REPAIR_KEY_CFM                       
-[ ] GW_CS_REPAIR_KEY_NTF                       
-[ ] GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ      
-[ ] GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM      
+[x] GW_CS_GENERATE_NEW_KEY_REQ                 
+[x] GW_CS_GENERATE_NEW_KEY_CFM                 
+[x] GW_CS_GENERATE_NEW_KEY_NTF                 
+[x] GW_CS_REPAIR_KEY_REQ                       
+[x] GW_CS_REPAIR_KEY_CFM                       
+[x] GW_CS_REPAIR_KEY_NTF                       
+[x] GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ      
+[x] GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM      
 [x] GW_GET_NODE_INFORMATION_REQ                
 [x] GW_GET_NODE_INFORMATION_CFM                
 [x] GW_GET_NODE_INFORMATION_NTF                
@@ -153,17 +153,17 @@ conn.loginAsync('velux123')
 [x] GW_STATUS_REQUEST_REQ                      
 [x] GW_STATUS_REQUEST_CFM                      
 [x] GW_STATUS_REQUEST_NTF                      
-[ ] GW_WINK_SEND_REQ                           
-[ ] GW_WINK_SEND_CFM                           
-[ ] GW_WINK_SEND_NTF                           
-[ ] GW_SET_LIMITATION_REQ                      
-[ ] GW_SET_LIMITATION_CFM                      
-[ ] GW_GET_LIMITATION_STATUS_REQ               
-[ ] GW_GET_LIMITATION_STATUS_CFM               
-[ ] GW_LIMITATION_STATUS_NTF                   
-[ ] GW_MODE_SEND_REQ                           
-[ ] GW_MODE_SEND_CFM                           
-[ ] GW_MODE_SEND_NTF                           
+[x] GW_WINK_SEND_REQ                           
+[x] GW_WINK_SEND_CFM                           
+[x] GW_WINK_SEND_NTF                           
+[x] GW_SET_LIMITATION_REQ                      
+[x] GW_SET_LIMITATION_CFM                      
+[x] GW_GET_LIMITATION_STATUS_REQ \(this one throws invalid frame error\)
+[x] GW_GET_LIMITATION_STATUS_CFM               
+[x] GW_LIMITATION_STATUS_NTF                   
+[x] GW_MODE_SEND_REQ                           
+[x] GW_MODE_SEND_CFM                           
+[ ] GW_MODE_SEND_NTF \(not documented and not received\)
 [ ] GW_INITIALIZE_SCENE_REQ                    
 [ ] GW_INITIALIZE_SCENE_CFM                    
 [ ] GW_INITIALIZE_SCENE_NTF                    
@@ -196,16 +196,16 @@ conn.loginAsync('velux123')
 [ ] GW_SET_CONTACT_INPUT_LINK_CFM              
 [ ] GW_REMOVE_CONTACT_INPUT_LINK_REQ           
 [ ] GW_REMOVE_CONTACT_INPUT_LINK_CFM           
-[ ] GW_GET_ACTIVATION_LOG_HEADER_REQ           
-[ ] GW_GET_ACTIVATION_LOG_HEADER_CFM           
-[ ] GW_CLEAR_ACTIVATION_LOG_REQ                
-[ ] GW_CLEAR_ACTIVATION_LOG_CFM                
-[ ] GW_GET_ACTIVATION_LOG_LINE_REQ             
-[ ] GW_GET_ACTIVATION_LOG_LINE_CFM             
-[ ] GW_ACTIVATION_LOG_UPDATED_NTF              
-[ ] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ   
-[ ] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF   
-[ ] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM   
+[x] GW_GET_ACTIVATION_LOG_HEADER_REQ           
+[x] GW_GET_ACTIVATION_LOG_HEADER_CFM           
+[x] GW_CLEAR_ACTIVATION_LOG_REQ                
+[x] GW_CLEAR_ACTIVATION_LOG_CFM                
+[x] GW_GET_ACTIVATION_LOG_LINE_REQ             
+[x] GW_GET_ACTIVATION_LOG_LINE_CFM             
+[x] GW_ACTIVATION_LOG_UPDATED_NTF              
+[x] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ   
+[x] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF   
+[x] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM   
 [x] GW_SET_UTC_REQ                             
 [x] GW_SET_UTC_CFM                             
 [x] GW_RTC_SET_TIME_ZONE_REQ                   

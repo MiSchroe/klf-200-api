@@ -168,3 +168,18 @@ export type FunctionalParameter = {
     ID: number,
     Value: number
 }
+
+export enum LimitationType {
+    MinimumLimitation = 0,
+    MaximumLimitation = 1
+}
+
+export enum ModeStatus {
+    OK = 0,
+    CommandRejected,
+    UnknownClientID,
+    sessionIDInUse,
+    Busy,
+    IllegalParameterValue,
+    Failed = 255
+}

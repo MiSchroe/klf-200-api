@@ -157,4 +157,19 @@ function getNextSessionID() {
     return sessionID++ & 0xFFFF;
 }
 exports.getNextSessionID = getNextSessionID;
+var LimitationType;
+(function (LimitationType) {
+    LimitationType[LimitationType["MinimumLimitation"] = 0] = "MinimumLimitation";
+    LimitationType[LimitationType["MaximumLimitation"] = 1] = "MaximumLimitation";
+})(LimitationType = exports.LimitationType || (exports.LimitationType = {}));
+var ModeStatus;
+(function (ModeStatus) {
+    ModeStatus[ModeStatus["OK"] = 0] = "OK";
+    ModeStatus[ModeStatus["CommandRejected"] = 1] = "CommandRejected";
+    ModeStatus[ModeStatus["UnknownClientID"] = 2] = "UnknownClientID";
+    ModeStatus[ModeStatus["sessionIDInUse"] = 3] = "sessionIDInUse";
+    ModeStatus[ModeStatus["Busy"] = 4] = "Busy";
+    ModeStatus[ModeStatus["IllegalParameterValue"] = 5] = "IllegalParameterValue";
+    ModeStatus[ModeStatus["Failed"] = 255] = "Failed";
+})(ModeStatus = exports.ModeStatus || (exports.ModeStatus = {}));
 //# sourceMappingURL=GW_COMMAND.js.map
