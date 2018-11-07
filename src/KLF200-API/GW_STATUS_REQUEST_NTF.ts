@@ -1,7 +1,7 @@
 'use strict';
 
 import { GW_FRAME_NTF } from "./common";
-import { StatusOwner, ParameterActive, RunStatus, StatusReply, StatusType, FunctionalParameter, CommandOriginator } from "./GW_COMMAND";
+import { StatusOwner, RunStatus, StatusReply, StatusType, FunctionalParameter, CommandOriginator } from "./GW_COMMAND";
 
 export class GW_STATUS_REQUEST_NTF extends GW_FRAME_NTF {
     public readonly SessionID: number;

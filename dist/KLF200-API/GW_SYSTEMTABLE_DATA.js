@@ -115,4 +115,21 @@ class ActuatorAlias {
     }
 }
 exports.ActuatorAlias = ActuatorAlias;
+var ControllerCopyMode;
+(function (ControllerCopyMode) {
+    ControllerCopyMode[ControllerCopyMode["TransmittingConfigurationMode"] = 0] = "TransmittingConfigurationMode";
+    ControllerCopyMode[ControllerCopyMode["ReceivingConfigurationMode"] = 1] = "ReceivingConfigurationMode";
+})(ControllerCopyMode = exports.ControllerCopyMode || (exports.ControllerCopyMode = {}));
+var ChangeKeyStatus;
+(function (ChangeKeyStatus) {
+    ChangeKeyStatus[ChangeKeyStatus["OK_KeyChangeClientController"] = 0] = "OK_KeyChangeClientController";
+    ChangeKeyStatus[ChangeKeyStatus["OK_AllNodesUpdated"] = 2] = "OK_AllNodesUpdated";
+    ChangeKeyStatus[ChangeKeyStatus["OK_PartialNodesUpdated"] = 3] = "OK_PartialNodesUpdated";
+    ChangeKeyStatus[ChangeKeyStatus["OK_ClientControllerReceivedKey"] = 5] = "OK_ClientControllerReceivedKey";
+    ChangeKeyStatus[ChangeKeyStatus["Failed_LocalStimuliNotDisabled"] = 7] = "Failed_LocalStimuliNotDisabled";
+    ChangeKeyStatus[ChangeKeyStatus["Failed_NoControllerFound"] = 9] = "Failed_NoControllerFound";
+    ChangeKeyStatus[ChangeKeyStatus["Failed_DTSNotReady"] = 10] = "Failed_DTSNotReady";
+    ChangeKeyStatus[ChangeKeyStatus["Failed_DTSError"] = 11] = "Failed_DTSError";
+    ChangeKeyStatus[ChangeKeyStatus["Failed_CSNotReady"] = 16] = "Failed_CSNotReady";
+})(ChangeKeyStatus = exports.ChangeKeyStatus || (exports.ChangeKeyStatus = {}));
 //# sourceMappingURL=GW_SYSTEMTABLE_DATA.js.map

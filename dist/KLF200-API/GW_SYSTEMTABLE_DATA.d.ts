@@ -88,3 +88,18 @@ export declare class ActuatorAlias {
     readonly AliasValue: number;
     constructor(AliasType: number, AliasValue: number);
 }
+export declare enum ControllerCopyMode {
+    TransmittingConfigurationMode = 0,
+    ReceivingConfigurationMode = 1
+}
+export declare enum ChangeKeyStatus {
+    OK_KeyChangeClientController = 0,
+    OK_AllNodesUpdated = 2,
+    OK_PartialNodesUpdated = 3,
+    OK_ClientControllerReceivedKey = 5,
+    Failed_LocalStimuliNotDisabled = 7,
+    Failed_NoControllerFound = 9,
+    Failed_DTSNotReady = 10,
+    Failed_DTSError = 11,
+    Failed_CSNotReady = 16
+}
