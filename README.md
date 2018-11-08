@@ -179,14 +179,14 @@ conn.loginAsync('velux123')
 [x] GW_GET_SCENE_LIST_REQ                      
 [x] GW_GET_SCENE_LIST_CFM                      
 [x] GW_GET_SCENE_LIST_NTF                      
-[ ] GW_GET_SCENE_INFOAMATION_REQ               
-[ ] GW_GET_SCENE_INFOAMATION_CFM               
-[ ] GW_GET_SCENE_INFOAMATION_NTF               
+[x] GW_GET_SCENE_INFOAMATION_REQ               
+[x] GW_GET_SCENE_INFOAMATION_CFM               
+[x] GW_GET_SCENE_INFOAMATION_NTF               
 [ ] GW_ACTIVATE_SCENE_REQ                      
 [ ] GW_ACTIVATE_SCENE_CFM                      
 [ ] GW_STOP_SCENE_REQ                          
 [ ] GW_STOP_SCENE_CFM                          
-[ ] GW_SCENE_INFORMATION_CHANGED_NTF           
+[x] GW_SCENE_INFORMATION_CHANGED_NTF           
 [x] GW_ACTIVATE_PRODUCTGROUP_REQ               
 [x] GW_ACTIVATE_PRODUCTGROUP_CFM               
 [ ] GW_ACTIVATE_PRODUCTGROUP_NTF \(not documented and not received\)

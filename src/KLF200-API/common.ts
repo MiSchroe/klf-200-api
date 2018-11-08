@@ -117,9 +117,9 @@ export enum GatewayCommand {
     GW_GET_SCENE_LIST_REQ                      = 0x040C,    // Request a list of scenes.
     GW_GET_SCENE_LIST_CFM                      = 0x040D,    // Acknowledge to GW_GET_SCENE_LIST.
     GW_GET_SCENE_LIST_NTF                      = 0x040E,    // Acknowledge to GW_GET_SCENE_LIST.
-    GW_GET_SCENE_INFOAMATION_REQ               = 0x040F,    // Request extended information for one given scene.
-    GW_GET_SCENE_INFOAMATION_CFM               = 0x0410,    // Acknowledge to GW_GET_SCENE_INFOAMATION_REQ.
-    GW_GET_SCENE_INFOAMATION_NTF               = 0x0411,    // Acknowledge to GW_GET_SCENE_INFOAMATION_REQ.
+    GW_GET_SCENE_INFORMATION_REQ               = 0x040F,    // Request extended information for one given scene.
+    GW_GET_SCENE_INFORMATION_CFM               = 0x0410,    // Acknowledge to GW_GET_SCENE_INFOAMATION_REQ.
+    GW_GET_SCENE_INFORMATION_NTF               = 0x0411,    // Acknowledge to GW_GET_SCENE_INFOAMATION_REQ.
     GW_ACTIVATE_SCENE_REQ                      = 0x0412,    // Request gateway to enter a scene.
     GW_ACTIVATE_SCENE_CFM                      = 0x0413,    // Acknowledge to GW_ACTIVATE_SCENE_REQ.
     GW_STOP_SCENE_REQ                          = 0x0415,    // Request all nodes in a given scene to stop at their current position.
@@ -200,7 +200,7 @@ export type GatewayCommand_Request =
     | GatewayCommand.GW_DELETE_SCENE_REQ                       
     | GatewayCommand.GW_RENAME_SCENE_REQ                       
     | GatewayCommand.GW_GET_SCENE_LIST_REQ                     
-    | GatewayCommand.GW_GET_SCENE_INFOAMATION_REQ              
+    | GatewayCommand.GW_GET_SCENE_INFORMATION_REQ              
     | GatewayCommand.GW_ACTIVATE_SCENE_REQ                     
     | GatewayCommand.GW_STOP_SCENE_REQ                         
     | GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_REQ              
@@ -261,7 +261,7 @@ export type GatewayCommand_Confirmation =
     | GatewayCommand.GW_DELETE_SCENE_CFM                       
     | GatewayCommand.GW_RENAME_SCENE_CFM                       
     | GatewayCommand.GW_GET_SCENE_LIST_CFM                     
-    | GatewayCommand.GW_GET_SCENE_INFOAMATION_CFM              
+    | GatewayCommand.GW_GET_SCENE_INFORMATION_CFM              
     | GatewayCommand.GW_ACTIVATE_SCENE_CFM                     
     | GatewayCommand.GW_STOP_SCENE_CFM                         
     | GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_CFM              
@@ -310,7 +310,7 @@ export type GatewayCommand_Notification =
     | GatewayCommand.GW_INITIALIZE_SCENE_NTF                   
     | GatewayCommand.GW_RECORD_SCENE_NTF                       
     | GatewayCommand.GW_GET_SCENE_LIST_NTF                     
-    | GatewayCommand.GW_GET_SCENE_INFOAMATION_NTF              
+    | GatewayCommand.GW_GET_SCENE_INFORMATION_NTF              
     | GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF          
     | GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_NTF              
     | GatewayCommand.GW_ACTIVATION_LOG_UPDATED_NTF             

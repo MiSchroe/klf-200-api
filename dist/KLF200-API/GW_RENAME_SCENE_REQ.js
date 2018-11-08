@@ -11,7 +11,7 @@ class GW_RENAME_SCENE_REQ extends common_1.GW_FRAME_REQ {
         const buff = this.Data.slice(this.offset);
         buff.writeUInt8(this.SceneID, 0);
         // Fill the name part with spaces first:
-        buff.slice(1, 66).fill(" ");
+        // buff.slice(1, 66).fill(" ");
         buff.write(this.Name, 1);
     }
     InitializeBuffer() {
