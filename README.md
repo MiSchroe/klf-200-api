@@ -164,21 +164,21 @@ conn.loginAsync('velux123')
 [x] GW_MODE_SEND_REQ                           
 [x] GW_MODE_SEND_CFM                           
 [ ] GW_MODE_SEND_NTF \(not documented and not received\)
-[ ] GW_INITIALIZE_SCENE_REQ                    
-[ ] GW_INITIALIZE_SCENE_CFM                    
-[ ] GW_INITIALIZE_SCENE_NTF                    
-[ ] GW_INITIALIZE_SCENE_CANCEL_REQ             
-[ ] GW_INITIALIZE_SCENE_CANCEL_CFM             
-[ ] GW_RECORD_SCENE_REQ                        
-[ ] GW_RECORD_SCENE_CFM                        
-[ ] GW_RECORD_SCENE_NTF                        
-[ ] GW_DELETE_SCENE_REQ                        
-[ ] GW_DELETE_SCENE_CFM                        
-[ ] GW_RENAME_SCENE_REQ                        
-[ ] GW_RENAME_SCENE_CFM                        
-[ ] GW_GET_SCENE_LIST_REQ                      
-[ ] GW_GET_SCENE_LIST_CFM                      
-[ ] GW_GET_SCENE_LIST_NTF                      
+[x] GW_INITIALIZE_SCENE_REQ                    
+[x] GW_INITIALIZE_SCENE_CFM                    
+[x] GW_INITIALIZE_SCENE_NTF                    
+[x] GW_INITIALIZE_SCENE_CANCEL_REQ             
+[x] GW_INITIALIZE_SCENE_CANCEL_CFM             
+[x] GW_RECORD_SCENE_REQ                        
+[x] GW_RECORD_SCENE_CFM                        
+[x] GW_RECORD_SCENE_NTF                        
+[x] GW_DELETE_SCENE_REQ                        
+[x] GW_DELETE_SCENE_CFM                        
+[x] GW_RENAME_SCENE_REQ                        
+[x] GW_RENAME_SCENE_CFM                        
+[x] GW_GET_SCENE_LIST_REQ                      
+[x] GW_GET_SCENE_LIST_CFM                      
+[x] GW_GET_SCENE_LIST_NTF                      
 [ ] GW_GET_SCENE_INFOAMATION_REQ               
 [ ] GW_GET_SCENE_INFOAMATION_CFM               
 [ ] GW_GET_SCENE_INFOAMATION_NTF               
