@@ -187,9 +187,9 @@ conn.loginAsync('velux123')
 [ ] GW_STOP_SCENE_REQ                          
 [ ] GW_STOP_SCENE_CFM                          
 [ ] GW_SCENE_INFORMATION_CHANGED_NTF           
-[ ] GW_ACTIVATE_PRODUCTGROUP_REQ               
-[ ] GW_ACTIVATE_PRODUCTGROUP_CFM               
-[ ] GW_ACTIVATE_PRODUCTGROUP_NTF               
+[x] GW_ACTIVATE_PRODUCTGROUP_REQ               
+[x] GW_ACTIVATE_PRODUCTGROUP_CFM               
+[ ] GW_ACTIVATE_PRODUCTGROUP_NTF \(not documented and not received\)
 [ ] GW_GET_CONTACT_INPUT_LINK_LIST_REQ         
 [ ] GW_GET_CONTACT_INPUT_LINK_LIST_CFM         
 [ ] GW_SET_CONTACT_INPUT_LINK_REQ              

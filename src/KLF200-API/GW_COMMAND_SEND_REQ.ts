@@ -58,6 +58,7 @@ export class GW_COMMAND_SEND_REQ extends GW_FRAME_REQ {
             buff.writeUInt8(this.Nodes, 42);
         }
 
+        buff.writeUInt8(this.PriorityLevelLock, 62);
         if (this.PriorityLevels.length > 8)
             throw "Too many priority levels.";
 

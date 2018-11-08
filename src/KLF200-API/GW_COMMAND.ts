@@ -178,8 +178,18 @@ export enum ModeStatus {
     OK = 0,
     CommandRejected,
     UnknownClientID,
-    sessionIDInUse,
+    SessionIDInUse,
     Busy,
     IllegalParameterValue,
     Failed = 255
+}
+
+export enum ActivateProductGroupStatus {
+    OK = 0,
+    UnknownProductGroup,
+    SessionIDInUse,
+    Busy,
+    WrongGroupType,
+    Failed,
+    InvalidParameterUsed
 }

@@ -167,9 +167,19 @@ var ModeStatus;
     ModeStatus[ModeStatus["OK"] = 0] = "OK";
     ModeStatus[ModeStatus["CommandRejected"] = 1] = "CommandRejected";
     ModeStatus[ModeStatus["UnknownClientID"] = 2] = "UnknownClientID";
-    ModeStatus[ModeStatus["sessionIDInUse"] = 3] = "sessionIDInUse";
+    ModeStatus[ModeStatus["SessionIDInUse"] = 3] = "SessionIDInUse";
     ModeStatus[ModeStatus["Busy"] = 4] = "Busy";
     ModeStatus[ModeStatus["IllegalParameterValue"] = 5] = "IllegalParameterValue";
     ModeStatus[ModeStatus["Failed"] = 255] = "Failed";
 })(ModeStatus = exports.ModeStatus || (exports.ModeStatus = {}));
+var ActivateProductGroupStatus;
+(function (ActivateProductGroupStatus) {
+    ActivateProductGroupStatus[ActivateProductGroupStatus["OK"] = 0] = "OK";
+    ActivateProductGroupStatus[ActivateProductGroupStatus["UnknownProductGroup"] = 1] = "UnknownProductGroup";
+    ActivateProductGroupStatus[ActivateProductGroupStatus["SessionIDInUse"] = 2] = "SessionIDInUse";
+    ActivateProductGroupStatus[ActivateProductGroupStatus["Busy"] = 3] = "Busy";
+    ActivateProductGroupStatus[ActivateProductGroupStatus["WrongGroupType"] = 4] = "WrongGroupType";
+    ActivateProductGroupStatus[ActivateProductGroupStatus["Failed"] = 5] = "Failed";
+    ActivateProductGroupStatus[ActivateProductGroupStatus["InvalidParameterUsed"] = 6] = "InvalidParameterUsed";
+})(ActivateProductGroupStatus = exports.ActivateProductGroupStatus || (exports.ActivateProductGroupStatus = {}));
 //# sourceMappingURL=GW_COMMAND.js.map

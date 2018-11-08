@@ -140,8 +140,17 @@ export declare enum ModeStatus {
     OK = 0,
     CommandRejected = 1,
     UnknownClientID = 2,
-    sessionIDInUse = 3,
+    SessionIDInUse = 3,
     Busy = 4,
     IllegalParameterValue = 5,
     Failed = 255
+}
+export declare enum ActivateProductGroupStatus {
+    OK = 0,
+    UnknownProductGroup = 1,
+    SessionIDInUse = 2,
+    Busy = 3,
+    WrongGroupType = 4,
+    Failed = 5,
+    InvalidParameterUsed = 6
 }
