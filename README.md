@@ -182,20 +182,20 @@ conn.loginAsync('velux123')
 [x] GW_GET_SCENE_INFOAMATION_REQ               
 [x] GW_GET_SCENE_INFOAMATION_CFM               
 [x] GW_GET_SCENE_INFOAMATION_NTF               
-[ ] GW_ACTIVATE_SCENE_REQ                      
-[ ] GW_ACTIVATE_SCENE_CFM                      
-[ ] GW_STOP_SCENE_REQ                          
-[ ] GW_STOP_SCENE_CFM                          
+[x] GW_ACTIVATE_SCENE_REQ                      
+[x] GW_ACTIVATE_SCENE_CFM                      
+[x] GW_STOP_SCENE_REQ                          
+[x] GW_STOP_SCENE_CFM                          
 [x] GW_SCENE_INFORMATION_CHANGED_NTF           
 [x] GW_ACTIVATE_PRODUCTGROUP_REQ               
 [x] GW_ACTIVATE_PRODUCTGROUP_CFM               
 [ ] GW_ACTIVATE_PRODUCTGROUP_NTF \(not documented and not received\)
-[ ] GW_GET_CONTACT_INPUT_LINK_LIST_REQ         
-[ ] GW_GET_CONTACT_INPUT_LINK_LIST_CFM         
-[ ] GW_SET_CONTACT_INPUT_LINK_REQ              
-[ ] GW_SET_CONTACT_INPUT_LINK_CFM              
-[ ] GW_REMOVE_CONTACT_INPUT_LINK_REQ           
-[ ] GW_REMOVE_CONTACT_INPUT_LINK_CFM           
+[x] GW_GET_CONTACT_INPUT_LINK_LIST_REQ         
+[x] GW_GET_CONTACT_INPUT_LINK_LIST_CFM         
+[x] GW_SET_CONTACT_INPUT_LINK_REQ              
+[x] GW_SET_CONTACT_INPUT_LINK_CFM              
+[x] GW_REMOVE_CONTACT_INPUT_LINK_REQ           
+[x] GW_REMOVE_CONTACT_INPUT_LINK_CFM           
 [x] GW_GET_ACTIVATION_LOG_HEADER_REQ           
 [x] GW_GET_ACTIVATION_LOG_HEADER_CFM           
 [x] GW_CLEAR_ACTIVATION_LOG_REQ                

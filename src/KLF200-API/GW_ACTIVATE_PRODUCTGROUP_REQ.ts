@@ -6,7 +6,7 @@ import { isArray } from "util";
 import { Velocity } from "./GW_SYSTEMTABLE_DATA";
 
 export class GW_ACTIVATE_PRODUCTGROUP_REQ extends GW_FRAME_REQ {
-    private readonly SessionID: number;
+    public readonly SessionID: number;
 
     constructor(readonly GroupID: number, readonly Position: number, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly ParameterActive: ParameterActive = 0, readonly Velocity: Velocity = 0, readonly PriorityLevelLock: PriorityLevelLock = 0, readonly PriorityLevels: number[] = [], readonly LockTime: number = Infinity) {
         super();

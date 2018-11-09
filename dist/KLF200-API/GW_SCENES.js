@@ -25,4 +25,10 @@ var RenameSceneStatus;
     RenameSceneStatus[RenameSceneStatus["InvalidSceneIndex"] = 1] = "InvalidSceneIndex";
     RenameSceneStatus[RenameSceneStatus["NameInUse"] = 2] = "NameInUse";
 })(RenameSceneStatus = exports.RenameSceneStatus || (exports.RenameSceneStatus = {}));
+var ActivateSceneStatus;
+(function (ActivateSceneStatus) {
+    ActivateSceneStatus[ActivateSceneStatus["OK"] = 0] = "OK";
+    ActivateSceneStatus[ActivateSceneStatus["InvalidParameter"] = 1] = "InvalidParameter";
+    ActivateSceneStatus[ActivateSceneStatus["RequestRejected"] = 2] = "RequestRejected";
+})(ActivateSceneStatus = exports.ActivateSceneStatus || (exports.ActivateSceneStatus = {}));
 //# sourceMappingURL=GW_SCENES.js.map

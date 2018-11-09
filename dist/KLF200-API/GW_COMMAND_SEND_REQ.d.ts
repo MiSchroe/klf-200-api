@@ -10,7 +10,7 @@ export declare class GW_COMMAND_SEND_REQ extends GW_FRAME_REQ {
     readonly PriorityLevelLock: PriorityLevelLock;
     readonly PriorityLevels: number[];
     readonly LockTime: number;
-    private readonly SessionID;
+    readonly SessionID: number;
     constructor(Nodes: number[] | number, MainValue: number, PriorityLevel?: PriorityLevel, CommandOriginator?: CommandOriginator, ParameterActive?: ParameterActive, FunctionalParameters?: FunctionalParameter[], PriorityLevelLock?: PriorityLevelLock, PriorityLevels?: number[], LockTime?: number);
     protected InitializeBuffer(): void;
 }

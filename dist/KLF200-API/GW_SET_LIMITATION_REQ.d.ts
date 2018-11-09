@@ -8,7 +8,7 @@ export declare class GW_SET_LIMITATION_REQ extends GW_FRAME_REQ {
     readonly PriorityLevel: PriorityLevel;
     readonly CommandOriginator: CommandOriginator;
     readonly ParameterActive: ParameterActive;
-    private readonly SessionID;
+    readonly SessionID: number;
     constructor(Nodes: number[] | number, LimitationValueMin: number, LimitationValueMax: number, LimitationTime: number, PriorityLevel?: PriorityLevel, CommandOriginator?: CommandOriginator, ParameterActive?: ParameterActive);
     protected InitializeBuffer(): void;
 }

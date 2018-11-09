@@ -5,7 +5,7 @@ import { getNextSessionID, StatusType } from "./GW_COMMAND";
 import { isArray } from "util";
 
 export class GW_STATUS_REQUEST_REQ extends GW_FRAME_REQ {
-    private readonly SessionID: number;
+    public readonly SessionID: number;
 
     constructor(readonly Nodes: number[] | number, readonly StatusType: StatusType, readonly FunctionalParameters: number[] = []) {
         super();

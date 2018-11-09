@@ -19,3 +19,8 @@ export declare enum RenameSceneStatus {
     InvalidSceneIndex = 1,
     NameInUse = 2
 }
+export declare enum ActivateSceneStatus {
+    OK = 0,
+    InvalidParameter = 1,
+    RequestRejected = 2
+}

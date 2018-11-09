@@ -5,7 +5,7 @@ import { CommandOriginator, PriorityLevel, ParameterActive, getNextSessionID, Li
 import { isArray } from "util";
 
 export class GW_GET_LIMITATION_STATUS_REQ extends GW_FRAME_REQ {
-    private readonly SessionID: number;
+    public readonly SessionID: number;
 
     constructor(readonly Nodes: number[] | number, readonly LimitationType: LimitationType, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly ParameterActive: ParameterActive = 0) {
         super();

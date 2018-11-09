@@ -6,7 +6,7 @@ export declare class GW_WINK_SEND_REQ extends GW_FRAME_REQ {
     readonly WinkTime: number;
     readonly PriorityLevel: PriorityLevel;
     readonly CommandOriginator: CommandOriginator;
-    private readonly SessionID;
+    readonly SessionID: number;
     constructor(Nodes: number[] | number, EnableWink?: boolean, WinkTime?: number, PriorityLevel?: PriorityLevel, CommandOriginator?: CommandOriginator);
     protected InitializeBuffer(): void;
 }
