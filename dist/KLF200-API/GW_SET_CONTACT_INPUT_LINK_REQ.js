@@ -1,8 +1,9 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./common");
+const GW_COMMAND_1 = require("./GW_COMMAND");
 class GW_SET_CONTACT_INPUT_LINK_REQ extends common_1.GW_FRAME_REQ {
-    constructor(ContactInputID, ContactInputAssignment, SuccessOutputID, ErrorOutputID, Position, Velocity = 0, ActionID, PriorityLevel = 3, CommandOriginator = 1, ParameterActive = 0, LockPriorityLevel = 0, PLI3 = 0, PLI4 = 0, PLI5 = 0, PLI6 = 0, PLI7 = 0) {
+    constructor(ContactInputID, ContactInputAssignment, SuccessOutputID, ErrorOutputID, Position, Velocity = 0, ActionID, PriorityLevel = 3, CommandOriginator = 1, ParameterActive = 0, LockPriorityLevel = 0, PLI3 = GW_COMMAND_1.PriorityLevelInformation.KeepCurrent, PLI4 = GW_COMMAND_1.PriorityLevelInformation.KeepCurrent, PLI5 = GW_COMMAND_1.PriorityLevelInformation.KeepCurrent, PLI6 = GW_COMMAND_1.PriorityLevelInformation.KeepCurrent, PLI7 = GW_COMMAND_1.PriorityLevelInformation.KeepCurrent) {
         super();
         this.ContactInputID = ContactInputID;
         this.ContactInputAssignment = ContactInputAssignment;

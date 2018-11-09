@@ -1,6 +1,7 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./common");
+const GW_CONTACTINPUT_1 = require("./GW_CONTACTINPUT");
 class GW_GET_CONTACT_INPUT_LINK_LIST_CFM extends common_1.GW_FRAME_CFM {
     constructor(Data) {
         super(Data);
@@ -25,7 +26,9 @@ class GW_GET_CONTACT_INPUT_LINK_LIST_CFM extends common_1.GW_FRAME_CFM {
                 SuccessOutputID: this.Data.readUInt8(objectIndex * 17 + 16),
                 ErrorOutputID: this.Data.readUInt8(objectIndex * 17 + 17)
             };
-            this.ContactInputObjects.push(contactInputObject);
+            if (contactInputObject.ContactInputAssignment !== GW_CONTACTINPUT_1.ContactInputAssignment.NotAssigned) {
+                this.ContactInputObjects.push(contactInputObject);
+            }
         }
     }
 }

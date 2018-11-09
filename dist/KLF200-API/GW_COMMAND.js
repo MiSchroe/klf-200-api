@@ -49,12 +49,13 @@ var PriorityLevelLock;
     PriorityLevelLock[PriorityLevelLock["DoNotUsePriorityLevelLock"] = 0] = "DoNotUsePriorityLevelLock";
     PriorityLevelLock[PriorityLevelLock["UsePriorityLevelLock"] = 1] = "UsePriorityLevelLock";
 })(PriorityLevelLock = exports.PriorityLevelLock || (exports.PriorityLevelLock = {}));
-(function (PriorityLevel) {
-    PriorityLevel[PriorityLevel["Disable"] = 0] = "Disable";
-    PriorityLevel[PriorityLevel["Enable"] = 1] = "Enable";
-    PriorityLevel[PriorityLevel["EnableAll"] = 2] = "EnableAll";
-    PriorityLevel[PriorityLevel["KeepCurrent"] = 3] = "KeepCurrent";
-})(PriorityLevel = exports.PriorityLevel || (exports.PriorityLevel = {}));
+var PriorityLevelInformation;
+(function (PriorityLevelInformation) {
+    PriorityLevelInformation[PriorityLevelInformation["Disable"] = 0] = "Disable";
+    PriorityLevelInformation[PriorityLevelInformation["Enable"] = 1] = "Enable";
+    PriorityLevelInformation[PriorityLevelInformation["EnableAll"] = 2] = "EnableAll";
+    PriorityLevelInformation[PriorityLevelInformation["KeepCurrent"] = 3] = "KeepCurrent";
+})(PriorityLevelInformation = exports.PriorityLevelInformation || (exports.PriorityLevelInformation = {}));
 class LockTime {
     static lockTimeValueToLockTime(lockTimeValue) {
         // Check parameter range

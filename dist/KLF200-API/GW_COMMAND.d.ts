@@ -43,7 +43,7 @@ export declare enum PriorityLevelLock {
     DoNotUsePriorityLevelLock = 0,
     UsePriorityLevelLock = 1
 }
-export declare enum PriorityLevel {
+export declare enum PriorityLevelInformation {
     Disable = 0,
     Enable = 1,
     EnableAll = 2,

@@ -1,13 +1,12 @@
 'use strict';
 
 import { GW_FRAME_REQ } from "./common";
-import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelLock, getNextSessionID, LockTime as lt, FunctionalParameter } from "./GW_COMMAND";
-import { isArray } from "util";
+import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelInformation } from "./GW_COMMAND";
 import { ContactInputAssignment, LockPriorityLevel } from "./GW_CONTACTINPUT";
 import { Velocity } from "./GW_SYSTEMTABLE_DATA";
 
 export class GW_SET_CONTACT_INPUT_LINK_REQ extends GW_FRAME_REQ {
-    constructor(readonly ContactInputID: number, readonly ContactInputAssignment: ContactInputAssignment, readonly SuccessOutputID: number, readonly ErrorOutputID: number, readonly Position: number, readonly Velocity: Velocity = 0, readonly ActionID: number, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly ParameterActive: ParameterActive = 0, readonly LockPriorityLevel: LockPriorityLevel = 0, readonly PLI3: number = 0, readonly PLI4: number = 0, readonly PLI5: number = 0, readonly PLI6: number = 0, readonly PLI7: number = 0) {
+    constructor(readonly ContactInputID: number, readonly ContactInputAssignment: ContactInputAssignment, readonly SuccessOutputID: number, readonly ErrorOutputID: number, readonly Position: number, readonly Velocity: Velocity = 0, readonly ActionID: number, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly ParameterActive: ParameterActive = 0, readonly LockPriorityLevel: LockPriorityLevel = 0, readonly PLI3: PriorityLevelInformation = PriorityLevelInformation.KeepCurrent, readonly PLI4: PriorityLevelInformation = PriorityLevelInformation.KeepCurrent, readonly PLI5: PriorityLevelInformation = PriorityLevelInformation.KeepCurrent, readonly PLI6: PriorityLevelInformation = PriorityLevelInformation.KeepCurrent, readonly PLI7: PriorityLevelInformation = PriorityLevelInformation.KeepCurrent) {
         super();
 
         const buff = this.Data.slice(this.offset);

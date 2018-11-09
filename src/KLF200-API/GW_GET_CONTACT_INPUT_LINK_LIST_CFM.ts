@@ -50,7 +50,9 @@ export class GW_GET_CONTACT_INPUT_LINK_LIST_CFM extends GW_FRAME_CFM {
                 SuccessOutputID: this.Data.readUInt8(objectIndex * 17 + 16),
                 ErrorOutputID: this.Data.readUInt8(objectIndex * 17 + 17)
             };
-            this.ContactInputObjects.push(contactInputObject);
+            if (contactInputObject.ContactInputAssignment !== ContactInputAssignment.NotAssigned) {
+                this.ContactInputObjects.push(contactInputObject);
+            }
         }
     }
 }

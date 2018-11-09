@@ -1,14 +1,13 @@
 'use strict';
 
 import { GW_FRAME_REQ } from "./common";
-import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelLock, getNextSessionID, LockTime as lt, FunctionalParameter } from "./GW_COMMAND";
-import { isArray } from "util";
+import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelLock, getNextSessionID, LockTime as lt, PriorityLevelInformation } from "./GW_COMMAND";
 import { Velocity } from "./GW_SYSTEMTABLE_DATA";
 
 export class GW_ACTIVATE_PRODUCTGROUP_REQ extends GW_FRAME_REQ {
     public readonly SessionID: number;
 
-    constructor(readonly GroupID: number, readonly Position: number, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly ParameterActive: ParameterActive = 0, readonly Velocity: Velocity = 0, readonly PriorityLevelLock: PriorityLevelLock = 0, readonly PriorityLevels: number[] = [], readonly LockTime: number = Infinity) {
+    constructor(readonly GroupID: number, readonly Position: number, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly ParameterActive: ParameterActive = 0, readonly Velocity: Velocity = 0, readonly PriorityLevelLock: PriorityLevelLock = 0, readonly PriorityLevels: PriorityLevelInformation[] = [], readonly LockTime: number = Infinity) {
         super();
 
         this.SessionID = getNextSessionID();
