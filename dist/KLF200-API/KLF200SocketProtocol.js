@@ -18,12 +18,12 @@ var KLF200SocketProtocolState;
     KLF200SocketProtocolState[KLF200SocketProtocolState["StartFound"] = 1] = "StartFound";
 })(KLF200SocketProtocolState || (KLF200SocketProtocolState = {}));
 class KLF200SocketProtocol {
-    constructor(socket, handler) {
+    constructor(socket) {
         this.socket = socket;
         this.state = KLF200SocketProtocolState.Invalid;
         this.queue = [];
-        this.addHandler(handler);
         socket.on("data", (data) => this.processData(data));
+        socket.on("close", (had_error) => this.onSocketClose(had_error));
     }
     processData(data) {
         switch (this.state) {
@@ -58,17 +58,28 @@ class KLF200SocketProtocol {
                 break;
         }
     }
-    addHandler(handler) {
-        onFrameReceived.on(handler);
+    onSocketClose(had_error) {
     }
-    removeHandler(handler) {
+    on(handler) {
+        return onFrameReceived.on(handler);
+    }
+    off(handler) {
         onFrameReceived.off(handler);
+    }
+    once(handler) {
+        onFrameReceived.once(handler);
     }
     send(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const frameBuffer = common_1.KLF200Protocol.Decode(common_1.SLIPProtocol.Decode(data));
-            const frame = yield FrameRcvFactory_1.FrameRcvFactory.CreateRcvFrame(frameBuffer);
-            onFrameReceived.emit(frame);
+            try {
+                const frameBuffer = common_1.KLF200Protocol.Decode(common_1.SLIPProtocol.Decode(data));
+                const frame = yield FrameRcvFactory_1.FrameRcvFactory.CreateRcvFrame(frameBuffer);
+                onFrameReceived.emit(frame);
+                return Promise.resolve();
+            }
+            catch (e) {
+                return Promise.reject(e);
+            }
         });
     }
     write(data) {

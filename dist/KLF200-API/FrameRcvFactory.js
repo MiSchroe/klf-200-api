@@ -32,8 +32,6 @@ class FrameRcvFactory {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.modules[moduleName]) {
                 const modulePath = path.resolve(__dirname, moduleName);
-                console.log(`__dirname: ${__dirname}`);
-                console.log(`modulePath: ${modulePath}`);
                 this.modules[moduleName] = yield Promise.resolve().then(() => __importStar(require(modulePath)));
             }
         });

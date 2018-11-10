@@ -1,115 +1,112 @@
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = require("fs");
-const tls_1 = require("tls");
-const KLF200SocketProtocol_1 = require("./KLF200-API/KLF200SocketProtocol");
-const common_1 = require("./KLF200-API/common");
-const GW_PASSWORD_ENTER_REQ_1 = require("./KLF200-API/GW_PASSWORD_ENTER_REQ");
-const path_1 = require("path");
+﻿import { readFileSync } from "fs";
+import { PeerCertificate, checkServerIdentity as checkServerIdentityOriginal, connect, TLSSocket } from "tls";
+import { KLF200SocketProtocol } from "./KLF200-API/KLF200SocketProtocol";
+import { IGW_FRAME_RCV, IGW_FRAME_REQ, GatewayCommand, GW_COMMON_STATUS, KLF200_PORT } from "./KLF200-API/common";
+import { GW_PASSWORD_ENTER_REQ } from "./KLF200-API/GW_PASSWORD_ENTER_REQ";
+import { GW_PASSWORD_ENTER_CFM } from "./KLF200-API/GW_PASSWORD_ENTER_CFM";
+import { join } from "path";
+import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF";
+
 'use strict';
+
 const FINGERPRINT = "02:8C:23:A0:89:2B:62:98:C4:99:00:5B:D2:E7:2E:0A:70:3D:71:6A";
-const ca = fs_1.readFileSync(path_1.join(__dirname, "../velux-cert.pem"));
-class connection {
-    constructor(host, CA = ca, fingerprint = FINGERPRINT) {
-        this.host = host;
-        this.CA = CA;
-        this.fingerprint = fingerprint;
+const ca = readFileSync(join(__dirname, "../velux-cert.pem"));
+
+export class connection {
+    private sckt?: TLSSocket;
+    private klfProtocol?: KLF200SocketProtocol;
+
+    constructor(readonly host: string, readonly CA: Buffer = ca, readonly fingerprint: string = FINGERPRINT) {
     }
-    loginAsync(password) {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.initSocket();
-            this.klfProtocol = new KLF200SocketProtocol_1.KLF200SocketProtocol(this.sckt);
-            const passwordCFM = yield this.sendFrame(new GW_PASSWORD_ENTER_REQ_1.GW_PASSWORD_ENTER_REQ(password));
-            if (passwordCFM.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
-                return Promise.reject("Login failed.");
-            }
-            else {
-                return Promise.resolve();
-            }
-        });
+
+    public async loginAsync(password: string): Promise<void> {
+        await this.initSocket();
+        this.klfProtocol = new KLF200SocketProtocol(<TLSSocket>this.sckt);
+        const passwordCFM = <GW_PASSWORD_ENTER_CFM> await this.sendFrame(new GW_PASSWORD_ENTER_REQ(password));
+        if (passwordCFM.Status !== GW_COMMON_STATUS.SUCCESS) {
+            return Promise.reject("Login failed.");
+        } else {
+            return Promise.resolve();
+        }
     }
-    logoutAsync() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.sckt) {
-                if (this.klfProtocol) {
-                    this.klfProtocol = undefined;
-                }
-                return new Promise((resolve) => {
+
+    public async logoutAsync(): Promise<void> {
+        if (this.sckt) {
+            if (this.klfProtocol) {
+                this.klfProtocol = undefined;
+            }
+            return new Promise<void>(
+                (resolve) => {
                     // Close socket
-                    this.sckt.once("close", () => {
+                    (<TLSSocket>this.sckt).once("close", () => {
                         this.sckt = undefined;
                         resolve();
                     }).end();
-                });
-            }
-            else {
-                return Promise.resolve();
-            }
-        });
+                }
+            );
+        }
+        else {
+            return Promise.resolve();
+        }
     }
-    sendFrame(frame) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const frameName = common_1.GatewayCommand[frame.Command];
-            const expectedConfirmationFrameName = frameName.slice(0, -3) + "CFM";
-            const expectedConfirmationFrameCommand = common_1.GatewayCommand[expectedConfirmationFrameName];
-            return new Promise((resolve, reject) => {
-                const cfmHandler = this.klfProtocol.on((frame) => {
-                    if (frame.Command === common_1.GatewayCommand.GW_ERROR_NTF) {
-                        cfmHandler.dispose();
-                        reject(frame.ErrorNumber);
-                    }
-                    else if (frame.Command === expectedConfirmationFrameCommand) {
-                        cfmHandler.dispose();
-                        resolve(frame);
-                    }
-                });
-                this.klfProtocol.write(frame.Data);
+
+    public async sendFrame(frame: IGW_FRAME_REQ): Promise<IGW_FRAME_RCV> {
+        const frameName = GatewayCommand[frame.Command];
+        const expectedConfirmationFrameName: keyof typeof GatewayCommand = frameName.slice(0, -3) + "CFM" as keyof typeof GatewayCommand;
+        const expectedConfirmationFrameCommand = GatewayCommand[expectedConfirmationFrameName];
+
+        return new Promise<IGW_FRAME_RCV>((resolve, reject) => {
+            const cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((frame) => {
+                if (frame.Command === GatewayCommand.GW_ERROR_NTF) {
+                    cfmHandler.dispose();
+                    reject((frame as GW_ERROR_NTF).ErrorNumber);
+                }
+                else if (frame.Command === expectedConfirmationFrameCommand) {
+                    cfmHandler.dispose();
+                    resolve(frame);
+                }
             });
+            (this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
         });
     }
-    initSocket() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.sckt === undefined) {
-                return new Promise((resolve, reject) => {
-                    this.sckt = tls_1.connect(common_1.KLF200_PORT, this.host, {
+
+    private async initSocket(): Promise<void> {
+        if (this.sckt === undefined) {
+            return new Promise<void>(
+                (resolve, reject) => {
+                    this.sckt = connect(KLF200_PORT, this.host,
+                        {
                         rejectUnauthorized: true,
-                        ca: [this.CA],
+                        ca: [ this.CA ],
                         checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert)
-                    }, () => {
-                        // Callback on event "secureConnect":
-                        // Resolve promise if connection is authorized, otherwise reject it.
-                        if (this.sckt.authorized) {
-                            resolve();
-                        }
-                        else {
-                            const err = this.sckt.authorizationError;
-                            this.sckt = undefined;
-                            reject(err);
-                        }
-                    });
-                });
-            }
-            else {
-                return Promise.resolve();
-            }
-        });
+                        }, () => {
+                            // Callback on event "secureConnect":
+                            // Resolve promise if connection is authorized, otherwise reject it.
+                            if ((<TLSSocket>this.sckt).authorized) {
+                                resolve();
+                            }
+                            else {
+                                const err = (<TLSSocket>this.sckt).authorizationError;
+                                this.sckt = undefined;
+                                reject(err);
+                            }
+                        });
+                }
+            );
+        }
+        else {
+            return Promise.resolve();
+        }
     }
-    checkServerIdentity(host, cert) {
+
+    private checkServerIdentity(host: string, cert: PeerCertificate): Error | undefined {
         if (cert.fingerprint === this.fingerprint)
-            return undefined;
+            return undefined
         else
-            return tls_1.checkServerIdentity(host, cert);
+            return checkServerIdentityOriginal(host, cert);
     }
 }
-exports.connection = connection;
+
 // /**
 //  * Creates a new connection object that connect to the given host.
 //  * @param {string} host URL of the host name, e.g. http://velux-klf-12ab
@@ -134,6 +131,7 @@ exports.connection = connection;
 // function connection(host) {
 //     this.host = host;
 // }
+
 // /**
 //  * Logs in to the KLF interface and provides a token for further calls to the REST API.
 //  * @param {string} password The password needed for login. The factory default password is velux123.
@@ -142,15 +140,18 @@ exports.connection = connection;
 // connection.prototype.loginAsync = function (password) {
 //     if (this.token)
 //         delete this.token;
+
 //     return this.postAsync(urlBuilder.authentication, 'login', { password: password })
 //         .then((res) => {
 //             if (res.token)
 //                 this.token = res.token;
 //             else
 //                 throw new Error('No login token found');
+
 //             return true;
 //         });
 // };
+
 // /**
 //  * Logs out from the KLF interface.
 //  * @return {Promise} Returns a promise that resolves to true on successful logout or rejects with the errors.
@@ -159,9 +160,11 @@ exports.connection = connection;
 //     return this.postAsync(urlBuilder.authentication, 'logout').then(() => {
 //         if (this.token)
 //             delete this.token;
+
 //         return true;
 //     });
 // };
+
 // /**
 //  * Calls a REST API function on the KLF interface.
 //  * @param {string} functionName The name of the function interface, e.g. auth or products.
@@ -172,15 +175,18 @@ exports.connection = connection;
 //  */
 // connection.prototype.postAsync = function (functionName, action, params = null) {
 //     try {
+
 //         let data = {
 //             action: action,
 //             params: params || {}
 //         };
+
 //         let req = request.post(this.host + urlBuilder.getPath(functionName));
 //         // Add authorization token
 //         if (this.token) {
 //             req = req.auth(this.token, { type: 'bearer' });
 //         }
+
 //         return Promise.resolve(
 //             req
 //             .parse(this.cleanJSONParse)
@@ -193,15 +199,18 @@ exports.connection = connection;
 //                     return res.body;
 //             })
 //         );
+
 //     } catch (error) {
 //         return Promise.reject(error);
 //     }
 // };
+
 // /**
 //  * @callback superAgentParserCallback
 //  * @param {Error} err
 //  * @param {any} body
 //  */
+
 // /**
 //  * Cleans the http-response from invalid characters and returns a JSON object.
 //  * Is implemented as a parser for {@link superagent}.
@@ -225,5 +234,5 @@ exports.connection = connection;
 //         }
 //     });
 // };
+
 // module.exports = connection;
-//# sourceMappingURL=connection.js.map

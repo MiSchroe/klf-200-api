@@ -2,7 +2,7 @@
 
 import { IGW_FRAME_RCV, SLIP_END, SLIPProtocol, KLF200Protocol } from "./common";
 import { Socket } from "net";
-import { TypedEvent, Listener } from "../utils/TypedEvent";
+import { TypedEvent, Listener, Disposable } from "../utils/TypedEvent";
 import { FrameRcvFactory } from "./FrameRcvFactory";
 
 export type FrameReceivedHandler = (frame: IGW_FRAME_RCV) => void;
@@ -18,10 +18,9 @@ export class KLF200SocketProtocol {
     private state: KLF200SocketProtocolState = KLF200SocketProtocolState.Invalid;
     private queue: Buffer[] = [];
 
-    constructor(readonly socket: Socket, handler: Listener<IGW_FRAME_RCV>) {
-        this.addHandler(handler);
-
-        socket.on("data", (data) =>  this.processData(data));
+    constructor(readonly socket: Socket) {
+        socket.on("data", (data) => this.processData(data));
+        socket.on("close", (had_error) => this.onSocketClose(had_error));
     }
 
     private processData(data: Buffer): void {
@@ -67,18 +66,31 @@ export class KLF200SocketProtocol {
         }
     }
 
-    addHandler(handler: Listener<IGW_FRAME_RCV>): void {
-        onFrameReceived.on(handler);
+    private onSocketClose(had_error: boolean): void {
     }
 
-    removeHandler(handler: Listener<IGW_FRAME_RCV>): void {
+    on(handler: Listener<IGW_FRAME_RCV>): Disposable {
+        return onFrameReceived.on(handler);
+    }
+
+    off(handler: Listener<IGW_FRAME_RCV>): void {
         onFrameReceived.off(handler);
     }
 
+    once(handler: Listener<IGW_FRAME_RCV>): void {
+        onFrameReceived.once(handler);
+    }
+
     async send(data: Buffer): Promise<void> {
-        const frameBuffer = KLF200Protocol.Decode(SLIPProtocol.Decode(data));
-        const frame = await FrameRcvFactory.CreateRcvFrame(frameBuffer);
-        onFrameReceived.emit(frame);
+        try {
+            const frameBuffer = KLF200Protocol.Decode(SLIPProtocol.Decode(data));
+            const frame = await FrameRcvFactory.CreateRcvFrame(frameBuffer);
+            onFrameReceived.emit(frame);
+            return Promise.resolve();
+        }
+        catch (e) {
+            return Promise.reject(e);
+        }
     }
 
     write(data: Buffer): boolean {

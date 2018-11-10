@@ -21,8 +21,6 @@ export class FrameRcvFactory {
     private static async LoadModule(moduleName: string): Promise<void> {
         if (!this.modules[moduleName]) {
             const modulePath = path.resolve(__dirname, moduleName);
-            console.log(`__dirname: ${__dirname}`);
-            console.log(`modulePath: ${modulePath}`);
             this.modules[moduleName] = await import(modulePath);
         }
     }

@@ -1,0 +1,10 @@
+/node_modules
+/obj
+/bin
+/.vs
+/.nyc_output
+/coverage
+/velux-api/TestResults
+/velux-api/.vs
+*.user
+/src
