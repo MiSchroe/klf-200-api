@@ -75,4 +75,78 @@ export declare class gateway {
      * @memberof gateway
      */
     setTimeZone(timeZone: string): Promise<void>;
+    /**
+     * Reboots the KLF interface. After reboot the socket has to be reconnected.
+     *
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    reboot(): Promise<void>;
+    /**
+     * Resets the KLF interface to the factory default settings. After 30 seconds you can reconnect.
+     *
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    factoryReset(): Promise<void>;
+    /**
+     * If the gateway has been put into learn state by pressing the learn button
+     * then leaveLearnState can be called to leave the learn state.
+     *
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    leaveLearnState(): Promise<void>;
+    /**
+     * Get the network settings
+     *
+     * @returns {Promise<{IPAddress: string, Mask: string, DefaultGateway: string, DHCP: boolean}>}
+     *          Returns an object with IP address, mask and default gateway and if DHCP is used.
+     * @memberof gateway
+     */
+    getNetworkSettings(): Promise<{
+        IPAddress: string;
+        Mask: string;
+        DefaultGateway: string;
+        DHCP: boolean;
+    }>;
+    /**
+     * Set the KLF interface to use DHCP.
+     *
+     * @param {true} DHCP Set DHCP to true to use DHCP.
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    setNetworkSettings(DHCP: true): Promise<void>;
+    /**
+     * Set the KLF interface to use a fixed IP address.
+     *
+     * @param {false} DHCP Set DHCP to false to use a fixed IP address.
+     * @param {string} IPAddress The IP address for the KLF interface.
+     * @param {string} Mask The IP mask for the network settings.
+     * @param {string} DefaultGateway The default gateway of your gateway.
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    setNetworkSettings(DHCP: false, IPAddress: string, Mask: string, DefaultGateway: string): Promise<void>;
+    /**
+     * Enables the house status monitor.
+     *
+     * With the house status monitor enabled you can get
+     * notifications of changes of products.
+     *
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    enableHouseStatusMonitor(): Promise<void>;
+    /**
+     * Disables the house status monitor.
+     *
+     * After disabling the house status monitor you will
+     * no longer get notifications of changes.
+     *
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    disableHouseStatusMonitor(): Promise<void>;
 }

@@ -15,6 +15,13 @@ const GW_GET_PROTOCOL_VERSION_REQ_1 = require("./KLF200-API/GW_GET_PROTOCOL_VERS
 const GW_GET_STATE_REQ_1 = require("./KLF200-API/GW_GET_STATE_REQ");
 const GW_SET_UTC_REQ_1 = require("./KLF200-API/GW_SET_UTC_REQ");
 const GW_RTC_SET_TIME_ZONE_REQ_1 = require("./KLF200-API/GW_RTC_SET_TIME_ZONE_REQ");
+const GW_REBOOT_REQ_1 = require("./KLF200-API/GW_REBOOT_REQ");
+const GW_SET_FACTORY_DEFAULT_REQ_1 = require("./KLF200-API/GW_SET_FACTORY_DEFAULT_REQ");
+const GW_LEAVE_LEARN_STATE_REQ_1 = require("./KLF200-API/GW_LEAVE_LEARN_STATE_REQ");
+const GW_GET_NETWORK_SETUP_REQ_1 = require("./KLF200-API/GW_GET_NETWORK_SETUP_REQ");
+const GW_SET_NETWORK_SETUP_REQ_1 = require("./KLF200-API/GW_SET_NETWORK_SETUP_REQ");
+const GW_HOUSE_STATUS_MONITOR_ENABLE_REQ_1 = require("./KLF200-API/GW_HOUSE_STATUS_MONITOR_ENABLE_REQ");
+const GW_HOUSE_STATUS_MONITOR_DISABLE_REQ_1 = require("./KLF200-API/GW_HOUSE_STATUS_MONITOR_DISABLE_REQ");
 'use strict';
 /**
  * Provides basic functions to control general functions of the KLF interface.
@@ -145,6 +152,129 @@ class gateway {
                 const timeZoneCFM = yield this.connection.sendFrame(new GW_RTC_SET_TIME_ZONE_REQ_1.GW_RTC_SET_TIME_ZONE_REQ(timeZone));
                 if (timeZoneCFM.Status !== common_1.GW_INVERSE_STATUS.SUCCESS)
                     throw "Error setting time zone.";
+            }
+            catch (error) {
+                return Promise.reject(error);
+            }
+        });
+    }
+    /**
+     * Reboots the KLF interface. After reboot the socket has to be reconnected.
+     *
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    reboot() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.connection.sendFrame(new GW_REBOOT_REQ_1.GW_REBOOT_REQ());
+            }
+            catch (error) {
+                return Promise.reject(error);
+            }
+        });
+    }
+    /**
+     * Resets the KLF interface to the factory default settings. After 30 seconds you can reconnect.
+     *
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    factoryReset() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.connection.sendFrame(new GW_SET_FACTORY_DEFAULT_REQ_1.GW_SET_FACTORY_DEFAULT_REQ());
+            }
+            catch (error) {
+                return Promise.reject(error);
+            }
+        });
+    }
+    /**
+     * If the gateway has been put into learn state by pressing the learn button
+     * then leaveLearnState can be called to leave the learn state.
+     *
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    leaveLearnState() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.connection.sendFrame(new GW_LEAVE_LEARN_STATE_REQ_1.GW_LEAVE_LEARN_STATE_REQ());
+            }
+            catch (error) {
+                return Promise.reject(error);
+            }
+        });
+    }
+    /**
+     * Get the network settings
+     *
+     * @returns {Promise<{IPAddress: string, Mask: string, DefaultGateway: string, DHCP: boolean}>}
+     *          Returns an object with IP address, mask and default gateway and if DHCP is used.
+     * @memberof gateway
+     */
+    getNetworkSettings() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const networkSettings = yield this.connection.sendFrame(new GW_GET_NETWORK_SETUP_REQ_1.GW_GET_NETWORK_SETUP_REQ());
+                return {
+                    IPAddress: networkSettings.IPAddress,
+                    Mask: networkSettings.Mask,
+                    DefaultGateway: networkSettings.DefaultGateway,
+                    DHCP: networkSettings.DHCP
+                };
+            }
+            catch (error) {
+                return Promise.reject(error);
+            }
+        });
+    }
+    setNetworkSettings(DHCP, IPAddress, Mask, DefaultGateway) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (DHCP) {
+                    IPAddress = Mask = DefaultGateway = "0.0.0.0";
+                }
+                yield this.connection.sendFrame(new GW_SET_NETWORK_SETUP_REQ_1.GW_SET_NETWORK_SETUP_REQ(DHCP, IPAddress, Mask, DefaultGateway));
+            }
+            catch (error) {
+                return Promise.reject(error);
+            }
+        });
+    }
+    /**
+     * Enables the house status monitor.
+     *
+     * With the house status monitor enabled you can get
+     * notifications of changes of products.
+     *
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    enableHouseStatusMonitor() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.connection.sendFrame(new GW_HOUSE_STATUS_MONITOR_ENABLE_REQ_1.GW_HOUSE_STATUS_MONITOR_ENABLE_REQ());
+            }
+            catch (error) {
+                return Promise.reject(error);
+            }
+        });
+    }
+    /**
+     * Disables the house status monitor.
+     *
+     * After disabling the house status monitor you will
+     * no longer get notifications of changes.
+     *
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    disableHouseStatusMonitor() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.connection.sendFrame(new GW_HOUSE_STATUS_MONITOR_DISABLE_REQ_1.GW_HOUSE_STATUS_MONITOR_DISABLE_REQ());
             }
             catch (error) {
                 return Promise.reject(error);
