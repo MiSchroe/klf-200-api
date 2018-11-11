@@ -155,3 +155,4 @@ export * from "./KLF200-API/GW_PASSWORD_CHANGE_REQ";
 export * from "./KLF200-API/GW_PASSWORD_CHANGE_CFM";
 export * from "./KLF200-API/GW_PASSWORD_CHANGE_NTF";
 export * from "./connection";
+export * from "./gateway";
