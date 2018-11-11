@@ -1,7 +1,7 @@
 import { connection } from "./connection";
 import { GW_PASSWORD_CHANGE_CFM } from "./KLF200-API/GW_PASSWORD_CHANGE_CFM";
 import { GW_PASSWORD_CHANGE_REQ } from "./KLF200-API/GW_PASSWORD_CHANGE_REQ";
-import { GW_COMMON_STATUS } from "./KLF200-API/common";
+import { GW_COMMON_STATUS, GW_INVERSE_STATUS } from "./KLF200-API/common";
 import { SoftwareVersion, GW_GET_VERSION_CFM } from "./KLF200-API/GW_GET_VERSION_CFM";
 import { GW_GET_VERSION_REQ } from "./KLF200-API/GW_GET_VERSION_REQ";
 import { GW_GET_PROTOCOL_VERSION_CFM } from "./KLF200-API/GW_GET_PROTOCOL_VERSION_CFM";
@@ -9,6 +9,8 @@ import { GW_GET_PROTOCOL_VERSION_REQ } from "./KLF200-API/GW_GET_PROTOCOL_VERSIO
 import { GatewayState, GatewaySubState, GW_GET_STATE_CFM } from "./KLF200-API/GW_GET_STATE_CFM";
 import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ";
 import { GW_SET_UTC_REQ } from "./KLF200-API/GW_SET_UTC_REQ";
+import { GW_RTC_SET_TIME_ZONE_CFM } from "./KLF200-API/GW_RTC_SET_TIME_ZONE_CFM";
+import { GW_RTC_SET_TIME_ZONE_REQ } from "./KLF200-API/GW_RTC_SET_TIME_ZONE_REQ";
 
 'use strict';
 
@@ -113,6 +115,23 @@ export class gateway {
     async setUTCDateTime(utcTimestamp: Date = new Date()): Promise<void> {
         try {
             await this.connection.sendFrame(new GW_SET_UTC_REQ(utcTimestamp));
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
+
+    /**
+     * Sets the time zone of the interface.
+     *
+     * @param {string} timeZone A string describing the time zone. See the KLF API documentation for details. Example: :GMT+1:GMT+2:0060:(1994)040102-0:110102-0
+     * @returns {Promise<void>} 
+     * @memberof gateway
+     */
+    async setTimeZone(timeZone: string): Promise<void> {
+        try {
+            const timeZoneCFM = <GW_RTC_SET_TIME_ZONE_CFM> await this.connection.sendFrame(new GW_RTC_SET_TIME_ZONE_REQ(timeZone));
+            if (timeZoneCFM.Status !== GW_INVERSE_STATUS.SUCCESS)
+                throw "Error setting time zone.";
         } catch (error) {
             return Promise.reject(error);
         }

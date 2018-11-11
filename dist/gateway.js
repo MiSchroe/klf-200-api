@@ -14,6 +14,7 @@ const GW_GET_VERSION_REQ_1 = require("./KLF200-API/GW_GET_VERSION_REQ");
 const GW_GET_PROTOCOL_VERSION_REQ_1 = require("./KLF200-API/GW_GET_PROTOCOL_VERSION_REQ");
 const GW_GET_STATE_REQ_1 = require("./KLF200-API/GW_GET_STATE_REQ");
 const GW_SET_UTC_REQ_1 = require("./KLF200-API/GW_SET_UTC_REQ");
+const GW_RTC_SET_TIME_ZONE_REQ_1 = require("./KLF200-API/GW_RTC_SET_TIME_ZONE_REQ");
 'use strict';
 /**
  * Provides basic functions to control general functions of the KLF interface.
@@ -125,6 +126,25 @@ class gateway {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 yield this.connection.sendFrame(new GW_SET_UTC_REQ_1.GW_SET_UTC_REQ(utcTimestamp));
+            }
+            catch (error) {
+                return Promise.reject(error);
+            }
+        });
+    }
+    /**
+     * Sets the time zone of the interface.
+     *
+     * @param {string} timeZone A string describing the time zone. See the KLF API documentation for details. Example: :GMT+1:GMT+2:0060:(1994)040102-0:110102-0
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    setTimeZone(timeZone) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const timeZoneCFM = yield this.connection.sendFrame(new GW_RTC_SET_TIME_ZONE_REQ_1.GW_RTC_SET_TIME_ZONE_REQ(timeZone));
+                if (timeZoneCFM.Status !== common_1.GW_INVERSE_STATUS.SUCCESS)
+                    throw "Error setting time zone.";
             }
             catch (error) {
                 return Promise.reject(error);

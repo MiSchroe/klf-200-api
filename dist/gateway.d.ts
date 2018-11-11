@@ -67,4 +67,12 @@ export declare class gateway {
      * @memberof gateway
      */
     setUTCDateTime(utcTimestamp?: Date): Promise<void>;
+    /**
+     * Sets the time zone of the interface.
+     *
+     * @param {string} timeZone A string describing the time zone. See the KLF API documentation for details. Example: :GMT+1:GMT+2:0060:(1994)040102-0:110102-0
+     * @returns {Promise<void>}
+     * @memberof gateway
+     */
+    setTimeZone(timeZone: string): Promise<void>;
 }
