@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./common");
 const GW_COMMAND_1 = require("./GW_COMMAND");
-class GW_ACTIVATE_PRODUCTGROUP_REQ extends common_1.GW_FRAME_REQ {
+class GW_ACTIVATE_PRODUCTGROUP_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     constructor(GroupID, Position, PriorityLevel = 3, CommandOriginator = 1, ParameterActive = 0, Velocity = 0, PriorityLevelLock = 0, PriorityLevels = [], LockTime = Infinity) {
         super();
         this.GroupID = GroupID;
@@ -14,7 +14,6 @@ class GW_ACTIVATE_PRODUCTGROUP_REQ extends common_1.GW_FRAME_REQ {
         this.PriorityLevelLock = PriorityLevelLock;
         this.PriorityLevels = PriorityLevels;
         this.LockTime = LockTime;
-        this.SessionID = GW_COMMAND_1.getNextSessionID();
         const buff = this.Data.slice(this.offset);
         buff.writeUInt16BE(this.SessionID, 0);
         buff.writeUInt8(this.CommandOriginator, 2);

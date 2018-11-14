@@ -8,6 +8,8 @@ import { FrameRcvFactory } from "./FrameRcvFactory";
 export type FrameReceivedHandler = (frame: IGW_FRAME_RCV) => void;
 
 const onFrameReceived = new TypedEvent<IGW_FRAME_RCV>();
+const onDataSent = new TypedEvent<Buffer>();
+const onDataReceived = new TypedEvent<Buffer>();
 
 enum KLF200SocketProtocolState {
     Invalid,
@@ -81,8 +83,25 @@ export class KLF200SocketProtocol {
         onFrameReceived.once(handler);
     }
 
+    onDataSent(handler: Listener<Buffer>): Disposable {
+        return onDataSent.on(handler);
+    }
+
+    onDataReceived(handler: Listener<Buffer>): Disposable {
+        return onDataReceived.on(handler);
+    }
+
+    offDataSent(handler: Listener<Buffer>): void {
+        onDataSent.off(handler);
+    }
+
+    offDataReceived(handler: Listener<Buffer>): void {
+        onDataReceived.off(handler);
+    }
+
     async send(data: Buffer): Promise<void> {
         try {
+            onDataReceived.emit(data);
             const frameBuffer = KLF200Protocol.Decode(SLIPProtocol.Decode(data));
             const frame = await FrameRcvFactory.CreateRcvFrame(frameBuffer);
             onFrameReceived.emit(frame);
@@ -94,6 +113,7 @@ export class KLF200SocketProtocol {
     }
 
     write(data: Buffer): boolean {
+        onDataSent.emit(data);
         const slipBuffer = SLIPProtocol.Encode(KLF200Protocol.Encode(data));
         return this.socket.write(slipBuffer);
     }

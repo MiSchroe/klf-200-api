@@ -1,6 +1,6 @@
-import { GW_FRAME_REQ } from "./common";
+import { GW_FRAME_COMMAND_REQ } from "./common";
 import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelLock, PriorityLevelInformation } from "./GW_COMMAND";
-export declare class GW_MODE_SEND_REQ extends GW_FRAME_REQ {
+export declare class GW_MODE_SEND_REQ extends GW_FRAME_COMMAND_REQ {
     readonly Nodes: number[] | number;
     readonly ModeNumber: number;
     readonly ModeParameter: ParameterActive;
@@ -9,7 +9,6 @@ export declare class GW_MODE_SEND_REQ extends GW_FRAME_REQ {
     readonly PriorityLevelLock: PriorityLevelLock;
     readonly PriorityLevels: PriorityLevelInformation[];
     readonly LockTime: number;
-    readonly SessionID: number;
     constructor(Nodes: number[] | number, ModeNumber?: number, ModeParameter?: ParameterActive, PriorityLevel?: PriorityLevel, CommandOriginator?: CommandOriginator, PriorityLevelLock?: PriorityLevelLock, PriorityLevels?: PriorityLevelInformation[], LockTime?: number);
     protected InitializeBuffer(): void;
 }

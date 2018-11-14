@@ -12,6 +12,8 @@ const common_1 = require("./common");
 const TypedEvent_1 = require("../utils/TypedEvent");
 const FrameRcvFactory_1 = require("./FrameRcvFactory");
 const onFrameReceived = new TypedEvent_1.TypedEvent();
+const onDataSent = new TypedEvent_1.TypedEvent();
+const onDataReceived = new TypedEvent_1.TypedEvent();
 var KLF200SocketProtocolState;
 (function (KLF200SocketProtocolState) {
     KLF200SocketProtocolState[KLF200SocketProtocolState["Invalid"] = 0] = "Invalid";
@@ -69,9 +71,22 @@ class KLF200SocketProtocol {
     once(handler) {
         onFrameReceived.once(handler);
     }
+    onDataSent(handler) {
+        return onDataSent.on(handler);
+    }
+    onDataReceived(handler) {
+        return onDataReceived.on(handler);
+    }
+    offDataSent(handler) {
+        onDataSent.off(handler);
+    }
+    offDataReceived(handler) {
+        onDataReceived.off(handler);
+    }
     send(data) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                onDataReceived.emit(data);
                 const frameBuffer = common_1.KLF200Protocol.Decode(common_1.SLIPProtocol.Decode(data));
                 const frame = yield FrameRcvFactory_1.FrameRcvFactory.CreateRcvFrame(frameBuffer);
                 onFrameReceived.emit(frame);
@@ -83,6 +98,7 @@ class KLF200SocketProtocol {
         });
     }
     write(data) {
+        onDataSent.emit(data);
         const slipBuffer = common_1.SLIPProtocol.Encode(common_1.KLF200Protocol.Encode(data));
         return this.socket.write(slipBuffer);
     }

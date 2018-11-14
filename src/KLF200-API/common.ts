@@ -1,3 +1,5 @@
+import { getNextSessionID } from "./GW_COMMAND";
+
 'use strict';
 
 export const KLF200_PORT = 51200;
@@ -355,6 +357,10 @@ export interface IGW_FRAME_CFM extends IGW_FRAME_RCV {
 export interface IGW_FRAME_NTF extends IGW_FRAME_RCV {
 }
 
+export interface IGW_FRAME_COMMAND extends IGW_FRAME {
+    readonly SessionID: number;
+}
+
 export abstract class GW_FRAME implements IGW_FRAME {
     readonly Command: GatewayCommand = GatewayCommand[<keyof typeof GatewayCommand>this.constructor.name];
     protected readonly offset = C_BUFFERLEN_SIZE + C_COMMAND_SIZE;
@@ -399,6 +405,16 @@ export abstract class GW_FRAME_REQ extends GW_FRAME implements IGW_FRAME_REQ {
         if (typeof this.data === "undefined")
             this.InitializeBuffer();
         return <Buffer>this.data;
+    }
+}
+
+export abstract class GW_FRAME_COMMAND_REQ extends GW_FRAME_REQ implements IGW_FRAME_COMMAND {
+    public readonly SessionID: number;
+
+    constructor() {
+        super();
+
+        this.SessionID = getNextSessionID();
     }
 }
 

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./common");
 const GW_COMMAND_1 = require("./GW_COMMAND");
 const util_1 = require("util");
-class GW_COMMAND_SEND_REQ extends common_1.GW_FRAME_REQ {
+class GW_COMMAND_SEND_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     constructor(Nodes, MainValue, PriorityLevel = 3, CommandOriginator = 1, ParameterActive = 0, FunctionalParameters = [], PriorityLevelLock = 0, PriorityLevels = [], LockTime = Infinity) {
         super();
         this.Nodes = Nodes;
@@ -15,7 +15,6 @@ class GW_COMMAND_SEND_REQ extends common_1.GW_FRAME_REQ {
         this.PriorityLevelLock = PriorityLevelLock;
         this.PriorityLevels = PriorityLevels;
         this.LockTime = LockTime;
-        this.SessionID = GW_COMMAND_1.getNextSessionID();
         const buff = this.Data.slice(this.offset);
         buff.writeUInt16BE(this.SessionID, 0);
         buff.writeUInt8(this.CommandOriginator, 2);

@@ -1,16 +1,13 @@
 'use strict';
 
-import { GW_FRAME_REQ } from "./common";
-import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelLock, getNextSessionID, LockTime as lt, FunctionalParameter, PriorityLevelInformation } from "./GW_COMMAND";
+import { GW_FRAME_COMMAND_REQ } from "./common";
+import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelLock, LockTime as lt, PriorityLevelInformation } from "./GW_COMMAND";
 import { isArray } from "util";
 
-export class GW_MODE_SEND_REQ extends GW_FRAME_REQ {
-    public readonly SessionID: number;
-
+export class GW_MODE_SEND_REQ extends GW_FRAME_COMMAND_REQ {
     constructor(readonly Nodes: number[] | number, readonly ModeNumber: number = 0, readonly ModeParameter: ParameterActive = 0, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly PriorityLevelLock: PriorityLevelLock = 0, readonly PriorityLevels: PriorityLevelInformation[] = [], readonly LockTime: number = Infinity) {
         super();
 
-        this.SessionID = getNextSessionID();
         const buff = this.Data.slice(this.offset);
 
         buff.writeUInt16BE(this.SessionID, 0);

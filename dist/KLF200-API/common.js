@@ -1,5 +1,7 @@
-'use strict';
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const GW_COMMAND_1 = require("./GW_COMMAND");
+'use strict';
 exports.KLF200_PORT = 51200;
 var GatewayCommand;
 (function (GatewayCommand) {
@@ -212,6 +214,13 @@ class GW_FRAME_REQ extends GW_FRAME {
     }
 }
 exports.GW_FRAME_REQ = GW_FRAME_REQ;
+class GW_FRAME_COMMAND_REQ extends GW_FRAME_REQ {
+    constructor() {
+        super();
+        this.SessionID = GW_COMMAND_1.getNextSessionID();
+    }
+}
+exports.GW_FRAME_COMMAND_REQ = GW_FRAME_COMMAND_REQ;
 class GW_FRAME_RCV extends GW_FRAME {
     constructor(Data) {
         super();

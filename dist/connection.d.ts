@@ -1,13 +1,15 @@
 /// <reference types="node" />
-import { IGW_FRAME_RCV, IGW_FRAME_REQ } from "./KLF200-API/common";
+import { KLF200SocketProtocol } from "./KLF200-API/KLF200SocketProtocol";
+import { IGW_FRAME_RCV, IGW_FRAME_REQ, GatewayCommand } from "./KLF200-API/common";
+import { Disposable, Listener } from "./utils/TypedEvent";
 /**
- * The connection class is used to handle the communication with the Velux KLF interface.
+ * The Connection class is used to handle the communication with the Velux KLF interface.
  * It provides login and logout functionality and provides methods to run other commands
  * on the socket API.
  * @example
- * const connection = require('velux-api').connection;
+ * const Connection = require('velux-api').Connection;
  *
- * let conn = new connection('velux-klf-12ab');
+ * let conn = new Connection('velux-klf-12ab');
  * conn.loginAsync('velux123')
  *     .then(() => {
  *         ... do some other stuff ...
@@ -18,9 +20,9 @@ import { IGW_FRAME_RCV, IGW_FRAME_REQ } from "./KLF200-API/common";
  *      });
  *
  * @export
- * @class connection
+ * @class Connection
  */
-export declare class connection {
+export declare class Connection {
     readonly host: string;
     readonly CA: Buffer;
     readonly fingerprint: string;
@@ -36,22 +38,23 @@ export declare class connection {
      *                         will be changed with subsequent firmware updates you can
      *                         provide the matching certificate with this parameter.
      * @param {string} [fingerprint=FINGERPRINT] The fingerprint of the certificate. This parameter is optional.
-     * @memberof connection
+     * @memberof Connection
      */
     constructor(host: string, CA?: Buffer, fingerprint?: string);
+    readonly KLF200SocketProtocol: KLF200SocketProtocol | undefined;
     /**
      * Logs in to the KLF interface by sending the GW_PASSWORD_ENTER_REQ.
      *
      * @param {string} password The password needed for login. The factory default password is velux123.
      * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
-     * @memberof connection
+     * @memberof Connection
      */
     loginAsync(password: string): Promise<void>;
     /**
      * Logs out from the KLF interface and closes the socket.
      *
      * @returns {Promise<void>} Returns a promise that resolves to true on successful logout or rejects with the errors.
-     * @memberof connection
+     * @memberof Connection
      */
     logoutAsync(): Promise<void>;
     /**
@@ -60,9 +63,22 @@ export declare class connection {
      * @param {IGW_FRAME_REQ} frame The frame that should be sent to the KLF interface.
      * @returns {Promise<IGW_FRAME_RCV>} Returns a promise with the corresponding confirmation message as value.
      *                                   In case of an error frame the promise will be rejected with the error number.
-     * @memberof connection
+     *                                   If the request frame is a command (with a SessionID) than the promise will be
+     *                                   resolved by the corresponding confirmation frame with a matching session ID.
+     * @memberof Connection
      */
-    sendFrame(frame: IGW_FRAME_REQ): Promise<IGW_FRAME_RCV>;
-    private initSocket;
+    sendFrameAsync(frame: IGW_FRAME_REQ): Promise<IGW_FRAME_RCV>;
+    /**
+     * Add a handler to listen for confirmations and notification.
+     * You can provide an optional filter to listen only to
+     * specific events.
+     *
+     * @param {Listener<IGW_FRAME_RCV>} handler Callback functions that is called for an event
+     * @param {GatewayCommand[]} [filter] Array of GatewayCommand entries you want to listen to. Optional.
+     * @returns {Disposable} Returns a Disposable that you can call to remove the handler.
+     * @memberof Connection
+     */
+    on(handler: Listener<IGW_FRAME_RCV>, filter?: GatewayCommand[]): Disposable;
+    private initSocketAsync;
     private checkServerIdentity;
 }

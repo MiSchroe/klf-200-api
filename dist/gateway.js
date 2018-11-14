@@ -27,13 +27,13 @@ const GW_HOUSE_STATUS_MONITOR_DISABLE_REQ_1 = require("./KLF200-API/GW_HOUSE_STA
  * Provides basic functions to control general functions of the KLF interface.
  *
  * @export
- * @class gateway
+ * @class Gateway
  */
-class gateway {
+class Gateway {
     /**
-     *Creates an instance of gateway.
-     * @param {connection} connection The connection that will be used to send and receive commands.
-     * @memberof gateway
+     *Creates an instance of Gateway.
+     * @param {Connection} connection The connection that will be used to send and receive commands.
+     * @memberof Gateway
      */
     constructor(connection) {
         this.connection = connection;
@@ -44,12 +44,12 @@ class gateway {
      * @param {string} oldPassword Provide the old password.
      * @param {string} newPassword Provide a new password. The password must not exceed 32 characters.
      * @returns {Promise<boolean>} Returns a promise that fulfills to true if the password has been changed successfully.
-     * @memberof gateway
+     * @memberof Gateway
      */
-    changePassword(oldPassword, newPassword) {
+    changePasswordAsync(oldPassword, newPassword) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const passwordChanged = yield this.connection.sendFrame(new GW_PASSWORD_CHANGE_REQ_1.GW_PASSWORD_CHANGE_REQ(oldPassword, newPassword));
+                const passwordChanged = yield this.connection.sendFrameAsync(new GW_PASSWORD_CHANGE_REQ_1.GW_PASSWORD_CHANGE_REQ(oldPassword, newPassword));
                 return passwordChanged.Status === common_1.GW_COMMON_STATUS.SUCCESS;
             }
             catch (error) {
@@ -62,12 +62,12 @@ class gateway {
      *
      * @returns {Promise<{SoftwareVersion: SoftwareVersion, HardwareVersion: number, ProductGroup: number, ProductType: number}>}
      *          Returns an object with the several version numbers.
-     * @memberof gateway
+     * @memberof Gateway
      */
-    getVersion() {
+    getVersionAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const versionInformation = yield this.connection.sendFrame(new GW_GET_VERSION_REQ_1.GW_GET_VERSION_REQ());
+                const versionInformation = yield this.connection.sendFrameAsync(new GW_GET_VERSION_REQ_1.GW_GET_VERSION_REQ());
                 return {
                     SoftwareVersion: versionInformation.SoftwareVersion,
                     HardwareVersion: versionInformation.HardwareVersion,
@@ -85,12 +85,12 @@ class gateway {
      *
      * @returns {Promise<{MajorVersion: number, MinorVersion: number}>}
      *          Returns an object with major and minor version number of the protocol.
-     * @memberof gateway
+     * @memberof Gateway
      */
-    getProtocolVersion() {
+    getProtocolVersionAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const versionInformation = yield this.connection.sendFrame(new GW_GET_PROTOCOL_VERSION_REQ_1.GW_GET_PROTOCOL_VERSION_REQ());
+                const versionInformation = yield this.connection.sendFrameAsync(new GW_GET_PROTOCOL_VERSION_REQ_1.GW_GET_PROTOCOL_VERSION_REQ());
                 return {
                     MajorVersion: versionInformation.MajorVersion,
                     MinorVersion: versionInformation.MinorVersion
@@ -106,12 +106,12 @@ class gateway {
      *
      * @returns {Promise<{GatewayState: GatewayState, SubState: GatewaySubState}>}
      *          Returns the current state and sub-state of the gateway.
-     * @memberof gateway
+     * @memberof Gateway
      */
-    getState() {
+    getStateAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const state = yield this.connection.sendFrame(new GW_GET_STATE_REQ_1.GW_GET_STATE_REQ());
+                const state = yield this.connection.sendFrameAsync(new GW_GET_STATE_REQ_1.GW_GET_STATE_REQ());
                 return {
                     GatewayState: state.GatewayState,
                     SubState: state.GatewaySubState
@@ -127,12 +127,12 @@ class gateway {
      *
      * @param {Date} [utcTimestamp=new Date()] The new date that should be set. Default is the current date/time.
      * @returns {Promise<void>}
-     * @memberof gateway
+     * @memberof Gateway
      */
-    setUTCDateTime(utcTimestamp = new Date()) {
+    setUTCDateTimeAsync(utcTimestamp = new Date()) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.connection.sendFrame(new GW_SET_UTC_REQ_1.GW_SET_UTC_REQ(utcTimestamp));
+                yield this.connection.sendFrameAsync(new GW_SET_UTC_REQ_1.GW_SET_UTC_REQ(utcTimestamp));
             }
             catch (error) {
                 return Promise.reject(error);
@@ -144,12 +144,12 @@ class gateway {
      *
      * @param {string} timeZone A string describing the time zone. See the KLF API documentation for details. Example: :GMT+1:GMT+2:0060:(1994)040102-0:110102-0
      * @returns {Promise<void>}
-     * @memberof gateway
+     * @memberof Gateway
      */
-    setTimeZone(timeZone) {
+    setTimeZoneAsync(timeZone) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const timeZoneCFM = yield this.connection.sendFrame(new GW_RTC_SET_TIME_ZONE_REQ_1.GW_RTC_SET_TIME_ZONE_REQ(timeZone));
+                const timeZoneCFM = yield this.connection.sendFrameAsync(new GW_RTC_SET_TIME_ZONE_REQ_1.GW_RTC_SET_TIME_ZONE_REQ(timeZone));
                 if (timeZoneCFM.Status !== common_1.GW_INVERSE_STATUS.SUCCESS)
                     throw "Error setting time zone.";
             }
@@ -162,12 +162,12 @@ class gateway {
      * Reboots the KLF interface. After reboot the socket has to be reconnected.
      *
      * @returns {Promise<void>}
-     * @memberof gateway
+     * @memberof Gateway
      */
-    reboot() {
+    rebootAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.connection.sendFrame(new GW_REBOOT_REQ_1.GW_REBOOT_REQ());
+                yield this.connection.sendFrameAsync(new GW_REBOOT_REQ_1.GW_REBOOT_REQ());
             }
             catch (error) {
                 return Promise.reject(error);
@@ -178,12 +178,12 @@ class gateway {
      * Resets the KLF interface to the factory default settings. After 30 seconds you can reconnect.
      *
      * @returns {Promise<void>}
-     * @memberof gateway
+     * @memberof Gateway
      */
-    factoryReset() {
+    factoryResetAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.connection.sendFrame(new GW_SET_FACTORY_DEFAULT_REQ_1.GW_SET_FACTORY_DEFAULT_REQ());
+                yield this.connection.sendFrameAsync(new GW_SET_FACTORY_DEFAULT_REQ_1.GW_SET_FACTORY_DEFAULT_REQ());
             }
             catch (error) {
                 return Promise.reject(error);
@@ -195,12 +195,12 @@ class gateway {
      * then leaveLearnState can be called to leave the learn state.
      *
      * @returns {Promise<void>}
-     * @memberof gateway
+     * @memberof Gateway
      */
-    leaveLearnState() {
+    leaveLearnStateAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.connection.sendFrame(new GW_LEAVE_LEARN_STATE_REQ_1.GW_LEAVE_LEARN_STATE_REQ());
+                yield this.connection.sendFrameAsync(new GW_LEAVE_LEARN_STATE_REQ_1.GW_LEAVE_LEARN_STATE_REQ());
             }
             catch (error) {
                 return Promise.reject(error);
@@ -212,12 +212,12 @@ class gateway {
      *
      * @returns {Promise<{IPAddress: string, Mask: string, DefaultGateway: string, DHCP: boolean}>}
      *          Returns an object with IP address, mask and default gateway and if DHCP is used.
-     * @memberof gateway
+     * @memberof Gateway
      */
-    getNetworkSettings() {
+    getNetworkSettingsAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const networkSettings = yield this.connection.sendFrame(new GW_GET_NETWORK_SETUP_REQ_1.GW_GET_NETWORK_SETUP_REQ());
+                const networkSettings = yield this.connection.sendFrameAsync(new GW_GET_NETWORK_SETUP_REQ_1.GW_GET_NETWORK_SETUP_REQ());
                 return {
                     IPAddress: networkSettings.IPAddress,
                     Mask: networkSettings.Mask,
@@ -230,13 +230,13 @@ class gateway {
             }
         });
     }
-    setNetworkSettings(DHCP, IPAddress, Mask, DefaultGateway) {
+    setNetworkSettingsAsync(DHCP, IPAddress, Mask, DefaultGateway) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if (DHCP) {
                     IPAddress = Mask = DefaultGateway = "0.0.0.0";
                 }
-                yield this.connection.sendFrame(new GW_SET_NETWORK_SETUP_REQ_1.GW_SET_NETWORK_SETUP_REQ(DHCP, IPAddress, Mask, DefaultGateway));
+                yield this.connection.sendFrameAsync(new GW_SET_NETWORK_SETUP_REQ_1.GW_SET_NETWORK_SETUP_REQ(DHCP, IPAddress, Mask, DefaultGateway));
             }
             catch (error) {
                 return Promise.reject(error);
@@ -250,12 +250,12 @@ class gateway {
      * notifications of changes of products.
      *
      * @returns {Promise<void>}
-     * @memberof gateway
+     * @memberof Gateway
      */
-    enableHouseStatusMonitor() {
+    enableHouseStatusMonitorAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.connection.sendFrame(new GW_HOUSE_STATUS_MONITOR_ENABLE_REQ_1.GW_HOUSE_STATUS_MONITOR_ENABLE_REQ());
+                yield this.connection.sendFrameAsync(new GW_HOUSE_STATUS_MONITOR_ENABLE_REQ_1.GW_HOUSE_STATUS_MONITOR_ENABLE_REQ());
             }
             catch (error) {
                 return Promise.reject(error);
@@ -269,12 +269,12 @@ class gateway {
      * no longer get notifications of changes.
      *
      * @returns {Promise<void>}
-     * @memberof gateway
+     * @memberof Gateway
      */
-    disableHouseStatusMonitor() {
+    disableHouseStatusMonitorAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.connection.sendFrame(new GW_HOUSE_STATUS_MONITOR_DISABLE_REQ_1.GW_HOUSE_STATUS_MONITOR_DISABLE_REQ());
+                yield this.connection.sendFrameAsync(new GW_HOUSE_STATUS_MONITOR_DISABLE_REQ_1.GW_HOUSE_STATUS_MONITOR_DISABLE_REQ());
             }
             catch (error) {
                 return Promise.reject(error);
@@ -282,5 +282,5 @@ class gateway {
         });
     }
 }
-exports.gateway = gateway;
+exports.Gateway = Gateway;
 //# sourceMappingURL=gateway.js.map

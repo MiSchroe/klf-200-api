@@ -13,6 +13,10 @@ export declare class KLF200SocketProtocol {
     on(handler: Listener<IGW_FRAME_RCV>): Disposable;
     off(handler: Listener<IGW_FRAME_RCV>): void;
     once(handler: Listener<IGW_FRAME_RCV>): void;
+    onDataSent(handler: Listener<Buffer>): Disposable;
+    onDataReceived(handler: Listener<Buffer>): Disposable;
+    offDataSent(handler: Listener<Buffer>): void;
+    offDataReceived(handler: Listener<Buffer>): void;
     send(data: Buffer): Promise<void>;
     write(data: Buffer): boolean;
 }

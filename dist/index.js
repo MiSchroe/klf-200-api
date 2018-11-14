@@ -163,4 +163,5 @@ __export(require("./KLF200-API/GW_PASSWORD_CHANGE_CFM"));
 __export(require("./KLF200-API/GW_PASSWORD_CHANGE_NTF"));
 __export(require("./connection"));
 __export(require("./gateway"));
+__export(require("./products"));
 //# sourceMappingURL=index.js.map

@@ -1,16 +1,13 @@
 'use strict';
 
-import { GW_FRAME_REQ } from "./common";
-import { getNextSessionID, StatusType } from "./GW_COMMAND";
+import { GW_FRAME_COMMAND_REQ } from "./common";
+import { StatusType } from "./GW_COMMAND";
 import { isArray } from "util";
 
-export class GW_STATUS_REQUEST_REQ extends GW_FRAME_REQ {
-    public readonly SessionID: number;
-
+export class GW_STATUS_REQUEST_REQ extends GW_FRAME_COMMAND_REQ {
     constructor(readonly Nodes: number[] | number, readonly StatusType: StatusType, readonly FunctionalParameters: number[] = []) {
         super();
 
-        this.SessionID = getNextSessionID();
         const buff = this.Data.slice(this.offset);
 
         buff.writeUInt16BE(this.SessionID, 0);
