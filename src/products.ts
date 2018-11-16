@@ -9,7 +9,7 @@ import { GW_SET_NODE_VARIATION_CFM } from "./KLF200-API/GW_SET_NODE_VARIATION_CF
 import { GW_SET_NODE_VARIATION_REQ } from "./KLF200-API/GW_SET_NODE_VARIATION_REQ";
 import { GW_SET_NODE_ORDER_AND_PLACEMENT_CFM } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_CFM";
 import { GW_SET_NODE_ORDER_AND_PLACEMENT_REQ } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_REQ";
-import { TypedEvent } from "./utils/TypedEvent";
+import { TypedEvent, Listener, Disposable } from "./utils/TypedEvent";
 import { PropertyChangedEvent } from "./utils/PropertyChangedEvent";
 import { GW_NODE_INFORMATION_CHANGED_NTF } from "./KLF200-API/GW_NODE_INFORMATION_CHANGED_NTF";
 import { GW_NODE_STATE_POSITION_CHANGED_NTF } from "./KLF200-API/GW_NODE_STATE_POSITION_CHANGED_NTF";
@@ -37,18 +37,75 @@ const InverseProductTypes = [
     ActuatorType.ExteriorHeating
 ];
 
+/**
+ * Each product that is registered at the KLF-200 interface will be created
+ * as an instance of the Product class.
+ *
+ * @export
+ * @class Product
+ */
 export class Product {
+    /**
+     * The event will be emitted when any of the public properties has changed.
+     * The event object contains a reference to the product, the name of the property
+     * that has changed and the new value of that property.
+     *
+     * @memberof Product
+     */
     public readonly propertyChangedEvent = new TypedEvent<PropertyChangedEvent>();
     private _name: string;
+    /**
+     * NodeID is an Actuator index in the system table, to get information from. It must be a
+     * value from 0 to 199.
+     *
+     * @type {number}
+     * @memberof Product
+     */
     public readonly NodeID: number;
+    /**
+     * Indicates the node type, ex. Window, Roller shutter, Light etc.
+     *
+     * @type {ActuatorType}
+     * @memberof Product
+     */
     public readonly TypeID: ActuatorType;
+    /**
+     * Details the node type and depends on the TypeID property.
+     *
+     * @type {number}
+     * @memberof Product
+     */
     public readonly SubType: number;
     private _order: number;
     private _placement: number;
+    /**
+     * Velocity the node is operated with.
+     *
+     * @type {Velocity}
+     * @memberof Product
+     */
     public readonly Velocity: Velocity;
     private _nodeVariation: NodeVariation;
+    /**
+     * The power mode of the node.
+     *
+     * @type {PowerSaveMode}
+     * @memberof Product
+     */
     public readonly PowerSaveMode: PowerSaveMode;
+    /**
+     * The serial number of the product.
+     *
+     * @type {Buffer}
+     * @memberof Product
+     */
     public readonly SerialNumber: Buffer;
+    /**
+     * Type of the product, eg. KMG, KMX.
+     *
+     * @type {number}
+     * @memberof Product
+     */
     public readonly ProductType: number;
     private _state: NodeOperatingState;
     private _currentPositionRaw: number;
@@ -59,10 +116,28 @@ export class Product {
     private _fp4CurrentPositionRaw: number;
     private _remainingTime: number;
     private _timeStamp: Date;
+    /**
+     * Contains the position values to move the product to a special position.
+     * The special position is defined by the alias value.
+     * 
+     * E.g. for a window the alias ID for secured ventilation if 0xD803.
+     * To move a product into secured ventilation position you have to read
+     * the value of the alias for the alias ID 0xD803 and set the
+     * raw target position to that value.
+     *
+     * @type {ActuatorAlias[]}
+     * @memberof Product
+     */
     public readonly ProductAlias: ActuatorAlias[];
     private _runStatus: RunStatus = RunStatus.ExecutionCompleted;
     private _statusReply: StatusReply = StatusReply.Unknown;
 
+    /**
+     *Creates an instance of Product.
+     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {(GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF)} frame Notification frame that is used to set the properties of the Product class instance.
+     * @memberof Product
+     */
     constructor(readonly Connection: Connection, frame: GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF) {
         this.NodeID = frame.NodeID;
         this._name = frame.Name;
@@ -94,7 +169,21 @@ export class Product {
         ]);
     }
 
+    /**
+     * Name of the product.
+     *
+     * @readonly
+     * @type {string}
+     * @memberof Product
+     */
     public get Name(): string { return this._name; }
+    /**
+     * Renames the product.
+     *
+     * @param {string} newName New name of the product.
+     * @returns {Promise<void>}
+     * @memberof Product
+     */
     public async setNameAsync(newName: string): Promise<void> {
         try {
             const confirmationFrame = <GW_SET_NODE_NAME_CFM> await this.Connection.sendFrameAsync(new GW_SET_NODE_NAME_REQ(this.NodeID, newName));
@@ -111,6 +200,13 @@ export class Product {
         }
     }
     
+    /**
+     * String representation of the TypeID and SubType.
+     *
+     * @readonly
+     * @type {string}
+     * @memberof Product
+     */
     public get Category(): string {
         switch (this.TypeID) {
             case ActuatorType.VenetianBlind:
@@ -211,7 +307,21 @@ export class Product {
         }
     }
 
+    /**
+     * Defines the variation of a product.
+     *
+     * @readonly
+     * @type {NodeVariation}
+     * @memberof Product
+     */
     public get NodeVariation(): NodeVariation { return this._nodeVariation; }
+    /**
+     * Sets the variation of a product to a new value.
+     *
+     * @param {NodeVariation} newNodeVariation New value for the variation of the product.
+     * @returns {Promise<void>}
+     * @memberof Product
+     */
     public async setNodeVariationAsync(newNodeVariation: NodeVariation): Promise<void> {
         try {
             const confirmationFrame = <GW_SET_NODE_VARIATION_CFM> await this.Connection.sendFrameAsync(new GW_SET_NODE_VARIATION_REQ(this.NodeID, newNodeVariation));
@@ -229,6 +339,14 @@ export class Product {
         }
     }
 
+    /**
+     * Sets the order and placement of the product.
+     *
+     * @param {number} newOrder The new order value of the product.
+     * @param {number} newPlacement The new placement value of the product.
+     * @returns {Promise<void>}
+     * @memberof Product
+     */
     public async setOrderAndPlacementAsync(newOrder: number, newPlacement: number): Promise<void> {
         try {
             const confirmationFrame = <GW_SET_NODE_ORDER_AND_PLACEMENT_CFM> await this.Connection.sendFrameAsync(new GW_SET_NODE_ORDER_AND_PLACEMENT_REQ(this.NodeID, newOrder, newPlacement));
@@ -246,26 +364,131 @@ export class Product {
         }
     }
 
+    /**
+     * The order in which the products should be displayed by a client application.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     public get Order(): number { return this._order; }
+    /**
+     * Sets a new value for the order number of the product.
+     *
+     * @param {number} newOrder New value for the order property.
+     * @returns {Promise<void>}
+     * @memberof Product
+     */
     public async setOrderAsync(newOrder: number): Promise<void> {
         return this.setOrderAndPlacementAsync(newOrder, this._placement);
     }
 
+    /**
+     * The placement of the product. Either a house index or a room index number.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     public get Placement(): number { return this._placement; }
+    /**
+     * Sets a new value for the placement of the product.
+     *
+     * @param {number} newPlacement New value for the placement property.
+     * @returns {Promise<void>}
+     * @memberof Product
+     */
     public async setPlacementAsync(newPlacement: number): Promise<void> {
         return this.setOrderAndPlacementAsync(this._order, newPlacement);
     }
 
+    /**
+     * Current operating state of the product.
+     *
+     * @readonly
+     * @type {NodeOperatingState}
+     * @memberof Product
+     */
     public get State(): NodeOperatingState { return this._state; }
+    /**
+     * Raw value of the current position of the product.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     public get CurrentPositionRaw(): number { return this._currentPositionRaw; }
+    /**
+     * Raw value of the target value for the position of the product.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     public get TargetPositionRaw(): number { return this._targetPositionRaw; }
+    /**
+     * Raw value of the current position of the functional paramter 1.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     public get FP1CurrentPositionRaw(): number { return this._fp1CurrentPositionRaw; }
+    /**
+     * Raw value of the current position of the functional paramter 2.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     public get FP2CurrentPositionRaw(): number { return this._fp2CurrentPositionRaw; }
+    /**
+     * Raw value of the current position of the functional paramter 3.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     public get FP3CurrentPositionRaw(): number { return this._fp3CurrentPositionRaw; }
+    /**
+     * Raw value of the current position of the functional paramter 4.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     public get FP4CurrentPositionRaw(): number { return this._fp4CurrentPositionRaw; }
+    /**
+     * Remaining time in seconds to reach the desired target position.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     public get RemainingTime(): number { return this._remainingTime; }
+    /**
+     * Timestamp of the last change to any of the properties.
+     *
+     * @readonly
+     * @type {Date}
+     * @memberof Product
+     */
     public get TimeStamp(): Date { return this._timeStamp; }
+    /**
+     * The current run status of the product.
+     *
+     * @readonly
+     * @type {RunStatus}
+     * @memberof Product
+     */
     public get RunStatus(): RunStatus { return this._runStatus; }
+    /**
+     * Additional status information, e.g. that opening a window is overruled by the rain sensor.
+     *
+     * @readonly
+     * @type {StatusReply}
+     * @memberof Product
+     */
     public get StatusReply(): StatusReply { return this._statusReply; }
 
     private convertPositionRaw(positionRaw: number): number {
@@ -293,10 +516,29 @@ export class Product {
         return 0xC800 * position;
     }
 
+    /**
+     * The current position of the product in percent.
+     * 
+     * The value is derived from the raw value and depending on
+     * the type ID it is inverted, so that 100% means e.g.
+     * window is fully open, roller shutter is fully closed,
+     * light is at full power etc.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     public get CurrentPosition(): number {
         return this.convertPositionRaw(this._currentPositionRaw);
     }
 
+    /**
+     * Sets the product to a new position in percent.
+     *
+     * @param {number} newPosition New position value in percent.
+     * @returns {Promise<number>}
+     * @memberof Product
+     */
     public async setTargetPositionAsync(newPosition: number): Promise<number> {
         try {
             const req = new GW_COMMAND_SEND_REQ(this.NodeID, this.convertPosition(newPosition));
@@ -317,10 +559,23 @@ export class Product {
         }
     }
 
+    /**
+     * The target position in percent.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     public get TargetPosition(): number {
         return this.convertPositionRaw(this._targetPositionRaw);
     }
 
+    /**
+     * Stops the product at the current position.
+     *
+     * @returns {Promise<number>}
+     * @memberof Product
+     */
     public async stopAsync(): Promise<number> {
         try {
             const confirmationFrame = <GW_COMMAND_SEND_CFM> await this.Connection.sendFrameAsync(new GW_COMMAND_SEND_REQ(this.NodeID, 0xD200));
@@ -335,6 +590,15 @@ export class Product {
         }
     }
 
+    /**
+     * Let the product "wink". Its main intention is to identify a product.
+     * 
+     * Winking depends on the product, e.g. a window moves the handle
+     * a little bit.
+     *
+     * @returns {Promise<number>}
+     * @memberof Product
+     */
     public async winkAsync(): Promise<number> {
         try {
             const confirmationFrame = <GW_WINK_SEND_CFM> await this.Connection.sendFrameAsync(new GW_WINK_SEND_REQ(this.NodeID));
@@ -349,6 +613,13 @@ export class Product {
         }
     }
 
+    /**
+     * This method emits the property changed event for the provided property name.
+     *
+     * @protected
+     * @param {keyof Product} propertyName Name of the property that has changed.
+     * @memberof Product
+     */
     protected propertyChanged(propertyName: keyof Product): void {
         this.propertyChangedEvent.emit({o: this, propertyName: propertyName, propertyValue: this[propertyName]});
     }
@@ -498,9 +769,35 @@ export class Product {
     }
 }
 
+/**
+ * Use the products object to retrieve a list of products known to your KLF interface.
+ * Products are e.g. windows, roller shutters, awnings.
+ * 
+ * To create an instance of the Products class use the
+ * static method [Products.createProductsAsync]{@link Products#createProductsAsync}.
+ *
+ * @export
+ * @class Products
+ */
 export class Products {
+    private _onNewProduct = new TypedEvent<number>();
+    private _onRemovedProduct = new TypedEvent<number>();
+
+    /**
+     * Contains a list of products.
+     * The index of each product corresponds to the 
+     * system table index. The range is [0-199].
+     *
+     * @type {((Product | undefined)[])}
+     * @memberof Products
+     */
     public readonly Products: (Product | undefined)[] = [];
 
+    /**
+     *Creates an instance of Products.
+     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @memberof Products
+     */
     private constructor(readonly Connection: Connection) {}
 
     private async initializeProductsAsync(): Promise<void> {
@@ -523,13 +820,49 @@ export class Products {
         }
     }
 
+    /**
+     * Adds a handler that will be called if a new product is added to the KLF-200 interface.
+     *
+     * @param {Listener<number>} handler Event handler that is called if a new product is added.
+     * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
+     * @memberof Products
+     */
+    public onNewProduct(handler: Listener<number>): Disposable {
+        return this._onNewProduct.on(handler);
+    }
+
+    /**
+     * Adds a handler that will be called if a product is removed from the KLF-200 interface.
+     *
+     * @param {Listener<number>} handler Event handler that is called if a product is removed.
+     * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
+     * @memberof Products
+     */
+    public onRemovedProduct(handler: Listener<number>): Disposable {
+        return this._onRemovedProduct.on(handler);
+    }
+
+    private notifyNewProduct(nodeId: number): void {
+        this._onNewProduct.emit(nodeId);
+    }
+
+    private notifiyRemovedProduct(nodeId: number): void {
+        this._onRemovedProduct.emit(nodeId);
+    }
+
     private onNotificationHandler(frame: IGW_FRAME_RCV): void {
         if (frame instanceof GW_CS_SYSTEM_TABLE_UPDATE_NTF) {
             // Remove nodes
-            frame.RemovedNodes.forEach(nodeID => { this.Products[nodeID] = undefined});
+            frame.RemovedNodes.forEach(nodeID => {
+                this.Products[nodeID] = undefined;
+                this.notifiyRemovedProduct(nodeID);
+            });
 
             // Add nodes
-            frame.AddedNodes.forEach(async nodeID => { this.Products[nodeID] = await this.addNodeAsync(nodeID); });
+            frame.AddedNodes.forEach(async nodeID => {
+                this.Products[nodeID] = await this.addNodeAsync(nodeID);
+                this.notifyNewProduct(nodeID);
+            });
         }
     }
 
@@ -548,6 +881,22 @@ export class Products {
         }
     }
 
+    /**
+     * Creates a new instance of the Products class.
+     * During the initilization phase of the class
+     * a list of all registered products will be
+     * retrieved from the KFL-200 interface and
+     * stored at the Product array.
+     * 
+     * Additionally, some notification handlers
+     * will be instantiated to watch for changes
+     * to the products.
+     *
+     * @static
+     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @returns {Promise<Products>} Resolves to a new instance of the Products class.
+     * @memberof Products
+     */
     static async createProductsAsync(Connection: Connection): Promise<Products> {
         try {
             const result = new Products(Connection);
@@ -558,26 +907,3 @@ export class Products {
         }
     }
 }
-
-// /**
-//  * Create a new products object.
-//  * Use the products object to retrieve a list of products known to your KLF interface.
-//  * @constructor
-//  * @param {connection} connection The connection object that handles the communication to the KLF interface.
-//  */
-// function products(connection) {
-//     this.connection = connection;
-// }
-
-// /**
-//  * Gets a list of your products.
-//  * @return {Promise} Returns a promise that resolves to the products array.
-//  */
-// products.prototype.getAsync = function () {
-//     return this.connection.postAsync(urlBuilder.products, 'get', null)
-//         .then((res) => {
-//             return res.data;
-//         });
-// };
-
-// module.exports = products;

@@ -34,9 +34,29 @@ const InverseProductTypes = [
     GW_SYSTEMTABLE_DATA_1.ActuatorType.VentilationPoint,
     GW_SYSTEMTABLE_DATA_1.ActuatorType.ExteriorHeating
 ];
+/**
+ * Each product that is registered at the KLF-200 interface will be created
+ * as an instance of the Product class.
+ *
+ * @export
+ * @class Product
+ */
 class Product {
+    /**
+     *Creates an instance of Product.
+     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {(GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF)} frame Notification frame that is used to set the properties of the Product class instance.
+     * @memberof Product
+     */
     constructor(Connection, frame) {
         this.Connection = Connection;
+        /**
+         * The event will be emitted when any of the public properties has changed.
+         * The event object contains a reference to the product, the name of the property
+         * that has changed and the new value of that property.
+         *
+         * @memberof Product
+         */
         this.propertyChangedEvent = new TypedEvent_1.TypedEvent();
         this._runStatus = GW_COMMAND_1.RunStatus.ExecutionCompleted;
         this._statusReply = GW_COMMAND_1.StatusReply.Unknown;
@@ -68,7 +88,21 @@ class Product {
             common_1.GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF
         ]);
     }
+    /**
+     * Name of the product.
+     *
+     * @readonly
+     * @type {string}
+     * @memberof Product
+     */
     get Name() { return this._name; }
+    /**
+     * Renames the product.
+     *
+     * @param {string} newName New name of the product.
+     * @returns {Promise<void>}
+     * @memberof Product
+     */
     setNameAsync(newName) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -86,6 +120,13 @@ class Product {
             }
         });
     }
+    /**
+     * String representation of the TypeID and SubType.
+     *
+     * @readonly
+     * @type {string}
+     * @memberof Product
+     */
     get Category() {
         switch (this.TypeID) {
             case GW_SYSTEMTABLE_DATA_1.ActuatorType.VenetianBlind:
@@ -159,7 +200,21 @@ class Product {
                 return `${this.TypeID.toString()}.${this.SubType.toString()}`;
         }
     }
+    /**
+     * Defines the variation of a product.
+     *
+     * @readonly
+     * @type {NodeVariation}
+     * @memberof Product
+     */
     get NodeVariation() { return this._nodeVariation; }
+    /**
+     * Sets the variation of a product to a new value.
+     *
+     * @param {NodeVariation} newNodeVariation New value for the variation of the product.
+     * @returns {Promise<void>}
+     * @memberof Product
+     */
     setNodeVariationAsync(newNodeVariation) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -177,6 +232,14 @@ class Product {
             }
         });
     }
+    /**
+     * Sets the order and placement of the product.
+     *
+     * @param {number} newOrder The new order value of the product.
+     * @param {number} newPlacement The new placement value of the product.
+     * @returns {Promise<void>}
+     * @memberof Product
+     */
     setOrderAndPlacementAsync(newOrder, newPlacement) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -195,28 +258,133 @@ class Product {
             }
         });
     }
+    /**
+     * The order in which the products should be displayed by a client application.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     get Order() { return this._order; }
+    /**
+     * Sets a new value for the order number of the product.
+     *
+     * @param {number} newOrder New value for the order property.
+     * @returns {Promise<void>}
+     * @memberof Product
+     */
     setOrderAsync(newOrder) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.setOrderAndPlacementAsync(newOrder, this._placement);
         });
     }
+    /**
+     * The placement of the product. Either a house index or a room index number.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     get Placement() { return this._placement; }
+    /**
+     * Sets a new value for the placement of the product.
+     *
+     * @param {number} newPlacement New value for the placement property.
+     * @returns {Promise<void>}
+     * @memberof Product
+     */
     setPlacementAsync(newPlacement) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.setOrderAndPlacementAsync(this._order, newPlacement);
         });
     }
+    /**
+     * Current operating state of the product.
+     *
+     * @readonly
+     * @type {NodeOperatingState}
+     * @memberof Product
+     */
     get State() { return this._state; }
+    /**
+     * Raw value of the current position of the product.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     get CurrentPositionRaw() { return this._currentPositionRaw; }
+    /**
+     * Raw value of the target value for the position of the product.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     get TargetPositionRaw() { return this._targetPositionRaw; }
+    /**
+     * Raw value of the current position of the functional paramter 1.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     get FP1CurrentPositionRaw() { return this._fp1CurrentPositionRaw; }
+    /**
+     * Raw value of the current position of the functional paramter 2.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     get FP2CurrentPositionRaw() { return this._fp2CurrentPositionRaw; }
+    /**
+     * Raw value of the current position of the functional paramter 3.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     get FP3CurrentPositionRaw() { return this._fp3CurrentPositionRaw; }
+    /**
+     * Raw value of the current position of the functional paramter 4.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     get FP4CurrentPositionRaw() { return this._fp4CurrentPositionRaw; }
+    /**
+     * Remaining time in seconds to reach the desired target position.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     get RemainingTime() { return this._remainingTime; }
+    /**
+     * Timestamp of the last change to any of the properties.
+     *
+     * @readonly
+     * @type {Date}
+     * @memberof Product
+     */
     get TimeStamp() { return this._timeStamp; }
+    /**
+     * The current run status of the product.
+     *
+     * @readonly
+     * @type {RunStatus}
+     * @memberof Product
+     */
     get RunStatus() { return this._runStatus; }
+    /**
+     * Additional status information, e.g. that opening a window is overruled by the rain sensor.
+     *
+     * @readonly
+     * @type {StatusReply}
+     * @memberof Product
+     */
     get StatusReply() { return this._statusReply; }
     convertPositionRaw(positionRaw) {
         if (positionRaw > 0xC800) {
@@ -238,9 +406,28 @@ class Product {
         }
         return 0xC800 * position;
     }
+    /**
+     * The current position of the product in percent.
+     *
+     * The value is derived from the raw value and depending on
+     * the type ID it is inverted, so that 100% means e.g.
+     * window is fully open, roller shutter is fully closed,
+     * light is at full power etc.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     get CurrentPosition() {
         return this.convertPositionRaw(this._currentPositionRaw);
     }
+    /**
+     * Sets the product to a new position in percent.
+     *
+     * @param {number} newPosition New position value in percent.
+     * @returns {Promise<number>}
+     * @memberof Product
+     */
     setTargetPositionAsync(newPosition) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -263,9 +450,22 @@ class Product {
             }
         });
     }
+    /**
+     * The target position in percent.
+     *
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
     get TargetPosition() {
         return this.convertPositionRaw(this._targetPositionRaw);
     }
+    /**
+     * Stops the product at the current position.
+     *
+     * @returns {Promise<number>}
+     * @memberof Product
+     */
     stopAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -282,6 +482,15 @@ class Product {
             }
         });
     }
+    /**
+     * Let the product "wink". Its main intention is to identify a product.
+     *
+     * Winking depends on the product, e.g. a window moves the handle
+     * a little bit.
+     *
+     * @returns {Promise<number>}
+     * @memberof Product
+     */
     winkAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -298,6 +507,13 @@ class Product {
             }
         });
     }
+    /**
+     * This method emits the property changed event for the provided property name.
+     *
+     * @protected
+     * @param {keyof Product} propertyName Name of the property that has changed.
+     * @memberof Product
+     */
     propertyChanged(propertyName) {
         this.propertyChangedEvent.emit({ o: this, propertyName: propertyName, propertyValue: this[propertyName] });
     }
@@ -434,9 +650,34 @@ class Product {
     }
 }
 exports.Product = Product;
+/**
+ * Use the products object to retrieve a list of products known to your KLF interface.
+ * Products are e.g. windows, roller shutters, awnings.
+ *
+ * To create an instance of the Products class use the
+ * static method [Products.createProductsAsync]{@link Products#createProductsAsync}.
+ *
+ * @export
+ * @class Products
+ */
 class Products {
+    /**
+     *Creates an instance of Products.
+     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @memberof Products
+     */
     constructor(Connection) {
         this.Connection = Connection;
+        this._onNewProduct = new TypedEvent_1.TypedEvent();
+        this._onRemovedProduct = new TypedEvent_1.TypedEvent();
+        /**
+         * Contains a list of products.
+         * The index of each product corresponds to the
+         * system table index. The range is [0-199].
+         *
+         * @type {((Product | undefined)[])}
+         * @memberof Products
+         */
         this.Products = [];
     }
     initializeProductsAsync() {
@@ -461,12 +702,44 @@ class Products {
             }
         });
     }
+    /**
+     * Adds a handler that will be called if a new product is added to the KLF-200 interface.
+     *
+     * @param {Listener<number>} handler Event handler that is called if a new product is added.
+     * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
+     * @memberof Products
+     */
+    onNewProduct(handler) {
+        return this._onNewProduct.on(handler);
+    }
+    /**
+     * Adds a handler that will be called if a product is removed from the KLF-200 interface.
+     *
+     * @param {Listener<number>} handler Event handler that is called if a product is removed.
+     * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
+     * @memberof Products
+     */
+    onRemovedProduct(handler) {
+        return this._onRemovedProduct.on(handler);
+    }
+    notifyNewProduct(nodeId) {
+        this._onNewProduct.emit(nodeId);
+    }
+    notifiyRemovedProduct(nodeId) {
+        this._onRemovedProduct.emit(nodeId);
+    }
     onNotificationHandler(frame) {
         if (frame instanceof GW_CS_SYSTEM_TABLE_UPDATE_NTF_1.GW_CS_SYSTEM_TABLE_UPDATE_NTF) {
             // Remove nodes
-            frame.RemovedNodes.forEach(nodeID => { this.Products[nodeID] = undefined; });
+            frame.RemovedNodes.forEach(nodeID => {
+                this.Products[nodeID] = undefined;
+                this.notifiyRemovedProduct(nodeID);
+            });
             // Add nodes
-            frame.AddedNodes.forEach((nodeID) => __awaiter(this, void 0, void 0, function* () { this.Products[nodeID] = yield this.addNodeAsync(nodeID); }));
+            frame.AddedNodes.forEach((nodeID) => __awaiter(this, void 0, void 0, function* () {
+                this.Products[nodeID] = yield this.addNodeAsync(nodeID);
+                this.notifyNewProduct(nodeID);
+            }));
         }
     }
     addNodeAsync(nodeID) {
@@ -485,6 +758,22 @@ class Products {
             }
         });
     }
+    /**
+     * Creates a new instance of the Products class.
+     * During the initilization phase of the class
+     * a list of all registered products will be
+     * retrieved from the KFL-200 interface and
+     * stored at the Product array.
+     *
+     * Additionally, some notification handlers
+     * will be instantiated to watch for changes
+     * to the products.
+     *
+     * @static
+     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @returns {Promise<Products>} Resolves to a new instance of the Products class.
+     * @memberof Products
+     */
     static createProductsAsync(Connection) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -499,24 +788,4 @@ class Products {
     }
 }
 exports.Products = Products;
-// /**
-//  * Create a new products object.
-//  * Use the products object to retrieve a list of products known to your KLF interface.
-//  * @constructor
-//  * @param {connection} connection The connection object that handles the communication to the KLF interface.
-//  */
-// function products(connection) {
-//     this.connection = connection;
-// }
-// /**
-//  * Gets a list of your products.
-//  * @return {Promise} Returns a promise that resolves to the products array.
-//  */
-// products.prototype.getAsync = function () {
-//     return this.connection.postAsync(urlBuilder.products, 'get', null)
-//         .then((res) => {
-//             return res.data;
-//         });
-// };
-// module.exports = products;
 //# sourceMappingURL=products.js.map
