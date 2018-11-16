@@ -5,6 +5,9 @@ import { Listener, Disposable } from "../utils/TypedEvent";
 export declare type FrameReceivedHandler = (frame: IGW_FRAME_RCV) => void;
 export declare class KLF200SocketProtocol {
     readonly socket: Socket;
+    private _onFrameReceived;
+    private _onDataSent;
+    private _onDataReceived;
     private state;
     private queue;
     constructor(socket: Socket);

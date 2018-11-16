@@ -1,5 +1,6 @@
 # klf-200-api
 This module provides a wrapper to the official API of a KLF-200 interface.
+You can find the links to the firmware and the documentation at https://www.velux.com/api/klf200.
 
 ## Installation
 ```

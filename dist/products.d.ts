@@ -5,6 +5,7 @@ import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_
 import { Connection } from "./connection";
 import { TypedEvent } from "./utils/TypedEvent";
 import { PropertyChangedEvent } from "./utils/PropertyChangedEvent";
+import { RunStatus, StatusReply } from "./KLF200-API/GW_COMMAND";
 export declare class Product {
     readonly Connection: Connection;
     readonly propertyChangedEvent: TypedEvent<PropertyChangedEvent>;
@@ -29,6 +30,8 @@ export declare class Product {
     private _remainingTime;
     private _timeStamp;
     readonly ProductAlias: ActuatorAlias[];
+    private _runStatus;
+    private _statusReply;
     constructor(Connection: Connection, frame: GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF);
     readonly Name: string;
     setNameAsync(newName: string): Promise<void>;
@@ -49,14 +52,21 @@ export declare class Product {
     readonly FP4CurrentPositionRaw: number;
     readonly RemainingTime: number;
     readonly TimeStamp: Date;
+    readonly RunStatus: RunStatus;
+    readonly StatusReply: StatusReply;
     private convertPositionRaw;
     private convertPosition;
     readonly CurrentPosition: number;
-    setCurrentPositionAsync(newPosition: number): Promise<number>;
+    setTargetPositionAsync(newPosition: number): Promise<number>;
     readonly TargetPosition: number;
+    stopAsync(): Promise<number>;
+    winkAsync(): Promise<number>;
+    protected propertyChanged(propertyName: keyof Product): void;
     private onNotificationHandler;
     private onNodeInformationChanged;
     private onNodeStatePositionChanged;
+    private onRunStatus;
+    private onRemainingTime;
 }
 export declare class Products {
     readonly Connection: Connection;

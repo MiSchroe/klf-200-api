@@ -7,16 +7,16 @@ import { FrameRcvFactory } from "./FrameRcvFactory";
 
 export type FrameReceivedHandler = (frame: IGW_FRAME_RCV) => void;
 
-const onFrameReceived = new TypedEvent<IGW_FRAME_RCV>();
-const onDataSent = new TypedEvent<Buffer>();
-const onDataReceived = new TypedEvent<Buffer>();
-
 enum KLF200SocketProtocolState {
     Invalid,
     StartFound
 }
 
 export class KLF200SocketProtocol {
+    private _onFrameReceived = new TypedEvent<IGW_FRAME_RCV>();
+    private _onDataSent = new TypedEvent<Buffer>();
+    private _onDataReceived = new TypedEvent<Buffer>();
+    
     private state: KLF200SocketProtocolState = KLF200SocketProtocolState.Invalid;
     private queue: Buffer[] = [];
 
@@ -72,39 +72,39 @@ export class KLF200SocketProtocol {
     }
 
     on(handler: Listener<IGW_FRAME_RCV>): Disposable {
-        return onFrameReceived.on(handler);
+        return this._onFrameReceived.on(handler);
     }
 
     off(handler: Listener<IGW_FRAME_RCV>): void {
-        onFrameReceived.off(handler);
+        this._onFrameReceived.off(handler);
     }
 
     once(handler: Listener<IGW_FRAME_RCV>): void {
-        onFrameReceived.once(handler);
+        this._onFrameReceived.once(handler);
     }
 
     onDataSent(handler: Listener<Buffer>): Disposable {
-        return onDataSent.on(handler);
+        return this._onDataSent.on(handler);
     }
 
     onDataReceived(handler: Listener<Buffer>): Disposable {
-        return onDataReceived.on(handler);
+        return this._onDataReceived.on(handler);
     }
 
     offDataSent(handler: Listener<Buffer>): void {
-        onDataSent.off(handler);
+        this._onDataSent.off(handler);
     }
 
     offDataReceived(handler: Listener<Buffer>): void {
-        onDataReceived.off(handler);
+        this._onDataReceived.off(handler);
     }
 
     async send(data: Buffer): Promise<void> {
         try {
-            onDataReceived.emit(data);
+            this._onDataReceived.emit(data);
             const frameBuffer = KLF200Protocol.Decode(SLIPProtocol.Decode(data));
             const frame = await FrameRcvFactory.CreateRcvFrame(frameBuffer);
-            onFrameReceived.emit(frame);
+            this._onFrameReceived.emit(frame);
             return Promise.resolve();
         }
         catch (e) {
@@ -113,7 +113,7 @@ export class KLF200SocketProtocol {
     }
 
     write(data: Buffer): boolean {
-        onDataSent.emit(data);
+        this._onDataSent.emit(data);
         const slipBuffer = SLIPProtocol.Encode(KLF200Protocol.Encode(data));
         return this.socket.write(slipBuffer);
     }

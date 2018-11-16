@@ -11,9 +11,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./common");
 const TypedEvent_1 = require("../utils/TypedEvent");
 const FrameRcvFactory_1 = require("./FrameRcvFactory");
-const onFrameReceived = new TypedEvent_1.TypedEvent();
-const onDataSent = new TypedEvent_1.TypedEvent();
-const onDataReceived = new TypedEvent_1.TypedEvent();
 var KLF200SocketProtocolState;
 (function (KLF200SocketProtocolState) {
     KLF200SocketProtocolState[KLF200SocketProtocolState["Invalid"] = 0] = "Invalid";
@@ -22,6 +19,9 @@ var KLF200SocketProtocolState;
 class KLF200SocketProtocol {
     constructor(socket) {
         this.socket = socket;
+        this._onFrameReceived = new TypedEvent_1.TypedEvent();
+        this._onDataSent = new TypedEvent_1.TypedEvent();
+        this._onDataReceived = new TypedEvent_1.TypedEvent();
         this.state = KLF200SocketProtocolState.Invalid;
         this.queue = [];
         socket.on("data", (data) => this.processData(data));
@@ -63,33 +63,33 @@ class KLF200SocketProtocol {
     onSocketClose(had_error) {
     }
     on(handler) {
-        return onFrameReceived.on(handler);
+        return this._onFrameReceived.on(handler);
     }
     off(handler) {
-        onFrameReceived.off(handler);
+        this._onFrameReceived.off(handler);
     }
     once(handler) {
-        onFrameReceived.once(handler);
+        this._onFrameReceived.once(handler);
     }
     onDataSent(handler) {
-        return onDataSent.on(handler);
+        return this._onDataSent.on(handler);
     }
     onDataReceived(handler) {
-        return onDataReceived.on(handler);
+        return this._onDataReceived.on(handler);
     }
     offDataSent(handler) {
-        onDataSent.off(handler);
+        this._onDataSent.off(handler);
     }
     offDataReceived(handler) {
-        onDataReceived.off(handler);
+        this._onDataReceived.off(handler);
     }
     send(data) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                onDataReceived.emit(data);
+                this._onDataReceived.emit(data);
                 const frameBuffer = common_1.KLF200Protocol.Decode(common_1.SLIPProtocol.Decode(data));
                 const frame = yield FrameRcvFactory_1.FrameRcvFactory.CreateRcvFrame(frameBuffer);
-                onFrameReceived.emit(frame);
+                this._onFrameReceived.emit(frame);
                 return Promise.resolve();
             }
             catch (e) {
@@ -98,7 +98,7 @@ class KLF200SocketProtocol {
         });
     }
     write(data) {
-        onDataSent.emit(data);
+        this._onDataSent.emit(data);
         const slipBuffer = common_1.SLIPProtocol.Encode(common_1.KLF200Protocol.Encode(data));
         return this.socket.write(slipBuffer);
     }
