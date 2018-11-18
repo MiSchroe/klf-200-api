@@ -3,8 +3,8 @@ import { Velocity, ActuatorType, NodeVariation, PowerSaveMode, NodeOperatingStat
 import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
 import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF";
 import { Connection } from "./connection";
-import { TypedEvent, Listener, Disposable } from "./utils/TypedEvent";
-import { PropertyChangedEvent } from "./utils/PropertyChangedEvent";
+import { Listener, Disposable } from "./utils/TypedEvent";
+import { Component } from "./utils/PropertyChangedEvent";
 import { RunStatus, StatusReply } from "./KLF200-API/GW_COMMAND";
 /**
  * Each product that is registered at the KLF-200 interface will be created
@@ -13,16 +13,8 @@ import { RunStatus, StatusReply } from "./KLF200-API/GW_COMMAND";
  * @export
  * @class Product
  */
-export declare class Product {
+export declare class Product extends Component {
     readonly Connection: Connection;
-    /**
-     * The event will be emitted when any of the public properties has changed.
-     * The event object contains a reference to the product, the name of the property
-     * that has changed and the new value of that property.
-     *
-     * @memberof Product
-     */
-    readonly propertyChangedEvent: TypedEvent<PropertyChangedEvent>;
     private _name;
     /**
      * NodeID is an Actuator index in the system table, to get information from. It must be a
@@ -325,14 +317,6 @@ export declare class Product {
      * @memberof Product
      */
     winkAsync(): Promise<number>;
-    /**
-     * This method emits the property changed event for the provided property name.
-     *
-     * @protected
-     * @param {keyof Product} propertyName Name of the property that has changed.
-     * @memberof Product
-     */
-    protected propertyChanged(propertyName: keyof Product): void;
     private onNotificationHandler;
     private onNodeInformationChanged;
     private onNodeStatePositionChanged;

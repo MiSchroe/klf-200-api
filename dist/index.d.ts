@@ -157,3 +157,4 @@ export * from "./KLF200-API/GW_PASSWORD_CHANGE_NTF";
 export * from "./connection";
 export * from "./gateway";
 export * from "./products";
+export * from "./scenes";

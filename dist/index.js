@@ -164,4 +164,5 @@ __export(require("./KLF200-API/GW_PASSWORD_CHANGE_NTF"));
 __export(require("./connection"));
 __export(require("./gateway"));
 __export(require("./products"));
+__export(require("./scenes"));
 //# sourceMappingURL=index.js.map

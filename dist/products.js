@@ -15,6 +15,7 @@ const common_1 = require("./KLF200-API/common");
 const GW_SET_NODE_VARIATION_REQ_1 = require("./KLF200-API/GW_SET_NODE_VARIATION_REQ");
 const GW_SET_NODE_ORDER_AND_PLACEMENT_REQ_1 = require("./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_REQ");
 const TypedEvent_1 = require("./utils/TypedEvent");
+const PropertyChangedEvent_1 = require("./utils/PropertyChangedEvent");
 const GW_NODE_INFORMATION_CHANGED_NTF_1 = require("./KLF200-API/GW_NODE_INFORMATION_CHANGED_NTF");
 const GW_NODE_STATE_POSITION_CHANGED_NTF_1 = require("./KLF200-API/GW_NODE_STATE_POSITION_CHANGED_NTF");
 const GW_COMMAND_SEND_REQ_1 = require("./KLF200-API/GW_COMMAND_SEND_REQ");
@@ -41,7 +42,7 @@ const InverseProductTypes = [
  * @export
  * @class Product
  */
-class Product {
+class Product extends PropertyChangedEvent_1.Component {
     /**
      *Creates an instance of Product.
      * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
@@ -49,15 +50,8 @@ class Product {
      * @memberof Product
      */
     constructor(Connection, frame) {
+        super();
         this.Connection = Connection;
-        /**
-         * The event will be emitted when any of the public properties has changed.
-         * The event object contains a reference to the product, the name of the property
-         * that has changed and the new value of that property.
-         *
-         * @memberof Product
-         */
-        this.propertyChangedEvent = new TypedEvent_1.TypedEvent();
         this._runStatus = GW_COMMAND_1.RunStatus.ExecutionCompleted;
         this._statusReply = GW_COMMAND_1.StatusReply.Unknown;
         this.NodeID = frame.NodeID;
@@ -507,16 +501,6 @@ class Product {
             }
         });
     }
-    /**
-     * This method emits the property changed event for the provided property name.
-     *
-     * @protected
-     * @param {keyof Product} propertyName Name of the property that has changed.
-     * @memberof Product
-     */
-    propertyChanged(propertyName) {
-        this.propertyChangedEvent.emit({ o: this, propertyName: propertyName, propertyValue: this[propertyName] });
-    }
     onNotificationHandler(frame) {
         if (typeof this === "undefined")
             return;
@@ -694,7 +678,7 @@ class Products {
                             resolve();
                         }
                     }, [common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF]);
-                    const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ_1.GW_GET_ALL_NODES_INFORMATION_REQ());
+                    yield this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ_1.GW_GET_ALL_NODES_INFORMATION_REQ());
                 }));
             }
             catch (error) {

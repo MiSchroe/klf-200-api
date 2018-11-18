@@ -10,7 +10,7 @@ import { GW_SET_NODE_VARIATION_REQ } from "./KLF200-API/GW_SET_NODE_VARIATION_RE
 import { GW_SET_NODE_ORDER_AND_PLACEMENT_CFM } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_CFM";
 import { GW_SET_NODE_ORDER_AND_PLACEMENT_REQ } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_REQ";
 import { TypedEvent, Listener, Disposable } from "./utils/TypedEvent";
-import { PropertyChangedEvent } from "./utils/PropertyChangedEvent";
+import { PropertyChangedEvent, Component } from "./utils/PropertyChangedEvent";
 import { GW_NODE_INFORMATION_CHANGED_NTF } from "./KLF200-API/GW_NODE_INFORMATION_CHANGED_NTF";
 import { GW_NODE_STATE_POSITION_CHANGED_NTF } from "./KLF200-API/GW_NODE_STATE_POSITION_CHANGED_NTF";
 import { GW_COMMAND_SEND_REQ } from "./KLF200-API/GW_COMMAND_SEND_REQ";
@@ -44,15 +44,7 @@ const InverseProductTypes = [
  * @export
  * @class Product
  */
-export class Product {
-    /**
-     * The event will be emitted when any of the public properties has changed.
-     * The event object contains a reference to the product, the name of the property
-     * that has changed and the new value of that property.
-     *
-     * @memberof Product
-     */
-    public readonly propertyChangedEvent = new TypedEvent<PropertyChangedEvent>();
+export class Product extends Component {
     private _name: string;
     /**
      * NodeID is an Actuator index in the system table, to get information from. It must be a
@@ -139,6 +131,8 @@ export class Product {
      * @memberof Product
      */
     constructor(readonly Connection: Connection, frame: GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF) {
+        super();
+        
         this.NodeID = frame.NodeID;
         this._name = frame.Name;
         this.TypeID = frame.ActuatorType;
@@ -613,17 +607,6 @@ export class Product {
         }
     }
 
-    /**
-     * This method emits the property changed event for the provided property name.
-     *
-     * @protected
-     * @param {keyof Product} propertyName Name of the property that has changed.
-     * @memberof Product
-     */
-    protected propertyChanged(propertyName: keyof Product): void {
-        this.propertyChangedEvent.emit({o: this, propertyName: propertyName, propertyValue: this[propertyName]});
-    }
-
     private onNotificationHandler(frame: IGW_FRAME_RCV): void {
         if (typeof this === "undefined")
             return;
@@ -813,7 +796,7 @@ export class Products {
                         resolve();
                     }
                 }, [GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF]);
-                const confirmationFrame = <GW_GET_ALL_NODES_INFORMATION_CFM> await this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ());
+                await this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ());
             });
         } catch (error) {
             return Promise.reject(error);
