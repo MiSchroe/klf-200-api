@@ -21,19 +21,60 @@ const GW_GET_SCENE_INFORMATION_REQ_1 = require("./KLF200-API/GW_GET_SCENE_INFORM
 const PropertyChangedEvent_1 = require("./utils/PropertyChangedEvent");
 const GW_STOP_SCENE_REQ_1 = require("./KLF200-API/GW_STOP_SCENE_REQ");
 'use strict';
+/**
+ * The scene object contains the ID, name and a list of products that are contained in the scene.
+ * You have methods to start and stop a scene.
+ *
+ * @export
+ * @class Scene
+ * @extends {Component}
+ */
 class Scene extends PropertyChangedEvent_1.Component {
+    /**
+     *Creates an instance of Scene.
+     * @param {Connection} Connection The connection that will be used to send and receive commands.
+     * @param {number} SceneID The ID of the scene.
+     * @param {string} SceneName The name of the scene.
+     * @memberof Scene
+     */
     constructor(Connection, SceneID, SceneName) {
         super();
         this.Connection = Connection;
         this.SceneID = SceneID;
         this._isRunning = false;
         this._runningSession = -1;
+        /**
+         * Contains a list of node IDs with their target values.
+         *
+         * @type {SceneInformationEntry[]}
+         * @memberof Scene
+         */
         this.Products = [];
         this._sceneName = SceneName;
         this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_SESSION_FINISHED_NTF]);
     }
+    /**
+     * The name of the scene.
+     *
+     * @readonly
+     * @type {string}
+     * @memberof Scene
+     */
     get SceneName() { return this._sceneName; }
+    /**
+     * Set to true if the scene is currently running.
+     *
+     * @readonly
+     * @type {boolean}
+     * @memberof Scene
+     */
     get IsRunning() { return this._isRunning; }
+    /**
+     * Start the scene.
+     *
+     * @returns {Promise<number>} Returns the session ID. You can listen for the GW_SESSION_FINISHED_NTF notification to determine when the scene has finished.
+     * @memberof Scene
+     */
     runAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -53,6 +94,12 @@ class Scene extends PropertyChangedEvent_1.Component {
             }
         });
     }
+    /**
+     * Stops a running scene.
+     *
+     * @returns {Promise<number>} Returns the session ID.
+     * @memberof Scene
+     */
     stopAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -72,6 +119,14 @@ class Scene extends PropertyChangedEvent_1.Component {
             }
         });
     }
+    /**
+     * Refreshes the Products array.
+     *
+     * This method is called from the Scenes class if a change notification has been received.
+     *
+     * @returns {Promise<void>}
+     * @memberof Scene
+     */
     refreshAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -119,13 +174,35 @@ class Scene extends PropertyChangedEvent_1.Component {
     }
 }
 exports.Scene = Scene;
+/**
+ * Use the scenes object to retrieve a list of scenes known to your KLF interface and to start one of them.
+ *
+ * @export
+ * @class Scenes
+ */
 class Scenes {
     constructor(Connection) {
         this.Connection = Connection;
         this._onChangedScenes = new TypedEvent_1.TypedEvent();
         this._onRemovedScenes = new TypedEvent_1.TypedEvent();
+        /**
+         * The list of scenes objects that correspond to the scenes defined at the KLF 200 interface.
+         *
+         * The array index corresponds to the scene ID.
+         *
+         * @type {((Scene | undefined)[])}
+         * @memberof Scenes
+         */
         this.Scenes = [];
     }
+    /**
+     * Creates an instance of Scenes.
+     *
+     * @static
+     * @param {Connection} Connection The connection that will be used to send and receive commands.
+     * @returns {Promise<Scenes>} Returns a new Scenes object that is initialized, already.
+     * @memberof Scenes
+     */
     static createScenesAsync(Connection) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -184,9 +261,23 @@ class Scenes {
             }
         }
     }
+    /**
+     * Add an event handler that is called if a scene has been changed.
+     *
+     * @param {Listener<number>} handler The handler that is called if the event is emitted.
+     * @returns {Disposable} Call the dispose method of the returned object to remove the handler.
+     * @memberof Scenes
+     */
     onChangedScene(handler) {
         return this._onChangedScenes.on(handler);
     }
+    /**
+     * Add an event handler that is called if a scene has been removed.
+     *
+     * @param {Listener<number>} handler The handler that is called if the event is emitted.
+     * @returns {Disposable} Call the dispose method of the returned object to remove the handler.
+     * @memberof Scenes
+     */
     onRemovedScene(handler) {
         return this._onRemovedScenes.on(handler);
     }
@@ -198,57 +289,4 @@ class Scenes {
     }
 }
 exports.Scenes = Scenes;
-// /**
-//  * Create a new scenes object.
-//  * Use the scenes object to retrieve a list of scenes known to your KLF interface and to start one of them.
-//  * @constructor
-//  * @param {connection} connection
-//  */
-// function scenes(connection) {
-//     this.connection = connection;
-// }
-// /**
-//  * Get a list of the scenes stored in the KLF interface.
-//  * @return {Promise} Returns a promise that resolves to the list of the scenes.
-//  */
-// scenes.prototype.getAsync = function () {
-//     return this.connection.postAsync(urlBuilder.scenes, 'get', null)
-//         .then((res) => {
-//             return res.data;
-//         });
-// };
-// /**
-//  * Runs a scene either by ID or name.
-//  * @param {(number|string)} sceneIdOrName The id or the name of the scene.
-//  * @return {Promise} Returns a promise that resolves.
-//  */
-// scenes.prototype.runAsync = function (sceneIdOrName) {
-//     if (!sceneIdOrName && sceneIdOrName !== 0)
-//         return Promise.reject(new Error('Missing sceneId parameter.'));
-//     let sceneIdType = typeof sceneIdOrName;
-//     switch (sceneIdType) {
-//         case 'number':
-//             return this.connection.postAsync(urlBuilder.scenes, 'run', { id: sceneIdOrName })
-//             .then(() => {
-//                 return Promise.resolve();
-//             });
-//         case 'string':
-//             return this.getAsync()
-//                 .then((scs) => {
-//                     // Convert scene name to Id
-//                     let scene = scs.find((scene) => {
-//                         return scene.name === sceneIdOrName;
-//                     });
-//                     if (!scene || !scene.id && scene.id !== 0)
-//                         return Promise.reject(new Error(`Scene "${sceneIdOrName}" not found`));
-//                     return this.connection.postAsync(urlBuilder.scenes, 'run', { id: scene.id })
-//                     .then(() => {
-//                         return Promise.resolve();
-//                     });
-//                 });
-//         default:
-//             return Promise.reject(new Error('Parameter sceneId must be of type number or string.'));
-//     }
-// };
-// module.exports = scenes;
 //# sourceMappingURL=scenes.js.map
