@@ -1,5 +1,5 @@
 import { Component } from "./utils/PropertyChangedEvent";
-import { Connection } from "./connection";
+import { IConnection } from "./connection";
 import { GW_GET_GROUP_INFORMATION_NTF } from "./KLF200-API/GW_GET_GROUP_INFORMATION_NTF";
 import { GW_GET_ALL_GROUPS_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_NTF";
 import { Velocity, NodeVariation, ActuatorType } from "./KLF200-API/GW_SYSTEMTABLE_DATA";
@@ -60,11 +60,11 @@ export class Group extends Component {
 
     /**
      * Creates an instance of Group.
-     * @param {Connection} Connection The connection that will be used to send and receive commands.
+     * @param {IConnection} Connection The connection that will be used to send and receive commands.
      * @param {(GW_GET_GROUP_INFORMATION_NTF | GW_GET_ALL_GROUPS_INFORMATION_NTF | GW_GROUP_INFORMATION_CHANGED_NTF)} frame Notification frame that is used to set the properties of the Group class instance.
      * @memberof Group
      */
-    constructor(readonly Connection: Connection, frame: GW_GET_GROUP_INFORMATION_NTF | GW_GET_ALL_GROUPS_INFORMATION_NTF | GW_GROUP_INFORMATION_CHANGED_NTF_Modified) {
+    constructor(readonly Connection: IConnection, frame: GW_GET_GROUP_INFORMATION_NTF | GW_GET_ALL_GROUPS_INFORMATION_NTF | GW_GROUP_INFORMATION_CHANGED_NTF_Modified) {
         super();
 
         this.GroupID = frame.GroupID;
@@ -342,7 +342,7 @@ export class Groups {
      */
     public readonly Groups: Group[] = [];
 
-    private constructor(readonly Connection: Connection) {}
+    private constructor(readonly Connection: IConnection) {}
 
     private async initializeGroupsAsync(): Promise<void> {
         try {
@@ -433,11 +433,11 @@ export class Groups {
      * to the groups.
      *
      * @static
-     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @returns {Promise<Groups>} Resolves to a new instance of the Groups class.
      * @memberof Groups
      */
-    static async createGroupsAsync(Connection: Connection): Promise<Groups> {
+    static async createGroupsAsync(Connection: IConnection): Promise<Groups> {
         try {
             const result = new Groups(Connection);
             await result.initializeGroupsAsync();

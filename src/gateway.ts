@@ -1,4 +1,4 @@
-import { Connection } from "./connection";
+import { IConnection } from "./connection";
 import { GW_PASSWORD_CHANGE_CFM } from "./KLF200-API/GW_PASSWORD_CHANGE_CFM";
 import { GW_PASSWORD_CHANGE_REQ } from "./KLF200-API/GW_PASSWORD_CHANGE_REQ";
 import { GW_COMMON_STATUS, GW_INVERSE_STATUS } from "./KLF200-API/common";
@@ -31,10 +31,10 @@ import { GW_HOUSE_STATUS_MONITOR_DISABLE_REQ } from "./KLF200-API/GW_HOUSE_STATU
 export class Gateway {
     /**
      *Creates an instance of Gateway.
-     * @param {Connection} connection The connection that will be used to send and receive commands.
+     * @param {IConnection} connection The connection that will be used to send and receive commands.
      * @memberof Gateway
      */
-    constructor(readonly connection: Connection) {}
+    constructor(readonly connection: IConnection) {}
 
     /**
      * Changes the password of the KLF interface.

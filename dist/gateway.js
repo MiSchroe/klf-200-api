@@ -32,7 +32,7 @@ const GW_HOUSE_STATUS_MONITOR_DISABLE_REQ_1 = require("./KLF200-API/GW_HOUSE_STA
 class Gateway {
     /**
      *Creates an instance of Gateway.
-     * @param {Connection} connection The connection that will be used to send and receive commands.
+     * @param {IConnection} connection The connection that will be used to send and receive commands.
      * @memberof Gateway
      */
     constructor(connection) {

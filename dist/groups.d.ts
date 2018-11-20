@@ -1,5 +1,5 @@
 import { Component } from "./utils/PropertyChangedEvent";
-import { Connection } from "./connection";
+import { IConnection } from "./connection";
 import { GW_GET_GROUP_INFORMATION_NTF } from "./KLF200-API/GW_GET_GROUP_INFORMATION_NTF";
 import { GW_GET_ALL_GROUPS_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_NTF";
 import { Velocity, NodeVariation } from "./KLF200-API/GW_SYSTEMTABLE_DATA";
@@ -20,7 +20,7 @@ a room group is will automatically be removed from another existing room group.
  * @extends {Component}
  */
 export declare class Group extends Component {
-    readonly Connection: Connection;
+    readonly Connection: IConnection;
     /**
      * ID of the group.
      *
@@ -44,11 +44,11 @@ export declare class Group extends Component {
     private _revision;
     /**
      * Creates an instance of Group.
-     * @param {Connection} Connection The connection that will be used to send and receive commands.
+     * @param {IConnection} Connection The connection that will be used to send and receive commands.
      * @param {(GW_GET_GROUP_INFORMATION_NTF | GW_GET_ALL_GROUPS_INFORMATION_NTF | GW_GROUP_INFORMATION_CHANGED_NTF)} frame Notification frame that is used to set the properties of the Group class instance.
      * @memberof Group
      */
-    constructor(Connection: Connection, frame: GW_GET_GROUP_INFORMATION_NTF | GW_GET_ALL_GROUPS_INFORMATION_NTF | GW_GROUP_INFORMATION_CHANGED_NTF_Modified);
+    constructor(Connection: IConnection, frame: GW_GET_GROUP_INFORMATION_NTF | GW_GET_ALL_GROUPS_INFORMATION_NTF | GW_GROUP_INFORMATION_CHANGED_NTF_Modified);
     changeFromNotifidation(frame: GW_GROUP_INFORMATION_CHANGED_NTF_Modified): void;
     /**
      * The order in which the groups should be displayed by a client application.
@@ -183,7 +183,7 @@ export declare class Group extends Component {
     setTargetPositionAsync(newPosition: number): Promise<number>;
 }
 export declare class Groups {
-    readonly Connection: Connection;
+    readonly Connection: IConnection;
     private _onChangedGroup;
     private _onRemovedGroup;
     /**
@@ -228,11 +228,11 @@ export declare class Groups {
      * to the groups.
      *
      * @static
-     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @returns {Promise<Groups>} Resolves to a new instance of the Groups class.
      * @memberof Groups
      */
-    static createGroupsAsync(Connection: Connection): Promise<Groups>;
+    static createGroupsAsync(Connection: IConnection): Promise<Groups>;
     /**
      * Finds a group by its name and returns the group object.
      *

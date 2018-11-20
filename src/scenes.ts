@@ -1,4 +1,4 @@
-﻿import { Connection } from "./connection";
+﻿import { IConnection } from "./connection";
 import { GatewayCommand, IGW_FRAME_RCV, GW_COMMON_STATUS } from "./KLF200-API/common";
 import { GW_GET_SCENE_LIST_NTF } from "./KLF200-API/GW_GET_SCENE_LIST_NTF";
 import { GW_GET_SCENE_LIST_REQ } from "./KLF200-API/GW_GET_SCENE_LIST_REQ";
@@ -39,13 +39,13 @@ export class Scene extends Component {
     public readonly Products: SceneInformationEntry[] = [];
 
     /**
-     *Creates an instance of Scene.
-     * @param {Connection} Connection The connection that will be used to send and receive commands.
+     * Creates an instance of Scene.
+     * @param {IConnection} Connection The connection that will be used to send and receive commands.
      * @param {number} SceneID The ID of the scene.
      * @param {string} SceneName The name of the scene.
      * @memberof Scene
      */
-    constructor(readonly Connection: Connection, readonly SceneID: number, SceneName: string) {
+    constructor(readonly Connection: IConnection, readonly SceneID: number, SceneName: string) {
         super();
 
         this._sceneName = SceneName;
@@ -193,17 +193,17 @@ export class Scenes {
      */
     public readonly Scenes: Scene[] = [];
 
-    private constructor(readonly Connection: Connection) {}
+    private constructor(readonly Connection: IConnection) {}
 
     /**
      * Creates an instance of Scenes.
      *
      * @static
-     * @param {Connection} Connection The connection that will be used to send and receive commands.
+     * @param {IConnection} Connection The connection that will be used to send and receive commands.
      * @returns {Promise<Scenes>} Returns a new Scenes object that is initialized, already.
      * @memberof Scenes
      */
-    static async createScenesAsync(Connection: Connection): Promise<Scenes> {
+    static async createScenesAsync(Connection: IConnection): Promise<Scenes> {
         try {
             const result = new Scenes(Connection);
             await result.initializeScenesAsync();

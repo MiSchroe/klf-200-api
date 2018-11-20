@@ -1,4 +1,4 @@
-import { Connection } from "./connection";
+import { IConnection } from "./connection";
 import { Listener, Disposable } from "./utils/TypedEvent";
 import { SceneInformationEntry } from "./KLF200-API/GW_GET_SCENE_INFORMATION_NTF";
 import { Component } from "./utils/PropertyChangedEvent";
@@ -11,7 +11,7 @@ import { Component } from "./utils/PropertyChangedEvent";
  * @extends {Component}
  */
 export declare class Scene extends Component {
-    readonly Connection: Connection;
+    readonly Connection: IConnection;
     readonly SceneID: number;
     private _isRunning;
     private _runningSession;
@@ -24,13 +24,13 @@ export declare class Scene extends Component {
      */
     readonly Products: SceneInformationEntry[];
     /**
-     *Creates an instance of Scene.
-     * @param {Connection} Connection The connection that will be used to send and receive commands.
+     * Creates an instance of Scene.
+     * @param {IConnection} Connection The connection that will be used to send and receive commands.
      * @param {number} SceneID The ID of the scene.
      * @param {string} SceneName The name of the scene.
      * @memberof Scene
      */
-    constructor(Connection: Connection, SceneID: number, SceneName: string);
+    constructor(Connection: IConnection, SceneID: number, SceneName: string);
     /**
      * The name of the scene.
      *
@@ -80,7 +80,7 @@ export declare class Scene extends Component {
  * @class Scenes
  */
 export declare class Scenes {
-    readonly Connection: Connection;
+    readonly Connection: IConnection;
     private readonly _onChangedScenes;
     private readonly _onRemovedScenes;
     /**
@@ -97,11 +97,11 @@ export declare class Scenes {
      * Creates an instance of Scenes.
      *
      * @static
-     * @param {Connection} Connection The connection that will be used to send and receive commands.
+     * @param {IConnection} Connection The connection that will be used to send and receive commands.
      * @returns {Promise<Scenes>} Returns a new Scenes object that is initialized, already.
      * @memberof Scenes
      */
-    static createScenesAsync(Connection: Connection): Promise<Scenes>;
+    static createScenesAsync(Connection: IConnection): Promise<Scenes>;
     private initializeScenesAsync;
     private onNotificationHandler;
     /**

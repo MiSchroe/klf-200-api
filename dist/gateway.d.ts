@@ -1,4 +1,4 @@
-import { Connection } from "./connection";
+import { IConnection } from "./connection";
 import { SoftwareVersion } from "./KLF200-API/GW_GET_VERSION_CFM";
 import { GatewayState, GatewaySubState } from "./KLF200-API/GW_GET_STATE_CFM";
 /**
@@ -8,13 +8,13 @@ import { GatewayState, GatewaySubState } from "./KLF200-API/GW_GET_STATE_CFM";
  * @class Gateway
  */
 export declare class Gateway {
-    readonly connection: Connection;
+    readonly connection: IConnection;
     /**
      *Creates an instance of Gateway.
-     * @param {Connection} connection The connection that will be used to send and receive commands.
+     * @param {IConnection} connection The connection that will be used to send and receive commands.
      * @memberof Gateway
      */
-    constructor(connection: Connection);
+    constructor(connection: IConnection);
     /**
      * Changes the password of the KLF interface.
      *

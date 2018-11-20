@@ -31,8 +31,8 @@ const GW_STOP_SCENE_REQ_1 = require("./KLF200-API/GW_STOP_SCENE_REQ");
  */
 class Scene extends PropertyChangedEvent_1.Component {
     /**
-     *Creates an instance of Scene.
-     * @param {Connection} Connection The connection that will be used to send and receive commands.
+     * Creates an instance of Scene.
+     * @param {IConnection} Connection The connection that will be used to send and receive commands.
      * @param {number} SceneID The ID of the scene.
      * @param {string} SceneName The name of the scene.
      * @memberof Scene
@@ -199,7 +199,7 @@ class Scenes {
      * Creates an instance of Scenes.
      *
      * @static
-     * @param {Connection} Connection The connection that will be used to send and receive commands.
+     * @param {IConnection} Connection The connection that will be used to send and receive commands.
      * @returns {Promise<Scenes>} Returns a new Scenes object that is initialized, already.
      * @memberof Scenes
      */

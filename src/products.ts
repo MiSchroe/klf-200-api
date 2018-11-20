@@ -1,7 +1,7 @@
 ﻿import { Velocity, ActuatorType, NodeVariation, PowerSaveMode, NodeOperatingState, ActuatorAlias } from "./KLF200-API/GW_SYSTEMTABLE_DATA";
 import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
 import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF";
-import { Connection } from "./connection";
+import { IConnection } from "./connection";
 import { GW_SET_NODE_NAME_CFM } from "./KLF200-API/GW_SET_NODE_NAME_CFM";
 import { GW_SET_NODE_NAME_REQ } from "./KLF200-API/GW_SET_NODE_NAME_REQ";
 import { GW_COMMON_STATUS, GatewayCommand, IGW_FRAME_RCV, GW_INVERSE_STATUS } from "./KLF200-API/common";
@@ -116,11 +116,11 @@ export class Product extends Component {
 
     /**
      *Creates an instance of Product.
-     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @param {(GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF)} frame Notification frame that is used to set the properties of the Product class instance.
      * @memberof Product
      */
-    constructor(readonly Connection: Connection, frame: GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF) {
+    constructor(readonly Connection: IConnection, frame: GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF) {
         super();
         
         this.NodeID = frame.NodeID;
@@ -743,10 +743,10 @@ export class Products {
 
     /**
      *Creates an instance of Products.
-     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @memberof Products
      */
-    private constructor(readonly Connection: Connection) {}
+    private constructor(readonly Connection: IConnection) {}
 
     private async initializeProductsAsync(): Promise<void> {
         try {
@@ -841,11 +841,11 @@ export class Products {
      * to the products.
      *
      * @static
-     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @returns {Promise<Products>} Resolves to a new instance of the Products class.
      * @memberof Products
      */
-    static async createProductsAsync(Connection: Connection): Promise<Products> {
+    static async createProductsAsync(Connection: IConnection): Promise<Products> {
         try {
             const result = new Products(Connection);
             await result.initializeProductsAsync();

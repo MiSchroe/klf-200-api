@@ -2,7 +2,7 @@
 import { Velocity, ActuatorType, NodeVariation, PowerSaveMode, NodeOperatingState, ActuatorAlias } from "./KLF200-API/GW_SYSTEMTABLE_DATA";
 import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
 import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF";
-import { Connection } from "./connection";
+import { IConnection } from "./connection";
 import { Listener, Disposable } from "./utils/TypedEvent";
 import { Component } from "./utils/PropertyChangedEvent";
 import { RunStatus, StatusReply } from "./KLF200-API/GW_COMMAND";
@@ -14,7 +14,7 @@ import { RunStatus, StatusReply } from "./KLF200-API/GW_COMMAND";
  * @class Product
  */
 export declare class Product extends Component {
-    readonly Connection: Connection;
+    readonly Connection: IConnection;
     private _name;
     /**
      * NodeID is an Actuator index in the system table, to get information from. It must be a
@@ -95,11 +95,11 @@ export declare class Product extends Component {
     private _statusReply;
     /**
      *Creates an instance of Product.
-     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @param {(GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF)} frame Notification frame that is used to set the properties of the Product class instance.
      * @memberof Product
      */
-    constructor(Connection: Connection, frame: GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF);
+    constructor(Connection: IConnection, frame: GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF);
     /**
      * Name of the product.
      *
@@ -332,7 +332,7 @@ export declare class Product extends Component {
  * @class Products
  */
 export declare class Products {
-    readonly Connection: Connection;
+    readonly Connection: IConnection;
     private _onNewProduct;
     private _onRemovedProduct;
     /**
@@ -346,7 +346,7 @@ export declare class Products {
     readonly Products: Product[];
     /**
      *Creates an instance of Products.
-     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @memberof Products
      */
     private constructor();
@@ -383,10 +383,10 @@ export declare class Products {
      * to the products.
      *
      * @static
-     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @returns {Promise<Products>} Resolves to a new instance of the Products class.
      * @memberof Products
      */
-    static createProductsAsync(Connection: Connection): Promise<Products>;
+    static createProductsAsync(Connection: IConnection): Promise<Products>;
     findByName(productName: string): Product | undefined;
 }

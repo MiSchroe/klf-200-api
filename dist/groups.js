@@ -39,7 +39,7 @@ a room group is will automatically be removed from another existing room group.
 class Group extends PropertyChangedEvent_1.Component {
     /**
      * Creates an instance of Group.
-     * @param {Connection} Connection The connection that will be used to send and receive commands.
+     * @param {IConnection} Connection The connection that will be used to send and receive commands.
      * @param {(GW_GET_GROUP_INFORMATION_NTF | GW_GET_ALL_GROUPS_INFORMATION_NTF | GW_GROUP_INFORMATION_CHANGED_NTF)} frame Notification frame that is used to set the properties of the Group class instance.
      * @memberof Group
      */
@@ -422,7 +422,7 @@ class Groups {
      * to the groups.
      *
      * @static
-     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @returns {Promise<Groups>} Resolves to a new instance of the Groups class.
      * @memberof Groups
      */

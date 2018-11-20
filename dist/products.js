@@ -38,7 +38,7 @@ const GW_COMMAND_REMAINING_TIME_NTF_1 = require("./KLF200-API/GW_COMMAND_REMAINI
 class Product extends PropertyChangedEvent_1.Component {
     /**
      *Creates an instance of Product.
-     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @param {(GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF)} frame Notification frame that is used to set the properties of the Product class instance.
      * @memberof Product
      */
@@ -620,7 +620,7 @@ exports.Product = Product;
 class Products {
     /**
      *Creates an instance of Products.
-     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @memberof Products
      */
     constructor(Connection) {
@@ -727,7 +727,7 @@ class Products {
      * to the products.
      *
      * @static
-     * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
+     * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @returns {Promise<Products>} Resolves to a new instance of the Products class.
      * @memberof Products
      */
