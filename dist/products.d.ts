@@ -269,8 +269,6 @@ export declare class Product extends Component {
      * @memberof Product
      */
     readonly StatusReply: StatusReply;
-    private convertPositionRaw;
-    private convertPosition;
     /**
      * The current position of the product in percent.
      *
@@ -342,10 +340,10 @@ export declare class Products {
      * The index of each product corresponds to the
      * system table index. The range is [0-199].
      *
-     * @type {((Product | undefined)[])}
+     * @type {Product[]}
      * @memberof Products
      */
-    readonly Products: (Product | undefined)[];
+    readonly Products: Product[];
     /**
      *Creates an instance of Products.
      * @param {Connection} Connection The connection object that handles the communication to the KLF interface.
@@ -375,7 +373,7 @@ export declare class Products {
     private addNodeAsync;
     /**
      * Creates a new instance of the Products class.
-     * During the initilization phase of the class
+     * During the initialization phase of the class
      * a list of all registered products will be
      * retrieved from the KFL-200 interface and
      * stored at the Product array.
@@ -390,4 +388,5 @@ export declare class Products {
      * @memberof Products
      */
     static createProductsAsync(Connection: Connection): Promise<Products>;
+    findByName(productName: string): Product | undefined;
 }

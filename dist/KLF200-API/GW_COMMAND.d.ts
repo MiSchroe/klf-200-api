@@ -1,3 +1,4 @@
+import { ActuatorType } from "./GW_SYSTEMTABLE_DATA";
 export declare enum CommandOriginator {
     User = 1,
     Rain = 2,
@@ -154,3 +155,5 @@ export declare enum ActivateProductGroupStatus {
     Failed = 5,
     InvalidParameterUsed = 6
 }
+export declare function convertPositionRaw(positionRaw: number, typeID: ActuatorType): number;
+export declare function convertPosition(position: number, typeID: ActuatorType): number;

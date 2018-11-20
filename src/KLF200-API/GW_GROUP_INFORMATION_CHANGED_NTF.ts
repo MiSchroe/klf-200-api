@@ -10,17 +10,35 @@ export enum ChangeType {
     Modified = 1
 }
 
+export interface GW_GROUP_INFORMATION_CHANGED_NTF_Deleted {
+    readonly ChangeType: ChangeType.Deleted;
+    readonly GroupID: number;
+}
+
+export interface GW_GROUP_INFORMATION_CHANGED_NTF_Modified {
+    readonly ChangeType: ChangeType.Modified;
+    readonly GroupID: number;
+    readonly Order: number;
+    readonly Placement: number;
+    readonly Name: string;
+    readonly Velocity: Velocity;
+    readonly NodeVariation: NodeVariation;
+    readonly GroupType: GroupType;
+    readonly Nodes: number[];
+    readonly Revision: number;
+}
+
 export class GW_GROUP_INFORMATION_CHANGED_NTF extends GW_FRAME_NTF {
     public readonly GroupID: number;
     public readonly ChangeType: ChangeType;
-    public readonly Order: number | undefined;
-    public readonly Placement: number | undefined;
-    public readonly Name: string| undefined;
-    public readonly Velocity: Velocity | undefined;
-    public readonly NodeVariation: NodeVariation | undefined;
-    public readonly GroupType: GroupType | undefined;
-    public readonly Nodes: number[] | undefined;
-    public readonly Revision: number | undefined;
+    public readonly Order?: number;
+    public readonly Placement?: number;
+    public readonly Name?: string;
+    public readonly Velocity?: Velocity;
+    public readonly NodeVariation?: NodeVariation;
+    public readonly GroupType?: GroupType;
+    public readonly Nodes?: number[];
+    public readonly Revision?: number;
 
     constructor(Data: Buffer) {
         super(Data);

@@ -28,13 +28,6 @@ const GW_COMMAND_1 = require("./KLF200-API/GW_COMMAND");
 const GW_COMMAND_RUN_STATUS_NTF_1 = require("./KLF200-API/GW_COMMAND_RUN_STATUS_NTF");
 const GW_COMMAND_REMAINING_TIME_NTF_1 = require("./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF");
 'use strict';
-const InverseProductTypes = [
-    GW_SYSTEMTABLE_DATA_1.ActuatorType.WindowOpener,
-    GW_SYSTEMTABLE_DATA_1.ActuatorType.Light,
-    GW_SYSTEMTABLE_DATA_1.ActuatorType.OnOffSwitch,
-    GW_SYSTEMTABLE_DATA_1.ActuatorType.VentilationPoint,
-    GW_SYSTEMTABLE_DATA_1.ActuatorType.ExteriorHeating
-];
 /**
  * Each product that is registered at the KLF-200 interface will be created
  * as an instance of the Product class.
@@ -380,26 +373,6 @@ class Product extends PropertyChangedEvent_1.Component {
      * @memberof Product
      */
     get StatusReply() { return this._statusReply; }
-    convertPositionRaw(positionRaw) {
-        if (positionRaw > 0xC800) {
-            return NaN; // Can't calculate the current position
-        }
-        let result = positionRaw / 0xC800;
-        if (InverseProductTypes.indexOf(this.TypeID) !== -1) {
-            // Percentage has to be calculated reverse
-            result = 1 - result;
-        }
-        return result;
-    }
-    convertPosition(position) {
-        if (position < 0 || position > 1)
-            throw "Position value out of range.";
-        if (InverseProductTypes.indexOf(this.TypeID) !== -1) {
-            // Percentage has to be calculated reverse
-            position = 1 - position;
-        }
-        return 0xC800 * position;
-    }
     /**
      * The current position of the product in percent.
      *
@@ -413,7 +386,7 @@ class Product extends PropertyChangedEvent_1.Component {
      * @memberof Product
      */
     get CurrentPosition() {
-        return this.convertPositionRaw(this._currentPositionRaw);
+        return GW_COMMAND_1.convertPositionRaw(this._currentPositionRaw, this.TypeID);
     }
     /**
      * Sets the product to a new position in percent.
@@ -425,7 +398,7 @@ class Product extends PropertyChangedEvent_1.Component {
     setTargetPositionAsync(newPosition) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const req = new GW_COMMAND_SEND_REQ_1.GW_COMMAND_SEND_REQ(this.NodeID, this.convertPosition(newPosition));
+                const req = new GW_COMMAND_SEND_REQ_1.GW_COMMAND_SEND_REQ(this.NodeID, GW_COMMAND_1.convertPosition(newPosition, this.TypeID));
                 // const dispose = this.connection.on(frame => {
                 //     if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === req.SessionID) {
                 //         dispose.dispose();
@@ -452,7 +425,7 @@ class Product extends PropertyChangedEvent_1.Component {
      * @memberof Product
      */
     get TargetPosition() {
-        return this.convertPositionRaw(this._targetPositionRaw);
+        return GW_COMMAND_1.convertPositionRaw(this._targetPositionRaw, this.TypeID);
     }
     /**
      * Stops the product at the current position.
@@ -659,7 +632,7 @@ class Products {
          * The index of each product corresponds to the
          * system table index. The range is [0-199].
          *
-         * @type {((Product | undefined)[])}
+         * @type {Product[]}
          * @memberof Products
          */
         this.Products = [];
@@ -716,7 +689,7 @@ class Products {
         if (frame instanceof GW_CS_SYSTEM_TABLE_UPDATE_NTF_1.GW_CS_SYSTEM_TABLE_UPDATE_NTF) {
             // Remove nodes
             frame.RemovedNodes.forEach(nodeID => {
-                this.Products[nodeID] = undefined;
+                delete this.Products[nodeID];
                 this.notifiyRemovedProduct(nodeID);
             });
             // Add nodes
@@ -744,7 +717,7 @@ class Products {
     }
     /**
      * Creates a new instance of the Products class.
-     * During the initilization phase of the class
+     * During the initialization phase of the class
      * a list of all registered products will be
      * retrieved from the KFL-200 interface and
      * stored at the Product array.
@@ -769,6 +742,9 @@ class Products {
                 return Promise.reject(error);
             }
         });
+    }
+    findByName(productName) {
+        return this.Products.find(pr => typeof pr !== "undefined" && pr.Name === productName);
     }
 }
 exports.Products = Products;

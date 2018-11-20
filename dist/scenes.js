@@ -190,7 +190,7 @@ class Scenes {
          *
          * The array index corresponds to the scene ID.
          *
-         * @type {((Scene | undefined)[])}
+         * @type {Scene[]}
          * @memberof Scenes
          */
         this.Scenes = [];
@@ -247,7 +247,7 @@ class Scenes {
         if (frame instanceof GW_SCENE_INFORMATION_CHANGED_NTF_1.GW_SCENE_INFORMATION_CHANGED_NTF) {
             switch (frame.SceneChangeType) {
                 case GW_SCENE_INFORMATION_CHANGED_NTF_1.SceneChangeType.Deleted:
-                    this.Scenes[frame.SceneID] = undefined;
+                    delete this.Scenes[frame.SceneID];
                     this.notifyRemovedScene(frame.SceneID);
                     break;
                 case GW_SCENE_INFORMATION_CHANGED_NTF_1.SceneChangeType.Modified:
@@ -286,6 +286,16 @@ class Scenes {
     }
     notifyRemovedScene(sceneId) {
         this._onRemovedScenes.emit(sceneId);
+    }
+    /**
+     * Finds a scene by its name and returns the scene object.
+     *
+     * @param {string} sceneName The name of the scene.
+     * @returns {(Scene | undefined)} Returns the scene object if found, otherwise undefined.
+     * @memberof Scenes
+     */
+    findByName(sceneName) {
+        return this.Scenes.find(sc => typeof sc !== "undefined" && sc.SceneName === sceneName);
     }
 }
 exports.Scenes = Scenes;

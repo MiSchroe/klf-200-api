@@ -165,4 +165,5 @@ __export(require("./connection"));
 __export(require("./gateway"));
 __export(require("./products"));
 __export(require("./scenes"));
+__export(require("./groups"));
 //# sourceMappingURL=index.js.map

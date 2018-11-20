@@ -158,3 +158,4 @@ export * from "./connection";
 export * from "./gateway";
 export * from "./products";
 export * from "./scenes";
+export * from "./groups";

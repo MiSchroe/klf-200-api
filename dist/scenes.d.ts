@@ -88,10 +88,10 @@ export declare class Scenes {
      *
      * The array index corresponds to the scene ID.
      *
-     * @type {((Scene | undefined)[])}
+     * @type {Scene[]}
      * @memberof Scenes
      */
-    readonly Scenes: (Scene | undefined)[];
+    readonly Scenes: Scene[];
     private constructor();
     /**
      * Creates an instance of Scenes.
@@ -122,4 +122,12 @@ export declare class Scenes {
     onRemovedScene(handler: Listener<number>): Disposable;
     private notifyChangedScene;
     private notifyRemovedScene;
+    /**
+     * Finds a scene by its name and returns the scene object.
+     *
+     * @param {string} sceneName The name of the scene.
+     * @returns {(Scene | undefined)} Returns the scene object if found, otherwise undefined.
+     * @memberof Scenes
+     */
+    findByName(sceneName: string): Scene | undefined;
 }

@@ -188,10 +188,10 @@ export class Scenes {
      * 
      * The array index corresponds to the scene ID.
      *
-     * @type {((Scene | undefined)[])}
+     * @type {Scene[]}
      * @memberof Scenes
      */
-    public readonly Scenes: (Scene | undefined)[] = [];
+    public readonly Scenes: Scene[] = [];
 
     private constructor(readonly Connection: Connection) {}
 
@@ -243,12 +243,12 @@ export class Scenes {
         if (frame instanceof GW_SCENE_INFORMATION_CHANGED_NTF) {
             switch (frame.SceneChangeType) {
                 case SceneChangeType.Deleted:
-                    this.Scenes[frame.SceneID] = undefined;
+                    delete this.Scenes[frame.SceneID];
                     this.notifyRemovedScene(frame.SceneID);
                     break;
 
                 case SceneChangeType.Modified:
-                    (this.Scenes[frame.SceneID] as Scene).refreshAsync()
+                    this.Scenes[frame.SceneID].refreshAsync()
                         .then(() => this.notifyChangedScene(frame.SceneID))
                         .catch(reason => {
                             throw reason;
@@ -288,5 +288,16 @@ export class Scenes {
 
     private notifyRemovedScene(sceneId: number): void {
         this._onRemovedScenes.emit(sceneId);
+    }
+
+    /**
+     * Finds a scene by its name and returns the scene object.
+     *
+     * @param {string} sceneName The name of the scene.
+     * @returns {(Scene | undefined)} Returns the scene object if found, otherwise undefined.
+     * @memberof Scenes
+     */
+    public findByName(sceneName: string): Scene | undefined {
+        return this.Scenes.find(sc => typeof sc !== "undefined" && sc.SceneName === sceneName);
     }
 }

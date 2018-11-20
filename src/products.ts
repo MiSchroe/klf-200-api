@@ -10,32 +10,22 @@ import { GW_SET_NODE_VARIATION_REQ } from "./KLF200-API/GW_SET_NODE_VARIATION_RE
 import { GW_SET_NODE_ORDER_AND_PLACEMENT_CFM } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_CFM";
 import { GW_SET_NODE_ORDER_AND_PLACEMENT_REQ } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_REQ";
 import { TypedEvent, Listener, Disposable } from "./utils/TypedEvent";
-import { PropertyChangedEvent, Component } from "./utils/PropertyChangedEvent";
+import { Component } from "./utils/PropertyChangedEvent";
 import { GW_NODE_INFORMATION_CHANGED_NTF } from "./KLF200-API/GW_NODE_INFORMATION_CHANGED_NTF";
 import { GW_NODE_STATE_POSITION_CHANGED_NTF } from "./KLF200-API/GW_NODE_STATE_POSITION_CHANGED_NTF";
 import { GW_COMMAND_SEND_REQ } from "./KLF200-API/GW_COMMAND_SEND_REQ";
 import { GW_COMMAND_SEND_CFM } from "./KLF200-API/GW_COMMAND_SEND_CFM";
-import { GW_SESSION_FINISHED_NTF } from "./KLF200-API/GW_SESSION_FINISHED_NTF";
-import { GW_GET_ALL_NODES_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_CFM";
 import { GW_GET_ALL_NODES_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_REQ";
 import { GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF";
 import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "./KLF200-API/GW_CS_SYSTEM_TABLE_UPDATE_NTF";
 import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
 import { GW_WINK_SEND_CFM } from "./KLF200-API/GW_WINK_SEND_CFM";
 import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ";
-import { CommandStatus, RunStatus, StatusReply, ParameterActive } from "./KLF200-API/GW_COMMAND";
+import { CommandStatus, RunStatus, StatusReply, ParameterActive, convertPositionRaw, convertPosition } from "./KLF200-API/GW_COMMAND";
 import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF";
 import { GW_COMMAND_REMAINING_TIME_NTF } from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF";
 
 'use strict';
-
-const InverseProductTypes = [
-    ActuatorType.WindowOpener,
-    ActuatorType.Light,
-    ActuatorType.OnOffSwitch,
-    ActuatorType.VentilationPoint,
-    ActuatorType.ExteriorHeating
-];
 
 /**
  * Each product that is registered at the KLF-200 interface will be created
@@ -485,31 +475,6 @@ export class Product extends Component {
      */
     public get StatusReply(): StatusReply { return this._statusReply; }
 
-    private convertPositionRaw(positionRaw: number): number {
-        if (positionRaw > 0xC800) {
-            return NaN; // Can't calculate the current position
-        }
-
-        let result = positionRaw / 0xC800;
-        if (InverseProductTypes.indexOf(this.TypeID) !== -1) {
-            // Percentage has to be calculated reverse
-            result = 1 - result;
-        }
-
-        return result;
-    }
-
-    private convertPosition(position: number): number {
-        if (position < 0 || position > 1)
-            throw "Position value out of range.";
-
-        if (InverseProductTypes.indexOf(this.TypeID) !== -1) {
-            // Percentage has to be calculated reverse
-            position = 1 - position;
-        }
-        return 0xC800 * position;
-    }
-
     /**
      * The current position of the product in percent.
      * 
@@ -523,7 +488,7 @@ export class Product extends Component {
      * @memberof Product
      */
     public get CurrentPosition(): number {
-        return this.convertPositionRaw(this._currentPositionRaw);
+        return convertPositionRaw(this._currentPositionRaw, this.TypeID);
     }
 
     /**
@@ -535,7 +500,7 @@ export class Product extends Component {
      */
     public async setTargetPositionAsync(newPosition: number): Promise<number> {
         try {
-            const req = new GW_COMMAND_SEND_REQ(this.NodeID, this.convertPosition(newPosition));
+            const req = new GW_COMMAND_SEND_REQ(this.NodeID, convertPosition(newPosition, this.TypeID));
             // const dispose = this.connection.on(frame => {
             //     if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === req.SessionID) {
             //         dispose.dispose();
@@ -561,7 +526,7 @@ export class Product extends Component {
      * @memberof Product
      */
     public get TargetPosition(): number {
-        return this.convertPositionRaw(this._targetPositionRaw);
+        return convertPositionRaw(this._targetPositionRaw, this.TypeID);
     }
 
     /**
@@ -771,10 +736,10 @@ export class Products {
      * The index of each product corresponds to the 
      * system table index. The range is [0-199].
      *
-     * @type {((Product | undefined)[])}
+     * @type {Product[]}
      * @memberof Products
      */
-    public readonly Products: (Product | undefined)[] = [];
+    public readonly Products: Product[] = [];
 
     /**
      *Creates an instance of Products.
@@ -837,7 +802,7 @@ export class Products {
         if (frame instanceof GW_CS_SYSTEM_TABLE_UPDATE_NTF) {
             // Remove nodes
             frame.RemovedNodes.forEach(nodeID => {
-                this.Products[nodeID] = undefined;
+                delete this.Products[nodeID];
                 this.notifiyRemovedProduct(nodeID);
             });
 
@@ -866,7 +831,7 @@ export class Products {
 
     /**
      * Creates a new instance of the Products class.
-     * During the initilization phase of the class
+     * During the initialization phase of the class
      * a list of all registered products will be
      * retrieved from the KFL-200 interface and
      * stored at the Product array.
@@ -888,5 +853,9 @@ export class Products {
         } catch (error) {
             return Promise.reject(error);
         }
+    }
+
+    public findByName(productName: string): Product | undefined {
+        return this.Products.find(pr => typeof pr !== "undefined" && pr.Name === productName);
     }
 }

@@ -1,3 +1,5 @@
+import { ActuatorType } from "./GW_SYSTEMTABLE_DATA";
+
 'use strict';
 
 export enum CommandOriginator {
@@ -193,3 +195,37 @@ export enum ActivateProductGroupStatus {
     Failed,
     InvalidParameterUsed
 }
+
+const InverseProductTypes = [
+    ActuatorType.WindowOpener,
+    ActuatorType.Light,
+    ActuatorType.OnOffSwitch,
+    ActuatorType.VentilationPoint,
+    ActuatorType.ExteriorHeating
+];
+
+export function convertPositionRaw(positionRaw: number, typeID: ActuatorType): number {
+    if (positionRaw > 0xC800) {
+        return NaN; // Can't calculate the current position
+    }
+
+    let result = positionRaw / 0xC800;
+    if (InverseProductTypes.indexOf(typeID) !== -1) {
+        // Percentage has to be calculated reverse
+        result = 1 - result;
+    }
+
+    return result;
+}
+
+export function convertPosition(position: number, typeID: ActuatorType): number {
+    if (position < 0 || position > 1)
+        throw "Position value out of range.";
+
+    if (InverseProductTypes.indexOf(typeID) !== -1) {
+        // Percentage has to be calculated reverse
+        position = 1 - position;
+    }
+    return 0xC800 * position;
+}
+

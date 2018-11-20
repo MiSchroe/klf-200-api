@@ -1,5 +1,7 @@
-'use strict';
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const GW_SYSTEMTABLE_DATA_1 = require("./GW_SYSTEMTABLE_DATA");
+'use strict';
 var CommandOriginator;
 (function (CommandOriginator) {
     CommandOriginator[CommandOriginator["User"] = 1] = "User";
@@ -183,4 +185,33 @@ var ActivateProductGroupStatus;
     ActivateProductGroupStatus[ActivateProductGroupStatus["Failed"] = 5] = "Failed";
     ActivateProductGroupStatus[ActivateProductGroupStatus["InvalidParameterUsed"] = 6] = "InvalidParameterUsed";
 })(ActivateProductGroupStatus = exports.ActivateProductGroupStatus || (exports.ActivateProductGroupStatus = {}));
+const InverseProductTypes = [
+    GW_SYSTEMTABLE_DATA_1.ActuatorType.WindowOpener,
+    GW_SYSTEMTABLE_DATA_1.ActuatorType.Light,
+    GW_SYSTEMTABLE_DATA_1.ActuatorType.OnOffSwitch,
+    GW_SYSTEMTABLE_DATA_1.ActuatorType.VentilationPoint,
+    GW_SYSTEMTABLE_DATA_1.ActuatorType.ExteriorHeating
+];
+function convertPositionRaw(positionRaw, typeID) {
+    if (positionRaw > 0xC800) {
+        return NaN; // Can't calculate the current position
+    }
+    let result = positionRaw / 0xC800;
+    if (InverseProductTypes.indexOf(typeID) !== -1) {
+        // Percentage has to be calculated reverse
+        result = 1 - result;
+    }
+    return result;
+}
+exports.convertPositionRaw = convertPositionRaw;
+function convertPosition(position, typeID) {
+    if (position < 0 || position > 1)
+        throw "Position value out of range.";
+    if (InverseProductTypes.indexOf(typeID) !== -1) {
+        // Percentage has to be calculated reverse
+        position = 1 - position;
+    }
+    return 0xC800 * position;
+}
+exports.convertPosition = convertPosition;
 //# sourceMappingURL=GW_COMMAND.js.map
