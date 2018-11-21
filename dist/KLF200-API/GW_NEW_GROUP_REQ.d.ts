@@ -10,5 +10,4 @@ export declare class GW_NEW_GROUP_REQ extends GW_FRAME_REQ {
     readonly Velocity: Velocity;
     readonly NodeVariation: NodeVariation;
     constructor(Name: string, GroupType: GroupType, Nodes: number[], Order?: number, Placement?: number, Velocity?: Velocity, NodeVariation?: NodeVariation);
-    protected InitializeBuffer(): void;
 }

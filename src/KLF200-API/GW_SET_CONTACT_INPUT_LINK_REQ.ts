@@ -7,7 +7,7 @@ import { Velocity } from "./GW_SYSTEMTABLE_DATA";
 
 export class GW_SET_CONTACT_INPUT_LINK_REQ extends GW_FRAME_REQ {
     constructor(readonly ContactInputID: number, readonly ContactInputAssignment: ContactInputAssignment, readonly SuccessOutputID: number, readonly ErrorOutputID: number, readonly Position: number, readonly Velocity: Velocity = 0, readonly ActionID: number, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly ParameterActive: ParameterActive = 0, readonly LockPriorityLevel: LockPriorityLevel = 0, readonly PLI3: PriorityLevelInformation = PriorityLevelInformation.KeepCurrent, readonly PLI4: PriorityLevelInformation = PriorityLevelInformation.KeepCurrent, readonly PLI5: PriorityLevelInformation = PriorityLevelInformation.KeepCurrent, readonly PLI6: PriorityLevelInformation = PriorityLevelInformation.KeepCurrent, readonly PLI7: PriorityLevelInformation = PriorityLevelInformation.KeepCurrent) {
-        super();
+        super(17);
 
         const buff = this.Data.slice(this.offset);
 
@@ -27,9 +27,5 @@ export class GW_SET_CONTACT_INPUT_LINK_REQ extends GW_FRAME_REQ {
         buff.writeUInt8(this.PLI7, 14);
         buff.writeUInt8(this.SuccessOutputID, 15);
         buff.writeUInt8(this.ErrorOutputID, 16);
-    }
-
-    protected InitializeBuffer() {
-        this.AllocBuffer(17);
     }
 }

@@ -6,7 +6,7 @@ import { isArray } from "util";
 
 export class GW_SET_LIMITATION_REQ extends GW_FRAME_COMMAND_REQ {
     constructor(readonly Nodes: number[] | number, readonly LimitationValueMin: number, readonly LimitationValueMax: number, readonly LimitationTime: number, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly ParameterActive: ParameterActive = 0) {
-        super();
+        super(31);
 
         const buff = this.Data.slice(this.offset);
 
@@ -35,9 +35,5 @@ export class GW_SET_LIMITATION_REQ extends GW_FRAME_COMMAND_REQ {
             buff.writeUInt8(1, 4);
             buff.writeUInt8(this.Nodes, 5);
         }
-    }
-
-    protected InitializeBuffer() {
-        this.AllocBuffer(31);
     }
 }

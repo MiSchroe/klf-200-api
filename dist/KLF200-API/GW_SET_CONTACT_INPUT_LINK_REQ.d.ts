@@ -20,5 +20,4 @@ export declare class GW_SET_CONTACT_INPUT_LINK_REQ extends GW_FRAME_REQ {
     readonly PLI6: PriorityLevelInformation;
     readonly PLI7: PriorityLevelInformation;
     constructor(ContactInputID: number, ContactInputAssignment: ContactInputAssignment, SuccessOutputID: number, ErrorOutputID: number, Position: number, Velocity: Velocity, ActionID: number, PriorityLevel?: PriorityLevel, CommandOriginator?: CommandOriginator, ParameterActive?: ParameterActive, LockPriorityLevel?: LockPriorityLevel, PLI3?: PriorityLevelInformation, PLI4?: PriorityLevelInformation, PLI5?: PriorityLevelInformation, PLI6?: PriorityLevelInformation, PLI7?: PriorityLevelInformation);
-    protected InitializeBuffer(): void;
 }

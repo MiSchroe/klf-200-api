@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./common");
 class GW_SET_NODE_ORDER_AND_PLACEMENT_REQ extends common_1.GW_FRAME_REQ {
     constructor(NodeID, Order, Placement) {
-        super();
+        super(4);
         this.NodeID = NodeID;
         this.Order = Order;
         this.Placement = Placement;
@@ -11,9 +11,6 @@ class GW_SET_NODE_ORDER_AND_PLACEMENT_REQ extends common_1.GW_FRAME_REQ {
         buff.writeUInt8(this.NodeID, 0);
         buff.writeUInt16BE(this.Order, 1);
         buff.writeUInt8(this.Placement, 3);
-    }
-    InitializeBuffer() {
-        this.AllocBuffer(4);
     }
 }
 exports.GW_SET_NODE_ORDER_AND_PLACEMENT_REQ = GW_SET_NODE_ORDER_AND_PLACEMENT_REQ;

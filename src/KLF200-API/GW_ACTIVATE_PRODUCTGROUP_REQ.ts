@@ -6,7 +6,7 @@ import { Velocity } from "./GW_SYSTEMTABLE_DATA";
 
 export class GW_ACTIVATE_PRODUCTGROUP_REQ extends GW_FRAME_COMMAND_REQ {
     constructor(readonly GroupID: number, readonly Position: number, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly ParameterActive: ParameterActive = 0, readonly Velocity: Velocity = 0, readonly PriorityLevelLock: PriorityLevelLock = 0, readonly PriorityLevels: PriorityLevelInformation[] = [], readonly LockTime: number = Infinity) {
-        super();
+        super(13);
 
         const buff = this.Data.slice(this.offset);
 
@@ -34,9 +34,5 @@ export class GW_ACTIVATE_PRODUCTGROUP_REQ extends GW_FRAME_COMMAND_REQ {
         PLI <<= 2 * (8 - this.PriorityLevels.length);   // Shift remaining, if provided priority leves are less than 8
         buff.writeUInt16BE(PLI, 10);
         buff.writeUInt8(lt.lockTimeTolockTimeValue(this.LockTime), 12);
-    }
-
-    protected InitializeBuffer() {
-        this.AllocBuffer(13);
     }
 }

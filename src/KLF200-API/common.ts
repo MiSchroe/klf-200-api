@@ -370,6 +370,20 @@ export abstract class GW_FRAME implements IGW_FRAME {
 
 export abstract class GW_FRAME_REQ extends GW_FRAME implements IGW_FRAME_REQ {
     /**
+     * Creates an instance of GW_FRAME_REQ.
+     * 
+     * @param {number} BufferSize The size of the buffer (only pure data, without protocol and command bytes)
+     * @memberof GW_FRAME_REQ
+     */
+    constructor(readonly BufferSize: number) {
+        super();
+
+        this.data = Buffer.alloc(BufferSize + this.offset);
+        this.data.writeUInt16BE(this.Command, C_BUFFERLEN_SIZE);
+        this.data.writeUInt8(this.data.byteLength, 0);
+}
+
+    /**
      * Allocates a buffer in the right size for the frame.
      * The first byte contains the buffer length.
      * The next two bytes of the buffer are used for the command.
@@ -398,21 +412,17 @@ export abstract class GW_FRAME_REQ extends GW_FRAME implements IGW_FRAME_REQ {
         }
     }
 
-    protected abstract InitializeBuffer(): void;
-
-    private data: Buffer | undefined;
+    private data: Buffer;
     public get Data(): Buffer {
-        if (typeof this.data === "undefined")
-            this.InitializeBuffer();
-        return <Buffer>this.data;
+        return this.data;
     }
 }
 
 export abstract class GW_FRAME_COMMAND_REQ extends GW_FRAME_REQ implements IGW_FRAME_COMMAND {
     public readonly SessionID: number;
 
-    constructor() {
-        super();
+    constructor(BufferSize: number) {
+        super(BufferSize);
 
         this.SessionID = getNextSessionID();
     }

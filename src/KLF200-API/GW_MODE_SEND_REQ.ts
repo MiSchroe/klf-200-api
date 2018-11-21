@@ -6,7 +6,7 @@ import { isArray } from "util";
 
 export class GW_MODE_SEND_REQ extends GW_FRAME_COMMAND_REQ {
     constructor(readonly Nodes: number[] | number, readonly ModeNumber: number = 0, readonly ModeParameter: ParameterActive = 0, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly PriorityLevelLock: PriorityLevelLock = 0, readonly PriorityLevels: PriorityLevelInformation[] = [], readonly LockTime: number = Infinity) {
-        super();
+        super(31);
 
         const buff = this.Data.slice(this.offset);
 
@@ -50,9 +50,5 @@ export class GW_MODE_SEND_REQ extends GW_FRAME_COMMAND_REQ {
         PLI <<= 2 * (8 - this.PriorityLevels.length);   // Shift remaining, if provided priority leves are less than 8
         buff.writeUInt16BE(PLI, 28);
         buff.writeUInt8(lt.lockTimeTolockTimeValue(this.LockTime), 30);
-    }
-
-    protected InitializeBuffer() {
-        this.AllocBuffer(31);
     }
 }

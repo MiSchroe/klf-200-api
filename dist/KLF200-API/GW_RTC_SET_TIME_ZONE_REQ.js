@@ -74,13 +74,10 @@ class GW_RTC_SET_TIME_ZONE_REQ extends common_1.GW_FRAME_REQ {
      * @memberof GW_RTC_SET_TIME_ZONE_REQ
      */
     constructor(TimeZoneString) {
-        super();
+        super(64);
         this.TimeZoneString = TimeZoneString;
         const buff = this.Data.slice(this.offset); // View on the internal buffer makes setting the data easier
         buff.write(TimeZoneString, 0, 64, "utf8");
-    }
-    InitializeBuffer() {
-        this.AllocBuffer(64);
     }
 }
 exports.GW_RTC_SET_TIME_ZONE_REQ = GW_RTC_SET_TIME_ZONE_REQ;

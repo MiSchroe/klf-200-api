@@ -192,6 +192,14 @@ export declare abstract class GW_FRAME implements IGW_FRAME {
     protected constructor();
 }
 export declare abstract class GW_FRAME_REQ extends GW_FRAME implements IGW_FRAME_REQ {
+    readonly BufferSize: number;
+    /**
+     * Creates an instance of GW_FRAME_REQ.
+     *
+     * @param {number} BufferSize The size of the buffer (only pure data, without protocol and command bytes)
+     * @memberof GW_FRAME_REQ
+     */
+    constructor(BufferSize: number);
     /**
      * Allocates a buffer in the right size for the frame.
      * The first byte contains the buffer length.
@@ -207,13 +215,12 @@ export declare abstract class GW_FRAME_REQ extends GW_FRAME implements IGW_FRAME
      * @memberof GW_FRAME
      */
     protected AllocBuffer(BufferSize: number, CopyData?: boolean): void;
-    protected abstract InitializeBuffer(): void;
     private data;
     readonly Data: Buffer;
 }
 export declare abstract class GW_FRAME_COMMAND_REQ extends GW_FRAME_REQ implements IGW_FRAME_COMMAND {
     readonly SessionID: number;
-    constructor();
+    constructor(BufferSize: number);
 }
 export declare abstract class GW_FRAME_RCV extends GW_FRAME implements IGW_FRAME_RCV {
     readonly Data: Buffer;

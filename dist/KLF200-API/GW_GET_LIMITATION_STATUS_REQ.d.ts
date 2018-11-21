@@ -7,5 +7,4 @@ export declare class GW_GET_LIMITATION_STATUS_REQ extends GW_FRAME_COMMAND_REQ {
     readonly CommandOriginator: CommandOriginator;
     readonly ParameterActive: ParameterActive;
     constructor(Nodes: number[] | number, LimitationType: LimitationType, PriorityLevel?: PriorityLevel, CommandOriginator?: CommandOriginator, ParameterActive?: ParameterActive);
-    protected InitializeBuffer(): void;
 }

@@ -7,5 +7,4 @@ export declare class GW_ACTIVATE_SCENE_REQ extends GW_FRAME_COMMAND_REQ {
     readonly CommandOriginator: CommandOriginator;
     readonly Velocity: Velocity;
     constructor(SceneID: number, PriorityLevel?: PriorityLevel, CommandOriginator?: CommandOriginator, Velocity?: Velocity);
-    protected InitializeBuffer(): void;
 }

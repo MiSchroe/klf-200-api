@@ -5,7 +5,7 @@ const GW_COMMAND_1 = require("./GW_COMMAND");
 const util_1 = require("util");
 class GW_COMMAND_SEND_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     constructor(Nodes, MainValue, PriorityLevel = 3, CommandOriginator = 1, ParameterActive = 0, FunctionalParameters = [], PriorityLevelLock = 0, PriorityLevels = [], LockTime = Infinity) {
-        super();
+        super(66);
         this.Nodes = Nodes;
         this.MainValue = MainValue;
         this.PriorityLevel = PriorityLevel;
@@ -66,9 +66,6 @@ class GW_COMMAND_SEND_REQ extends common_1.GW_FRAME_COMMAND_REQ {
         PLI <<= 2 * (8 - this.PriorityLevels.length); // Shift remaining, if provided priority leves are less than 8
         buff.writeUInt16BE(PLI, 63);
         buff.writeUInt8(GW_COMMAND_1.LockTime.lockTimeTolockTimeValue(this.LockTime), 65);
-    }
-    InitializeBuffer() {
-        this.AllocBuffer(66);
     }
 }
 exports.GW_COMMAND_SEND_REQ = GW_COMMAND_SEND_REQ;

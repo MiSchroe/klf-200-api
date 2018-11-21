@@ -4,7 +4,7 @@ const common_1 = require("./common");
 const util_1 = require("util");
 class GW_SET_LIMITATION_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     constructor(Nodes, LimitationValueMin, LimitationValueMax, LimitationTime, PriorityLevel = 3, CommandOriginator = 1, ParameterActive = 0) {
-        super();
+        super(31);
         this.Nodes = Nodes;
         this.LimitationValueMin = LimitationValueMin;
         this.LimitationValueMax = LimitationValueMax;
@@ -34,9 +34,6 @@ class GW_SET_LIMITATION_REQ extends common_1.GW_FRAME_COMMAND_REQ {
             buff.writeUInt8(1, 4);
             buff.writeUInt8(this.Nodes, 5);
         }
-    }
-    InitializeBuffer() {
-        this.AllocBuffer(31);
     }
 }
 exports.GW_SET_LIMITATION_REQ = GW_SET_LIMITATION_REQ;

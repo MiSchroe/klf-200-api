@@ -5,7 +5,7 @@ import { GroupType } from "./GW_GROUPS";
 
 export class GW_GET_ALL_GROUPS_INFORMATION_REQ extends GW_FRAME_REQ {
     constructor(GroupType?: GroupType) {
-        super();
+        super(2);
 
         if (typeof GroupType !== "undefined")
         {
@@ -14,10 +14,6 @@ export class GW_GET_ALL_GROUPS_INFORMATION_REQ extends GW_FRAME_REQ {
             this.Data.writeUInt8(1, this.offset);
             this.Data.writeUInt8(this._groupType, this.offset + 1);
         }
-    }
-
-    protected InitializeBuffer() {
-        this.AllocBuffer(2);
     }
 
     private _useFilter: boolean = false;

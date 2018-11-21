@@ -4,7 +4,7 @@ const common_1 = require("./common");
 const GW_COMMAND_1 = require("./GW_COMMAND");
 class GW_SET_CONTACT_INPUT_LINK_REQ extends common_1.GW_FRAME_REQ {
     constructor(ContactInputID, ContactInputAssignment, SuccessOutputID, ErrorOutputID, Position, Velocity = 0, ActionID, PriorityLevel = 3, CommandOriginator = 1, ParameterActive = 0, LockPriorityLevel = 0, PLI3 = GW_COMMAND_1.PriorityLevelInformation.KeepCurrent, PLI4 = GW_COMMAND_1.PriorityLevelInformation.KeepCurrent, PLI5 = GW_COMMAND_1.PriorityLevelInformation.KeepCurrent, PLI6 = GW_COMMAND_1.PriorityLevelInformation.KeepCurrent, PLI7 = GW_COMMAND_1.PriorityLevelInformation.KeepCurrent) {
-        super();
+        super(17);
         this.ContactInputID = ContactInputID;
         this.ContactInputAssignment = ContactInputAssignment;
         this.SuccessOutputID = SuccessOutputID;
@@ -38,9 +38,6 @@ class GW_SET_CONTACT_INPUT_LINK_REQ extends common_1.GW_FRAME_REQ {
         buff.writeUInt8(this.PLI7, 14);
         buff.writeUInt8(this.SuccessOutputID, 15);
         buff.writeUInt8(this.ErrorOutputID, 16);
-    }
-    InitializeBuffer() {
-        this.AllocBuffer(17);
     }
 }
 exports.GW_SET_CONTACT_INPUT_LINK_REQ = GW_SET_CONTACT_INPUT_LINK_REQ;

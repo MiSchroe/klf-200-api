@@ -6,7 +6,7 @@ import { isArray } from "util";
 
 export class GW_WINK_SEND_REQ extends GW_FRAME_COMMAND_REQ {
     constructor(readonly Nodes: number[] | number, readonly EnableWink: boolean = true, readonly WinkTime: number = 254, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1) {
-        super();
+        super(27);
 
         const buff = this.Data.slice(this.offset);
 
@@ -33,9 +33,5 @@ export class GW_WINK_SEND_REQ extends GW_FRAME_COMMAND_REQ {
             buff.writeUInt8(1, 6);
             buff.writeUInt8(this.Nodes, 7);
         }
-    }
-
-    protected InitializeBuffer() {
-        this.AllocBuffer(27);
     }
 }

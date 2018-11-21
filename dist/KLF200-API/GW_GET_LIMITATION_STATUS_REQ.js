@@ -4,7 +4,7 @@ const common_1 = require("./common");
 const util_1 = require("util");
 class GW_GET_LIMITATION_STATUS_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     constructor(Nodes, LimitationType, PriorityLevel = 3, CommandOriginator = 1, ParameterActive = 0) {
-        super();
+        super(27);
         this.Nodes = Nodes;
         this.LimitationType = LimitationType;
         this.PriorityLevel = PriorityLevel;
@@ -30,9 +30,6 @@ class GW_GET_LIMITATION_STATUS_REQ extends common_1.GW_FRAME_COMMAND_REQ {
             buff.writeUInt8(1, 4);
             buff.writeUInt8(this.Nodes, 5);
         }
-    }
-    InitializeBuffer() {
-        this.AllocBuffer(27);
     }
 }
 exports.GW_GET_LIMITATION_STATUS_REQ = GW_GET_LIMITATION_STATUS_REQ;

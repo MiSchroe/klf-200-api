@@ -6,7 +6,7 @@ import { Velocity } from "./GW_SYSTEMTABLE_DATA";
 
 export class GW_ACTIVATE_SCENE_REQ extends GW_FRAME_COMMAND_REQ {
     constructor(readonly SceneID: number, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly Velocity: Velocity = 0) {
-        super();
+        super(6);
 
         const buff = this.Data.slice(this.offset);
 
@@ -15,9 +15,5 @@ export class GW_ACTIVATE_SCENE_REQ extends GW_FRAME_COMMAND_REQ {
         buff.writeUInt8(this.PriorityLevel, 3);
         buff.writeUInt8(this.SceneID, 4);
         buff.writeUInt8(this.Velocity, 5);
-    }
-
-    protected InitializeBuffer() {
-        this.AllocBuffer(6);
     }
 }

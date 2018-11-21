@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./common");
 class GW_SET_NETWORK_SETUP_REQ extends common_1.GW_FRAME_REQ {
     constructor(DHCP, IPAddress = "0.0.0.0", Mask = "0.0.0.0", DefaultGateway = "0.0.0.0") {
-        super();
+        super(13);
         this.DHCP = DHCP;
         this.IPAddress = IPAddress;
         this.Mask = Mask;
@@ -30,9 +30,6 @@ class GW_SET_NETWORK_SETUP_REQ extends common_1.GW_FRAME_REQ {
                 buff.writeUInt8(parseInt(addressPart), buffIndex++);
             });
         }
-    }
-    InitializeBuffer() {
-        this.AllocBuffer(13);
     }
 }
 exports.GW_SET_NETWORK_SETUP_REQ = GW_SET_NETWORK_SETUP_REQ;

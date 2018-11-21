@@ -67,14 +67,19 @@ class Connection {
      */
     loginAsync(password) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.initSocketAsync();
-            this.klfProtocol = new KLF200SocketProtocol_1.KLF200SocketProtocol(this.sckt);
-            const passwordCFM = yield this.sendFrameAsync(new _1.GW_PASSWORD_ENTER_REQ(password));
-            if (passwordCFM.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
-                return Promise.reject("Login failed.");
+            try {
+                yield this.initSocketAsync();
+                this.klfProtocol = new KLF200SocketProtocol_1.KLF200SocketProtocol(this.sckt);
+                const passwordCFM = yield this.sendFrameAsync(new _1.GW_PASSWORD_ENTER_REQ(password));
+                if (passwordCFM.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
+                    return Promise.reject("Login failed.");
+                }
+                else {
+                    return Promise.resolve();
+                }
             }
-            else {
-                return Promise.resolve();
+            catch (error) {
+                return Promise.reject(error);
             }
         });
     }
@@ -86,20 +91,25 @@ class Connection {
      */
     logoutAsync() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.sckt) {
-                if (this.klfProtocol) {
-                    this.klfProtocol = undefined;
+            try {
+                if (this.sckt) {
+                    if (this.klfProtocol) {
+                        this.klfProtocol = undefined;
+                    }
+                    return new Promise((resolve) => {
+                        // Close socket
+                        this.sckt.once("close", () => {
+                            this.sckt = undefined;
+                            resolve();
+                        }).end();
+                    });
                 }
-                return new Promise((resolve) => {
-                    // Close socket
-                    this.sckt.once("close", () => {
-                        this.sckt = undefined;
-                        resolve();
-                    }).end();
-                });
+                else {
+                    return Promise.resolve();
+                }
             }
-            else {
-                return Promise.resolve();
+            catch (error) {
+                Promise.reject(error);
             }
         });
     }
@@ -115,23 +125,28 @@ class Connection {
      */
     sendFrameAsync(frame) {
         return __awaiter(this, void 0, void 0, function* () {
-            const frameName = common_1.GatewayCommand[frame.Command];
-            const expectedConfirmationFrameName = frameName.slice(0, -3) + "CFM";
-            const expectedConfirmationFrameCommand = common_1.GatewayCommand[expectedConfirmationFrameName];
-            const sessionID = frame instanceof common_1.GW_FRAME_COMMAND_REQ ? frame.SessionID : undefined;
-            return new Promise((resolve, reject) => {
-                const cfmHandler = this.klfProtocol.on((frame) => {
-                    if (frame.Command === common_1.GatewayCommand.GW_ERROR_NTF) {
-                        cfmHandler.dispose();
-                        reject(frame.ErrorNumber);
-                    }
-                    else if (frame.Command === expectedConfirmationFrameCommand && (typeof sessionID === "undefined" || sessionID === frame.SessionID)) {
-                        cfmHandler.dispose();
-                        resolve(frame);
-                    }
+            try {
+                const frameName = common_1.GatewayCommand[frame.Command];
+                const expectedConfirmationFrameName = frameName.slice(0, -3) + "CFM";
+                const expectedConfirmationFrameCommand = common_1.GatewayCommand[expectedConfirmationFrameName];
+                const sessionID = frame instanceof common_1.GW_FRAME_COMMAND_REQ ? frame.SessionID : undefined;
+                return new Promise((resolve, reject) => {
+                    const cfmHandler = this.klfProtocol.on((frame) => {
+                        if (frame.Command === common_1.GatewayCommand.GW_ERROR_NTF) {
+                            cfmHandler.dispose();
+                            reject(frame.ErrorNumber);
+                        }
+                        else if (frame.Command === expectedConfirmationFrameCommand && (typeof sessionID === "undefined" || sessionID === frame.SessionID)) {
+                            cfmHandler.dispose();
+                            resolve(frame);
+                        }
+                    });
+                    this.klfProtocol.write(frame.Data);
                 });
-                this.klfProtocol.write(frame.Data);
-            });
+            }
+            catch (error) {
+                return Promise.reject(error);
+            }
         });
     }
     /**
@@ -158,28 +173,33 @@ class Connection {
     }
     initSocketAsync() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.sckt === undefined) {
-                return new Promise((resolve, reject) => {
-                    this.sckt = tls_1.connect(common_1.KLF200_PORT, this.host, {
-                        rejectUnauthorized: true,
-                        ca: [this.CA],
-                        checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert)
-                    }, () => {
-                        // Callback on event "secureConnect":
-                        // Resolve promise if connection is authorized, otherwise reject it.
-                        if (this.sckt.authorized) {
-                            resolve();
-                        }
-                        else {
-                            const err = this.sckt.authorizationError;
-                            this.sckt = undefined;
-                            reject(err);
-                        }
+            try {
+                if (this.sckt === undefined) {
+                    return new Promise((resolve, reject) => {
+                        this.sckt = tls_1.connect(common_1.KLF200_PORT, this.host, {
+                            rejectUnauthorized: true,
+                            ca: [this.CA],
+                            checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert)
+                        }, () => {
+                            // Callback on event "secureConnect":
+                            // Resolve promise if connection is authorized, otherwise reject it.
+                            if (this.sckt.authorized) {
+                                resolve();
+                            }
+                            else {
+                                const err = this.sckt.authorizationError;
+                                this.sckt = undefined;
+                                reject(err);
+                            }
+                        });
                     });
-                });
+                }
+                else {
+                    return Promise.resolve();
+                }
             }
-            else {
-                return Promise.resolve();
+            catch (error) {
+                return Promise.reject(error);
             }
         });
     }

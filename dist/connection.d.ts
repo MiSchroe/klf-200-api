@@ -46,6 +46,13 @@ export interface IConnection {
      * @memberof Connection
      */
     on(handler: Listener<IGW_FRAME_RCV>, filter?: GatewayCommand[]): Disposable;
+    /**
+     * Gets the underlying socket protocol handler.
+     *
+     * @type {KLF200SocketProtocol}
+     * @memberof IConnection
+     */
+    readonly KLF200SocketProtocol?: KLF200SocketProtocol;
 }
 /**
  * The Connection class is used to handle the communication with the Velux KLF interface.

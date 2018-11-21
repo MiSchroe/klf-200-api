@@ -56,6 +56,14 @@ export interface IConnection {
      * @memberof Connection
      */
     on(handler: Listener<IGW_FRAME_RCV>, filter?: GatewayCommand[]): Disposable;
+
+    /**
+     * Gets the underlying socket protocol handler.
+     *
+     * @type {KLF200SocketProtocol}
+     * @memberof IConnection
+     */
+    readonly KLF200SocketProtocol?: KLF200SocketProtocol;
 }
 
 const FINGERPRINT = "02:8C:23:A0:89:2B:62:98:C4:99:00:5B:D2:E7:2E:0A:70:3D:71:6A";
@@ -112,13 +120,18 @@ export class Connection implements IConnection {
      * @memberof Connection
      */
     public async loginAsync(password: string): Promise<void> {
-        await this.initSocketAsync();
-        this.klfProtocol = new KLF200SocketProtocol(<TLSSocket>this.sckt);
-        const passwordCFM = <GW_PASSWORD_ENTER_CFM> await this.sendFrameAsync(new GW_PASSWORD_ENTER_REQ(password));
-        if (passwordCFM.Status !== GW_COMMON_STATUS.SUCCESS) {
-            return Promise.reject("Login failed.");
-        } else {
-            return Promise.resolve();
+        try {
+            await this.initSocketAsync();
+            this.klfProtocol = new KLF200SocketProtocol(<TLSSocket>this.sckt);
+            const passwordCFM = <GW_PASSWORD_ENTER_CFM> await this.sendFrameAsync(new GW_PASSWORD_ENTER_REQ(password));
+            if (passwordCFM.Status !== GW_COMMON_STATUS.SUCCESS) {
+                return Promise.reject("Login failed.");
+            } else {
+                return Promise.resolve();
+            }
+        }
+        catch (error) {
+            return Promise.reject(error);
         }
     }
 
@@ -129,22 +142,26 @@ export class Connection implements IConnection {
      * @memberof Connection
      */
     public async logoutAsync(): Promise<void> {
-        if (this.sckt) {
-            if (this.klfProtocol) {
-                this.klfProtocol = undefined;
-            }
-            return new Promise<void>(
-                (resolve) => {
-                    // Close socket
-                    (<TLSSocket>this.sckt).once("close", () => {
-                        this.sckt = undefined;
-                        resolve();
-                    }).end();
+        try {
+            if (this.sckt) {
+                if (this.klfProtocol) {
+                    this.klfProtocol = undefined;
                 }
-            );
-        }
-        else {
-            return Promise.resolve();
+                return new Promise<void>(
+                    (resolve) => {
+                        // Close socket
+                        (<TLSSocket>this.sckt).once("close", () => {
+                            this.sckt = undefined;
+                            resolve();
+                        }).end();
+                    }
+                );
+            }
+            else {
+                return Promise.resolve();
+            }
+        } catch (error) {
+            Promise.reject(error);
         }
     }
 
@@ -159,24 +176,29 @@ export class Connection implements IConnection {
      * @memberof Connection
      */
     public async sendFrameAsync(frame: IGW_FRAME_REQ): Promise<IGW_FRAME_RCV> {
-        const frameName = GatewayCommand[frame.Command];
-        const expectedConfirmationFrameName: keyof typeof GatewayCommand = frameName.slice(0, -3) + "CFM" as keyof typeof GatewayCommand;
-        const expectedConfirmationFrameCommand = GatewayCommand[expectedConfirmationFrameName];
-        const sessionID = frame instanceof GW_FRAME_COMMAND_REQ ? frame.SessionID : undefined;
+        try {
+            const frameName = GatewayCommand[frame.Command];
+            const expectedConfirmationFrameName: keyof typeof GatewayCommand = frameName.slice(0, -3) + "CFM" as keyof typeof GatewayCommand;
+            const expectedConfirmationFrameCommand = GatewayCommand[expectedConfirmationFrameName];
+            const sessionID = frame instanceof GW_FRAME_COMMAND_REQ ? frame.SessionID : undefined;
 
-        return new Promise<IGW_FRAME_RCV>((resolve, reject) => {
-            const cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((frame) => {
-                if (frame.Command === GatewayCommand.GW_ERROR_NTF) {
-                    cfmHandler.dispose();
-                    reject((frame as GW_ERROR_NTF).ErrorNumber);
-                }
-                else if (frame.Command === expectedConfirmationFrameCommand && (typeof sessionID === "undefined" || sessionID === (frame as IGW_FRAME_COMMAND).SessionID)) {
-                    cfmHandler.dispose();
-                    resolve(frame);
-                }
+            return new Promise<IGW_FRAME_RCV>((resolve, reject) => {
+                const cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((frame) => {
+                    if (frame.Command === GatewayCommand.GW_ERROR_NTF) {
+                        cfmHandler.dispose();
+                        reject((frame as GW_ERROR_NTF).ErrorNumber);
+                    }
+                    else if (frame.Command === expectedConfirmationFrameCommand && (typeof sessionID === "undefined" || sessionID === (frame as IGW_FRAME_COMMAND).SessionID)) {
+                        cfmHandler.dispose();
+                        resolve(frame);
+                    }
+                });
+                (this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
             });
-            (this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
-        });
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
 
     /**
@@ -203,31 +225,36 @@ export class Connection implements IConnection {
     }
 
     private async initSocketAsync(): Promise<void> {
-        if (this.sckt === undefined) {
-            return new Promise<void>(
-                (resolve, reject) => {
-                    this.sckt = connect(KLF200_PORT, this.host,
-                        {
-                        rejectUnauthorized: true,
-                        ca: [ this.CA ],
-                        checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert)
-                        }, () => {
-                            // Callback on event "secureConnect":
-                            // Resolve promise if connection is authorized, otherwise reject it.
-                            if ((<TLSSocket>this.sckt).authorized) {
-                                resolve();
-                            }
-                            else {
-                                const err = (<TLSSocket>this.sckt).authorizationError;
-                                this.sckt = undefined;
-                                reject(err);
-                            }
-                        });
-                }
-            );
+        try {
+            if (this.sckt === undefined) {
+                return new Promise<void>(
+                    (resolve, reject) => {
+                        this.sckt = connect(KLF200_PORT, this.host,
+                            {
+                            rejectUnauthorized: true,
+                            ca: [ this.CA ],
+                            checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert)
+                            }, () => {
+                                // Callback on event "secureConnect":
+                                // Resolve promise if connection is authorized, otherwise reject it.
+                                if ((<TLSSocket>this.sckt).authorized) {
+                                    resolve();
+                                }
+                                else {
+                                    const err = (<TLSSocket>this.sckt).authorizationError;
+                                    this.sckt = undefined;
+                                    reject(err);
+                                }
+                            });
+                    }
+                );
+            }
+            else {
+                return Promise.resolve();
+            }
         }
-        else {
-            return Promise.resolve();
+        catch (error) {
+            return Promise.reject(error);
         }
     }
 

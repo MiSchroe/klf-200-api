@@ -4,7 +4,7 @@ import { GW_FRAME_REQ } from "./common";
 
 export class GW_SET_NETWORK_SETUP_REQ extends GW_FRAME_REQ {
     constructor(readonly DHCP: boolean, readonly IPAddress: string = "0.0.0.0", readonly Mask: string = "0.0.0.0", readonly DefaultGateway: string = "0.0.0.0") {
-        super();
+        super(13);
 
         // Check for valid IP address formats:
         const checkIPv4 = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
@@ -30,9 +30,5 @@ export class GW_SET_NETWORK_SETUP_REQ extends GW_FRAME_REQ {
                 buff.writeUInt8(parseInt(addressPart), buffIndex++);
             });
         }
-    }
-
-    protected InitializeBuffer() {
-        this.AllocBuffer(13);
     }
 }

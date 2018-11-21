@@ -10,5 +10,4 @@ export declare class GW_MODE_SEND_REQ extends GW_FRAME_COMMAND_REQ {
     readonly PriorityLevels: PriorityLevelInformation[];
     readonly LockTime: number;
     constructor(Nodes: number[] | number, ModeNumber?: number, ModeParameter?: ParameterActive, PriorityLevel?: PriorityLevel, CommandOriginator?: CommandOriginator, PriorityLevelLock?: PriorityLevelLock, PriorityLevels?: PriorityLevelInformation[], LockTime?: number);
-    protected InitializeBuffer(): void;
 }

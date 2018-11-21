@@ -8,5 +8,4 @@ export declare class GW_RTC_SET_TIME_ZONE_REQ extends GW_FRAME_REQ {
      * @memberof GW_RTC_SET_TIME_ZONE_REQ
      */
     constructor(TimeZoneString: string);
-    protected InitializeBuffer(): void;
 }

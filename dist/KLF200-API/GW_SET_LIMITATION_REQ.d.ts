@@ -9,5 +9,4 @@ export declare class GW_SET_LIMITATION_REQ extends GW_FRAME_COMMAND_REQ {
     readonly CommandOriginator: CommandOriginator;
     readonly ParameterActive: ParameterActive;
     constructor(Nodes: number[] | number, LimitationValueMin: number, LimitationValueMax: number, LimitationTime: number, PriorityLevel?: PriorityLevel, CommandOriginator?: CommandOriginator, ParameterActive?: ParameterActive);
-    protected InitializeBuffer(): void;
 }

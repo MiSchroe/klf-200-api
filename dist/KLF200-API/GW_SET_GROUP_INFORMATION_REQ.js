@@ -4,7 +4,7 @@ const common_1 = require("./common");
 const BitArray_1 = require("../utils/BitArray");
 class GW_SET_GROUP_INFORMATION_REQ extends common_1.GW_FRAME_REQ {
     constructor(GroupID, Revision, Name, GroupType, Nodes, Order = 0, Placement = 0, Velocity = 0, NodeVariation = 0) {
-        super();
+        super(99);
         this.GroupID = GroupID;
         this.Revision = Revision;
         this.Name = Name;
@@ -25,9 +25,6 @@ class GW_SET_GROUP_INFORMATION_REQ extends common_1.GW_FRAME_REQ {
         buff.writeUInt8(this.Nodes.length, 71);
         BitArray_1.arrayToBitArray(this.Nodes, 25, buff.slice(72, 97));
         buff.writeUInt16BE(this.Revision, 97);
-    }
-    InitializeBuffer() {
-        this.AllocBuffer(99);
     }
 }
 exports.GW_SET_GROUP_INFORMATION_REQ = GW_SET_GROUP_INFORMATION_REQ;

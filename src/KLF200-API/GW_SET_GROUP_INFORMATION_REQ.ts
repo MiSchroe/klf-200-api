@@ -7,7 +7,7 @@ import { arrayToBitArray } from "../utils/BitArray";
 
 export class GW_SET_GROUP_INFORMATION_REQ extends GW_FRAME_REQ {
     constructor(readonly GroupID: number, readonly Revision: number, readonly Name: string, readonly GroupType: GroupType, readonly Nodes: number[], readonly Order: number = 0, readonly Placement: number = 0, readonly Velocity: Velocity = 0, readonly NodeVariation: NodeVariation = 0) {
-        super();
+        super(99);
 
         const buff = this.Data.slice(this.offset);  // View on the internal buffer makes setting the data easier
         buff.writeUInt8(this.GroupID, 0);
@@ -20,9 +20,5 @@ export class GW_SET_GROUP_INFORMATION_REQ extends GW_FRAME_REQ {
         buff.writeUInt8(this.Nodes.length, 71);
         arrayToBitArray(this.Nodes, 25, buff.slice(72, 97));
         buff.writeUInt16BE(this.Revision, 97);
-    }
-
-    protected InitializeBuffer() {
-        this.AllocBuffer(99);
     }
 }

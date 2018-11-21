@@ -12,5 +12,4 @@ export declare class GW_ACTIVATE_PRODUCTGROUP_REQ extends GW_FRAME_COMMAND_REQ {
     readonly PriorityLevels: PriorityLevelInformation[];
     readonly LockTime: number;
     constructor(GroupID: number, Position: number, PriorityLevel?: PriorityLevel, CommandOriginator?: CommandOriginator, ParameterActive?: ParameterActive, Velocity?: Velocity, PriorityLevelLock?: PriorityLevelLock, PriorityLevels?: PriorityLevelInformation[], LockTime?: number);
-    protected InitializeBuffer(): void;
 }

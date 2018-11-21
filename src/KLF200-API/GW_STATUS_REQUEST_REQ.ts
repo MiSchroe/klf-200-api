@@ -6,7 +6,7 @@ import { isArray } from "util";
 
 export class GW_STATUS_REQUEST_REQ extends GW_FRAME_COMMAND_REQ {
     constructor(readonly Nodes: number[] | number, readonly StatusType: StatusType, readonly FunctionalParameters: number[] = []) {
-        super();
+        super(26);
 
         const buff = this.Data.slice(this.offset);
 
@@ -51,9 +51,5 @@ export class GW_STATUS_REQUEST_REQ extends GW_FRAME_COMMAND_REQ {
         }
         buff.writeUInt8(FPI1, 24);
         buff.writeUInt8(FPI2, 25);
-    }
-
-    protected InitializeBuffer() {
-        this.AllocBuffer(26);
     }
 }

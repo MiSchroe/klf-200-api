@@ -4,7 +4,7 @@ const common_1 = require("./common");
 const util_1 = require("util");
 class GW_WINK_SEND_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     constructor(Nodes, EnableWink = true, WinkTime = 254, PriorityLevel = 3, CommandOriginator = 1) {
-        super();
+        super(27);
         this.Nodes = Nodes;
         this.EnableWink = EnableWink;
         this.WinkTime = WinkTime;
@@ -30,9 +30,6 @@ class GW_WINK_SEND_REQ extends common_1.GW_FRAME_COMMAND_REQ {
             buff.writeUInt8(1, 6);
             buff.writeUInt8(this.Nodes, 7);
         }
-    }
-    InitializeBuffer() {
-        this.AllocBuffer(27);
     }
 }
 exports.GW_WINK_SEND_REQ = GW_WINK_SEND_REQ;

@@ -4,7 +4,7 @@ const common_1 = require("./common");
 const util_1 = require("util");
 class GW_STATUS_REQUEST_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     constructor(Nodes, StatusType, FunctionalParameters = []) {
-        super();
+        super(26);
         this.Nodes = Nodes;
         this.StatusType = StatusType;
         this.FunctionalParameters = FunctionalParameters;
@@ -41,9 +41,6 @@ class GW_STATUS_REQUEST_REQ extends common_1.GW_FRAME_COMMAND_REQ {
         }
         buff.writeUInt8(FPI1, 24);
         buff.writeUInt8(FPI2, 25);
-    }
-    InitializeBuffer() {
-        this.AllocBuffer(26);
     }
 }
 exports.GW_STATUS_REQUEST_REQ = GW_STATUS_REQUEST_REQ;

@@ -4,7 +4,7 @@ import { GW_FRAME_REQ, C_MAX_PWD_LENGTH } from "./common";
 
 export class GW_PASSWORD_ENTER_REQ extends GW_FRAME_REQ {
     constructor(password: string) {
-        super();
+        super(C_MAX_PWD_LENGTH);
 
         this.Password = password;
     }
@@ -17,9 +17,5 @@ export class GW_PASSWORD_ENTER_REQ extends GW_FRAME_REQ {
 
         this.Data.fill(0, this.offset);
         buffer.copy(this.Data, this.offset);
-    }
-
-    protected InitializeBuffer() {
-        this.AllocBuffer(C_MAX_PWD_LENGTH);
     }
 }

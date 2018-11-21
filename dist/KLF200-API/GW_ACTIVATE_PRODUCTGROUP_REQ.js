@@ -4,7 +4,7 @@ const common_1 = require("./common");
 const GW_COMMAND_1 = require("./GW_COMMAND");
 class GW_ACTIVATE_PRODUCTGROUP_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     constructor(GroupID, Position, PriorityLevel = 3, CommandOriginator = 1, ParameterActive = 0, Velocity = 0, PriorityLevelLock = 0, PriorityLevels = [], LockTime = Infinity) {
-        super();
+        super(13);
         this.GroupID = GroupID;
         this.Position = Position;
         this.PriorityLevel = PriorityLevel;
@@ -36,9 +36,6 @@ class GW_ACTIVATE_PRODUCTGROUP_REQ extends common_1.GW_FRAME_COMMAND_REQ {
         PLI <<= 2 * (8 - this.PriorityLevels.length); // Shift remaining, if provided priority leves are less than 8
         buff.writeUInt16BE(PLI, 10);
         buff.writeUInt8(GW_COMMAND_1.LockTime.lockTimeTolockTimeValue(this.LockTime), 12);
-    }
-    InitializeBuffer() {
-        this.AllocBuffer(13);
     }
 }
 exports.GW_ACTIVATE_PRODUCTGROUP_REQ = GW_ACTIVATE_PRODUCTGROUP_REQ;
