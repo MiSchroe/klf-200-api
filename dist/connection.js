@@ -145,13 +145,18 @@ class Connection {
                 return promise_timeout_1.timeout(new Promise((resolve, reject) => {
                     try {
                         const cfmHandler = this.klfProtocol.on((frame) => {
-                            if (frame instanceof GW_ERROR_NTF_1.GW_ERROR_NTF) {
-                                cfmHandler.dispose();
-                                reject(new Error(frame.getError()));
+                            try {
+                                if (frame instanceof GW_ERROR_NTF_1.GW_ERROR_NTF) {
+                                    cfmHandler.dispose();
+                                    reject(new Error(frame.getError()));
+                                }
+                                else if (frame.Command === expectedConfirmationFrameCommand && (typeof sessionID === "undefined" || sessionID === frame.SessionID)) {
+                                    cfmHandler.dispose();
+                                    resolve(frame);
+                                }
                             }
-                            else if (frame.Command === expectedConfirmationFrameCommand && (typeof sessionID === "undefined" || sessionID === frame.SessionID)) {
-                                cfmHandler.dispose();
-                                resolve(frame);
+                            catch (error) {
+                                reject(error);
                             }
                         });
                         this.klfProtocol.write(frame.Data);

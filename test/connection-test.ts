@@ -129,8 +129,11 @@ describe("connection", function () {
             this.mitm.on("connection", function(socket: Socket) {
                 socket.on("data", (data) => {
                     if (isFirstData) {
-                        socket.write(rawBufferFrom([0x00, 0x00, 0x07]));
+                        socket.write(rawBufferFrom([0x30, 0x01, 0x00])); 
                         isFirstData = false;
+                    }
+                    else {
+                        socket.write(rawBufferFrom([0x00, 0x00, 0x07]));
                     }
                 });
             });

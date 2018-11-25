@@ -204,13 +204,18 @@ export class Connection implements IConnection {
                 new Promise<IGW_FRAME_RCV>((resolve, reject) => {
                     try {
                         const cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((frame) => {
-                            if (frame instanceof GW_ERROR_NTF) {
-                                cfmHandler.dispose();
-                                reject(new Error(frame.getError()));
+                            try {
+                                if (frame instanceof GW_ERROR_NTF) {
+                                    cfmHandler.dispose();
+                                    reject(new Error(frame.getError()));
+                                }
+                                else if (frame.Command === expectedConfirmationFrameCommand && (typeof sessionID === "undefined" || sessionID === (frame as IGW_FRAME_COMMAND).SessionID)) {
+                                    cfmHandler.dispose();
+                                    resolve(frame);
+                                }
                             }
-                            else if (frame.Command === expectedConfirmationFrameCommand && (typeof sessionID === "undefined" || sessionID === (frame as IGW_FRAME_COMMAND).SessionID)) {
-                                cfmHandler.dispose();
-                                resolve(frame);
+                            catch (error) {
+                                reject(error);
                             }
                         });
                         (this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
