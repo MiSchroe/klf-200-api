@@ -8,4 +8,3 @@ class GW_SESSION_FINISHED_NTF extends common_1.GW_FRAME_NTF {
     }
 }
 exports.GW_SESSION_FINISHED_NTF = GW_SESSION_FINISHED_NTF;
-//# sourceMappingURL=GW_SESSION_FINISHED_NTF.js.map

@@ -29,4 +29,3 @@ class GW_GET_STATE_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_GET_STATE_CFM = GW_GET_STATE_CFM;
-//# sourceMappingURL=GW_GET_STATE_CFM.js.map

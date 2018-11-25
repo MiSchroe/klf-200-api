@@ -19,4 +19,3 @@ class GW_SET_LIMITATION_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_SET_LIMITATION_CFM = GW_SET_LIMITATION_CFM;
-//# sourceMappingURL=GW_SET_LIMITATION_CFM.js.map

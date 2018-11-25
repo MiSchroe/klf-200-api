@@ -15,4 +15,3 @@ class GW_STOP_SCENE_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     }
 }
 exports.GW_STOP_SCENE_REQ = GW_STOP_SCENE_REQ;
-//# sourceMappingURL=GW_STOP_SCENE_REQ.js.map

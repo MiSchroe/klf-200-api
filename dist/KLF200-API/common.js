@@ -364,4 +364,3 @@ class SLIPProtocol {
     }
 }
 exports.SLIPProtocol = SLIPProtocol;
-//# sourceMappingURL=common.js.map

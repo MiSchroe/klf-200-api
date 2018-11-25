@@ -19,4 +19,3 @@ class GW_WINK_SEND_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_WINK_SEND_CFM = GW_WINK_SEND_CFM;
-//# sourceMappingURL=GW_WINK_SEND_CFM.js.map

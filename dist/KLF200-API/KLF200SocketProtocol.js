@@ -104,4 +104,3 @@ class KLF200SocketProtocol {
     }
 }
 exports.KLF200SocketProtocol = KLF200SocketProtocol;
-//# sourceMappingURL=KLF200SocketProtocol.js.map

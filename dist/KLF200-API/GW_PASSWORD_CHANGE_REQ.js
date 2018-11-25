@@ -15,4 +15,3 @@ class GW_PASSWORD_CHANGE_REQ extends common_1.GW_FRAME_REQ {
     }
 }
 exports.GW_PASSWORD_CHANGE_REQ = GW_PASSWORD_CHANGE_REQ;
-//# sourceMappingURL=GW_PASSWORD_CHANGE_REQ.js.map

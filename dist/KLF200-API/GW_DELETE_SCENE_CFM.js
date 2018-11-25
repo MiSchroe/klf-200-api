@@ -21,4 +21,3 @@ class GW_DELETE_SCENE_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_DELETE_SCENE_CFM = GW_DELETE_SCENE_CFM;
-//# sourceMappingURL=GW_DELETE_SCENE_CFM.js.map

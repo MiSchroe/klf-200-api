@@ -9,4 +9,3 @@ class GW_RECORD_SCENE_NTF extends common_1.GW_FRAME_NTF {
     }
 }
 exports.GW_RECORD_SCENE_NTF = GW_RECORD_SCENE_NTF;
-//# sourceMappingURL=GW_RECORD_SCENE_NTF.js.map

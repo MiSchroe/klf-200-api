@@ -18,4 +18,3 @@ class GW_RTC_SET_TIME_ZONE_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_RTC_SET_TIME_ZONE_CFM = GW_RTC_SET_TIME_ZONE_CFM;
-//# sourceMappingURL=GW_RTC_SET_TIME_ZONE_CFM.js.map

@@ -32,4 +32,3 @@ class TypedEvent {
     }
 }
 exports.TypedEvent = TypedEvent;
-//# sourceMappingURL=TypedEvent.js.map

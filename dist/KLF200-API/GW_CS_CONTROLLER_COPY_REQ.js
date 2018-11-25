@@ -10,4 +10,3 @@ class GW_CS_CONTROLLER_COPY_REQ extends common_1.GW_FRAME_REQ {
     }
 }
 exports.GW_CS_CONTROLLER_COPY_REQ = GW_CS_CONTROLLER_COPY_REQ;
-//# sourceMappingURL=GW_CS_CONTROLLER_COPY_REQ.js.map

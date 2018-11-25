@@ -37,4 +37,3 @@ class GW_STATUS_REQUEST_NTF extends common_1.GW_FRAME_NTF {
     }
 }
 exports.GW_STATUS_REQUEST_NTF = GW_STATUS_REQUEST_NTF;
-//# sourceMappingURL=GW_STATUS_REQUEST_NTF.js.map

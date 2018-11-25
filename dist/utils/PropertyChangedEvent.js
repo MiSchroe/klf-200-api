@@ -25,4 +25,3 @@ class Component {
     }
 }
 exports.Component = Component;
-//# sourceMappingURL=PropertyChangedEvent.js.map

@@ -14,4 +14,3 @@ function isArrayEqual(first, second) {
     return true;
 }
 exports.isArrayEqual = isArrayEqual;
-//# sourceMappingURL=UtilityFunctions.js.map

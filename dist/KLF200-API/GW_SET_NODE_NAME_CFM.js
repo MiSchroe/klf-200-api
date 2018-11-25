@@ -21,4 +21,3 @@ class GW_SET_NODE_NAME_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_SET_NODE_NAME_CFM = GW_SET_NODE_NAME_CFM;
-//# sourceMappingURL=GW_SET_NODE_NAME_CFM.js.map

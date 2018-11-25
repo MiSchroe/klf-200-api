@@ -31,4 +31,3 @@ var ActivateSceneStatus;
     ActivateSceneStatus[ActivateSceneStatus["InvalidParameter"] = 1] = "InvalidParameter";
     ActivateSceneStatus[ActivateSceneStatus["RequestRejected"] = 2] = "RequestRejected";
 })(ActivateSceneStatus = exports.ActivateSceneStatus || (exports.ActivateSceneStatus = {}));
-//# sourceMappingURL=GW_SCENES.js.map

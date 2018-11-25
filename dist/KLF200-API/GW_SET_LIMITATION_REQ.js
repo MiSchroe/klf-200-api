@@ -37,4 +37,3 @@ class GW_SET_LIMITATION_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     }
 }
 exports.GW_SET_LIMITATION_REQ = GW_SET_LIMITATION_REQ;
-//# sourceMappingURL=GW_SET_LIMITATION_REQ.js.map

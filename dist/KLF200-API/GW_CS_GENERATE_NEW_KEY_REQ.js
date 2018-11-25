@@ -7,4 +7,3 @@ class GW_CS_GENERATE_NEW_KEY_REQ extends common_1.GW_FRAME_REQ {
     }
 }
 exports.GW_CS_GENERATE_NEW_KEY_REQ = GW_CS_GENERATE_NEW_KEY_REQ;
-//# sourceMappingURL=GW_CS_GENERATE_NEW_KEY_REQ.js.map

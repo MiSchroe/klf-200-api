@@ -1,1 +1,1 @@
-{"version":3,"file":"GW_GET_LOCAL_TIME_REQ.js","sourceRoot":"","sources":["../../src/KLF200-API/GW_GET_LOCAL_TIME_REQ.ts"],"names":[],"mappings":"AAAA,YAAY,CAAC;;AAEb,qCAAwC;AAExC,MAAa,qBAAsB,SAAQ,qBAAY;IACnD;QACI,KAAK,CAAC,CAAC,CAAC,CAAC;IACb,CAAC;CACJ;AAJD,sDAIC"}
+{"version":3,"file":"GW_GET_LOCAL_TIME_REQ.js","sourceRoot":"","sources":["../../src/KLF200-API/GW_GET_LOCAL_TIME_REQ.ts"],"names":[],"mappings":"AAAA,YAAY,CAAC;;;;;;;;;;;;;;;AAEb,mCAAwC;AAExC;IAA2C,yCAAY;IACnD;eACI,kBAAM,CAAC,CAAC;IACZ,CAAC;IACL,4BAAC;AAAD,CAAC,AAJD,CAA2C,qBAAY,GAItD;AAJY,sDAAqB"}

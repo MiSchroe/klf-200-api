@@ -9,4 +9,3 @@ class GW_CS_CONTROLLER_COPY_NTF extends common_1.GW_FRAME_NTF {
     }
 }
 exports.GW_CS_CONTROLLER_COPY_NTF = GW_CS_CONTROLLER_COPY_NTF;
-//# sourceMappingURL=GW_CS_CONTROLLER_COPY_NTF.js.map

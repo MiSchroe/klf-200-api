@@ -15,4 +15,3 @@ class GW_PASSWORD_ENTER_REQ extends common_1.GW_FRAME_REQ {
     }
 }
 exports.GW_PASSWORD_ENTER_REQ = GW_PASSWORD_ENTER_REQ;
-//# sourceMappingURL=GW_PASSWORD_ENTER_REQ.js.map

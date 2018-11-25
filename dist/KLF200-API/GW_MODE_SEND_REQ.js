@@ -51,4 +51,3 @@ class GW_MODE_SEND_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     }
 }
 exports.GW_MODE_SEND_REQ = GW_MODE_SEND_REQ;
-//# sourceMappingURL=GW_MODE_SEND_REQ.js.map

@@ -16,4 +16,3 @@ class GW_GET_SCENE_LIST_NTF extends common_1.GW_FRAME_NTF {
     }
 }
 exports.GW_GET_SCENE_LIST_NTF = GW_GET_SCENE_LIST_NTF;
-//# sourceMappingURL=GW_GET_SCENE_LIST_NTF.js.map

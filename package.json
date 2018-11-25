@@ -49,7 +49,11 @@
     "document": "jsdoc src -r -c ./.jsdoc.json -d docs"
   },
   "nyc": {
-    "extensions": [
+    "include": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+    ],
+    "extension": [
       ".ts",
       ".tsx"
     ],
@@ -57,8 +61,11 @@
       "**/*.d.ts"
     ],
     "reporter": [
+      "text-summary",
       "html"
     ],
+    "sourceMap": true,
+    "instrument": true,
     "all": true
   },
   "repository": {
@@ -67,9 +74,7 @@
   },
   "keywords": [
     "klf-200",
-    "IoT",
-    "ioBroker",
-    "wrapper"
+    "IoT"
   ],
   "license": "MIT",
   "bugs": {

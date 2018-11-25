@@ -12,4 +12,3 @@ class GW_SET_NODE_VARIATION_REQ extends common_1.GW_FRAME_REQ {
     }
 }
 exports.GW_SET_NODE_VARIATION_REQ = GW_SET_NODE_VARIATION_REQ;
-//# sourceMappingURL=GW_SET_NODE_VARIATION_REQ.js.map
