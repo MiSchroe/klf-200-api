@@ -87,7 +87,7 @@ export class Scene extends Component {
                 return confirmationFrame.SessionID;
             }
             else {
-                return Promise.reject(confirmationFrame.Status);
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
         }
         catch (error) {
@@ -111,7 +111,7 @@ export class Scene extends Component {
                 return confirmationFrame.SessionID;
             }
             else {
-                return Promise.reject(confirmationFrame.Status);
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
         } catch (error) {
             return Promise.reject(error);
@@ -130,27 +130,32 @@ export class Scene extends Component {
         try {
             const tempResult: SceneInformationEntry[] = [];     // Store results temporary until finished without error.
             return new Promise<void>(async (resolve, reject) => {
-                const dispose = this.Connection.on(frame => {
-                    if (frame instanceof GW_GET_SCENE_INFORMATION_NTF) {
-                        tempResult.push(...frame.Nodes);
-                        // Check, if last notification message
-                        if (frame.NumberOfRemainingNodes === 0) {
-                            dispose.dispose();
+                try {
+                    const dispose = this.Connection.on(frame => {
+                        if (frame instanceof GW_GET_SCENE_INFORMATION_NTF) {
+                            tempResult.push(...frame.Nodes);
+                            // Check, if last notification message
+                            if (frame.NumberOfRemainingNodes === 0) {
+                                dispose.dispose();
 
-                            // Finished without error -> update Products array
-                            this.Products.length = 0;   // Clear array of products
-                            this.Products.push(...tempResult);
-                            this.propertyChanged("Products");
-                            resolve();
+                                // Finished without error -> update Products array
+                                this.Products.length = 0;   // Clear array of products
+                                this.Products.push(...tempResult);
+                                this.propertyChanged("Products");
+                                resolve();
+                            }
+                        }
+                    }, [GatewayCommand.GW_GET_SCENE_INFORMATION_NTF]);
+                    const confirmationFrame = <GW_GET_SCENE_INFORMATION_CFM> await this.Connection.sendFrameAsync(new GW_GET_SCENE_INFORMATION_REQ(this.SceneID));
+                    if (confirmationFrame.SceneID === this.SceneID) {
+                        if (confirmationFrame.Status !== GW_COMMON_STATUS.SUCCESS) {
+                            dispose.dispose();
+                            reject(new Error(confirmationFrame.getError()));
                         }
                     }
-                }, [GatewayCommand.GW_GET_SCENE_INFORMATION_NTF]);
-                const confirmationFrame = <GW_GET_SCENE_INFORMATION_CFM> await this.Connection.sendFrameAsync(new GW_GET_SCENE_INFORMATION_REQ(this.SceneID));
-                if (confirmationFrame.SceneID === this.SceneID) {
-                    if (confirmationFrame.Status !== GW_COMMON_STATUS.SUCCESS) {
-                        dispose.dispose();
-                        reject(confirmationFrame.Status);
-                    }
+                }
+                catch (error) {
+                    reject(error);
                 }
             });
         } catch (error) {
@@ -215,24 +220,29 @@ export class Scenes {
 
     private async initializeScenesAsync(): Promise<void> {
         try {
-            return new Promise<void>(async resolve => {
-                const dispose = this.Connection.on(async frame => {
-                    if (frame instanceof GW_GET_SCENE_LIST_NTF) {
-                        frame.Scenes.forEach(scene => this.Scenes[scene.SceneID] = new Scene(this.Connection, scene.SceneID, scene.Name));
-                        if (frame.NumberOfRemainingScenes === 0) {
-                            dispose.dispose();
-                            // Get more detailed information for each scene
-                            for (const scene of this.Scenes) {
-                                if (typeof scene !== "undefined") {
-                                    await scene.refreshAsync();
+            return new Promise<void>(async (resolve, reject) => {
+                try {
+                    const dispose = this.Connection.on(async frame => {
+                        if (frame instanceof GW_GET_SCENE_LIST_NTF) {
+                            frame.Scenes.forEach(scene => this.Scenes[scene.SceneID] = new Scene(this.Connection, scene.SceneID, scene.Name));
+                            if (frame.NumberOfRemainingScenes === 0) {
+                                dispose.dispose();
+                                // Get more detailed information for each scene
+                                for (const scene of this.Scenes) {
+                                    if (typeof scene !== "undefined") {
+                                        await scene.refreshAsync();
+                                    }
                                 }
+                                this.Connection.on(frame => this.onNotificationHandler(frame), [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
+                                resolve();
                             }
-                            this.Connection.on(frame => this.onNotificationHandler(frame), [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
-                            resolve();
                         }
-                    }
-                }, [GatewayCommand.GW_GET_SCENE_LIST_NTF]);
-                await this.Connection.sendFrameAsync(new GW_GET_SCENE_LIST_REQ());
+                    }, [GatewayCommand.GW_GET_SCENE_LIST_NTF]);
+                    await this.Connection.sendFrameAsync(new GW_GET_SCENE_LIST_REQ());
+                }
+                catch (error) {
+                    reject(error);
+                }
             });
         } catch (error) {
             return Promise.reject(error);

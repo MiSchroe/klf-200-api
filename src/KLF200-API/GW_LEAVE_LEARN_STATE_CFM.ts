@@ -10,4 +10,17 @@ export class GW_LEAVE_LEARN_STATE_CFM extends GW_FRAME_CFM {
 
         this.Status = this.Data.readUInt8(0);
     }
+
+    public getError(): string {
+        switch (this.Status) {
+            case GW_INVERSE_STATUS.SUCCESS:
+                throw new Error("No error.");
+                
+            case GW_INVERSE_STATUS.ERROR:
+                return "Request failed.";
+        
+            default:
+                return `Unknown error ${this.Status}.`;
+        }
+    }
 }

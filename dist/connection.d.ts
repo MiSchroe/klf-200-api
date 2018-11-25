@@ -13,28 +13,31 @@ export interface IConnection {
      * Logs in to the KLF interface by sending the GW_PASSWORD_ENTER_REQ.
      *
      * @param {string} password The password needed for login. The factory default password is velux123.
+     * @param {number} [timeout] A timeout in seconds. After the timeout the returned promise will be rejected.
      * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
      * @memberof IConnection
      */
-    loginAsync(password: string): Promise<void>;
+    loginAsync(password: string, timeout?: number): Promise<void>;
     /**
      * Logs out from the KLF interface and closes the socket.
      *
+     * @param {number} [timeout] A timeout in seconds. After the timeout the returned promise will be rejected.
      * @returns {Promise<void>} Returns a promise that resolves to true on successful logout or rejects with the errors.
      * @memberof IConnection
      */
-    logoutAsync(): Promise<void>;
+    logoutAsync(timeout?: number): Promise<void>;
     /**
      * Sends a request frame to the KLF interface.
      *
      * @param {IGW_FRAME_REQ} frame The frame that should be sent to the KLF interface.
+     * @param {number} [timeout] A timeout in seconds. After the timeout the returned promise will be rejected.
      * @returns {Promise<IGW_FRAME_RCV>} Returns a promise with the corresponding confirmation message as value.
      *                                   In case of an error frame the promise will be rejected with the error number.
      *                                   If the request frame is a command (with a SessionID) than the promise will be
      *                                   resolved by the corresponding confirmation frame with a matching session ID.
      * @memberof IConnection
      */
-    sendFrameAsync(frame: IGW_FRAME_REQ): Promise<IGW_FRAME_RCV>;
+    sendFrameAsync(frame: IGW_FRAME_REQ, timeout?: number): Promise<IGW_FRAME_RCV>;
     /**
      * Add a handler to listen for confirmations and notification.
      * You can provide an optional filter to listen only to
@@ -98,28 +101,31 @@ export declare class Connection implements IConnection {
      * Logs in to the KLF interface by sending the GW_PASSWORD_ENTER_REQ.
      *
      * @param {string} password The password needed for login. The factory default password is velux123.
+     * @param {number} [timeout=60] A timeout in seconds. After the timeout the returned promise will be rejected.
      * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
      * @memberof Connection
      */
-    loginAsync(password: string): Promise<void>;
+    loginAsync(password: string, timeout?: number): Promise<void>;
     /**
      * Logs out from the KLF interface and closes the socket.
      *
+     * @param {number} [timeout=10] A timeout in seconds. After the timeout the returned promise will be rejected.
      * @returns {Promise<void>} Returns a promise that resolves to true on successful logout or rejects with the errors.
      * @memberof Connection
      */
-    logoutAsync(): Promise<void>;
+    logoutAsync(timeout?: number): Promise<void>;
     /**
      * Sends a request frame to the KLF interface.
      *
      * @param {IGW_FRAME_REQ} frame The frame that should be sent to the KLF interface.
+     * @param {number} [timeout=10] A timeout in seconds. After the timeout the returned promise will be rejected.
      * @returns {Promise<IGW_FRAME_RCV>} Returns a promise with the corresponding confirmation message as value.
      *                                   In case of an error frame the promise will be rejected with the error number.
      *                                   If the request frame is a command (with a SessionID) than the promise will be
      *                                   resolved by the corresponding confirmation frame with a matching session ID.
      * @memberof Connection
      */
-    sendFrameAsync(frame: IGW_FRAME_REQ): Promise<IGW_FRAME_RCV>;
+    sendFrameAsync(frame: IGW_FRAME_REQ, timeout?: number): Promise<IGW_FRAME_RCV>;
     /**
      * Add a handler to listen for confirmations and notification.
      * You can provide an optional filter to listen only to

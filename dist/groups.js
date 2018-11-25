@@ -186,7 +186,7 @@ class Group extends PropertyChangedEvent_1.Component {
                     return Promise.resolve();
                 }
                 else {
-                    return Promise.reject(confirmationFrame.Status);
+                    return Promise.reject(new Error(confirmationFrame.getError()));
                 }
             }
             catch (error) {
@@ -281,7 +281,7 @@ class Group extends PropertyChangedEvent_1.Component {
                     return confirmationFrame.SessionID;
                 }
                 else {
-                    return Promise.reject(confirmationFrame.Status);
+                    return Promise.reject(new Error(confirmationFrame.getError()));
                 }
             }
             catch (error) {
@@ -311,7 +311,7 @@ class Group extends PropertyChangedEvent_1.Component {
                     const productInformation = yield this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ_1.GW_GET_NODE_INFORMATION_REQ(nodeID));
                     if (productInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
                         dispose.dispose();
-                        reject(productInformation.Status);
+                        reject(new Error(productInformation.getError()));
                     }
                 }));
                 return this.setTargetPositionAsyncRaw(GW_COMMAND_1.convertPosition(newPosition, nodeTypeID));
@@ -341,18 +341,23 @@ class Groups {
     initializeGroupsAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
-                    const dispose = this.Connection.on(frame => {
-                        if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF_1.GW_GET_ALL_GROUPS_INFORMATION_NTF || frame instanceof GW_GET_GROUP_INFORMATION_NTF_1.GW_GET_GROUP_INFORMATION_NTF) {
-                            this.Groups[frame.GroupID] = new Group(this.Connection, frame);
-                        }
-                        else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF_1.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
-                            dispose.dispose();
-                            this.Connection.on(this.onNotificationHandler, [common_1.GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
-                            resolve();
-                        }
-                    }, [common_1.GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, common_1.GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
-                    yield this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ_1.GW_GET_ALL_GROUPS_INFORMATION_REQ());
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    try {
+                        const dispose = this.Connection.on(frame => {
+                            if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF_1.GW_GET_ALL_GROUPS_INFORMATION_NTF || frame instanceof GW_GET_GROUP_INFORMATION_NTF_1.GW_GET_GROUP_INFORMATION_NTF) {
+                                this.Groups[frame.GroupID] = new Group(this.Connection, frame);
+                            }
+                            else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF_1.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
+                                dispose.dispose();
+                                this.Connection.on(this.onNotificationHandler, [common_1.GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
+                                resolve();
+                            }
+                        }, [common_1.GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, common_1.GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
+                        yield this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ_1.GW_GET_ALL_GROUPS_INFORMATION_REQ());
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
                 }));
             }
             catch (error) {

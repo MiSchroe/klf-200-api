@@ -99,7 +99,7 @@ class Product extends PropertyChangedEvent_1.Component {
                     return Promise.resolve();
                 }
                 else {
-                    return Promise.reject(confirmationFrame.Status);
+                    return Promise.reject(new Error(confirmationFrame.getError()));
                 }
             }
             catch (error) {
@@ -211,7 +211,7 @@ class Product extends PropertyChangedEvent_1.Component {
                     return Promise.resolve();
                 }
                 else {
-                    return Promise.reject(confirmationFrame.Status);
+                    return Promise.reject(new Error(confirmationFrame.getError()));
                 }
             }
             catch (error) {
@@ -237,7 +237,7 @@ class Product extends PropertyChangedEvent_1.Component {
                     return Promise.resolve();
                 }
                 else {
-                    return Promise.reject(confirmationFrame.Status);
+                    return Promise.reject(new Error(confirmationFrame.getError()));
                 }
             }
             catch (error) {
@@ -409,7 +409,7 @@ class Product extends PropertyChangedEvent_1.Component {
                     return confirmationFrame.SessionID;
                 }
                 else {
-                    return Promise.reject(confirmationFrame.CommandStatus);
+                    return Promise.reject(new Error(confirmationFrame.getError()));
                 }
             }
             catch (error) {
@@ -441,7 +441,7 @@ class Product extends PropertyChangedEvent_1.Component {
                     return confirmationFrame.SessionID;
                 }
                 else {
-                    return Promise.reject(confirmationFrame.CommandStatus);
+                    return Promise.reject(new Error(confirmationFrame.getError()));
                 }
             }
             catch (error) {
@@ -466,7 +466,7 @@ class Product extends PropertyChangedEvent_1.Component {
                     return confirmationFrame.SessionID;
                 }
                 else {
-                    return Promise.reject(confirmationFrame.Status);
+                    return Promise.reject(new Error(confirmationFrame.getError()));
                 }
             }
             catch (error) {
@@ -640,18 +640,23 @@ class Products {
     initializeProductsAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
-                    const dispose = this.Connection.on(frame => {
-                        if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF_1.GW_GET_ALL_NODES_INFORMATION_NTF) {
-                            this.Products[frame.NodeID] = new Product(this.Connection, frame);
-                        }
-                        else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF_1.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
-                            dispose.dispose();
-                            this.Connection.on(this.onNotificationHandler, [common_1.GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
-                            resolve();
-                        }
-                    }, [common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF]);
-                    yield this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ_1.GW_GET_ALL_NODES_INFORMATION_REQ());
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    try {
+                        const dispose = this.Connection.on(frame => {
+                            if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF_1.GW_GET_ALL_NODES_INFORMATION_NTF) {
+                                this.Products[frame.NodeID] = new Product(this.Connection, frame);
+                            }
+                            else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF_1.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
+                                dispose.dispose();
+                                this.Connection.on(this.onNotificationHandler, [common_1.GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
+                                resolve();
+                            }
+                        }, [common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF]);
+                        yield this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ_1.GW_GET_ALL_NODES_INFORMATION_REQ());
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
                 }));
             }
             catch (error) {
@@ -702,12 +707,17 @@ class Products {
     addNodeAsync(nodeID) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
-                    const dispose = this.Connection.on(frame => {
-                        dispose.dispose();
-                        resolve(new Product(this.Connection, frame));
-                    }, [common_1.GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
-                    yield this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ_1.GW_GET_NODE_INFORMATION_REQ(nodeID));
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    try {
+                        const dispose = this.Connection.on(frame => {
+                            dispose.dispose();
+                            resolve(new Product(this.Connection, frame));
+                        }, [common_1.GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+                        yield this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ_1.GW_GET_NODE_INFORMATION_REQ(nodeID));
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
                 }));
             }
             catch (error) {

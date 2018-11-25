@@ -7,10 +7,6 @@ import 'mocha';
 
 describe("KLF200-API", function() {
     describe("GW_ERROR_NTF", function () {
-        it('This test should be reached', function() {
-            expect(1).to.be.equal(1);
-        });
-
         it("should return a valid error number.", function() {
             const error = 7; // Busy
             const buff = Buffer.alloc(4);

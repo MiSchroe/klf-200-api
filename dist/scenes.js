@@ -86,7 +86,7 @@ class Scene extends PropertyChangedEvent_1.Component {
                     return confirmationFrame.SessionID;
                 }
                 else {
-                    return Promise.reject(confirmationFrame.Status);
+                    return Promise.reject(new Error(confirmationFrame.getError()));
                 }
             }
             catch (error) {
@@ -111,7 +111,7 @@ class Scene extends PropertyChangedEvent_1.Component {
                     return confirmationFrame.SessionID;
                 }
                 else {
-                    return Promise.reject(confirmationFrame.Status);
+                    return Promise.reject(new Error(confirmationFrame.getError()));
                 }
             }
             catch (error) {
@@ -132,26 +132,31 @@ class Scene extends PropertyChangedEvent_1.Component {
             try {
                 const tempResult = []; // Store results temporary until finished without error.
                 return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                    const dispose = this.Connection.on(frame => {
-                        if (frame instanceof GW_GET_SCENE_INFORMATION_NTF_1.GW_GET_SCENE_INFORMATION_NTF) {
-                            tempResult.push(...frame.Nodes);
-                            // Check, if last notification message
-                            if (frame.NumberOfRemainingNodes === 0) {
+                    try {
+                        const dispose = this.Connection.on(frame => {
+                            if (frame instanceof GW_GET_SCENE_INFORMATION_NTF_1.GW_GET_SCENE_INFORMATION_NTF) {
+                                tempResult.push(...frame.Nodes);
+                                // Check, if last notification message
+                                if (frame.NumberOfRemainingNodes === 0) {
+                                    dispose.dispose();
+                                    // Finished without error -> update Products array
+                                    this.Products.length = 0; // Clear array of products
+                                    this.Products.push(...tempResult);
+                                    this.propertyChanged("Products");
+                                    resolve();
+                                }
+                            }
+                        }, [common_1.GatewayCommand.GW_GET_SCENE_INFORMATION_NTF]);
+                        const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_GET_SCENE_INFORMATION_REQ_1.GW_GET_SCENE_INFORMATION_REQ(this.SceneID));
+                        if (confirmationFrame.SceneID === this.SceneID) {
+                            if (confirmationFrame.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
                                 dispose.dispose();
-                                // Finished without error -> update Products array
-                                this.Products.length = 0; // Clear array of products
-                                this.Products.push(...tempResult);
-                                this.propertyChanged("Products");
-                                resolve();
+                                reject(new Error(confirmationFrame.getError()));
                             }
                         }
-                    }, [common_1.GatewayCommand.GW_GET_SCENE_INFORMATION_NTF]);
-                    const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_GET_SCENE_INFORMATION_REQ_1.GW_GET_SCENE_INFORMATION_REQ(this.SceneID));
-                    if (confirmationFrame.SceneID === this.SceneID) {
-                        if (confirmationFrame.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
-                            dispose.dispose();
-                            reject(confirmationFrame.Status);
-                        }
+                    }
+                    catch (error) {
+                        reject(error);
                     }
                 }));
             }
@@ -218,24 +223,29 @@ class Scenes {
     initializeScenesAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
-                    const dispose = this.Connection.on((frame) => __awaiter(this, void 0, void 0, function* () {
-                        if (frame instanceof GW_GET_SCENE_LIST_NTF_1.GW_GET_SCENE_LIST_NTF) {
-                            frame.Scenes.forEach(scene => this.Scenes[scene.SceneID] = new Scene(this.Connection, scene.SceneID, scene.Name));
-                            if (frame.NumberOfRemainingScenes === 0) {
-                                dispose.dispose();
-                                // Get more detailed information for each scene
-                                for (const scene of this.Scenes) {
-                                    if (typeof scene !== "undefined") {
-                                        yield scene.refreshAsync();
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    try {
+                        const dispose = this.Connection.on((frame) => __awaiter(this, void 0, void 0, function* () {
+                            if (frame instanceof GW_GET_SCENE_LIST_NTF_1.GW_GET_SCENE_LIST_NTF) {
+                                frame.Scenes.forEach(scene => this.Scenes[scene.SceneID] = new Scene(this.Connection, scene.SceneID, scene.Name));
+                                if (frame.NumberOfRemainingScenes === 0) {
+                                    dispose.dispose();
+                                    // Get more detailed information for each scene
+                                    for (const scene of this.Scenes) {
+                                        if (typeof scene !== "undefined") {
+                                            yield scene.refreshAsync();
+                                        }
                                     }
+                                    this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
+                                    resolve();
                                 }
-                                this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
-                                resolve();
                             }
-                        }
-                    }), [common_1.GatewayCommand.GW_GET_SCENE_LIST_NTF]);
-                    yield this.Connection.sendFrameAsync(new GW_GET_SCENE_LIST_REQ_1.GW_GET_SCENE_LIST_REQ());
+                        }), [common_1.GatewayCommand.GW_GET_SCENE_LIST_NTF]);
+                        yield this.Connection.sendFrameAsync(new GW_GET_SCENE_LIST_REQ_1.GW_GET_SCENE_LIST_REQ());
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
                 }));
             }
             catch (error) {

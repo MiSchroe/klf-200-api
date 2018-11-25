@@ -202,7 +202,7 @@ export class Group extends Component {
                 return Promise.resolve();
             }
             else {
-                return Promise.reject(confirmationFrame.Status);
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
         } catch (error) {
             return Promise.reject(error);
@@ -289,7 +289,7 @@ export class Group extends Component {
                 return confirmationFrame.SessionID;
             }
             else {
-                return Promise.reject(confirmationFrame.Status);
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
         } catch (error) {
             return Promise.reject(error);
@@ -317,7 +317,7 @@ export class Group extends Component {
                 const productInformation = <GW_GET_NODE_INFORMATION_CFM> await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID));
                 if (productInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
                     dispose.dispose();
-                    reject(productInformation.Status);
+                    reject(new Error(productInformation.getError()));
                 }
             });
 
@@ -346,18 +346,23 @@ export class Groups {
 
     private async initializeGroupsAsync(): Promise<void> {
         try {
-            return new Promise<void>(async resolve => {
-                const dispose = this.Connection.on(frame => {
-                    if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF || frame instanceof GW_GET_GROUP_INFORMATION_NTF) {
-                        this.Groups[frame.GroupID] = new Group(this.Connection, frame);
-                    }
-                    else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
-                        dispose.dispose();
-                        this.Connection.on(this.onNotificationHandler, [GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
-                        resolve();
-                    }
-                }, [GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF, GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
-                await this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ());
+            return new Promise<void>(async (resolve, reject) => {
+                try {
+                    const dispose = this.Connection.on(frame => {
+                        if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF || frame instanceof GW_GET_GROUP_INFORMATION_NTF) {
+                            this.Groups[frame.GroupID] = new Group(this.Connection, frame);
+                        }
+                        else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
+                            dispose.dispose();
+                            this.Connection.on(this.onNotificationHandler, [GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
+                            resolve();
+                        }
+                    }, [GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF, GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
+                    await this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ());
+                }
+                catch (error) {
+                    reject(error);
+                }
             });
         } catch (error) {
             return Promise.reject(error);

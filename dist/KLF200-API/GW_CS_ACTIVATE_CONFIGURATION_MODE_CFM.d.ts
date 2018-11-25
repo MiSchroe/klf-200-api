@@ -6,4 +6,5 @@ export declare class GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM extends GW_FRAME_CFM 
     readonly OtherErrorNodes: number[];
     readonly Status: number;
     constructor(Data: Buffer);
+    getError(): string;
 }

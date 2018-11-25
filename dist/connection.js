@@ -13,7 +13,9 @@ const tls_1 = require("tls");
 const KLF200SocketProtocol_1 = require("./KLF200-API/KLF200SocketProtocol");
 const common_1 = require("./KLF200-API/common");
 const path_1 = require("path");
+const GW_ERROR_NTF_1 = require("./KLF200-API/GW_ERROR_NTF");
 const _1 = require(".");
+const promise_timeout_1 = require("promise-timeout");
 'use strict';
 const FINGERPRINT = "02:8C:23:A0:89:2B:62:98:C4:99:00:5B:D2:E7:2E:0A:70:3D:71:6A";
 const ca = fs_1.readFileSync(path_1.join(__dirname, "../velux-cert.pem"));
@@ -62,21 +64,29 @@ class Connection {
      * Logs in to the KLF interface by sending the GW_PASSWORD_ENTER_REQ.
      *
      * @param {string} password The password needed for login. The factory default password is velux123.
+     * @param {number} [timeout=60] A timeout in seconds. After the timeout the returned promise will be rejected.
      * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
      * @memberof Connection
      */
-    loginAsync(password) {
+    loginAsync(password, timeout = 60) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.initSocketAsync();
-                this.klfProtocol = new KLF200SocketProtocol_1.KLF200SocketProtocol(this.sckt);
-                const passwordCFM = yield this.sendFrameAsync(new _1.GW_PASSWORD_ENTER_REQ(password));
-                if (passwordCFM.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
-                    return Promise.reject("Login failed.");
-                }
-                else {
-                    return Promise.resolve();
-                }
+                return promise_timeout_1.timeout(new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    try {
+                        yield this.initSocketAsync();
+                        this.klfProtocol = new KLF200SocketProtocol_1.KLF200SocketProtocol(this.sckt);
+                        const passwordCFM = yield this.sendFrameAsync(new _1.GW_PASSWORD_ENTER_REQ(password));
+                        if (passwordCFM.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
+                            reject(new Error("Login failed."));
+                        }
+                        else {
+                            resolve();
+                        }
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
+                })), timeout * 1000);
             }
             catch (error) {
                 return Promise.reject(error);
@@ -86,23 +96,24 @@ class Connection {
     /**
      * Logs out from the KLF interface and closes the socket.
      *
+     * @param {number} [timeout=10] A timeout in seconds. After the timeout the returned promise will be rejected.
      * @returns {Promise<void>} Returns a promise that resolves to true on successful logout or rejects with the errors.
      * @memberof Connection
      */
-    logoutAsync() {
+    logoutAsync(timeout = 10) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 if (this.sckt) {
                     if (this.klfProtocol) {
                         this.klfProtocol = undefined;
                     }
-                    return new Promise((resolve) => {
+                    return promise_timeout_1.timeout(new Promise((resolve) => {
                         // Close socket
                         this.sckt.once("close", () => {
                             this.sckt = undefined;
                             resolve();
                         }).end();
-                    });
+                    }), timeout * 1000);
                 }
                 else {
                     return Promise.resolve();
@@ -117,32 +128,38 @@ class Connection {
      * Sends a request frame to the KLF interface.
      *
      * @param {IGW_FRAME_REQ} frame The frame that should be sent to the KLF interface.
+     * @param {number} [timeout=10] A timeout in seconds. After the timeout the returned promise will be rejected.
      * @returns {Promise<IGW_FRAME_RCV>} Returns a promise with the corresponding confirmation message as value.
      *                                   In case of an error frame the promise will be rejected with the error number.
      *                                   If the request frame is a command (with a SessionID) than the promise will be
      *                                   resolved by the corresponding confirmation frame with a matching session ID.
      * @memberof Connection
      */
-    sendFrameAsync(frame) {
+    sendFrameAsync(frame, timeout = 10) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const frameName = common_1.GatewayCommand[frame.Command];
                 const expectedConfirmationFrameName = frameName.slice(0, -3) + "CFM";
                 const expectedConfirmationFrameCommand = common_1.GatewayCommand[expectedConfirmationFrameName];
                 const sessionID = frame instanceof common_1.GW_FRAME_COMMAND_REQ ? frame.SessionID : undefined;
-                return new Promise((resolve, reject) => {
-                    const cfmHandler = this.klfProtocol.on((frame) => {
-                        if (frame.Command === common_1.GatewayCommand.GW_ERROR_NTF) {
-                            cfmHandler.dispose();
-                            reject(frame.ErrorNumber);
-                        }
-                        else if (frame.Command === expectedConfirmationFrameCommand && (typeof sessionID === "undefined" || sessionID === frame.SessionID)) {
-                            cfmHandler.dispose();
-                            resolve(frame);
-                        }
-                    });
-                    this.klfProtocol.write(frame.Data);
-                });
+                return promise_timeout_1.timeout(new Promise((resolve, reject) => {
+                    try {
+                        const cfmHandler = this.klfProtocol.on((frame) => {
+                            if (frame instanceof GW_ERROR_NTF_1.GW_ERROR_NTF) {
+                                cfmHandler.dispose();
+                                reject(new Error(frame.getError()));
+                            }
+                            else if (frame.Command === expectedConfirmationFrameCommand && (typeof sessionID === "undefined" || sessionID === frame.SessionID)) {
+                                cfmHandler.dispose();
+                                resolve(frame);
+                            }
+                        });
+                        this.klfProtocol.write(frame.Data);
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
+                }), timeout * 1000);
             }
             catch (error) {
                 return Promise.reject(error);

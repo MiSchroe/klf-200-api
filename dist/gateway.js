@@ -151,7 +151,7 @@ class Gateway {
             try {
                 const timeZoneCFM = yield this.connection.sendFrameAsync(new GW_RTC_SET_TIME_ZONE_REQ_1.GW_RTC_SET_TIME_ZONE_REQ(timeZone));
                 if (timeZoneCFM.Status !== common_1.GW_INVERSE_STATUS.SUCCESS)
-                    throw "Error setting time zone.";
+                    throw new Error("Error setting time zone.");
             }
             catch (error) {
                 return Promise.reject(error);

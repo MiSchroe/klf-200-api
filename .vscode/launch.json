@@ -28,6 +28,7 @@
               "--colors",
               "${workspaceFolder}/test/**/*.ts"
           ],
+          "protocol": "inspector",
           "console": "integratedTerminal",
           "internalConsoleOptions": "neverOpen",
           "outFiles": [

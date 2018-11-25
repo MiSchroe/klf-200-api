@@ -5,4 +5,5 @@ export declare class GW_ACTIVATE_SCENE_CFM extends GW_FRAME_CFM {
     readonly SessionID: number;
     readonly Status: ActivateSceneStatus;
     constructor(Data: Buffer);
+    getError(): string;
 }

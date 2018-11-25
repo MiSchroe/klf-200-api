@@ -5,4 +5,5 @@ export declare class GW_ACTIVATE_PRODUCTGROUP_CFM extends GW_FRAME_CFM {
     readonly SessionID: number;
     readonly Status: ActivateProductGroupStatus;
     constructor(Data: Buffer);
+    getError(): string;
 }

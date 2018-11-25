@@ -24,4 +24,29 @@ export class GW_ERROR_NTF extends GW_FRAME_NTF {
         else
             this.ErrorNumber = GW_ERROR.UnknonwErrorCode;
     }
+
+    public getError(): string {
+        switch (this.ErrorNumber) {
+            case GW_ERROR.NotFurtherDefined:
+                return "Not further defined error.";
+                
+            case GW_ERROR.UnknownCommand:
+                return "Unknown command.";
+
+            case GW_ERROR.InvalidFrameStructure:
+                return "Invalid frame structure.";
+
+            case GW_ERROR.Busy:
+                return "Busy.";
+
+            case GW_ERROR.InvalidSystemTableIndex:
+                return "Invalid system table index.";
+
+            case GW_ERROR.NotAuthenticated:
+                return "Not authenticated.";
+        
+            default:
+                return `Unknown error (${this.ErrorNumber.toString()}).`;
+        }
+    }
 }

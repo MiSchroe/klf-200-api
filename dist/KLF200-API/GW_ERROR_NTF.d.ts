@@ -12,4 +12,5 @@ export declare enum GW_ERROR {
 export declare class GW_ERROR_NTF extends GW_FRAME_NTF {
     readonly ErrorNumber: GW_ERROR;
     constructor(Data: Buffer);
+    getError(): string;
 }

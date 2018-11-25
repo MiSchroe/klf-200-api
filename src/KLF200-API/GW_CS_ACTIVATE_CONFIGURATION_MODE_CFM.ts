@@ -17,4 +17,14 @@ export class GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM extends GW_FRAME_CFM {
         this.OtherErrorNodes = bitArrayToArray(this.Data.slice(52, 78));
         this.Status = this.Data.readUInt8(78);
     }
+
+    public getError(): string {
+        switch (this.Status) {
+            case 0:
+                throw new Error("No error.");
+        
+            default:
+                return `Error code ${this.Status.toString()}.`;
+        }
+    }
 }
