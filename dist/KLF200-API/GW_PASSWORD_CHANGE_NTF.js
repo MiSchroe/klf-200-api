@@ -8,3 +8,4 @@ class GW_PASSWORD_CHANGE_NTF extends common_1.GW_FRAME_NTF {
     }
 }
 exports.GW_PASSWORD_CHANGE_NTF = GW_PASSWORD_CHANGE_NTF;
+//# sourceMappingURL=GW_PASSWORD_CHANGE_NTF.js.map

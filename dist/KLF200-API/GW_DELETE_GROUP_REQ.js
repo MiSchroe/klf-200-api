@@ -9,3 +9,4 @@ class GW_DELETE_GROUP_REQ extends common_1.GW_FRAME_REQ {
     }
 }
 exports.GW_DELETE_GROUP_REQ = GW_DELETE_GROUP_REQ;
+//# sourceMappingURL=GW_DELETE_GROUP_REQ.js.map

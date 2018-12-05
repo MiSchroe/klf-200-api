@@ -7,3 +7,4 @@ class GW_GET_VERSION_REQ extends common_1.GW_FRAME_REQ {
     }
 }
 exports.GW_GET_VERSION_REQ = GW_GET_VERSION_REQ;
+//# sourceMappingURL=GW_GET_VERSION_REQ.js.map

@@ -11,3 +11,4 @@ class GW_CS_REMOVE_NODES_REQ extends common_1.GW_FRAME_REQ {
     }
 }
 exports.GW_CS_REMOVE_NODES_REQ = GW_CS_REMOVE_NODES_REQ;
+//# sourceMappingURL=GW_CS_REMOVE_NODES_REQ.js.map

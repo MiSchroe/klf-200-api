@@ -44,3 +44,4 @@ class GW_STATUS_REQUEST_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     }
 }
 exports.GW_STATUS_REQUEST_REQ = GW_STATUS_REQUEST_REQ;
+//# sourceMappingURL=GW_STATUS_REQUEST_REQ.js.map

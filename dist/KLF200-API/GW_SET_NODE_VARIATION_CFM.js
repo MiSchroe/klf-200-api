@@ -21,3 +21,4 @@ class GW_SET_NODE_VARIATION_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_SET_NODE_VARIATION_CFM = GW_SET_NODE_VARIATION_CFM;
+//# sourceMappingURL=GW_SET_NODE_VARIATION_CFM.js.map

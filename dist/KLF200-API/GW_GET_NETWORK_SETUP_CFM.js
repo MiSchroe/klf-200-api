@@ -11,3 +11,4 @@ class GW_GET_NETWORK_SETUP_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_GET_NETWORK_SETUP_CFM = GW_GET_NETWORK_SETUP_CFM;
+//# sourceMappingURL=GW_GET_NETWORK_SETUP_CFM.js.map

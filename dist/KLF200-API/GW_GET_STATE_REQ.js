@@ -7,3 +7,4 @@ class GW_GET_STATE_REQ extends common_1.GW_FRAME_REQ {
     }
 }
 exports.GW_GET_STATE_REQ = GW_GET_STATE_REQ;
+//# sourceMappingURL=GW_GET_STATE_REQ.js.map

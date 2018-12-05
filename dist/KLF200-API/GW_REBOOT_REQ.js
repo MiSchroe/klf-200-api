@@ -7,3 +7,4 @@ class GW_REBOOT_REQ extends common_1.GW_FRAME_REQ {
     }
 }
 exports.GW_REBOOT_REQ = GW_REBOOT_REQ;
+//# sourceMappingURL=GW_REBOOT_REQ.js.map

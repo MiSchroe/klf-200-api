@@ -10,3 +10,4 @@ class GW_INITIALIZE_SCENE_NTF extends common_1.GW_FRAME_NTF {
     }
 }
 exports.GW_INITIALIZE_SCENE_NTF = GW_INITIALIZE_SCENE_NTF;
+//# sourceMappingURL=GW_INITIALIZE_SCENE_NTF.js.map

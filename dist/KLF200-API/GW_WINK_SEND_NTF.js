@@ -8,3 +8,4 @@ class GW_WINK_SEND_NTF extends common_1.GW_FRAME_NTF {
     }
 }
 exports.GW_WINK_SEND_NTF = GW_WINK_SEND_NTF;
+//# sourceMappingURL=GW_WINK_SEND_NTF.js.map

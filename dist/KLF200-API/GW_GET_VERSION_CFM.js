@@ -25,3 +25,4 @@ class GW_GET_VERSION_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_GET_VERSION_CFM = GW_GET_VERSION_CFM;
+//# sourceMappingURL=GW_GET_VERSION_CFM.js.map

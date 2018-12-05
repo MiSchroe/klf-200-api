@@ -214,3 +214,4 @@ function convertPosition(position, typeID) {
     return 0xC800 * position;
 }
 exports.convertPosition = convertPosition;
+//# sourceMappingURL=GW_COMMAND.js.map

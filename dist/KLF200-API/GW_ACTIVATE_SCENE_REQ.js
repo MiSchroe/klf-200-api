@@ -17,3 +17,4 @@ class GW_ACTIVATE_SCENE_REQ extends common_1.GW_FRAME_COMMAND_REQ {
     }
 }
 exports.GW_ACTIVATE_SCENE_REQ = GW_ACTIVATE_SCENE_REQ;
+//# sourceMappingURL=GW_ACTIVATE_SCENE_REQ.js.map

@@ -24,3 +24,4 @@ class GW_NEW_GROUP_REQ extends common_1.GW_FRAME_REQ {
     }
 }
 exports.GW_NEW_GROUP_REQ = GW_NEW_GROUP_REQ;
+//# sourceMappingURL=GW_NEW_GROUP_REQ.js.map

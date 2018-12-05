@@ -1,1 +1,1 @@
-{"version":3,"file":"GW_GET_VERSION_REQ.js","sourceRoot":"","sources":["../../src/KLF200-API/GW_GET_VERSION_REQ.ts"],"names":[],"mappings":"AAAA,YAAY,CAAC;;;;;;;;;;;;;;;AAEb,mCAAwC;AAExC;IAAwC,sCAAY;IAChD;eACI,kBAAM,CAAC,CAAC;IACZ,CAAC;IACL,yBAAC;AAAD,CAAC,AAJD,CAAwC,qBAAY,GAInD;AAJY,gDAAkB"}
+{"version":3,"file":"GW_GET_VERSION_REQ.js","sourceRoot":"","sources":["../../src/KLF200-API/GW_GET_VERSION_REQ.ts"],"names":[],"mappings":"AAAA,YAAY,CAAC;;AAEb,qCAAwC;AAExC,MAAa,kBAAmB,SAAQ,qBAAY;IAChD;QACI,KAAK,CAAC,CAAC,CAAC,CAAC;IACb,CAAC;CACJ;AAJD,gDAIC"}

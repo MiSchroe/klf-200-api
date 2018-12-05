@@ -21,3 +21,4 @@ class GW_NEW_GROUP_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_NEW_GROUP_CFM = GW_NEW_GROUP_CFM;
+//# sourceMappingURL=GW_NEW_GROUP_CFM.js.map

@@ -8,3 +8,4 @@ class GW_GROUP_DELETED_NTF extends common_1.GW_FRAME_NTF {
     }
 }
 exports.GW_GROUP_DELETED_NTF = GW_GROUP_DELETED_NTF;
+//# sourceMappingURL=GW_GROUP_DELETED_NTF.js.map

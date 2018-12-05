@@ -30,3 +30,4 @@ class GW_MODE_SEND_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_MODE_SEND_CFM = GW_MODE_SEND_CFM;
+//# sourceMappingURL=GW_MODE_SEND_CFM.js.map

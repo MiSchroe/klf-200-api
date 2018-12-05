@@ -20,3 +20,4 @@ class GW_RECORD_SCENE_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_RECORD_SCENE_CFM = GW_RECORD_SCENE_CFM;
+//# sourceMappingURL=GW_RECORD_SCENE_CFM.js.map

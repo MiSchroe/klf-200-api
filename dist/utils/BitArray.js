@@ -54,3 +54,4 @@ function arrayToBitArray(numberArray, bufferLength, destinationBuffer) {
     return returnBuffer;
 }
 exports.arrayToBitArray = arrayToBitArray;
+//# sourceMappingURL=BitArray.js.map

@@ -20,3 +20,4 @@ class GW_STATUS_REQUEST_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_STATUS_REQUEST_CFM = GW_STATUS_REQUEST_CFM;
+//# sourceMappingURL=GW_STATUS_REQUEST_CFM.js.map

@@ -40,3 +40,4 @@ class GW_ERROR_NTF extends common_1.GW_FRAME_NTF {
     }
 }
 exports.GW_ERROR_NTF = GW_ERROR_NTF;
+//# sourceMappingURL=GW_ERROR_NTF.js.map

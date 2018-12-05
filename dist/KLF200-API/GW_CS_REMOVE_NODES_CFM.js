@@ -8,3 +8,4 @@ class GW_CS_REMOVE_NODES_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_CS_REMOVE_NODES_CFM = GW_CS_REMOVE_NODES_CFM;
+//# sourceMappingURL=GW_CS_REMOVE_NODES_CFM.js.map

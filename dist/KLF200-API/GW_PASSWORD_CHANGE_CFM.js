@@ -20,3 +20,4 @@ class GW_PASSWORD_CHANGE_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_PASSWORD_CHANGE_CFM = GW_PASSWORD_CHANGE_CFM;
+//# sourceMappingURL=GW_PASSWORD_CHANGE_CFM.js.map

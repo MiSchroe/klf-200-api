@@ -4,17 +4,11 @@ import Mitm from "mitm";
 import { Socket } from "net";
 import { SLIPProtocol, KLF200Protocol } from "../src/KLF200-API/common";
 import { Connection } from "../src/connection";
-import { expect } from "chai";
-import chai = require("chai");
-import chaiAsPromised = require("chai-as-promised");
-import { timeout, TimeoutError } from "promise-timeout";
-import { sleep } from "sleep";
-import sinon from "sinon";
-import { TLSSocket } from "tls";
-import { Stream, Duplex, Readable, Writable } from "stream";
+import { expect, use } from "chai";
+import chaiAsPromised from "chai-as-promised";
 import { GW_PASSWORD_ENTER_REQ } from "../src";
 
-chai.use(chaiAsPromised);
+use(chaiAsPromised);
 
 function rawBufferFrom(data: number[]): Buffer {
     return SLIPProtocol.Encode(KLF200Protocol.Encode(Buffer.concat([Buffer.from([data.length]), Buffer.from(data)])));
@@ -82,8 +76,8 @@ describe("connection", function () {
 
         it("should fulfill if logged in.", async function() {
             this.mitm.on("connection", function(socket: Socket) {
-                socket.on("data", (data) => {
-                    socket.write(rawBufferFrom([0x30, 0x01, 0x00])); 
+                socket.on("data", () => {
+                    socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                 });
             });
 
@@ -96,8 +90,8 @@ describe("connection", function () {
     describe("sendFrameAsync", function() {
         it("should return the corresponding confirmation.", async function() {
             this.mitm.on("connection", function(socket: Socket) {
-                socket.on("data", (data) => {
-                    socket.write(rawBufferFrom([0x30, 0x01, 0x00])); 
+                socket.on("data", () => {
+                    socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                 });
             });
 
@@ -110,7 +104,7 @@ describe("connection", function () {
             this.timeout(2000);
             let isFirstData = true;
             this.mitm.on("connection", function(socket: Socket) {
-                socket.on("data", (data) => {
+                socket.on("data", () => {
                     if (isFirstData) {
                         socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                         isFirstData = false;
@@ -127,9 +121,9 @@ describe("connection", function () {
             this.timeout(2000);
             let isFirstData = true;
             this.mitm.on("connection", function(socket: Socket) {
-                socket.on("data", (data) => {
+                socket.on("data", () => {
                     if (isFirstData) {
-                        socket.write(rawBufferFrom([0x30, 0x01, 0x00])); 
+                        socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                         isFirstData = false;
                     }
                     else {
@@ -147,7 +141,7 @@ describe("connection", function () {
             this.timeout(2000);
             let isFirstData = true;
             this.mitm.on("connection", function(socket: Socket) {
-                socket.on("data", (data) => {
+                socket.on("data", () => {
                     if (isFirstData) {
                         socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                         isFirstData = false;

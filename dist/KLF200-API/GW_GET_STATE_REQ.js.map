@@ -1,1 +1,1 @@
-{"version":3,"file":"GW_GET_STATE_REQ.js","sourceRoot":"","sources":["../../src/KLF200-API/GW_GET_STATE_REQ.ts"],"names":[],"mappings":"AAAA,YAAY,CAAC;;;;;;;;;;;;;;;AAEb,mCAAwC;AAExC;IAAsC,oCAAY;IAC9C;eACI,kBAAM,CAAC,CAAC;IACZ,CAAC;IACL,uBAAC;AAAD,CAAC,AAJD,CAAsC,qBAAY,GAIjD;AAJY,4CAAgB"}
+{"version":3,"file":"GW_GET_STATE_REQ.js","sourceRoot":"","sources":["../../src/KLF200-API/GW_GET_STATE_REQ.ts"],"names":[],"mappings":"AAAA,YAAY,CAAC;;AAEb,qCAAwC;AAExC,MAAa,gBAAiB,SAAQ,qBAAY;IAC9C;QACI,KAAK,CAAC,CAAC,CAAC,CAAC;IACb,CAAC;CACJ;AAJD,4CAIC"}

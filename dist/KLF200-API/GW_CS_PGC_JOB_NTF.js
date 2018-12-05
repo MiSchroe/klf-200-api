@@ -30,3 +30,4 @@ class GW_CS_PGC_JOB_NTF extends common_1.GW_FRAME_NTF {
     }
 }
 exports.GW_CS_PGC_JOB_NTF = GW_CS_PGC_JOB_NTF;
+//# sourceMappingURL=GW_CS_PGC_JOB_NTF.js.map

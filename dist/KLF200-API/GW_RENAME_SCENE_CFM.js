@@ -22,3 +22,4 @@ class GW_RENAME_SCENE_CFM extends common_1.GW_FRAME_CFM {
     }
 }
 exports.GW_RENAME_SCENE_CFM = GW_RENAME_SCENE_CFM;
+//# sourceMappingURL=GW_RENAME_SCENE_CFM.js.map

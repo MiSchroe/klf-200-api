@@ -10,3 +10,4 @@ class GW_DELETE_SCENE_REQ extends common_1.GW_FRAME_REQ {
     }
 }
 exports.GW_DELETE_SCENE_REQ = GW_DELETE_SCENE_REQ;
+//# sourceMappingURL=GW_DELETE_SCENE_REQ.js.map

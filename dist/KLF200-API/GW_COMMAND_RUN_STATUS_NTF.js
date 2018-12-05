@@ -15,3 +15,4 @@ class GW_COMMAND_RUN_STATUS_NTF extends common_1.GW_FRAME_NTF {
     }
 }
 exports.GW_COMMAND_RUN_STATUS_NTF = GW_COMMAND_RUN_STATUS_NTF;
+//# sourceMappingURL=GW_COMMAND_RUN_STATUS_NTF.js.map
