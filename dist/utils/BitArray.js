@@ -36,7 +36,7 @@ exports.bitArrayToArray = bitArrayToArray;
 function arrayToBitArray(numberArray, bufferLength, destinationBuffer) {
     const returnBuffer = destinationBuffer ? destinationBuffer : Buffer.alloc(bufferLength);
     if (destinationBuffer) {
-        // Get the bufferLength from the destination buffer, is one is provided
+        // Get the bufferLength from the destination buffer, if one is provided
         bufferLength = destinationBuffer.byteLength;
     }
     const maxAllowedNumber = bufferLength * 8 - 1; // Max. allowed number is defined by the buffer size
@@ -47,9 +47,9 @@ function arrayToBitArray(numberArray, bufferLength, destinationBuffer) {
         // Check for valid number
         const numberToWrite = numberArray[index];
         if (numberToWrite < 0 || numberToWrite > maxAllowedNumber)
-            throw "Number out of range.";
+            throw new Error("Number out of range.");
         // Set bit
-        returnBuffer[Math.floor(index / 8)] |= 1 << (index % 8); // index / 8 = byte position (0-bufferLength), index % 8 = bit position (0-7)
+        returnBuffer[Math.floor(numberToWrite / 8)] |= 1 << (numberToWrite % 8); // numberToWrite / 8 = byte position (0-bufferLength), numberToWrite % 8 = bit position (0-7)
     }
     return returnBuffer;
 }
