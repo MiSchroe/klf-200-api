@@ -2,7 +2,7 @@
 
 declare module "chai-bytes" {
     function chaiBytes(chai: any, utils: any): void;
-
+    
     export = chaiBytes;
 }
 

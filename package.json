@@ -24,6 +24,7 @@
     "chai-as-promised": "^7.1.1",
     "chai-bytes": "^0.1.1",
     "chai-sinon": "^2.8.1",
+    "cross-env": "^5.2.0",
     "eslint": "^4.7.1",
     "eslint-config-defaults": "^9.0.0",
     "eslint-plugin-react": "^7.3.0",
@@ -64,8 +65,6 @@
       "text-summary",
       "html"
     ],
-    "sourceMap": true,
-    "instrument": true,
     "all": true
   },
   "repository": {
