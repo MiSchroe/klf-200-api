@@ -1,10 +1,11 @@
+/// <reference path="../../types/chai-bytes/index.d.ts" />
+
 'use strict';
 
 import { GW_PASSWORD_ENTER_REQ } from "../../src/KLF200-API/GW_PASSWORD_ENTER_REQ";
 import { expect, use } from "chai";
 import 'mocha';
 import chaibytes from "chai-bytes";
-
 use(chaibytes);
 
 describe("KLF200-API", function() {

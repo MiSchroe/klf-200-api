@@ -17,6 +17,7 @@ function rawBufferFrom(data: number[]): Buffer {
 const testHOST = 'velux1234';
 
 describe("connection", function () {
+    this.timeout(10000);
     this.beforeEach(function() { this.mitm = Mitm(); });
     this.afterEach(function() { this.mitm.disable(); });
 
