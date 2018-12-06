@@ -1,9 +1,11 @@
 'use strict';
 
-import { GatewayCommand } from "../../src/KLF200-API/common";
 import { GW_PASSWORD_ENTER_REQ } from "../../src/KLF200-API/GW_PASSWORD_ENTER_REQ";
-import { expect } from "chai";
+import { expect, use } from "chai";
 import 'mocha';
+import chaibytes from "chai-bytes";
+
+use(chaibytes);
 
 describe("KLF200-API", function() {
     describe("GW_PASSWORD_ENTER_REQ", function () {
@@ -15,7 +17,7 @@ describe("KLF200-API", function() {
     
             const result = new GW_PASSWORD_ENTER_REQ(password);
             expect(result).to.be.instanceOf(GW_PASSWORD_ENTER_REQ);
-            expect(result.Data.slice(3).equals(expectedBuffer)).is.true;
+            expect(result.Data.slice(3)).equalBytes(expectedBuffer);
         });
 
         it("should return the provided password, if the password length equals 32 bytes.", function() {
@@ -26,7 +28,7 @@ describe("KLF200-API", function() {
     
             const result = new GW_PASSWORD_ENTER_REQ(password);
             expect(result).to.be.instanceOf(GW_PASSWORD_ENTER_REQ);
-            expect(result.Data.slice(3).equals(expectedBuffer)).is.true;
+            expect(result.Data.slice(3)).equalBytes(expectedBuffer);
         });
 
         it("should throw an exception if the password is to long.", function() {
