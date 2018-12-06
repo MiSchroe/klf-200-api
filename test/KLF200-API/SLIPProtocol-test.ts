@@ -1,11 +1,11 @@
 'use strict';
 
 import { SLIPProtocol } from "../../src/KLF200-API/common";
-import { expect } from "chai";
+import { expect, use } from "chai";
 import 'mocha';
 
-// import * as chaibytes from "chai-bytes";
-// chai.use(chaibytes);
+import chaibytes from "chai-bytes";
+use(chaibytes);
 
 describe("KLF200-API", function() {
     describe("SLIPProtocol", function () {
@@ -14,8 +14,7 @@ describe("KLF200-API", function() {
             const expectedBuffer = Buffer.from([192, 0, 4, 0, 0, 1, 5, 192]);
     
             const result = SLIPProtocol.Encode(inputBuffer);
-            //expect(result).equalBytes(expectedBuffer);
-            expect(result.equals(expectedBuffer), `${result} expected to be equal to ${expectedBuffer}`).to.be.true;
+            expect(result).equalBytes(expectedBuffer);
         });
 
         it("should return the decoded buffer.", function() {
@@ -23,8 +22,7 @@ describe("KLF200-API", function() {
             const expectedBuffer = Buffer.from([0, 4, 0, 0, 1, 5]);
     
             const result = SLIPProtocol.Decode(inputBuffer);
-            //expect(result).equalBytes(expectedBuffer);
-            expect(result.equals(expectedBuffer), `${result.toString("hex")} expected to be equal to ${expectedBuffer.toString("hex")}`).to.be.true;
+            expect(result).equalBytes(expectedBuffer);
         });
 
         it("should return the encoded buffer for an empty buffer.", function() {
@@ -32,8 +30,7 @@ describe("KLF200-API", function() {
             const expectedBuffer = Buffer.from([192, 192]);
     
             const result = SLIPProtocol.Encode(inputBuffer);
-            //expect(result).equalBytes(expectedBuffer);
-            expect(result.equals(expectedBuffer), `${result} expected to be equal to ${expectedBuffer}`).to.be.true;
+            expect(result).equalBytes(expectedBuffer);
         });
 
         it("should return an empty buffer after decode.", function() {
@@ -41,8 +38,7 @@ describe("KLF200-API", function() {
             const expectedBuffer = Buffer.alloc(0);
     
             const result = SLIPProtocol.Decode(inputBuffer);
-            //expect(result).equalBytes(expectedBuffer);
-            expect(result.equals(expectedBuffer), `${result} expected to be equal to ${expectedBuffer}`).to.be.true;
+            expect(result).equalBytes(expectedBuffer);
         });
 
         it("should return the encoded END marker.", function() {
@@ -50,8 +46,7 @@ describe("KLF200-API", function() {
             const expectedBuffer = Buffer.from([192, 219, 220, 192]);
     
             const result = SLIPProtocol.Encode(inputBuffer);
-            //expect(result).equalBytes(expectedBuffer);
-            expect(result.equals(expectedBuffer), `${result} expected to be equal to ${expectedBuffer}`).to.be.true;
+            expect(result).equalBytes(expectedBuffer);
         });
 
         it("should return the encoded ESC marker.", function() {
@@ -59,8 +54,7 @@ describe("KLF200-API", function() {
             const expectedBuffer = Buffer.from([192, 219, 221, 192]);
     
             const result = SLIPProtocol.Encode(inputBuffer);
-            //expect(result).equalBytes(expectedBuffer);
-            expect(result.equals(expectedBuffer), `${result} expected to be equal to ${expectedBuffer}`).to.be.true;
+            expect(result).equalBytes(expectedBuffer);
         });
 
         it("should return the decoded END marker.", function() {
@@ -68,8 +62,7 @@ describe("KLF200-API", function() {
             const expectedBuffer = Buffer.from([192]);
     
             const result = SLIPProtocol.Decode(inputBuffer);
-            //expect(result).equalBytes(expectedBuffer);
-            expect(result.equals(expectedBuffer), `${result} expected to be equal to ${expectedBuffer}`).to.be.true;
+            expect(result).equalBytes(expectedBuffer);
         });
 
         it("should return the decoded ESC marker.", function() {
@@ -77,8 +70,7 @@ describe("KLF200-API", function() {
             const expectedBuffer = Buffer.from([219]);
     
             const result = SLIPProtocol.Decode(inputBuffer);
-            //expect(result).equalBytes(expectedBuffer);
-            expect(result.equals(expectedBuffer), `${result} expected to be equal to ${expectedBuffer}`).to.be.true;
+            expect(result).equalBytes(expectedBuffer);
         });
 
         it("should throw an exception on missing markers.", function() {
