@@ -1,3 +1,5 @@
+/// <reference path="../../types/chai-bytes/index.d.ts" />
+
 'use strict';
 
 import { SLIPProtocol } from "../../src/KLF200-API/common";
