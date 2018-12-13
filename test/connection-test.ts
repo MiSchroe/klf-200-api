@@ -22,7 +22,7 @@ describe("connection", function () {
     this.afterEach(function() { this.mitm.disable(); });
 
     describe("loginAsync", function() {
-        it("should succeed with correct passowrd.", async function() {
+        it("should succeed with correct passowrd.", function(done) {
             this.mitm.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
@@ -30,10 +30,10 @@ describe("connection", function () {
             });
 
             const conn = new Connection(testHOST);
-            await expect(conn.loginAsync("velux123")).to.eventually.be.fulfilled;
+            expect(conn.loginAsync("velux123")).to.be.fulfilled.and.notify(done);
         });
 
-        it("should throw an error with incorrect passowrd.", async function() {
+        it("should throw an error with incorrect passowrd.", function(done) {
             this.mitm.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x01]));
@@ -41,10 +41,10 @@ describe("connection", function () {
             });
 
             const conn = new Connection(testHOST);
-            await expect(conn.loginAsync("velux123")).to.eventually.be.rejectedWith(Error);
+            expect(conn.loginAsync("velux123")).to.be.rejectedWith(Error).and.notify(done);
         });
 
-        it("should throw an error on GW_ERROR_NTF.", async function() {
+        it("should throw an error on GW_ERROR_NTF.", function(done) {
             this.mitm.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x00, 0x00, 0x0c]));
@@ -52,10 +52,10 @@ describe("connection", function () {
             });
 
             const conn = new Connection(testHOST);
-            await expect(conn.loginAsync("velux123")).to.eventually.be.rejectedWith(Error);
+            expect(conn.loginAsync("velux123")).to.be.rejectedWith(Error).and.notify(done);
         });
 
-        it("should throw an error after timeout.", async function() {
+        it("should throw an error after timeout.", function(done) {
             this.mitm.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     setTimeout(function() {
@@ -65,17 +65,17 @@ describe("connection", function () {
             });
 
             const conn = new Connection(testHOST);
-            await expect(conn.loginAsync("velux123", 1)).to.eventually.be.rejectedWith(Error);
+            expect(conn.loginAsync("velux123", 1)).to.be.rejectedWith(Error).and.notify(done);
         });
     });
 
     describe("logoutAsync", function() {
-        it("should fulfill if not logged in.", async function() {
+        it("should fulfill if not logged in.", function(done) {
             const conn = new Connection(testHOST);
-            await expect(conn.logoutAsync()).to.eventually.be.fulfilled;
+            expect(conn.logoutAsync()).to.be.fulfilled.and.notify(done);
         });
 
-        it("should fulfill if logged in.", async function() {
+        it("should fulfill if logged in.", function(done) {
             this.mitm.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
@@ -83,13 +83,15 @@ describe("connection", function () {
             });
 
             const conn = new Connection(testHOST);
-            await conn.loginAsync("velux123");
-            await expect(conn.logoutAsync()).to.eventually.be.fulfilled;
+            conn.loginAsync("velux123")
+            .then(() =>
+                expect(conn.logoutAsync()).to.be.fulfilled.and.notify(done)
+            );
         });
     });
 
     describe("sendFrameAsync", function() {
-        it("should return the corresponding confirmation.", async function() {
+        it("should return the corresponding confirmation.", function(done) {
             this.mitm.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
@@ -97,11 +99,13 @@ describe("connection", function () {
             });
 
             const conn = new Connection(testHOST);
-            await conn.loginAsync("velux123");
-            await expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"))).to.eventually.be.fulfilled;
+            conn.loginAsync("velux123")
+            .then(() =>
+                expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"))).to.be.fulfilled.and.notify(done)
+            );
         });
 
-        it("should timeout on missing confirmation.", async function() {
+        it("should timeout on missing confirmation.", function(done) {
             this.timeout(2000);
             let isFirstData = true;
             this.mitm.on("connection", function(socket: Socket) {
@@ -114,11 +118,13 @@ describe("connection", function () {
             });
 
             const conn = new Connection(testHOST);
-            await conn.loginAsync("velux123");
-            await expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1)).to.eventually.be.rejectedWith(Error);
+            conn.loginAsync("velux123")
+            .then(() =>
+                expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1)).to.be.rejectedWith(Error).and.notify(done)
+            );
         });
 
-        it("should reject on error frame.", async function() {
+        it("should reject on error frame.", function(done) {
             this.timeout(2000);
             let isFirstData = true;
             this.mitm.on("connection", function(socket: Socket) {
@@ -134,11 +140,13 @@ describe("connection", function () {
             });
 
             const conn = new Connection(testHOST);
-            await conn.loginAsync("velux123");
-            await expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1)).to.eventually.be.rejectedWith(Error);
+            conn.loginAsync("velux123")
+            .then(() =>
+                expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1)).to.be.rejectedWith(Error).and.notify(done)
+            );
         });
 
-        it("should ignore wrong confirmation.", async function() {
+        it("should ignore wrong confirmation.", function(done) {
             this.timeout(2000);
             let isFirstData = true;
             this.mitm.on("connection", function(socket: Socket) {
@@ -155,8 +163,10 @@ describe("connection", function () {
             });
 
             const conn = new Connection(testHOST);
-            await conn.loginAsync("velux123");
-            await expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1)).to.eventually.be.fulfilled;
+            conn.loginAsync("velux123")
+            .then(() =>
+                expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1)).to.be.fulfilled.and.notify(done)
+            );
         });
     });
 });

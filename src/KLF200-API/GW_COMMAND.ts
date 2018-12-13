@@ -62,7 +62,7 @@ export class LockTime {
     static lockTimeValueToLockTime(lockTimeValue: number): number {
         // Check parameter range
         if (lockTimeValue < 0 || lockTimeValue > 255)
-            throw "Lock time value out of range.";
+            throw new Error("Lock time value out of range.");
 
         return lockTimeValue === 255 ? Infinity : lockTimeValue * 30 + 30;
     }
@@ -72,10 +72,10 @@ export class LockTime {
             return 255;
 
         if ((lockTime % 30) !== 0)
-            throw "Lock time must be a multiple of 30.";
+            throw new Error("Lock time must be a multiple of 30.");
 
         if (lockTime < 0 || lockTime > 7560)
-            throw "Lock time out of range.";
+            throw new Error("Lock time out of range.");
 
         return lockTime / 30 - 1;
     }
@@ -220,12 +220,12 @@ export function convertPositionRaw(positionRaw: number, typeID: ActuatorType): n
 
 export function convertPosition(position: number, typeID: ActuatorType): number {
     if (position < 0 || position > 1)
-        throw "Position value out of range.";
+        throw new Error("Position value out of range.");
 
     if (InverseProductTypes.indexOf(typeID) !== -1) {
         // Percentage has to be calculated reverse
         position = 1 - position;
     }
-    return 0xC800 * position;
+    return Math.round(0xC800 * position);
 }
 
