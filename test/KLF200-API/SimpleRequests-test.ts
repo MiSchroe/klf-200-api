@@ -40,15 +40,17 @@ const simpleRequests: requestListEntryType[] = [
     { RequestClass: new GW_GET_LOCAL_TIME_REQ(), RequestCommand: GatewayCommand.GW_GET_LOCAL_TIME_REQ }
 ];
 
-describe("Simple Requests", function() {
-    for (const request of simpleRequests) {
-        describe(request.RequestClass.constructor.name, function() {
-            it("should have the right command and a length byte of 3", function() {
-                const expectedBuffer = Buffer.from([3, 0, 0]);
-                expectedBuffer.writeInt16BE(request.RequestCommand, 1);
-                expect(request.RequestClass.Command).to.be.equal(request.RequestCommand);
-                expect(request.RequestClass.Data).to.be.equalBytes(expectedBuffer);
+describe("KLF200-API", function() {
+    describe("Simple Requests", function() {
+        for (const request of simpleRequests) {
+            describe(request.RequestClass.constructor.name, function() {
+                it("should have the right command and a length byte of 3", function() {
+                    const expectedBuffer = Buffer.from([3, 0, 0]);
+                    expectedBuffer.writeInt16BE(request.RequestCommand, 1);
+                    expect(request.RequestClass.Command).to.be.equal(request.RequestCommand);
+                    expect(request.RequestClass.Data).to.be.equalBytes(expectedBuffer);
+                });
             });
-        });
-    }
+        }
+    });
 });

@@ -20,13 +20,13 @@ export class GW_ACTIVATE_PRODUCTGROUP_REQ extends GW_FRAME_COMMAND_REQ {
 
         buff.writeUInt8(this.PriorityLevelLock, 9);
         if (this.PriorityLevels.length > 8)
-            throw "Too many priority levels.";
+            throw new Error("Too many priority levels.");
 
         let PLI = 0;
         for (let pliIndex = 0; pliIndex < this.PriorityLevels.length; pliIndex++) {
             const pli = this.PriorityLevels[pliIndex];
             if (pli < 0 || pli > 3)
-                throw "Priority level lock out of range.";
+                throw new Error("Priority level lock out of range.");
 
             PLI <<= 2;
             PLI |= pli;

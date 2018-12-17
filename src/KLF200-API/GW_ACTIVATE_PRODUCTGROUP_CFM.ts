@@ -17,7 +17,7 @@ export class GW_ACTIVATE_PRODUCTGROUP_CFM extends GW_FRAME_CFM {
     public getError(): string {
         switch (this.Status) {
             case ActivateProductGroupStatus.OK:
-                throw new Error("No error.");
+                return "No error.";
 
             case ActivateProductGroupStatus.UnknownProductGroup:
                 return "Unknown product group.";
