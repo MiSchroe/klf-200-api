@@ -86,7 +86,11 @@ describe("connection", function () {
             conn.loginAsync("velux123")
             .then(() =>
                 expect(conn.logoutAsync()).to.be.fulfilled.and.notify(done)
-            );
+            )
+            .catch((error) => {
+                expect.fail(`Unexpected error during test: ${error}`);
+                done();
+            });
         });
     });
 
