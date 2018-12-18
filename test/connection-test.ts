@@ -78,12 +78,18 @@ describe("connection", function () {
         it("should fulfill if logged in.", async function() {
             this.mitm.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
+                    console.log("mitm: Send data.");
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
+                });
+                socket.on("end", () => {
+                    console.log("mitm: End connection.");
+                    socket.end();
                 });
             });
 
             const conn = new Connection(testHOST);
             await conn.loginAsync("velux123");
+            console.log("test: Login successful.");
             return expect(conn.logoutAsync()).to.be.fulfilled;
         });
     });
@@ -93,9 +99,6 @@ describe("connection", function () {
             this.mitm.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
-                });
-                socket.on("end", () => {
-                    socket.end();
                 });
             });
 
