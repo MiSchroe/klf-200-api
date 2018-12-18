@@ -165,10 +165,8 @@ export class Connection implements IConnection {
                 return promiseTimeout(
                     new Promise<void>(
                         (resolve) => {
-                            console.log("logoutAsync: close event established.");
                             // Close socket
                             (<TLSSocket>this.sckt).once("close", () => {
-                                console.log("logoutAsync: close event received.");
                                 this.sckt = undefined;
                                 resolve();
                             }).end();
