@@ -94,6 +94,9 @@ describe("connection", function () {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                 });
+                socket.on("end", () => {
+                    socket.end();
+                });
             });
 
             const conn = new Connection(testHOST);
