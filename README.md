@@ -9,8 +9,7 @@ npm install klf-200-api --save
 
 ### Generate Certificate
 ```
-echo -n | openssl s_client -connect <your ip adress>:51200 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > velux-c
-ert.pem
+echo -n | openssl s_client -connect <your ip adress>:51200 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > velux-cert.pem
 ```
 
 ## Usage

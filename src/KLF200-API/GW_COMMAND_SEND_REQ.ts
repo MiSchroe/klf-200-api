@@ -24,11 +24,11 @@ export class GW_COMMAND_SEND_REQ extends GW_FRAME_COMMAND_REQ {
 
             if (functionalParameterID < 8)
             {
-                FPI1 |= 0x80 >>> functionalParameterID;
+                FPI1 |= (0x80 >>> functionalParameterID);
             }
             else
             {
-                FPI2 |= 0x80 >>> (functionalParameterID - 8);
+                FPI2 |= (0x80 >>> (functionalParameterID - 8));
             }
             buff.writeUInt16BE(functionalParameter.Value, 9 + 2 * functionalParameterID);
         }
