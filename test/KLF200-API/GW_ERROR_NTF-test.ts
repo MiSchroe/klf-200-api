@@ -65,5 +65,30 @@ describe("KLF200-API", function() {
             expect(() => new GW_ERROR_NTF(buff)).to.throw();
         });
 
+        describe("getError()", function() {
+            const errorCodesAndMessages = [
+                { ErrorCode: 0, ErrorMessage: "Not further defined error." },
+                { ErrorCode: 1, ErrorMessage: "Unknown command." },
+                { ErrorCode: 2, ErrorMessage: "Invalid frame structure." },
+                { ErrorCode: 7, ErrorMessage: "Busy." },
+                { ErrorCode: 8, ErrorMessage: "Invalid system table index." },
+                { ErrorCode: 12, ErrorMessage: "Not authenticated." },
+                { ErrorCode: 255, ErrorMessage: "Unknown error (255)." }
+            ]
+            errorCodesAndMessages.forEach(errorCodeAndMessage => {
+                it(`should return the correct error message for error code ${errorCodeAndMessage.ErrorCode}`, function() {
+                    const error = errorCodeAndMessage.ErrorCode; // UnknonwErrorCode
+                    const buff = Buffer.alloc(4);
+                    buff.writeUInt8(4, 0);
+                    buff.writeUInt16BE(GatewayCommand.GW_ERROR_NTF, 1);
+                    buff.writeUInt8(error, 3);
+            
+                    const result = new GW_ERROR_NTF(buff);
+                    expect(result).to.be.instanceOf(GW_ERROR_NTF);
+                    expect(result.ErrorNumber).equals(error);
+                    expect(result.getError()).equals(errorCodeAndMessage.ErrorMessage);
+                });
+            });
+        });
     });
 });

@@ -11,7 +11,7 @@ class GW_COMMAND_SEND_CFM extends common_1.GW_FRAME_CFM {
     getError() {
         switch (this.CommandStatus) {
             case GW_COMMAND_1.CommandStatus.CommandAccepted:
-                throw new Error("No error.");
+                return "No error.";
             case GW_COMMAND_1.CommandStatus.CommandRejected:
                 return "Command rejected.";
             default:

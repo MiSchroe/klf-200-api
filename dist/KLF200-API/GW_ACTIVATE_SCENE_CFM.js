@@ -11,7 +11,7 @@ class GW_ACTIVATE_SCENE_CFM extends common_1.GW_FRAME_CFM {
     getError() {
         switch (this.Status) {
             case GW_SCENES_1.ActivateSceneStatus.OK:
-                throw new Error("No error.");
+                return "No error.";
             case GW_SCENES_1.ActivateSceneStatus.InvalidParameter:
                 return "Invalid parameter.";
             case GW_SCENES_1.ActivateSceneStatus.RequestRejected:

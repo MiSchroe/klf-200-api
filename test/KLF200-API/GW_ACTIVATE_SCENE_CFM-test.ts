@@ -2,7 +2,7 @@
 
 import { expect } from "chai";
 import 'mocha';
-import { GW_ACTIVATE_SCENE_CFM } from "../../src";
+import { GW_ACTIVATE_SCENE_CFM, ActivateSceneStatus } from "../../src";
 
 describe("KLF200-API", function() {
     describe("GW_ACTIVATE_SCENE_CFM", function() {
@@ -16,6 +16,12 @@ describe("KLF200-API", function() {
                 const data = Buffer.from([0x06, 0x04, 0x13, 0x00, 0x47, 0x11]);
                 const result = new GW_ACTIVATE_SCENE_CFM(data);
                 expect(result.SessionID).to.equal(0x4711);
+            });
+
+            it("should return the status", function() {
+                const data = Buffer.from([0x06, 0x04, 0x13, 0x00, 0x47, 0x11]);
+                const result = new GW_ACTIVATE_SCENE_CFM(data);
+                expect(result.Status).to.equal(ActivateSceneStatus.OK);
             });
         });
 

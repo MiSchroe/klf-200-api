@@ -28,10 +28,10 @@ class GW_COMMAND_SEND_REQ extends common_1.GW_FRAME_COMMAND_REQ {
             if (functionalParameterID < 0 || functionalParameterID > 15)
                 throw "Functional paramter ID out of range.";
             if (functionalParameterID < 8) {
-                FPI1 |= 0x80 >>> functionalParameterID;
+                FPI1 |= (0x80 >>> functionalParameterID);
             }
             else {
-                FPI2 |= 0x80 >>> (functionalParameterID - 8);
+                FPI2 |= (0x80 >>> (functionalParameterID - 8));
             }
             buff.writeUInt16BE(functionalParameter.Value, 9 + 2 * functionalParameterID);
         }

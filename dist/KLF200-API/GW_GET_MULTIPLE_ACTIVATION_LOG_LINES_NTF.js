@@ -4,7 +4,7 @@ const common_1 = require("./common");
 class GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF extends common_1.GW_FRAME_NTF {
     constructor(Data) {
         super(Data);
-        this.TimeStamp = new Date(this.Data.readUInt32BE(0));
+        this.TimeStamp = new Date(this.Data.readUInt32BE(0) * 1000);
         this.SessionID = this.Data.readUInt16BE(4);
         this.StatusOwner = this.Data.readUInt8(6);
         this.NodeID = this.Data.readUInt8(7);

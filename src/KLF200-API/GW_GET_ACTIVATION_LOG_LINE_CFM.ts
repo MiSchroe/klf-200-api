@@ -17,7 +17,7 @@ export class GW_GET_ACTIVATION_LOG_LINE_CFM extends GW_FRAME_CFM {
     constructor(Data: Buffer) {
         super(Data);
 
-        this.TimeStamp = new Date(this.Data.readUInt32BE(0));
+        this.TimeStamp = new Date(this.Data.readUInt32BE(0) * 1000);
         this.SessionID = this.Data.readUInt16BE(4);
         this.StatusOwner = this.Data.readUInt8(6);
         this.NodeID = this.Data.readUInt8(7);
