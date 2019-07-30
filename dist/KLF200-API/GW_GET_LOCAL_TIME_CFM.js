@@ -18,7 +18,7 @@ class GW_GET_LOCAL_TIME_CFM extends common_1.GW_FRAME_CFM {
         this.Month = this.Data.readUInt8(8);
         this.Year = this.Data.readUInt16BE(9);
         this.Weekday = this.Data.readUInt8(11);
-        this.DayOfYear = this.Data.readUInt8(12);
+        this.DayOfYear = this.Data.readUInt16BE(12);
         this.DaylightSavingFlag = this.Data.readInt8(14);
     }
 }
