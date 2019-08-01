@@ -78,7 +78,7 @@ export class Group extends Component {
         this._revision = frame.Revision;
     }
 
-    public changeFromNotifidation(frame: GW_GROUP_INFORMATION_CHANGED_NTF_Modified): void {
+    public changeFromNotification(frame: GW_GROUP_INFORMATION_CHANGED_NTF_Modified): void {
         if (this._order !== frame.Order) {
             this._order = frame.Order;
             this.propertyChanged("Order");
@@ -416,7 +416,7 @@ export class Groups {
                     }
                     else {
                         // Change group
-                        this.Groups[frame.GroupID].changeFromNotifidation(frame as GW_GROUP_INFORMATION_CHANGED_NTF_Modified);
+                        this.Groups[frame.GroupID].changeFromNotification(frame as GW_GROUP_INFORMATION_CHANGED_NTF_Modified);
                     }
                     this.notifyChangedGroup(frame.GroupID);
             

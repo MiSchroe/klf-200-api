@@ -49,7 +49,7 @@ export declare class Group extends Component {
      * @memberof Group
      */
     constructor(Connection: IConnection, frame: GW_GET_GROUP_INFORMATION_NTF | GW_GET_ALL_GROUPS_INFORMATION_NTF | GW_GROUP_INFORMATION_CHANGED_NTF_Modified);
-    changeFromNotifidation(frame: GW_GROUP_INFORMATION_CHANGED_NTF_Modified): void;
+    changeFromNotification(frame: GW_GROUP_INFORMATION_CHANGED_NTF_Modified): void;
     /**
      * The order in which the groups should be displayed by a client application.
      *

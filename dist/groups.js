@@ -63,7 +63,7 @@ class Group extends PropertyChangedEvent_1.Component {
         this.Nodes.push(...frame.Nodes);
         this._revision = frame.Revision;
     }
-    changeFromNotifidation(frame) {
+    changeFromNotification(frame) {
         if (this._order !== frame.Order) {
             this._order = frame.Order;
             this.propertyChanged("Order");
@@ -407,7 +407,7 @@ class Groups {
                     }
                     else {
                         // Change group
-                        this.Groups[frame.GroupID].changeFromNotifidation(frame);
+                        this.Groups[frame.GroupID].changeFromNotification(frame);
                     }
                     this.notifyChangedGroup(frame.GroupID);
                 default:
