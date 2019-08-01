@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { GW_FRAME_CFM } from "./common";
 import { ActivateSceneStatus } from "./GW_SCENES";
 export declare class GW_ACTIVATE_SCENE_CFM extends GW_FRAME_CFM {

@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { GW_FRAME_NTF } from "./common";
 import { StatusOwner, ParameterActive, RunStatus, StatusReply } from "./GW_COMMAND";
 export declare class GW_COMMAND_RUN_STATUS_NTF extends GW_FRAME_NTF {

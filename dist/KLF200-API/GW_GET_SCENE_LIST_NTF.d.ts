@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { GW_FRAME_NTF } from "./common";
 export declare type SceneListEntry = {
     SceneID: number;
