@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { GW_FRAME_CFM } from "./common";
 export declare enum DaylightSavingFlag {
     NotAvailable = -1,

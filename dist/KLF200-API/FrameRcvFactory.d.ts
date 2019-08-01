@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { IGW_FRAME_RCV } from "./common";
 export declare class FrameRcvFactory {
     static CreateRcvFrame(Buff: Buffer): Promise<IGW_FRAME_RCV>;

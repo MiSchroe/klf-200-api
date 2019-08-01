@@ -1,4 +1,3 @@
-/// <reference types="node" />
 export declare const KLF200_PORT = 51200;
 export declare enum GatewayCommand {
     GW_ERROR_NTF = 0,

@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { IGW_FRAME_RCV } from "./common";
 import { Socket } from "net";
 import { Listener, Disposable } from "../utils/TypedEvent";

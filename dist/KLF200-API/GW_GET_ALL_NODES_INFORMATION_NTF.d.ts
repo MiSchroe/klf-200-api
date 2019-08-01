@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { GW_FRAME_NTF } from "./common";
 import { Velocity, ActuatorType, NodeVariation, PowerSaveMode, NodeOperatingState, ActuatorAlias } from "./GW_SYSTEMTABLE_DATA";
 export declare class GW_GET_ALL_NODES_INFORMATION_NTF extends GW_FRAME_NTF {
