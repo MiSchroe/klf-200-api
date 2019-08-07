@@ -1,3 +1,4 @@
+/// <reference types="node" />
 export declare enum ActuatorType {
     NO_TYPE = 0,
     VenetianBlind = 1,

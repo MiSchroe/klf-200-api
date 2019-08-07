@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * Converts a binary bit array to an array of numbers.
  *

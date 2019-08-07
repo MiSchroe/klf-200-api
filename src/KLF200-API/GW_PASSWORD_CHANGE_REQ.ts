@@ -12,7 +12,8 @@ export class GW_PASSWORD_CHANGE_REQ extends GW_FRAME_REQ {
         if (Buffer.from(this.NewPassword, "utf8").byteLength > C_MAX_PWD_LENGTH)
             throw `New password must not exceed ${C_MAX_PWD_LENGTH} characters length.`;
         
-        this.Data.write(this.OldPassword, 0);
-        this.Data.write(this.NewPassword, 31);
+        const buff = this.Data.slice(this.offset);
+        buff.write(this.OldPassword, 0);
+        buff.write(this.NewPassword, C_MAX_PWD_LENGTH);
     }
 }

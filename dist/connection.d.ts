@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { KLF200SocketProtocol } from "./KLF200-API/KLF200SocketProtocol";
 import { IGW_FRAME_RCV, IGW_FRAME_REQ, GatewayCommand } from "./KLF200-API/common";
 import { Disposable, Listener } from "./utils/TypedEvent";

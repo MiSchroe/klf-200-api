@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { GW_FRAME_NTF } from "./common";
 import { Velocity, NodeVariation } from "./GW_SYSTEMTABLE_DATA";
 import { GroupType } from "./GW_GROUPS";

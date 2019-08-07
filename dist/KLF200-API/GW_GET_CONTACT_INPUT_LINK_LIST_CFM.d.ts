@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { GW_FRAME_CFM } from "./common";
 import { ContactInputAssignment, LockPriorityLevel } from "./GW_CONTACTINPUT";
 import { CommandOriginator, PriorityLevel, ParameterActive } from "./GW_COMMAND";
