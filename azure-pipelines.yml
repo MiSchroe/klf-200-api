@@ -8,24 +8,43 @@ trigger:
 
 strategy:
   matrix:
-    linux:
+    linux_node6:
       imageName: "ubuntu-latest"
-    mac:
-      imageName: "macos-10.13"
-    windows:
-      imageName: "vs2017-win2016"
-  maxParallel: 3
-
-  matrix:
-    node6:
       versionName: "6.x"
-    node8:
+    linux_node8:
+      imageName: "ubuntu-latest"
       versionName: "8.x"
-    node10:
+    linux_node10:
+      imageName: "ubuntu-latest"
       versionName: "10.x"
-    nodeLTS:
+    linux_nodeLTS:
+      imageName: "ubuntu-latest"
       versionName: "lts"
-  maxParallel: 2
+    mac_node6:
+      imageName: "macos-latest"
+      versionName: "6.x"
+    mac_node8:
+      imageName: "macos-latest"
+      versionName: "8.x"
+    mac_node10:
+      imageName: "macos-latest"
+      versionName: "10.x"
+    mac_nodeLTS:
+      imageName: "macos-latest"
+      versionName: "lts"
+    windows_node6:
+      imageName: "windows-latest"
+      versionName: "6.x"
+    windows_node8:
+      imageName: "windows-latest"
+      versionName: "8.x"
+    windows_node10:
+      imageName: "windows-latest"
+      versionName: "10.x"
+    windows_nodeLTS:
+      imageName: "windows-latest"
+      versionName: "lts"
+  maxParallel: 3
 
 pool:
   vmImage: $(imageName)
@@ -39,4 +58,5 @@ steps:
 - script: |
     npm install
     npm run build
-  displayName: 'npm install and build'
+    npm test
+  displayName: 'npm install, build and test'
