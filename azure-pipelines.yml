@@ -6,13 +6,34 @@
 trigger:
 - master
 
+strategy:
+  matrix:
+    linux:
+      imageName: "ubuntu-latest"
+    mac:
+      imageName: "macos-10.13"
+    windows:
+      imageName: "vs2017-win2016"
+  maxParallel: 3
+
+  matrix:
+    node6:
+      versionName: "6.x"
+    node8:
+      versionName: "8.x"
+    node10:
+      versionName: "10.x"
+    nodeLTS:
+      versionName: "lts"
+  maxParallel: 2
+
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: $(imageName)
 
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '10.x'
+    versionSpec: $(versionName)
   displayName: 'Install Node.js'
 
 - script: |
