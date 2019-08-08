@@ -19,7 +19,7 @@ strategy:
       versionName: "10.x"
     linux_nodeLTS:
       imageName: "ubuntu-latest"
-      versionName: "lts"
+      versionName: "12.x"
     mac_node6:
       imageName: "macos-latest"
       versionName: "6.x"
@@ -31,7 +31,7 @@ strategy:
       versionName: "10.x"
     mac_nodeLTS:
       imageName: "macos-latest"
-      versionName: "lts"
+      versionName: "12.x"
     windows_node6:
       imageName: "windows-latest"
       versionName: "6.x"
@@ -43,8 +43,8 @@ strategy:
       versionName: "10.x"
     windows_nodeLTS:
       imageName: "windows-latest"
-      versionName: "lts"
-  maxParallel: 3
+      versionName: "12.x"
+  maxParallel: 10
 
 pool:
   vmImage: $(imageName)
