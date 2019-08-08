@@ -17,9 +17,6 @@ strategy:
     linux_node10:
       imageName: "ubuntu-latest"
       versionName: "10.x"
-    linux_nodeLTS:
-      imageName: "ubuntu-latest"
-      versionName: "12.x"
     mac_node6:
       imageName: "macos-latest"
       versionName: "6.x"
@@ -29,9 +26,6 @@ strategy:
     mac_node10:
       imageName: "macos-latest"
       versionName: "10.x"
-    mac_nodeLTS:
-      imageName: "macos-latest"
-      versionName: "12.x"
     windows_node6:
       imageName: "windows-latest"
       versionName: "6.x"
@@ -41,9 +35,6 @@ strategy:
     windows_node10:
       imageName: "windows-latest"
       versionName: "10.x"
-    windows_nodeLTS:
-      imageName: "windows-latest"
-      versionName: "12.x"
   maxParallel: 10
 
 pool:
