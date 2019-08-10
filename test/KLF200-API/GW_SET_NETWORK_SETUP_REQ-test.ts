@@ -11,7 +11,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_SET_NETWORK_SETUP_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_SET_NETWORK_SETUP_REQ(true)).not.to.throw;
+            expect(() => new GW_SET_NETWORK_SETUP_REQ(true)).not.to.throw();
         });
 
         it("should write the correct default values", function() {
@@ -32,15 +32,15 @@ describe("KLF200-API", function() {
         });
 
         it("should throw an error on invalid IP address", function() {
-            expect(() => new GW_SET_NETWORK_SETUP_REQ(false, "NoIP", "5.6.7.8", "9.10.11.12")).to.throw;
+            expect(() => new GW_SET_NETWORK_SETUP_REQ(false, "NoIP", "5.6.7.8", "9.10.11.12")).to.throw();
         });
 
         it("should throw an error on invalid mask address", function() {
-            expect(() => new GW_SET_NETWORK_SETUP_REQ(false, "1.2.3.4", "NoIP", "9.10.11.12")).to.throw;
+            expect(() => new GW_SET_NETWORK_SETUP_REQ(false, "1.2.3.4", "NoIP", "9.10.11.12")).to.throw();
         });
 
         it("should throw an error on invalid default gateway address", function() {
-            expect(() => new GW_SET_NETWORK_SETUP_REQ(false, "1.2.3.4", "5.6.7.8", "NoIP")).to.throw;
+            expect(() => new GW_SET_NETWORK_SETUP_REQ(false, "1.2.3.4", "5.6.7.8", "NoIP")).to.throw();
         });
     });
 });

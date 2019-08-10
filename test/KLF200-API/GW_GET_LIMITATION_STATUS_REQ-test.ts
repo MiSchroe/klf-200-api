@@ -11,7 +11,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_GET_LIMITATION_STATUS_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_GET_LIMITATION_STATUS_REQ(42, LimitationType.MinimumLimitation)).not.to.throw;
+            expect(() => new GW_GET_LIMITATION_STATUS_REQ(42, LimitationType.MinimumLimitation)).not.to.throw();
         });
 
         it("should write the correct default values", function() {
@@ -42,11 +42,11 @@ describe("KLF200-API", function() {
         });
 
         it("shouldn't throw an error with 20 nodes", function() {
-            expect(() => new GW_GET_LIMITATION_STATUS_REQ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20], LimitationType.MinimumLimitation)).not.to.throw;
+            expect(() => new GW_GET_LIMITATION_STATUS_REQ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20], LimitationType.MinimumLimitation)).not.to.throw();
         });
 
         it("should throw an error with more than 20 nodes", function() {
-            expect(() => new GW_GET_LIMITATION_STATUS_REQ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], LimitationType.MinimumLimitation)).to.throw;
+            expect(() => new GW_GET_LIMITATION_STATUS_REQ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], LimitationType.MinimumLimitation)).to.throw();
         });
     });
 });

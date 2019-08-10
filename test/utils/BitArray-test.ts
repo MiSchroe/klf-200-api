@@ -72,14 +72,14 @@ describe("utils", function() {
                 const nums: number[] = [0, 2, 4, 6, 8, 10, 12, 14, -1];
                 const writeToBuffer = Buffer.from([1, 2, 3]);
 
-                expect(() => arrayToBitArray(nums, 2, writeToBuffer)).to.throw;
+                expect(() => arrayToBitArray(nums, 2, writeToBuffer)).to.throw();
             });
 
             it("should throw an exception if the number is out of range of the buffer length", function() {
                 const nums: number[] = [0, 2, 4, 6, 8, 10, 12, 14, 24];
                 const writeToBuffer = Buffer.from([1, 2, 3]);
 
-                expect(() => arrayToBitArray(nums, 2, writeToBuffer)).to.throw;
+                expect(() => arrayToBitArray(nums, 2, writeToBuffer)).to.throw();
             });
         });
     });

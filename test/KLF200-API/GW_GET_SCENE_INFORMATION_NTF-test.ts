@@ -31,7 +31,7 @@ describe("KLF200-API", function() {
                 3
             ]);
             it("should create without error", function() {
-                expect(() => new GW_GET_SCENE_INFORMATION_NTF(data)).not.to.throw;
+                expect(() => new GW_GET_SCENE_INFORMATION_NTF(data)).not.to.throw();
             });
 
             it("should return the scene ID", function() {

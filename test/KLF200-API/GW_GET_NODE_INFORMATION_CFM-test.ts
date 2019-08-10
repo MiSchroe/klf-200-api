@@ -9,7 +9,7 @@ describe("KLF200-API", function() {
         describe("Constructor", function() {
             it("should create without error", function() {
                 const data = Buffer.from([0x05, 0x02, 0x01, 0x00, 42]);
-                expect(() => new GW_GET_NODE_INFORMATION_CFM(data)).not.to.throw;
+                expect(() => new GW_GET_NODE_INFORMATION_CFM(data)).not.to.throw();
             });
 
             it("should return the scene ID", function() {
@@ -29,7 +29,7 @@ describe("KLF200-API", function() {
             it("should throw No error", function() {
                 const data = Buffer.from([0x05, 0x02, 0x01, 0x00, 42]);
                 const result = new GW_GET_NODE_INFORMATION_CFM(data);
-                expect(() => result.getError()).to.throw;
+                expect(() => result.getError()).to.throw();
             });
             
             it("should return 'Request failed.'", function() {

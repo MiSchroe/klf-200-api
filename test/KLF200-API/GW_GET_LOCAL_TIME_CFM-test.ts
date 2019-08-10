@@ -28,7 +28,7 @@ describe("KLF200-API", function() {
                 1   // DST
             ]);
             it("should create without error", function() {
-                expect(() => new GW_GET_LOCAL_TIME_CFM(data)).not.to.throw;
+                expect(() => new GW_GET_LOCAL_TIME_CFM(data)).not.to.throw();
             });
 
             it("should return the UTC time", function() {

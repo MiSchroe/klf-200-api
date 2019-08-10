@@ -22,7 +22,7 @@ describe("KLF200-API", function() {
                     // Status
                     0
                 ]);
-                expect(() => new GW_CS_DISCOVER_NODES_NTF(data)).not.to.throw;
+                expect(() => new GW_CS_DISCOVER_NODES_NTF(data)).not.to.throw();
             });
 
             it("should return the status", function() {

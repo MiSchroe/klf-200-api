@@ -11,11 +11,11 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_GET_ALL_GROUPS_INFORMATION_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_GET_ALL_GROUPS_INFORMATION_REQ()).not.to.throw;
-            expect(() => new GW_GET_ALL_GROUPS_INFORMATION_REQ(GroupType.UserGroup)).not.to.throw;
-            expect(() => new GW_GET_ALL_GROUPS_INFORMATION_REQ(GroupType.Room)).not.to.throw;
-            expect(() => new GW_GET_ALL_GROUPS_INFORMATION_REQ(GroupType.House)).not.to.throw;
-            expect(() => new GW_GET_ALL_GROUPS_INFORMATION_REQ(GroupType.All)).not.to.throw;
+            expect(() => new GW_GET_ALL_GROUPS_INFORMATION_REQ()).not.to.throw();
+            expect(() => new GW_GET_ALL_GROUPS_INFORMATION_REQ(GroupType.UserGroup)).not.to.throw();
+            expect(() => new GW_GET_ALL_GROUPS_INFORMATION_REQ(GroupType.Room)).not.to.throw();
+            expect(() => new GW_GET_ALL_GROUPS_INFORMATION_REQ(GroupType.House)).not.to.throw();
+            expect(() => new GW_GET_ALL_GROUPS_INFORMATION_REQ(GroupType.All)).not.to.throw();
         });
 
         it("should set no filter with empty parameter", function() {

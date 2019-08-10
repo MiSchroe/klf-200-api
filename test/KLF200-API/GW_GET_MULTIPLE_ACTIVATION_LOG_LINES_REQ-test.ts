@@ -13,7 +13,7 @@ describe("KLF200-API", function() {
         const testDate = new Date();
         testDate.setMilliseconds(0);    // We don't want to hassle with fraction numbers here.
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ(testDate)).not.to.throw;
+            expect(() => new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ(testDate)).not.to.throw();
         });
 
         it("should write the correct date", function() {

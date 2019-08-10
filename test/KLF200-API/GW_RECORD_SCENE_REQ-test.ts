@@ -11,7 +11,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_RECORD_SCENE_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_RECORD_SCENE_REQ("Dummy")).not.to.throw;
+            expect(() => new GW_RECORD_SCENE_REQ("Dummy")).not.to.throw();
         });
 
         it("should write the correct scene name", function() {
@@ -22,11 +22,11 @@ describe("KLF200-API", function() {
         });
 
         it("shouldn't throw an error with scene name at size of 64 chars", function() {
-            expect(() => new GW_RECORD_SCENE_REQ("0123456789012345678901234567890123456789012345678901234567890123")).not.to.throw;  //DevSkim: ignore DS173237
+            expect(() => new GW_RECORD_SCENE_REQ("0123456789012345678901234567890123456789012345678901234567890123")).not.to.throw();  //DevSkim: ignore DS173237
         });
 
         it("should throw an error with old passwords at size greater than 64 chars", function() {
-            expect(() => new GW_RECORD_SCENE_REQ("01234567890123456789012345678901234567890123456789012345678901234")).to.throw;  //DevSkim: ignore DS173237
+            expect(() => new GW_RECORD_SCENE_REQ("01234567890123456789012345678901234567890123456789012345678901234")).to.throw();  //DevSkim: ignore DS173237
         });
     });
 });

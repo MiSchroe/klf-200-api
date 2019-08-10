@@ -11,7 +11,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_PASSWORD_CHANGE_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_PASSWORD_CHANGE_REQ("OldPass", "NewPass")).not.to.throw;
+            expect(() => new GW_PASSWORD_CHANGE_REQ("OldPass", "NewPass")).not.to.throw();
         });
 
         it("should write the correct password values", function() {
@@ -23,15 +23,15 @@ describe("KLF200-API", function() {
         });
 
         it("shouldn't throw an error with passwords at size of 32 chars", function() {
-            expect(() => new GW_PASSWORD_CHANGE_REQ("01234567890123456789012345678901", "01234567890123456789012345678901")).not.to.throw;  //DevSkim: ignore DS173237
+            expect(() => new GW_PASSWORD_CHANGE_REQ("01234567890123456789012345678901", "01234567890123456789012345678901")).not.to.throw();  //DevSkim: ignore DS173237
         });
 
         it("should throw an error with old passwords at size greater than 32 chars", function() {
-            expect(() => new GW_PASSWORD_CHANGE_REQ("012345678901234567890123456789012", "01234567890123456789012345678901")).to.throw;  //DevSkim: ignore DS173237
+            expect(() => new GW_PASSWORD_CHANGE_REQ("012345678901234567890123456789012", "01234567890123456789012345678901")).to.throw();  //DevSkim: ignore DS173237
         });
 
         it("should throw an error with new passwords at size greater than 32 chars", function() {
-            expect(() => new GW_PASSWORD_CHANGE_REQ("01234567890123456789012345678901", "012345678901234567890123456789012")).to.throw;  //DevSkim: ignore DS173237
+            expect(() => new GW_PASSWORD_CHANGE_REQ("01234567890123456789012345678901", "012345678901234567890123456789012")).to.throw();  //DevSkim: ignore DS173237
         });
     });
 });

@@ -9,7 +9,7 @@ describe("KLF200-API", function() {
         describe("Constructor", function() {
             it("should create without error", function() {
                 const data = Buffer.from([0x05, 0x01, 0x0C, 0x02, 0x01]);
-                expect(() => new GW_CS_CONTROLLER_COPY_NTF(data)).not.to.throw;
+                expect(() => new GW_CS_CONTROLLER_COPY_NTF(data)).not.to.throw();
             });
 
             it("should return the Controller Copy Mode", function() {

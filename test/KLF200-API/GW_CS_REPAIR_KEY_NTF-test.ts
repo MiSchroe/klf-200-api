@@ -17,7 +17,7 @@ describe("KLF200-API", function() {
                     // Key not changed
                     4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
                 ]);
-                expect(() => new GW_CS_REPAIR_KEY_NTF(data)).not.to.throw;
+                expect(() => new GW_CS_REPAIR_KEY_NTF(data)).not.to.throw();
             });
 
             it("should return the ChangeKeyStatus", function() {

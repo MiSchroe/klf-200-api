@@ -58,7 +58,7 @@ describe("KLF200-API", function() {
             ]);
 
             it("should create without error", function() {
-                expect(() => new GW_GET_CONTACT_INPUT_LINK_LIST_CFM(data)).not.to.throw;
+                expect(() => new GW_GET_CONTACT_INPUT_LINK_LIST_CFM(data)).not.to.throw();
             });
 
             it("should return an array with one contact input object", function() {

@@ -11,7 +11,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_ACTIVATE_SCENE_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_ACTIVATE_SCENE_REQ(1)).not.to.throw;
+            expect(() => new GW_ACTIVATE_SCENE_REQ(1)).not.to.throw();
         });
 
         it("should create the right object with default values", function() {

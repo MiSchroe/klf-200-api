@@ -18,7 +18,7 @@ describe("KLF200-API", function() {
                 1
             ]);
             it("should create without error", function() {
-                expect(() => new GW_GET_NETWORK_SETUP_CFM(data)).not.to.throw;
+                expect(() => new GW_GET_NETWORK_SETUP_CFM(data)).not.to.throw();
             });
 
             it("should return the IP address", function() {

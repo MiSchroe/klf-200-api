@@ -9,3 +9,4 @@
 *.user
 /src
 /TestResults
+xunit.xml

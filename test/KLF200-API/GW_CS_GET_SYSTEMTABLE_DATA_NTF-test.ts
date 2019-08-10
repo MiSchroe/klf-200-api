@@ -20,7 +20,7 @@ describe("KLF200-API", function() {
                     0x12, 0x34, 0x56,       // Backbone address
                     0                       // Number of remaining entries
                 ]);
-                expect(() => new GW_CS_GET_SYSTEMTABLE_DATA_NTF(data)).not.to.throw;
+                expect(() => new GW_CS_GET_SYSTEMTABLE_DATA_NTF(data)).not.to.throw();
             });
 
             it("should return the correct number of entries", function() {

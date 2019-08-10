@@ -18,7 +18,7 @@ describe("KLF200-API", function() {
                     // Status
                     1
                 ]);
-                expect(() => new GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM(data)).not.to.throw;
+                expect(() => new GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM(data)).not.to.throw();
             });
 
             it("should return the status", function() {
@@ -110,7 +110,7 @@ describe("KLF200-API", function() {
                     0
                 ]);
                 const result = new GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM(data);
-                expect(() => result.getError()).to.throw;
+                expect(() => result.getError()).to.throw();
             });
         });
     });

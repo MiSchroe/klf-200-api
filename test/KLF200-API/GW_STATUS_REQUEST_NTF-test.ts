@@ -29,7 +29,7 @@ describe("KLF200-API", function() {
                 ]);
                 describe("Constructor", function() {
                     it("should create without error", function() {
-                        expect(() => new GW_STATUS_REQUEST_NTF(data)).not.to.throw;
+                        expect(() => new GW_STATUS_REQUEST_NTF(data)).not.to.throw();
                     });
     
                     it("should return the session ID", function() {
@@ -107,7 +107,7 @@ describe("KLF200-API", function() {
             ]);
             describe("Constructor", function() {
                 it("should create without error", function() {
-                    expect(() => new GW_STATUS_REQUEST_NTF(data)).not.to.throw;
+                    expect(() => new GW_STATUS_REQUEST_NTF(data)).not.to.throw();
                 });
 
                 it("should return the session ID", function() {

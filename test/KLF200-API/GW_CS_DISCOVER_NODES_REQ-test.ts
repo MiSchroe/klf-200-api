@@ -11,7 +11,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_CS_CONTROLLER_COPY_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_CS_CONTROLLER_COPY_REQ(ControllerCopyMode.ReceivingConfigurationMode)).not.to.throw;
+            expect(() => new GW_CS_CONTROLLER_COPY_REQ(ControllerCopyMode.ReceivingConfigurationMode)).not.to.throw();
         });
 
         it("should write the controller copy mode at the right position", function() {

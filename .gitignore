@@ -12,3 +12,4 @@
 /velux-api/.vs
 *.user
 /TestResults
+xunit.xml

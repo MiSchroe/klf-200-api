@@ -18,7 +18,7 @@ describe("KLF200-API", function() {
                 0x01, 0x01, 0x00, 0x00, 0x00
             ]);
             it("should create without error", function() {
-                expect(() => new GW_INITIALIZE_SCENE_NTF(data)).not.to.throw;
+                expect(() => new GW_INITIALIZE_SCENE_NTF(data)).not.to.throw();
             });
 
             it("should return the status", function() {

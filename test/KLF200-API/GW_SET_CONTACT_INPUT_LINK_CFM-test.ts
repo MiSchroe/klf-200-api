@@ -9,7 +9,7 @@ describe("KLF200-API", function() {
         describe("Constructor", function() {
             it("should create without error", function() {
                 const data = Buffer.from([0x05, 0x04, 0x63, 0x07, 0x01]);
-                expect(() => new GW_SET_CONTACT_INPUT_LINK_CFM(data)).not.to.throw;
+                expect(() => new GW_SET_CONTACT_INPUT_LINK_CFM(data)).not.to.throw();
             });
 
             it("should return the contact input ID", function() {
@@ -29,7 +29,7 @@ describe("KLF200-API", function() {
             it("should throw 'No error.'", function() {
                 const data = Buffer.from([0x05, 0x04, 0x63, 0x07, 0x01]);
                 const result = new GW_SET_CONTACT_INPUT_LINK_CFM(data);
-                expect(() => result.getError()).to.throw;
+                expect(() => result.getError()).to.throw();
             });
             
             it("should return 'Request failed.'", function() {

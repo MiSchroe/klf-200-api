@@ -9,7 +9,7 @@ describe("KLF200-API", function() {
         describe("Constructor", function() {
             const data = Buffer.from([6, 0x03, 0x21, 0x47, 0x11, 0x00]);
             it("should create without error", function() {
-                expect(() => new GW_MODE_SEND_CFM(data)).not.to.throw;
+                expect(() => new GW_MODE_SEND_CFM(data)).not.to.throw();
             });
 
             it("should return the session ID", function() {
@@ -27,7 +27,7 @@ describe("KLF200-API", function() {
             it("should throw No error", function() {
                 const data = Buffer.from([6, 0x03, 0x21, 0x47, 0x11, 0x00]);
                 const result = new GW_MODE_SEND_CFM(data);
-                expect(() => result.getError()).to.throw;
+                expect(() => result.getError()).to.throw();
             });
             
             it("should return 'Command rejected.'", function() {

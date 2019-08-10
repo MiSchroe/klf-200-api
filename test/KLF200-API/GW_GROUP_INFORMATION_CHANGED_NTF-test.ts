@@ -16,7 +16,7 @@ describe("KLF200-API", function() {
                 ]);
     
                 it("should create without error", function() {
-                    expect(() => new GW_GROUP_INFORMATION_CHANGED_NTF(data)).not.to.throw;
+                    expect(() => new GW_GROUP_INFORMATION_CHANGED_NTF(data)).not.to.throw();
                 });
     
                 it("should return the group ID", function() {
@@ -103,7 +103,7 @@ describe("KLF200-API", function() {
                 ]);
     
                 it("should create without error", function() {
-                    expect(() => new GW_GROUP_INFORMATION_CHANGED_NTF(data)).not.to.throw;
+                    expect(() => new GW_GROUP_INFORMATION_CHANGED_NTF(data)).not.to.throw();
                 });
     
                 it("should return the group ID", function() {

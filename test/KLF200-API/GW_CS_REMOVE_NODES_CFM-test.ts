@@ -9,7 +9,7 @@ describe("KLF200-API", function() {
         describe("Constructor", function() {
             it("should create without error", function() {
                 const data = Buffer.from([0x04, 0x01, 0x07, 0x01]);
-                expect(() => new GW_CS_REMOVE_NODES_CFM(data)).not.to.throw;
+                expect(() => new GW_CS_REMOVE_NODES_CFM(data)).not.to.throw();
             });
 
             it("should return scene deleted as true", function() {

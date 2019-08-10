@@ -42,7 +42,7 @@ describe("KLF200-API", function() {
             ]);
 
             it("should create without error", function() {
-                expect(() => new GW_GET_ALL_GROUPS_INFORMATION_NTF(data)).not.to.throw;
+                expect(() => new GW_GET_ALL_GROUPS_INFORMATION_NTF(data)).not.to.throw();
             });
 
             it("should return the group ID", function() {

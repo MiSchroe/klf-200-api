@@ -11,7 +11,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_CS_REMOVE_NODES_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_CS_REMOVE_NODES_REQ([42])).not.to.throw;
+            expect(() => new GW_CS_REMOVE_NODES_REQ([42])).not.to.throw();
         });
 
         it("should create the right object with the bit for node 42 set", function() {

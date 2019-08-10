@@ -11,7 +11,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ([0, 1, 2, 3])).not.to.throw;
+            expect(() => new GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ([0, 1, 2, 3])).not.to.throw();
         });
 
         it("should write multiple nodes", function() {

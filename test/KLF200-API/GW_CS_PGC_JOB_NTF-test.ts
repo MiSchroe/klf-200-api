@@ -9,7 +9,7 @@ describe("KLF200-API", function() {
         describe("Constructor", function() {
             const data = Buffer.from([0x06, 0x01, 0x11, 0x01, 0x02, 0x03]);
             it("should create without error", function() {
-                expect(() => new GW_CS_PGC_JOB_NTF(data)).not.to.throw;
+                expect(() => new GW_CS_PGC_JOB_NTF(data)).not.to.throw();
             });
 
             it("should return the correct PGC Job State", function() {

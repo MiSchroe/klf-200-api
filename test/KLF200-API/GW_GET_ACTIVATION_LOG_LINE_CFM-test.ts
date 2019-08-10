@@ -31,7 +31,7 @@ describe("KLF200-API", function() {
                 // Information code
                 0x12, 0x34, 0x56, 0x78
                 ]);
-                expect(() => new GW_GET_ACTIVATION_LOG_LINE_CFM(data)).not.to.throw;
+                expect(() => new GW_GET_ACTIVATION_LOG_LINE_CFM(data)).not.to.throw();
             });
 
             it("should return the correct property values", function() {

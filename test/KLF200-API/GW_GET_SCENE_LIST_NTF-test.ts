@@ -38,7 +38,7 @@ describe("KLF200-API", function() {
                 5
             ]);
             it("should create without error", function() {
-                expect(() => new GW_GET_SCENE_LIST_NTF(data)).not.to.throw;
+                expect(() => new GW_GET_SCENE_LIST_NTF(data)).not.to.throw();
             });
 
             it("should return the number of scenes", function() {

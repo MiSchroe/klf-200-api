@@ -25,7 +25,7 @@ describe("KLF200-API", function() {
             ]);
 
             it("should create without error", function() {
-                expect(() => new GW_LIMITATION_STATUS_NTF(data)).not.to.throw;
+                expect(() => new GW_LIMITATION_STATUS_NTF(data)).not.to.throw();
             });
 
             it("should return the session ID", function() {

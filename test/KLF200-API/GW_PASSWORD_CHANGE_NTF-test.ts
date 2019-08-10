@@ -15,7 +15,7 @@ describe("KLF200-API", function() {
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
             ]);
             it("should create without error", function() {
-                expect(() => new GW_PASSWORD_CHANGE_NTF(data)).not.to.throw;
+                expect(() => new GW_PASSWORD_CHANGE_NTF(data)).not.to.throw();
             });
 
             it("should return the number of scenes", function() {

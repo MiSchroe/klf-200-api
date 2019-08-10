@@ -11,7 +11,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_ACTIVATE_PRODUCTGROUP_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_ACTIVATE_PRODUCTGROUP_REQ(1, 0x4711)).not.to.throw;
+            expect(() => new GW_ACTIVATE_PRODUCTGROUP_REQ(1, 0x4711)).not.to.throw();
         });
 
         it("should create the right object with default values", function() {
@@ -36,15 +36,15 @@ describe("KLF200-API", function() {
         });
 
         it("should throw an error at priority level value greater than 3", function() {
-            expect(() => new GW_ACTIVATE_PRODUCTGROUP_REQ(1, 0x4711, undefined, undefined, undefined, undefined, undefined, [4])).to.throw;
+            expect(() => new GW_ACTIVATE_PRODUCTGROUP_REQ(1, 0x4711, undefined, undefined, undefined, undefined, undefined, [4])).to.throw();
         });
 
         it("should throw an error at priority level less than 0", function() {
-            expect(() => new GW_ACTIVATE_PRODUCTGROUP_REQ(1, 0x4711, undefined, undefined, undefined, undefined, undefined, [-1])).to.throw;
+            expect(() => new GW_ACTIVATE_PRODUCTGROUP_REQ(1, 0x4711, undefined, undefined, undefined, undefined, undefined, [-1])).to.throw();
         });
 
         it("should throw an error at too many priority levels (more than 8)", function() {
-            expect(() => new GW_ACTIVATE_PRODUCTGROUP_REQ(1, 0x4711, undefined, undefined, undefined, undefined, undefined, [0, 1, 2, 3, 0, 1, 2, 3, 0])).to.throw;
+            expect(() => new GW_ACTIVATE_PRODUCTGROUP_REQ(1, 0x4711, undefined, undefined, undefined, undefined, undefined, [0, 1, 2, 3, 0, 1, 2, 3, 0])).to.throw();
         });
     });
 });

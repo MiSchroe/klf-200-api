@@ -13,7 +13,7 @@ describe("KLF200-API", function() {
         const testTime = new Date();
         testTime.setMilliseconds(0);    // We don't want milliseconds
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_SET_UTC_REQ()).not.to.throw;
+            expect(() => new GW_SET_UTC_REQ()).not.to.throw();
         });
 
         it("should write the correct date/time", function() {

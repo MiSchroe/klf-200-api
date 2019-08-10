@@ -31,7 +31,7 @@ describe("KLF200-API", function() {
             ]);
 
             it("should create without error", function() {
-                expect(() => new GW_NODE_STATE_POSITION_CHANGED_NTF(data)).not.to.throw;
+                expect(() => new GW_NODE_STATE_POSITION_CHANGED_NTF(data)).not.to.throw();
             });
 
             it("should return the node ID", function() {

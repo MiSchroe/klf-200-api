@@ -34,13 +34,13 @@ describe("GW_COMMAND", function() {
             it("should throw on a negative input value", function() {
                 const inputValue = -1;
 
-                expect(() => LockTime.lockTimeValueToLockTime(inputValue)).to.throw;
+                expect(() => LockTime.lockTimeValueToLockTime(inputValue)).to.throw();
             });
 
             it("should throw on an input value greater than 255", function() {
                 const inputValue = 256;
 
-                expect(() => LockTime.lockTimeValueToLockTime(inputValue)).to.throw;
+                expect(() => LockTime.lockTimeValueToLockTime(inputValue)).to.throw();
             });
         });
 
@@ -72,19 +72,19 @@ describe("GW_COMMAND", function() {
             it("should throw on a negative input value", function() {
                 const inputValue = -1;
 
-                expect(() => LockTime.lockTimeTolockTimeValue(inputValue)).to.throw;
+                expect(() => LockTime.lockTimeTolockTimeValue(inputValue)).to.throw();
             });
 
             it("should throw on an input value greater than 7560", function() {
                 const inputValue = 7561;
 
-                expect(() => LockTime.lockTimeTolockTimeValue(inputValue)).to.throw;
+                expect(() => LockTime.lockTimeTolockTimeValue(inputValue)).to.throw();
             });
 
             it("should throw on an input value not dividable by 30", function() {
                 const inputValue = 31;
 
-                expect(() => LockTime.lockTimeTolockTimeValue(inputValue)).to.throw;
+                expect(() => LockTime.lockTimeTolockTimeValue(inputValue)).to.throw();
             });
         });
     });
@@ -193,14 +193,14 @@ describe("GW_COMMAND", function() {
             const inputValue = -0.1;
             const actuatorType = ActuatorType.RollerShutter;
 
-            expect(() => convertPosition(inputValue, actuatorType)).to.throw;
+            expect(() => convertPosition(inputValue, actuatorType)).to.throw();
         });
 
         it("should throw an error for values larger than 1.0 for a roller shutter", function() {
             const inputValue = 1.1;
             const actuatorType = ActuatorType.RollerShutter;
 
-            expect(() => convertPosition(inputValue, actuatorType)).to.throw;
+            expect(() => convertPosition(inputValue, actuatorType)).to.throw();
         });
 
         it("should return 0x0000 for 1 for a window opener", function() {
@@ -234,14 +234,14 @@ describe("GW_COMMAND", function() {
             const inputValue = -0.1;
             const actuatorType = ActuatorType.WindowOpener;
 
-            expect(() => convertPosition(inputValue, actuatorType)).to.throw;
+            expect(() => convertPosition(inputValue, actuatorType)).to.throw();
         });
 
         it("should throw an error for values larger than 1.0 for a window opener", function() {
             const inputValue = 1.1;
             const actuatorType = ActuatorType.WindowOpener;
 
-            expect(() => convertPosition(inputValue, actuatorType)).to.throw;
+            expect(() => convertPosition(inputValue, actuatorType)).to.throw();
         });
     });
 });

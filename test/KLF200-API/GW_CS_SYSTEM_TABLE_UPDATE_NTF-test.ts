@@ -15,7 +15,7 @@ describe("KLF200-API", function() {
                     // Removed nodes
                     4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
                 ]);
-                expect(() => new GW_CS_SYSTEM_TABLE_UPDATE_NTF(data)).not.to.throw;
+                expect(() => new GW_CS_SYSTEM_TABLE_UPDATE_NTF(data)).not.to.throw();
             });
 
             it("should return the added and removed nodes", function() {

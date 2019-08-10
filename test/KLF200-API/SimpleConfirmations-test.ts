@@ -36,7 +36,7 @@ describe("KLF200-API", function() {
         for (const confirmationTestCase of simpleConfirmations) {
             describe(confirmationTestCase.ConfirmationClass.name, function() {
                 it("should create the class without error", function() {
-                    expect(() => new confirmationTestCase.ConfirmationClass(Buffer.from(confirmationTestCase.ConfirmationBytes))).not.to.throw;
+                    expect(() => new confirmationTestCase.ConfirmationClass(Buffer.from(confirmationTestCase.ConfirmationBytes))).not.to.throw();
                 });
             });
         }

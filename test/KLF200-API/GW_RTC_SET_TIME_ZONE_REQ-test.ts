@@ -12,7 +12,7 @@ describe("KLF200-API", function() {
     describe("GW_RTC_SET_TIME_ZONE_REQ", function() {
         const testTimeZone = ":GMT:GMT+1:0060:(1990)040102-0:100102-0";
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_RTC_SET_TIME_ZONE_REQ(testTimeZone)).not.to.throw;
+            expect(() => new GW_RTC_SET_TIME_ZONE_REQ(testTimeZone)).not.to.throw();
         });
 
         it("should write the correct time zone", function() {

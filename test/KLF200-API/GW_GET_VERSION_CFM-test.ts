@@ -9,7 +9,7 @@ describe("KLF200-API", function() {
         describe("Constructor", function() {
             it("should create without error", function() {
                 const data = Buffer.from([0x0a, 0x00, 0x09, 2, 3, 4, 71, 5, 6, 1, 14, 3]);
-                expect(() => new GW_GET_VERSION_CFM(data)).not.to.throw;
+                expect(() => new GW_GET_VERSION_CFM(data)).not.to.throw();
             });
 
             it("should return the Software Version", function() {
@@ -41,7 +41,7 @@ describe("KLF200-API", function() {
     describe("SoftwareVersion", function() {
         describe("Constructur", function() {
             it("should create without error", function() {
-                expect(() => new SoftwareVersion(2, 3, 4, 71, 5, 6)).not.to.throw;
+                expect(() => new SoftwareVersion(2, 3, 4, 71, 5, 6)).not.to.throw();
             });
         });
 

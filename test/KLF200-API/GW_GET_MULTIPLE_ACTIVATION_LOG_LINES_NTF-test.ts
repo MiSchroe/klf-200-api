@@ -32,7 +32,7 @@ describe("KLF200-API", function() {
                 0x87, 0x65, 0x43, 0x21
             ]);
             it("should create without error", function() {
-                expect(() => new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data)).not.to.throw;
+                expect(() => new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data)).not.to.throw();
             });
 
             it("should return the timestamp", function() {

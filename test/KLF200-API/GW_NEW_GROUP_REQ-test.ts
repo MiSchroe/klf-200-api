@@ -11,7 +11,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_NEW_GROUP_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_NEW_GROUP_REQ("Dummy", GroupType.UserGroup, [42, 87])).not.to.throw;
+            expect(() => new GW_NEW_GROUP_REQ("Dummy", GroupType.UserGroup, [42, 87])).not.to.throw();
         });
 
         it("should write the correct default values", function() {

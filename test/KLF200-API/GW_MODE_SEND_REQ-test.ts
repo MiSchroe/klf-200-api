@@ -11,7 +11,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_MODE_SEND_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_MODE_SEND_REQ(42)).not.to.throw;
+            expect(() => new GW_MODE_SEND_REQ(42)).not.to.throw();
         });
 
         it("should write the correct default values", function() {
@@ -45,31 +45,31 @@ describe("KLF200-API", function() {
         });
 
         it("shouldn't throw an error with 20 nodes", function() {
-            expect(() => new GW_MODE_SEND_REQ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])).not.to.throw;
+            expect(() => new GW_MODE_SEND_REQ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])).not.to.throw();
         });
 
         it("should throw an error with more than 20 nodes", function() {
-            expect(() => new GW_MODE_SEND_REQ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])).to.throw;
+            expect(() => new GW_MODE_SEND_REQ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])).to.throw();
         });
 
         it("shouldn't throw an error with 8 priority levels", function() {
-            expect(() => new GW_MODE_SEND_REQ(42, undefined, undefined, undefined, undefined, undefined, [PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable])).not.to.throw;
+            expect(() => new GW_MODE_SEND_REQ(42, undefined, undefined, undefined, undefined, undefined, [PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable])).not.to.throw();
         });
 
         it("should throw an error with more than 8 priority levels", function() {
-            expect(() => new GW_MODE_SEND_REQ(42, undefined, undefined, undefined, undefined, undefined, [PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable])).to.throw;
+            expect(() => new GW_MODE_SEND_REQ(42, undefined, undefined, undefined, undefined, undefined, [PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable, PriorityLevelInformation.Enable])).to.throw();
         });
 
         it("should throw an error with a negative priority level", function() {
-            expect(() => new GW_MODE_SEND_REQ(42, undefined, undefined, undefined, undefined, undefined, [-1])).to.throw;
+            expect(() => new GW_MODE_SEND_REQ(42, undefined, undefined, undefined, undefined, undefined, [-1])).to.throw();
         });
 
         it("should throw an error with a priority level greater than 3", function() {
-            expect(() => new GW_MODE_SEND_REQ(42, undefined, undefined, undefined, undefined, undefined, [4])).to.throw;
+            expect(() => new GW_MODE_SEND_REQ(42, undefined, undefined, undefined, undefined, undefined, [4])).to.throw();
         });
 
         it("shouldn't throw an error with priority levels 0-3", function() {
-            expect(() => new GW_MODE_SEND_REQ(42, undefined, undefined, undefined, undefined, undefined, [0, 1, 2, 3])).not.to.throw;
+            expect(() => new GW_MODE_SEND_REQ(42, undefined, undefined, undefined, undefined, undefined, [0, 1, 2, 3])).not.to.throw();
         });
 
         it("should write the correct priority levels 0-3", function() {

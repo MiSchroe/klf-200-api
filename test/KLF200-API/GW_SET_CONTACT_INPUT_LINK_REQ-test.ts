@@ -11,7 +11,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_SET_CONTACT_INPUT_LINK_REQ", function() {
         it("shouldn't throw an error on create", function() {
-            expect(() => new GW_SET_CONTACT_INPUT_LINK_REQ(3, ContactInputAssignment.NodeMode, 4, 5, 0xc3FF, Velocity.Fast, 42)).not.to.throw;
+            expect(() => new GW_SET_CONTACT_INPUT_LINK_REQ(3, ContactInputAssignment.NodeMode, 4, 5, 0xc3FF, Velocity.Fast, 42)).not.to.throw();
         });
 
         it("should write the correct default values", function() {

@@ -9,7 +9,7 @@ describe("KLF200-API", function() {
         describe("Constructor", function() {
             it("should create without error", function() {
                 const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x07, 0x02, 0xFB, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00]);
-                expect(() => new GW_COMMAND_RUN_STATUS_NTF(data)).not.to.throw;
+                expect(() => new GW_COMMAND_RUN_STATUS_NTF(data)).not.to.throw();
             });
 
             it("should return the session ID", function() {
