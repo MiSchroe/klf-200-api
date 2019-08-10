@@ -13,7 +13,7 @@ class GW_STATUS_REQUEST_REQ extends common_1.GW_FRAME_COMMAND_REQ {
         // Multiple nodes are provided
         if (util_1.isArray(this.Nodes)) {
             if (this.Nodes.length > 20)
-                throw "Too many nodes.";
+                throw new Error("Too many nodes.");
             buff.writeUInt8(this.Nodes.length, 2);
             for (let nodeIndex = 0; nodeIndex < this.Nodes.length; nodeIndex++) {
                 const node = this.Nodes[nodeIndex];
@@ -31,7 +31,7 @@ class GW_STATUS_REQUEST_REQ extends common_1.GW_FRAME_COMMAND_REQ {
             const functionalParameter = this.FunctionalParameters[functionalParameterIndex];
             const functionalParameterID = functionalParameter - 1;
             if (functionalParameterID < 0 || functionalParameterID > 15)
-                throw "Functional paramter ID out of range.";
+                throw new Error("Functional paramter ID out of range.");
             if (functionalParameterID < 8) {
                 FPI1 |= 0x80 >>> functionalParameterID;
             }

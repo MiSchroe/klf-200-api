@@ -7,7 +7,7 @@ export class GW_RENAME_SCENE_REQ extends GW_FRAME_REQ {
         super(65);
 
         if (Buffer.from(this.Name).byteLength > 64)
-            throw "Name too long.";
+            throw new Error("Name too long.");
 
         const buff = this.Data.slice(this.offset);
         buff.writeUInt8(this.SceneID, 0);

@@ -26,7 +26,7 @@ class GW_COMMAND_SEND_REQ extends common_1.GW_FRAME_COMMAND_REQ {
             const functionalParameter = this.FunctionalParameters[functionalParameterIndex];
             const functionalParameterID = functionalParameter.ID - 1;
             if (functionalParameterID < 0 || functionalParameterID > 15)
-                throw "Functional paramter ID out of range.";
+                throw new Error("Functional paramter ID out of range.");
             if (functionalParameterID < 8) {
                 FPI1 |= (0x80 >>> functionalParameterID);
             }
@@ -41,7 +41,7 @@ class GW_COMMAND_SEND_REQ extends common_1.GW_FRAME_COMMAND_REQ {
         // Multiple nodes are provided
         if (util_1.isArray(this.Nodes)) {
             if (this.Nodes.length > 20)
-                throw "Too many nodes.";
+                throw new Error("Too many nodes.");
             buff.writeUInt8(this.Nodes.length, 41);
             for (let nodeIndex = 0; nodeIndex < this.Nodes.length; nodeIndex++) {
                 const node = this.Nodes[nodeIndex];
@@ -54,12 +54,12 @@ class GW_COMMAND_SEND_REQ extends common_1.GW_FRAME_COMMAND_REQ {
         }
         buff.writeUInt8(this.PriorityLevelLock, 62);
         if (this.PriorityLevels.length > 8)
-            throw "Too many priority levels.";
+            throw new Error("Too many priority levels.");
         let PLI = 0;
         for (let pliIndex = 0; pliIndex < this.PriorityLevels.length; pliIndex++) {
             const pli = this.PriorityLevels[pliIndex];
             if (pli < 0 || pli > 3)
-                throw "Priority level lock out of range.";
+                throw new Error("Priority level lock out of range.");
             PLI <<= 2;
             PLI |= pli;
         }

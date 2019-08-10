@@ -3,4 +3,5 @@
 --recursive
 --full-trace
 --bail
+--reporter mocha-multi-reporters
 test/**/*.ts

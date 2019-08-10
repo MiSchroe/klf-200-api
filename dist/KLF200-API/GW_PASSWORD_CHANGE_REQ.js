@@ -7,9 +7,9 @@ class GW_PASSWORD_CHANGE_REQ extends common_1.GW_FRAME_REQ {
         this.OldPassword = OldPassword;
         this.NewPassword = NewPassword;
         if (Buffer.from(this.OldPassword, "utf8").byteLength > common_1.C_MAX_PWD_LENGTH)
-            throw `Old password must not exceed ${common_1.C_MAX_PWD_LENGTH} characters length.`;
+            throw new Error(`Old password must not exceed ${common_1.C_MAX_PWD_LENGTH} characters length.`);
         if (Buffer.from(this.NewPassword, "utf8").byteLength > common_1.C_MAX_PWD_LENGTH)
-            throw `New password must not exceed ${common_1.C_MAX_PWD_LENGTH} characters length.`;
+            throw new Error(`New password must not exceed ${common_1.C_MAX_PWD_LENGTH} characters length.`);
         const buff = this.Data.slice(this.offset);
         buff.write(this.OldPassword, 0);
         buff.write(this.NewPassword, common_1.C_MAX_PWD_LENGTH);

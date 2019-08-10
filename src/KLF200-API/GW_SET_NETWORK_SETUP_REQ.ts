@@ -9,14 +9,14 @@ export class GW_SET_NETWORK_SETUP_REQ extends GW_FRAME_REQ {
         // Check for valid IP address formats:
         const checkIPv4 = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
         if (!checkIPv4.test(this.IPAddress))
-            throw "Invalid IP address for parameter IPAddress.";
+            throw new Error("Invalid IP address for parameter IPAddress.");
         if (!checkIPv4.test(this.Mask))
-            throw "Invalid IP address for parameter IPAddress.";
+            throw new Error("Invalid IP address for parameter Mask.");
         if (!checkIPv4.test(this.DefaultGateway))
-            throw "Invalid IP address for parameter IPAddress.";
+            throw new Error("Invalid IP address for parameter DefaultGateway.");
 
         const buff = this.Data.slice(this.offset);
-        buff.writeUInt8(DHCP ? 1 : 0, 13);
+        buff.writeUInt8(DHCP ? 1 : 0, 12);
         if (!DHCP)
         {
             let buffIndex = 0;

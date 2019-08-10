@@ -22,7 +22,7 @@ export class GW_SET_LIMITATION_REQ extends GW_FRAME_COMMAND_REQ {
         if (isArray(this.Nodes))
         {
             if (this.Nodes.length > 20)
-                throw "Too many nodes.";
+                throw new Error("Too many nodes.");
 
             buff.writeUInt8(this.Nodes.length, 4);
             for (let nodeIndex = 0; nodeIndex < this.Nodes.length; nodeIndex++) {

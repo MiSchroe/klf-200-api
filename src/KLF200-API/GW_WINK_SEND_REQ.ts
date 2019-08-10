@@ -20,7 +20,7 @@ export class GW_WINK_SEND_REQ extends GW_FRAME_COMMAND_REQ {
         if (isArray(this.Nodes))
         {
             if (this.Nodes.length > 20)
-                throw "Too many nodes.";
+                throw new Error("Too many nodes.");
 
             buff.writeUInt8(this.Nodes.length, 6);
             for (let nodeIndex = 0; nodeIndex < this.Nodes.length; nodeIndex++) {

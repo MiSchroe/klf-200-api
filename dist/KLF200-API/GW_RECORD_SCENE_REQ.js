@@ -6,7 +6,7 @@ class GW_RECORD_SCENE_REQ extends common_1.GW_FRAME_REQ {
         super(64);
         this.Name = Name;
         if (Buffer.from(Name).byteLength > 64)
-            throw "Name too long.";
+            throw new Error("Name too long.");
         const buff = this.Data.slice(this.offset);
         buff.write(this.Name, 0);
     }

@@ -19,7 +19,7 @@ class GW_GET_LIMITATION_STATUS_REQ extends common_1.GW_FRAME_COMMAND_REQ {
         // Multiple nodes are provided
         if (util_1.isArray(this.Nodes)) {
             if (this.Nodes.length > 20)
-                throw "Too many nodes.";
+                throw new Error("Too many nodes.");
             buff.writeUInt8(this.Nodes.length, 4);
             for (let nodeIndex = 0; nodeIndex < this.Nodes.length; nodeIndex++) {
                 const node = this.Nodes[nodeIndex];

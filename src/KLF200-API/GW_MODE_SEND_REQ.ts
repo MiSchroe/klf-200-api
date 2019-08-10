@@ -20,7 +20,7 @@ export class GW_MODE_SEND_REQ extends GW_FRAME_COMMAND_REQ {
         if (isArray(this.Nodes))
         {
             if (this.Nodes.length > 20)
-                throw "Too many nodes.";
+                throw new Error("Too many nodes.");
 
             buff.writeUInt8(this.Nodes.length, 6);
             for (let nodeIndex = 0; nodeIndex < this.Nodes.length; nodeIndex++) {
@@ -36,13 +36,13 @@ export class GW_MODE_SEND_REQ extends GW_FRAME_COMMAND_REQ {
 
         buff.writeUInt8(this.PriorityLevelLock, 27);
         if (this.PriorityLevels.length > 8)
-            throw "Too many priority levels.";
+            throw new Error("Too many priority levels.");
 
         let PLI = 0;
         for (let pliIndex = 0; pliIndex < this.PriorityLevels.length; pliIndex++) {
             const pli = this.PriorityLevels[pliIndex];
             if (pli < 0 || pli > 3)
-                throw "Priority level lock out of range.";
+                throw new Error("Priority level lock out of range.");
 
             PLI <<= 2;
             PLI |= pli;

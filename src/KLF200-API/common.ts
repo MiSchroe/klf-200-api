@@ -443,7 +443,7 @@ export abstract class GW_FRAME_RCV extends GW_FRAME implements IGW_FRAME_RCV {
     private CheckCommand(command: GatewayCommand_Receive) {
         //const className = <keyof typeof GatewayCommand>this.constructor.name;
         if (command !== this.Command)
-            throw `Command from buffer (${command}) doesn't match command of frame (${this.Command}).`;
+            throw new Error(`Command from buffer (${command}) doesn't match command of frame (${this.Command}).`);
     }
 }
 
@@ -491,7 +491,7 @@ export class KLF200Protocol {
     static Decode(data: Buffer): Buffer {
         // Check ProtocolID
         if (data[0] !== this.ProtocolID) {
-            throw "Invalid ProtocolID.";
+            throw new Error("Invalid ProtocolID.");
         }
 
         // Calculate CRC
@@ -500,7 +500,7 @@ export class KLF200Protocol {
             CRC ^= data[index];
         }
         if (CRC !== data[data.byteLength - 1]) {
-            throw "CRC error";
+            throw new Error("CRC error");
         }
 
         const result = Buffer.alloc(data.byteLength - 2);
@@ -552,7 +552,7 @@ export class SLIPProtocol {
     static Decode(data: Buffer): Buffer {
         // Check END mark at start and END
         if (data[0] !== SLIP_END || data[data.byteLength - 1] !== SLIP_END)
-            throw "Missing END mark.";
+            throw new Error("Missing END mark.");
 
         const resultBuffer = Buffer.alloc(data.byteLength - 2);     // Max. possible size without END mark at start and end
         let resultLength = 0;
@@ -573,7 +573,7 @@ export class SLIPProtocol {
                             break;
                     
                         default:
-                            throw "Invalid SLIP special character.";
+                            throw new Error("Invalid SLIP special character.");
                     }
                     break;
             

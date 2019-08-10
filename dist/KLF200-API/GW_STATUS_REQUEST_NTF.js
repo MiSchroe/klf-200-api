@@ -32,7 +32,7 @@ class GW_STATUS_REQUEST_NTF extends common_1.GW_FRAME_NTF {
                 }
                 break;
             default:
-                throw "Unknown StatusType.";
+                throw new Error("Unknown StatusType.");
         }
     }
 }

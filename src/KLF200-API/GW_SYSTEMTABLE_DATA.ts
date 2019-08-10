@@ -80,7 +80,7 @@ export class SystemTableDataEntry {
                 break;
         
             default:
-                throw "Invalid actuator turn-around time.";
+                throw new Error("Invalid actuator turn-around time.");
         }
         this.Manufacturer = data.readUInt8(7);
         this.BackboneReferenceNumber = data.readUInt8(8) * 65536 + data.readUInt8(9) * 256 + data.readUInt8(10);
