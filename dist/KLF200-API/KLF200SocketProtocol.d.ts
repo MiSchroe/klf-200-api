@@ -8,6 +8,7 @@ export declare class KLF200SocketProtocol {
     private _onFrameReceived;
     private _onDataSent;
     private _onDataReceived;
+    private _onError;
     private state;
     private queue;
     constructor(socket: Socket);
@@ -20,6 +21,8 @@ export declare class KLF200SocketProtocol {
     onDataReceived(handler: Listener<Buffer>): Disposable;
     offDataSent(handler: Listener<Buffer>): void;
     offDataReceived(handler: Listener<Buffer>): void;
+    onError(handler: Listener<Error>): void;
+    offError(handler: Listener<Error>): void;
     send(data: Buffer): Promise<void>;
     write(data: Buffer): boolean;
 }

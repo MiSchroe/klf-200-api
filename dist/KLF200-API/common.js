@@ -243,7 +243,6 @@ class GW_FRAME_RCV extends GW_FRAME {
         this.Data = Data.slice(C_BUFFERLEN_SIZE + C_COMMAND_SIZE);
     }
     CheckCommand(command) {
-        //const className = <keyof typeof GatewayCommand>this.constructor.name;
         if (command !== this.Command)
             throw new Error(`Command from buffer (${command}) doesn't match command of frame (${this.Command}).`);
     }

@@ -16,6 +16,7 @@ export class KLF200SocketProtocol {
     private _onFrameReceived = new TypedEvent<IGW_FRAME_RCV>();
     private _onDataSent = new TypedEvent<Buffer>();
     private _onDataReceived = new TypedEvent<Buffer>();
+    private _onError = new TypedEvent<Error>();
     
     private state: KLF200SocketProtocolState = KLF200SocketProtocolState.Invalid;
     private queue: Buffer[] = [];
@@ -99,6 +100,14 @@ export class KLF200SocketProtocol {
         this._onDataReceived.off(handler);
     }
 
+    onError(handler: Listener<Error>): void {
+        this._onError.on(handler);
+    }
+
+    offError(handler: Listener<Error>): void {
+        this._onError.off(handler);
+    }
+
     async send(data: Buffer): Promise<void> {
         try {
             this._onDataReceived.emit(data);
@@ -108,7 +117,8 @@ export class KLF200SocketProtocol {
             return Promise.resolve();
         }
         catch (e) {
-            return Promise.reject(e);
+            this._onError.emit(e);
+            return Promise.resolve();
         }
     }
 

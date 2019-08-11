@@ -4,9 +4,9 @@ import Mitm from "mitm";
 import { Socket } from "net";
 import { SLIPProtocol, KLF200Protocol } from "../src/KLF200-API/common";
 import { Connection } from "../src/connection";
-import { should, expect, use } from "chai";
+import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { GW_PASSWORD_ENTER_REQ } from "../src";
+import { GW_PASSWORD_ENTER_REQ, KLF200SocketProtocol } from "../src";
 
 use(chaiAsPromised);
 
@@ -165,6 +165,26 @@ describe("connection", function () {
             .then(() =>
                 expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1)).to.be.fulfilled.and.notify(done)
             );
+        });
+    });
+
+    describe("KLF200SocketProtocol", function() {
+        it("should get the protocol after login.", async function() {
+            this.mitm.on("connection", function(socket: Socket) {
+                socket.on("data", () => {
+                    socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
+                });
+            });
+
+            try
+            {
+                const conn = new Connection(testHOST);
+                await conn.loginAsync("velux123");
+                return Promise.resolve(expect(conn.KLF200SocketProtocol).to.be.instanceOf(KLF200SocketProtocol));
+            }
+            catch(error) {
+                return Promise.reject(error);
+            }
         });
     });
 });

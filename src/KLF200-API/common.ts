@@ -441,7 +441,6 @@ export abstract class GW_FRAME_RCV extends GW_FRAME implements IGW_FRAME_RCV {
     }
 
     private CheckCommand(command: GatewayCommand_Receive) {
-        //const className = <keyof typeof GatewayCommand>this.constructor.name;
         if (command !== this.Command)
             throw new Error(`Command from buffer (${command}) doesn't match command of frame (${this.Command}).`);
     }

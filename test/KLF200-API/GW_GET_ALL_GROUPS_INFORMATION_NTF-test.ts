@@ -86,7 +86,7 @@ describe("KLF200-API", function() {
             });
 
             it("should return the empty nodes list if not User Group", function() {
-                const data2 = new Buffer(data);
+                const data2 = Buffer.from(data);
                 // Change group type
                 data2.writeUInt8(GroupType.House, 73);
                 const result = new GW_GET_ALL_GROUPS_INFORMATION_NTF(data2);

@@ -22,6 +22,7 @@ class KLF200SocketProtocol {
         this._onFrameReceived = new TypedEvent_1.TypedEvent();
         this._onDataSent = new TypedEvent_1.TypedEvent();
         this._onDataReceived = new TypedEvent_1.TypedEvent();
+        this._onError = new TypedEvent_1.TypedEvent();
         this.state = KLF200SocketProtocolState.Invalid;
         this.queue = [];
         socket.on("data", (data) => this.processData(data));
@@ -83,6 +84,12 @@ class KLF200SocketProtocol {
     offDataReceived(handler) {
         this._onDataReceived.off(handler);
     }
+    onError(handler) {
+        this._onError.on(handler);
+    }
+    offError(handler) {
+        this._onError.off(handler);
+    }
     send(data) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -93,7 +100,8 @@ class KLF200SocketProtocol {
                 return Promise.resolve();
             }
             catch (e) {
-                return Promise.reject(e);
+                this._onError.emit(e);
+                return Promise.resolve();
             }
         });
     }
