@@ -179,7 +179,7 @@ class Product extends PropertyChangedEvent_1.Component {
             case GW_SYSTEMTABLE_DATA_1.ActuatorType.SwingingShutter:
                 switch (this.SubType) {
                     case 1:
-                        return "Swinging shutter with independent handling of the leaes";
+                        return "Swinging shutter with independent handling of the leaves";
                     default:
                         return "Swinging shutter";
                 }
@@ -546,7 +546,7 @@ class Product extends PropertyChangedEvent_1.Component {
                 this._remainingTime = frame.RemainingTime;
                 this.propertyChanged("RemainingTime");
             }
-            if (frame.TimeStamp !== this._timeStamp) {
+            if (frame.TimeStamp.valueOf() !== this._timeStamp.valueOf()) {
                 this._timeStamp = frame.TimeStamp;
                 this.propertyChanged("TimeStamp");
             }

@@ -280,7 +280,7 @@ export class Product extends Component {
             case ActuatorType.SwingingShutter:
                 switch (this.SubType) {
                     case 1:
-                        return "Swinging shutter with independent handling of the leaes";
+                        return "Swinging shutter with independent handling of the leaves";
                 
                     default:
                         return "Swinging shutter";
@@ -647,7 +647,7 @@ export class Product extends Component {
                 this._remainingTime = frame.RemainingTime;
                 this.propertyChanged("RemainingTime");
             }
-            if (frame.TimeStamp !== this._timeStamp) {
+            if (frame.TimeStamp.valueOf() !== this._timeStamp.valueOf()) {
                 this._timeStamp = frame.TimeStamp;
                 this.propertyChanged("TimeStamp");
             }
