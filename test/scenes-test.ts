@@ -1,10 +1,9 @@
 ﻿'use strict';
 
-import { Gateway, GW_PASSWORD_CHANGE_CFM, GW_ERROR_NTF, GW_GET_VERSION_CFM, GW_GET_PROTOCOL_VERSION_CFM, GatewayState, GatewaySubState, GW_GET_STATE_CFM, GW_SET_UTC_CFM, GW_RTC_SET_TIME_ZONE_CFM, GW_REBOOT_CFM, GW_SET_FACTORY_DEFAULT_CFM, GW_LEAVE_LEARN_STATE_CFM, GW_GET_NETWORK_SETUP_CFM, GW_SET_NETWORK_SETUP_CFM, GW_HOUSE_STATUS_MONITOR_ENABLE_CFM, GW_HOUSE_STATUS_MONITOR_DISABLE_CFM, Scene, Scenes, GW_GET_SCENE_LIST_NTF, GW_GET_SCENE_LIST_CFM, GW_GET_SCENE_INFORMATION_NTF, GW_GET_SCENE_INFORMATION_CFM, GW_SCENE_INFORMATION_CHANGED_NTF, GW_ACTIVATE_SCENE_CFM, GW_SESSION_FINISHED_NTF, GW_STOP_SCENE_CFM } from "../src";
+import { GW_ERROR_NTF, Scene, Scenes, GW_GET_SCENE_LIST_NTF, GW_GET_SCENE_LIST_CFM, GW_GET_SCENE_INFORMATION_NTF, GW_GET_SCENE_INFORMATION_CFM, GW_SCENE_INFORMATION_CHANGED_NTF, GW_ACTIVATE_SCENE_CFM, GW_SESSION_FINISHED_NTF, GW_STOP_SCENE_CFM } from "../src";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { MockExceptionConnection, MockConnection } from "./mocks/mockConnection";
-import { PropertyChangedEvent } from "../src/utils/PropertyChangedEvent";
+import { MockConnection } from "./mocks/mockConnection";
 import sinon from "sinon";
 
 use(chaiAsPromised);

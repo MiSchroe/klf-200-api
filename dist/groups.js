@@ -349,7 +349,7 @@ class Groups {
                             }
                             else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF_1.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
                                 dispose.dispose();
-                                this.Connection.on(this.onNotificationHandler, [common_1.GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
+                                this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
                                 resolve();
                             }
                         }, [common_1.GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, common_1.GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);

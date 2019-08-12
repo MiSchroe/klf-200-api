@@ -758,7 +758,7 @@ export class Products {
                         }
                         else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
                             dispose.dispose();
-                            this.Connection.on(this.onNotificationHandler, [GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
+                            this.Connection.on(frame => this.onNotificationHandler(frame), [GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
                             resolve();
                         }
                     }, [GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF]);
@@ -806,16 +806,20 @@ export class Products {
     private onNotificationHandler(frame: IGW_FRAME_RCV): void {
         if (frame instanceof GW_CS_SYSTEM_TABLE_UPDATE_NTF) {
             // Remove nodes
-            frame.RemovedNodes.forEach(nodeID => {
+            for (const nodeID of frame.RemovedNodes) {
                 delete this.Products[nodeID];
                 this.notifiyRemovedProduct(nodeID);
-            });
+            }
 
             // Add nodes
-            frame.AddedNodes.forEach(async nodeID => {
-                this.Products[nodeID] = await this.addNodeAsync(nodeID);
-                this.notifyNewProduct(nodeID);
-            });
+            (
+                async () => {
+                    for (const nodeID of frame.AddedNodes) {
+                        this.Products[nodeID] = await this.addNodeAsync(nodeID);
+                        this.notifyNewProduct(nodeID);
+                    }
+                }
+            )();
         }
     }
 

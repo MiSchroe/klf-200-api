@@ -648,7 +648,7 @@ class Products {
                             }
                             else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF_1.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
                                 dispose.dispose();
-                                this.Connection.on(this.onNotificationHandler, [common_1.GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
+                                this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
                                 resolve();
                             }
                         }, [common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF]);
@@ -693,15 +693,17 @@ class Products {
     onNotificationHandler(frame) {
         if (frame instanceof GW_CS_SYSTEM_TABLE_UPDATE_NTF_1.GW_CS_SYSTEM_TABLE_UPDATE_NTF) {
             // Remove nodes
-            frame.RemovedNodes.forEach(nodeID => {
+            for (const nodeID of frame.RemovedNodes) {
                 delete this.Products[nodeID];
                 this.notifiyRemovedProduct(nodeID);
-            });
+            }
             // Add nodes
-            frame.AddedNodes.forEach((nodeID) => __awaiter(this, void 0, void 0, function* () {
-                this.Products[nodeID] = yield this.addNodeAsync(nodeID);
-                this.notifyNewProduct(nodeID);
-            }));
+            (() => __awaiter(this, void 0, void 0, function* () {
+                for (const nodeID of frame.AddedNodes) {
+                    this.Products[nodeID] = yield this.addNodeAsync(nodeID);
+                    this.notifyNewProduct(nodeID);
+                }
+            }))();
         }
     }
     addNodeAsync(nodeID) {

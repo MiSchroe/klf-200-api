@@ -354,7 +354,7 @@ export class Groups {
                         }
                         else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
                             dispose.dispose();
-                            this.Connection.on(this.onNotificationHandler, [GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
+                            this.Connection.on(frame => this.onNotificationHandler(frame), [GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
                             resolve();
                         }
                     }, [GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF, GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
