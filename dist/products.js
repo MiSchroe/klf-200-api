@@ -703,7 +703,7 @@ class Products {
                     this.Products[nodeID] = yield this.addNodeAsync(nodeID);
                     this.notifyNewProduct(nodeID);
                 }
-            }))();
+            }))().catch(() => { });
         }
     }
     addNodeAsync(nodeID) {

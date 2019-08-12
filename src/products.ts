@@ -819,7 +819,7 @@ export class Products {
                         this.notifyNewProduct(nodeID);
                     }
                 }
-            )();
+            )().catch(() => {});
         }
     }
 

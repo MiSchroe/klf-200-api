@@ -118,41 +118,47 @@ describe("products", function() {
             });
         });
         
-        // describe("addNodeAsync", function() {
-        //     it.only("should throw on error frame.", async function() {
-        //         const data = Buffer.from([55, 0x01, 0x12, 
-        //             // Added nodes (0)
-        //             1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        //             // Removed nodes (0, 1)
-        //             3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        //         ]);
-        //         const dataNtf = new GW_CS_SYSTEM_TABLE_UPDATE_NTF(data);
-        //         const dataNodeInformation = Buffer.from([0x05, 0x02, 0x01, 0x00, 0x00]);
-        //         const dataNodeInformationCfm = new GW_GET_NODE_INFORMATION_CFM(dataNodeInformation);
-        //         const dataNodeInfoNotification = Buffer.from([0x7f, 0x02, 0x10, 0x00, 0x00, 0x00, 0x01, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0xd5, 0x07, 0x00, 0x01, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x66, 0x00, 0x66, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00, 0x4f, 0x00, 0x4c, 0x93, 0x01, 0xd8, 0x03, 0xb2, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-        //         const dataNodeInfoNotificationNtf = new GW_GET_NODE_INFORMATION_NTF(dataNodeInfoNotification);
+        describe("addNodeAsync", function() {
+            it("should throw on error frame.", async function() {
+                const data = Buffer.from([55, 0x01, 0x12, 
+                    // Added nodes (0)
+                    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    // Removed nodes (0, 1)
+                    3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                ]);
+                const dataNtf = new GW_CS_SYSTEM_TABLE_UPDATE_NTF(data);
+                const dataNodeInformation = Buffer.from([0x05, 0x02, 0x01, 0x00, 0x00]);
+                const dataNodeInformationCfm = new GW_GET_NODE_INFORMATION_CFM(dataNodeInformation);
+                const dataNodeInfoNotification = Buffer.from([0x7f, 0x02, 0x10, 0x00, 0x00, 0x00, 0x01, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0xd5, 0x07, 0x00, 0x01, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x66, 0x00, 0x66, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00, 0x4f, 0x00, 0x4c, 0x93, 0x01, 0xd8, 0x03, 0xb2, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+                const dataNodeInfoNotificationNtf = new GW_GET_NODE_INFORMATION_NTF(dataNodeInfoNotification);
 
-        //         const conn = new MockConnection(receivedFrames);
-        //         const promProducts = Products.createProductsAsync(conn);
-        //         for (const dataNodeNtf of dataNodesNtf) {
-        //             conn.sendNotification(dataNodeNtf, []);
-        //         }
-        //         // Send finished
-        //         conn.sendNotification(dataNodeFinishNtf, []);
-        //         const products = await promProducts;
+                const conn = new MockConnection(receivedFrames);
+                const promProducts = Products.createProductsAsync(conn);
+                for (const dataNodeNtf of dataNodesNtf) {
+                    conn.sendNotification(dataNodeNtf, []);
+                }
+                // Send finished
+                conn.sendNotification(dataNodeFinishNtf, []);
+                const products = await promProducts;
 
-        //         // Setups spies for counting notifications
-        //         const productAddedSpy = sinon.spy();
-        //         const productRemovedSpy = sinon.spy();
-        //         products.onNewProduct((productID) => {
-        //             productAddedSpy(productID);
-        //         });
-        //         products.onRemovedProduct((productID) => {
-        //             productRemovedSpy(productID);
-        //         });
+                // Setups spies for counting notifications
+                const productAddedSpy = sinon.spy();
+                const productRemovedSpy = sinon.spy();
+                products.onNewProduct((productID) => {
+                    productAddedSpy(productID);
+                });
+                products.onRemovedProduct((productID) => {
+                    productRemovedSpy(productID);
+                });
 
-        //         expect(() => conn.sendNotification(dataNtf, [dataErrorNtf])).to.throw();
-        //     });
-        // });
+                conn.sendNotification(dataNtf, [dataErrorNtf]);
+
+                // Just let the asynchronous stuff run before our checks
+                await new Promise(resolve => { setTimeout(resolve, 0); });
+
+                expect(productAddedSpy.notCalled, `onNewProduct shouldn't be called at all. Instead it was called ${productAddedSpy.callCount} times.`).to.be.true;
+                expect(productRemovedSpy.calledTwice, `onRemovedProduct should be called twice. Instead it was called ${productRemovedSpy.callCount} times.`).to.be.true;
+            });
+        });
     });
 });
