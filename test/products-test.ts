@@ -1,6 +1,6 @@
 ﻿'use strict';
 
-import { GW_ERROR_NTF, Scene, Scenes, GW_GET_SCENE_LIST_NTF, GW_GET_SCENE_LIST_CFM, GW_GET_SCENE_INFORMATION_NTF, GW_GET_SCENE_INFORMATION_CFM, GW_SCENE_INFORMATION_CHANGED_NTF, GW_ACTIVATE_SCENE_CFM, GW_SESSION_FINISHED_NTF, GW_STOP_SCENE_CFM, GW_GET_ALL_NODES_INFORMATION_CFM, GW_GET_ALL_NODES_INFORMATION_NTF, GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF, Products, Product, GW_GET_NODE_INFORMATION_CFM, GW_GET_NODE_INFORMATION_NTF, GW_CS_SYSTEM_TABLE_UPDATE_NTF, IConnection, NodeVariation, NodeOperatingState, StatusReply, RunStatus, GW_SET_NODE_NAME_CFM, GW_COMMON_STATUS, GW_SET_NODE_VARIATION_CFM, GW_SET_NODE_ORDER_AND_PLACEMENT_CFM, GW_COMMAND_SEND_CFM, GW_WINK_SEND_CFM, GW_NODE_INFORMATION_CHANGED_NTF, GW_NODE_STATE_POSITION_CHANGED_NTF } from "../src";
+import { GW_ERROR_NTF, Scene, Scenes, GW_GET_SCENE_LIST_NTF, GW_GET_SCENE_LIST_CFM, GW_GET_SCENE_INFORMATION_NTF, GW_GET_SCENE_INFORMATION_CFM, GW_SCENE_INFORMATION_CHANGED_NTF, GW_ACTIVATE_SCENE_CFM, GW_SESSION_FINISHED_NTF, GW_STOP_SCENE_CFM, GW_GET_ALL_NODES_INFORMATION_CFM, GW_GET_ALL_NODES_INFORMATION_NTF, GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF, Products, Product, GW_GET_NODE_INFORMATION_CFM, GW_GET_NODE_INFORMATION_NTF, GW_CS_SYSTEM_TABLE_UPDATE_NTF, IConnection, NodeVariation, NodeOperatingState, StatusReply, RunStatus, GW_SET_NODE_NAME_CFM, GW_COMMON_STATUS, GW_SET_NODE_VARIATION_CFM, GW_SET_NODE_ORDER_AND_PLACEMENT_CFM, GW_COMMAND_SEND_CFM, GW_WINK_SEND_CFM, GW_NODE_INFORMATION_CHANGED_NTF, GW_NODE_STATE_POSITION_CHANGED_NTF, GW_COMMAND_RUN_STATUS_NTF, StatusOwner, GW_COMMAND_REMAINING_TIME_NTF } from "../src";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { MockConnection } from "./mocks/mockConnection";
@@ -787,6 +787,93 @@ describe("products", function() {
                             0x4f, 0x00, 0x3f, 0xf3
                         ]);
                         const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy).not.to.be.called;
+                    });
+                });
+
+                describe("GW_COMMAND_RUN_STATUS_NTF", function() {
+                    it("should send notifications for CurrentPositionRaw, CurrentPosition, RunStatus, StatusReply", function() {
+                        const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x00, 0xC0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00]);
+                        const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({o: product, propertyName: "CurrentPositionRaw", propertyValue: 0xC000});
+                        expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({o: product, propertyName: "CurrentPosition", propertyValue: 0.040000000000000036});
+                        expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({o: product, propertyName: "RunStatus", propertyValue: RunStatus.ExecutionActive});
+                        expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({o: product, propertyName: "StatusReply", propertyValue: StatusReply.Ok});
+                    });
+
+                    it("should send notifications for FP1CurrentPositionRaw, RunStatus, StatusReply", function() {
+                        const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x01, 0xC0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00]);
+                        const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledWithMatch({o: product, propertyName: "FP1CurrentPositionRaw", propertyValue: 0xC000});
+                        expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({o: product, propertyName: "RunStatus", propertyValue: RunStatus.ExecutionActive});
+                        expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({o: product, propertyName: "StatusReply", propertyValue: StatusReply.Ok});
+                    });
+
+                    it("should send notifications for FP2CurrentPositionRaw, RunStatus, StatusReply", function() {
+                        const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x02, 0xC0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00]);
+                        const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({o: product, propertyName: "FP2CurrentPositionRaw", propertyValue: 0xC000});
+                        expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({o: product, propertyName: "RunStatus", propertyValue: RunStatus.ExecutionActive});
+                        expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({o: product, propertyName: "StatusReply", propertyValue: StatusReply.Ok});
+                    });
+
+                    it("should send notifications for FP3CurrentPositionRaw, RunStatus, StatusReply", function() {
+                        const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x03, 0xC0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00]);
+                        const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledWithMatch({o: product, propertyName: "FP3CurrentPositionRaw", propertyValue: 0xC000});
+                        expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({o: product, propertyName: "RunStatus", propertyValue: RunStatus.ExecutionActive});
+                        expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({o: product, propertyName: "StatusReply", propertyValue: StatusReply.Ok});
+                    });
+
+                    it("should send notifications for FP4CurrentPositionRaw, RunStatus, StatusReply", function() {
+                        const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x04, 0xC0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00]);
+                        const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledWithMatch({o: product, propertyName: "FP4CurrentPositionRaw", propertyValue: 0xC000});
+                        expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({o: product, propertyName: "RunStatus", propertyValue: RunStatus.ExecutionActive});
+                        expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({o: product, propertyName: "StatusReply", propertyValue: StatusReply.Ok});
+                    });
+
+                    it("shouldn't send any notifications", function() {
+                        const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x00, 0xC8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+                        const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy).not.to.be.called;
+                    });
+                });
+
+                describe("GW_COMMAND_REMAINING_TIME_NTF", function() {
+                    it("should send notifications for RemainingTime", function() {
+                        const data = Buffer.from([0x06, 0x03, 0x03, 0x47, 0x11, 0x00, 0x00, 0x00, 0x2A]);
+                        const dataNtf = new GW_COMMAND_REMAINING_TIME_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({o: product, propertyName: "RemainingTime", propertyValue: 42});
+                    });
+
+                    it("shouldn't send any notifications", function() {
+                        const data = Buffer.from([0x06, 0x03, 0x03, 0x47, 0x11, 0x00, 0x00, 0x00, 0x00]);
+                        const dataNtf = new GW_COMMAND_REMAINING_TIME_NTF(data);
     
                         conn.sendNotification(dataNtf, []);
     
