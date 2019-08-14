@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 export interface Listener<T> {
     (event: T): any;

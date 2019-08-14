@@ -20,7 +20,7 @@ import { GW_SET_NETWORK_SETUP_REQ } from "./KLF200-API/GW_SET_NETWORK_SETUP_REQ"
 import { GW_HOUSE_STATUS_MONITOR_ENABLE_REQ } from "./KLF200-API/GW_HOUSE_STATUS_MONITOR_ENABLE_REQ";
 import { GW_HOUSE_STATUS_MONITOR_DISABLE_REQ } from "./KLF200-API/GW_HOUSE_STATUS_MONITOR_DISABLE_REQ";
 
-'use strict';
+"use strict";
 
 /**
  * Provides basic functions to control general functions of the KLF interface.
@@ -48,8 +48,7 @@ export class Gateway {
         try {
             const passwordChanged: GW_PASSWORD_CHANGE_CFM = <GW_PASSWORD_CHANGE_CFM> await this.connection.sendFrameAsync(new GW_PASSWORD_CHANGE_REQ(oldPassword, newPassword));
             return passwordChanged.Status === GW_COMMON_STATUS.SUCCESS;
-        }
-        catch (error) {
+        } catch (error) {
             return Promise.reject(error);
         }
     }

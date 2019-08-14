@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_FRAME_NTF } from "./common";
 import { RunStatus, StatusReply, ParameterActive, StatusOwner } from "./GW_COMMAND";

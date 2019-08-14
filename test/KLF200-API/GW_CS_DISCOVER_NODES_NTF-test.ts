@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_CS_DISCOVER_NODES_NTF, DiscoverStatus } from "../../src";
 import { expect } from "chai";

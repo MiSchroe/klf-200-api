@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /** passes through events as they happen. You will not get events from before you start listening */
 class TypedEvent {

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM } from "../../src";
 import { expect } from "chai";

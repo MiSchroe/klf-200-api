@@ -1,6 +1,6 @@
 /// <reference path="../../types/chai-bytes/index.d.ts" />
 
-'use strict';
+"use strict";
 
 import { expect, use } from "chai";
 import chaiBytes from "chai-bytes";

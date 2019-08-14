@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 export enum InitializeSceneConfirmationStatus {
     OK = 0,

@@ -1,4 +1,4 @@
-﻿'use strict';
+﻿"use strict";
 
 import Mitm from "mitm";
 import { Socket } from "net";

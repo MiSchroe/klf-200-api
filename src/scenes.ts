@@ -15,7 +15,7 @@ import { Component } from "./utils/PropertyChangedEvent";
 import { GW_STOP_SCENE_CFM } from "./KLF200-API/GW_STOP_SCENE_CFM";
 import { GW_STOP_SCENE_REQ } from "./KLF200-API/GW_STOP_SCENE_REQ";
 
-'use strict';
+"use strict";
 
 /**
  * The scene object contains the ID, name and a list of products that are contained in the scene.
@@ -89,8 +89,7 @@ export class Scene extends Component {
             else {
                 return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        }
-        catch (error) {
+        } catch (error) {
             return Promise.reject(error);
         }
     }
@@ -153,8 +152,7 @@ export class Scene extends Component {
                             reject(new Error(confirmationFrame.getError()));
                         }
                     }
-                }
-                catch (error) {
+                } catch (error) {
                     reject(error);
                 }
             });
@@ -239,8 +237,7 @@ export class Scenes {
                         }
                     }, [GatewayCommand.GW_GET_SCENE_LIST_NTF]);
                     await this.Connection.sendFrameAsync(new GW_GET_SCENE_LIST_REQ());
-                }
-                catch (error) {
+                } catch (error) {
                     reject(error);
                 }
             });

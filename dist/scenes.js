@@ -20,7 +20,7 @@ const GW_GET_SCENE_INFORMATION_NTF_1 = require("./KLF200-API/GW_GET_SCENE_INFORM
 const GW_GET_SCENE_INFORMATION_REQ_1 = require("./KLF200-API/GW_GET_SCENE_INFORMATION_REQ");
 const PropertyChangedEvent_1 = require("./utils/PropertyChangedEvent");
 const GW_STOP_SCENE_REQ_1 = require("./KLF200-API/GW_STOP_SCENE_REQ");
-'use strict';
+"use strict";
 /**
  * The scene object contains the ID, name and a list of products that are contained in the scene.
  * You have methods to start and stop a scene.

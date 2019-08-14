@@ -3,7 +3,7 @@
 import { isArrayEqual } from "../../src/utils/UtilityFunctions";
 import { expect } from "chai";
 
-'use strict';
+"use strict";
 
 describe("utils", function() {
     describe("UtilityFunctions", function() {

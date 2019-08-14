@@ -1,6 +1,6 @@
 /// <reference path="../../types/chai-bytes/index.d.ts" />
 
-'use strict';
+"use strict";
 
 import { GW_COMMAND_SEND_REQ, PriorityLevelInformation, FunctionalParameter } from "../../src";
 import { expect, use } from "chai";

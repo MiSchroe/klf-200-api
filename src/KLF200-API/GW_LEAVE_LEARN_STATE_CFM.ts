@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_FRAME_CFM, GW_INVERSE_STATUS } from "./common";
 

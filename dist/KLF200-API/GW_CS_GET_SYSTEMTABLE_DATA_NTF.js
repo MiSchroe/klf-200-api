@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./common");
 const GW_SYSTEMTABLE_DATA_1 = require("./GW_SYSTEMTABLE_DATA");

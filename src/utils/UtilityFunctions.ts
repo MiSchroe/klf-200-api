@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 export function isArrayEqual<T>(first: Array<T>, second: Array<T>): boolean {
     if (first.length !== second.length) {

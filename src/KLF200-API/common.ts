@@ -1,6 +1,6 @@
 import { getNextSessionID } from "./GW_COMMAND";
 
-'use strict';
+"use strict";
 
 export const KLF200_PORT = 51200;
 

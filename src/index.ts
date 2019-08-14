@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 export * from "./KLF200-API/common";
 export * from "./KLF200-API/FrameRcvFactory";

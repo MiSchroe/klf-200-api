@@ -1,6 +1,6 @@
 /// <reference path="../../types/chai-bytes/index.d.ts" />
 
-'use strict';
+"use strict";
 
 import { GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ } from "../../src";
 import { expect, use } from "chai";

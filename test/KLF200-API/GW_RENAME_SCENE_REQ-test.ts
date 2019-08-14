@@ -1,6 +1,6 @@
 /// <reference path="../../types/chai-bytes/index.d.ts" />
 
-'use strict';
+"use strict";
 
 import { GW_RENAME_SCENE_REQ, readZString } from "../../src";
 import { expect, use } from "chai";

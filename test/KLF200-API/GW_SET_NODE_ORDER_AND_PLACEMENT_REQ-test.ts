@@ -1,6 +1,6 @@
 /// <reference path="../../types/chai-bytes/index.d.ts" />
 
-'use strict';
+"use strict";
 
 import { GW_SET_NODE_ORDER_AND_PLACEMENT_REQ } from "../../src";
 import { expect, use } from "chai";

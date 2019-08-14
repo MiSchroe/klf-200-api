@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { IGW_FRAME_RCV_CTOR, IGW_FRAME_RCV, GatewayCommand } from "./common";
 import * as path from "path";

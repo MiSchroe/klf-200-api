@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { expect } from "chai";
 import { LockTime, convertPositionRaw, convertPosition } from "../../src/KLF200-API/GW_COMMAND";

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 function isArrayEqual(first, second) {
     if (first.length !== second.length) {

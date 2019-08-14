@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GatewayCommand } from "../../src/KLF200-API/common";
 import { GW_CS_RECEIVE_KEY_NTF } from "../../src";

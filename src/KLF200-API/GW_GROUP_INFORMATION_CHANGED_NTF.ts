@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_FRAME_NTF, readZString } from "./common";
 import { GroupType } from "./GW_GROUPS";

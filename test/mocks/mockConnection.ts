@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { IConnection, IGW_FRAME_REQ, IGW_FRAME_RCV, GatewayCommand, KLF200SocketProtocol, GW_ERROR_NTF, GW_FRAME_CFM, IGW_FRAME_NTF } from "../../src";
 

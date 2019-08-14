@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /**
  * Converts a binary bit array to an array of numbers.

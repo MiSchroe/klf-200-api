@@ -1,4 +1,6 @@
-﻿import { readFileSync } from "fs";
+﻿"use strict";
+
+import { readFileSync } from "fs";
 import { PeerCertificate, checkServerIdentity as checkServerIdentityOriginal, connect, TLSSocket } from "tls";
 import { KLF200SocketProtocol } from "./KLF200-API/KLF200SocketProtocol";
 import { IGW_FRAME_RCV, IGW_FRAME_REQ, GatewayCommand, GW_COMMON_STATUS, KLF200_PORT, GW_FRAME_COMMAND_REQ, IGW_FRAME_COMMAND } from "./KLF200-API/common";
@@ -7,8 +9,6 @@ import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF";
 import { GW_PASSWORD_ENTER_CFM, GW_PASSWORD_ENTER_REQ } from ".";
 import { Disposable, Listener } from "./utils/TypedEvent";
 import { timeout as promiseTimeout } from "promise-timeout";
-
-'use strict';
 
 /**
  * Interface for the connection.
@@ -70,8 +70,8 @@ export interface IConnection {
     readonly KLF200SocketProtocol?: KLF200SocketProtocol;
 }
 
-const FINGERPRINT = "02:8C:23:A0:89:2B:62:98:C4:99:00:5B:D2:E7:2E:0A:70:3D:71:6A";
-const ca = readFileSync(join(__dirname, "../velux-cert.pem"));
+const FINGERPRINT: string = "02:8C:23:A0:89:2B:62:98:C4:99:00:5B:D2:E7:2E:0A:70:3D:71:6A";
+const ca: Buffer = readFileSync(join(__dirname, "../velux-cert.pem"));
 
 /**
  * The Connection class is used to handle the communication with the Velux KLF interface.
@@ -137,14 +137,12 @@ export class Connection implements IConnection {
                         } else {
                             resolve();
                         }
-                    }
-                    catch (error) {
+                    } catch (error) {
                         reject(error);
                     }
                 }), timeout * 1000
             );
-        }
-        catch (error) {
+        } catch (error) {
             return Promise.reject(error);
         }
     }
@@ -213,20 +211,17 @@ export class Connection implements IConnection {
                                     cfmHandler.dispose();
                                     resolve(frame);
                                 }
-                            }
-                            catch (error) {
+                            } catch (error) {
                                 reject(error);
                             }
                         });
                         (this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
-                    }
-                    catch (error) {
+                    } catch (error) {
                         reject(error);
                     }
                 }), timeout * 1000
             );
-        }
-        catch (error) {
+        } catch (error) {
             return Promise.reject(error);
         }
     }
@@ -282,8 +277,7 @@ export class Connection implements IConnection {
             else {
                 return Promise.resolve();
             }
-        }
-        catch (error) {
+        } catch (error) {
             return Promise.reject(error);
         }
     }

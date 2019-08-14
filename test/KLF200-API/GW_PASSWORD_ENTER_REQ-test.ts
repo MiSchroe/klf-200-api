@@ -1,6 +1,6 @@
 /// <reference path="../../types/chai-bytes/index.d.ts" />
 
-'use strict';
+"use strict";
 
 import { GW_PASSWORD_ENTER_REQ } from "../../src/KLF200-API/GW_PASSWORD_ENTER_REQ";
 import { expect, use } from "chai";

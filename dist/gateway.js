@@ -22,7 +22,7 @@ const GW_GET_NETWORK_SETUP_REQ_1 = require("./KLF200-API/GW_GET_NETWORK_SETUP_RE
 const GW_SET_NETWORK_SETUP_REQ_1 = require("./KLF200-API/GW_SET_NETWORK_SETUP_REQ");
 const GW_HOUSE_STATUS_MONITOR_ENABLE_REQ_1 = require("./KLF200-API/GW_HOUSE_STATUS_MONITOR_ENABLE_REQ");
 const GW_HOUSE_STATUS_MONITOR_DISABLE_REQ_1 = require("./KLF200-API/GW_HOUSE_STATUS_MONITOR_DISABLE_REQ");
-'use strict';
+"use strict";
 /**
  * Provides basic functions to control general functions of the KLF interface.
  *

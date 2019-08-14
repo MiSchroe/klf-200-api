@@ -4,7 +4,7 @@ import { bitArrayToArray, arrayToBitArray } from "../../src/utils/BitArray";
 import chaibytes from "chai-bytes";
 import { expect, use } from "chai";
 
-'use strict';
+"use strict";
 
 use(chaibytes);
 

@@ -1,6 +1,6 @@
 import { TypedEvent } from "./TypedEvent";
 
-'use strict';
+"use strict";
 
 export type PropertyChangedEvent = {
     o: object,

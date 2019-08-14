@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./common");
 class GW_GET_NETWORK_SETUP_CFM extends common_1.GW_FRAME_CFM {

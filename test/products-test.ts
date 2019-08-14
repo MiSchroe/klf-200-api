@@ -1,10 +1,10 @@
-﻿'use strict';
+﻿"use strict";
 
-import { GW_ERROR_NTF, Scene, Scenes, GW_GET_SCENE_LIST_NTF, GW_GET_SCENE_LIST_CFM, GW_GET_SCENE_INFORMATION_NTF, GW_GET_SCENE_INFORMATION_CFM, GW_SCENE_INFORMATION_CHANGED_NTF, GW_ACTIVATE_SCENE_CFM, GW_SESSION_FINISHED_NTF, GW_STOP_SCENE_CFM, GW_GET_ALL_NODES_INFORMATION_CFM, GW_GET_ALL_NODES_INFORMATION_NTF, GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF, Products, Product, GW_GET_NODE_INFORMATION_CFM, GW_GET_NODE_INFORMATION_NTF, GW_CS_SYSTEM_TABLE_UPDATE_NTF, IConnection, NodeVariation, NodeOperatingState, StatusReply, RunStatus, GW_SET_NODE_NAME_CFM, GW_COMMON_STATUS, GW_SET_NODE_VARIATION_CFM, GW_SET_NODE_ORDER_AND_PLACEMENT_CFM, GW_COMMAND_SEND_CFM, GW_WINK_SEND_CFM, GW_NODE_INFORMATION_CHANGED_NTF, GW_NODE_STATE_POSITION_CHANGED_NTF, GW_COMMAND_RUN_STATUS_NTF, StatusOwner, GW_COMMAND_REMAINING_TIME_NTF } from "../src";
+import { GW_ERROR_NTF, GW_GET_ALL_NODES_INFORMATION_CFM, GW_GET_ALL_NODES_INFORMATION_NTF, GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF, Products, Product, GW_GET_NODE_INFORMATION_CFM, GW_GET_NODE_INFORMATION_NTF, GW_CS_SYSTEM_TABLE_UPDATE_NTF, NodeVariation, NodeOperatingState, StatusReply, RunStatus, GW_SET_NODE_NAME_CFM, GW_SET_NODE_VARIATION_CFM, GW_SET_NODE_ORDER_AND_PLACEMENT_CFM, GW_COMMAND_SEND_CFM, GW_WINK_SEND_CFM, GW_NODE_INFORMATION_CHANGED_NTF, GW_NODE_STATE_POSITION_CHANGED_NTF, GW_COMMAND_RUN_STATUS_NTF, GW_COMMAND_REMAINING_TIME_NTF } from "../src";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { MockConnection } from "./mocks/mockConnection";
-import sinon, { SinonApi, SinonSandbox, SinonSpy } from "sinon";
+import sinon, { SinonSandbox, SinonSpy } from "sinon";
 import sinonChai from "sinon-chai";
 import { PropertyChangedEvent } from "../src/utils/PropertyChangedEvent";
 
@@ -142,9 +142,7 @@ describe("products", function() {
                 ]);
                 const dataNtf = new GW_CS_SYSTEM_TABLE_UPDATE_NTF(data);
                 const dataNodeInformation = Buffer.from([0x05, 0x02, 0x01, 0x00, 0x00]);
-                const dataNodeInformationCfm = new GW_GET_NODE_INFORMATION_CFM(dataNodeInformation);
                 const dataNodeInfoNotification = Buffer.from([0x7f, 0x02, 0x10, 0x00, 0x00, 0x00, 0x01, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0xd5, 0x07, 0x00, 0x01, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x66, 0x00, 0x66, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00, 0x4f, 0x00, 0x4c, 0x93, 0x01, 0xd8, 0x03, 0xb2, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-                const dataNodeInfoNotificationNtf = new GW_GET_NODE_INFORMATION_NTF(dataNodeInfoNotification);
 
                 const conn = new MockConnection(receivedFrames);
                 const promProducts = Products.createProductsAsync(conn);

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { IGW_FRAME_RCV, SLIP_END, SLIPProtocol, KLF200Protocol } from "./common";
 import { Socket } from "net";
@@ -115,8 +115,7 @@ export class KLF200SocketProtocol {
             const frame = await FrameRcvFactory.CreateRcvFrame(frameBuffer);
             this._onFrameReceived.emit(frame);
             return Promise.resolve();
-        }
-        catch (e) {
+        } catch (e) {
             this._onError.emit(e);
             return Promise.resolve();
         }

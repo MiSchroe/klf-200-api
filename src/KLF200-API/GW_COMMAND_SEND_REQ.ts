@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_FRAME_COMMAND_REQ } from "./common";
 import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelLock, LockTime as lt, FunctionalParameter, PriorityLevelInformation } from "./GW_COMMAND";

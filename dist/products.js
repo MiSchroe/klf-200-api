@@ -27,7 +27,6 @@ const GW_WINK_SEND_REQ_1 = require("./KLF200-API/GW_WINK_SEND_REQ");
 const GW_COMMAND_1 = require("./KLF200-API/GW_COMMAND");
 const GW_COMMAND_RUN_STATUS_NTF_1 = require("./KLF200-API/GW_COMMAND_RUN_STATUS_NTF");
 const GW_COMMAND_REMAINING_TIME_NTF_1 = require("./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF");
-'use strict';
 /**
  * Each product that is registered at the KLF-200 interface will be created
  * as an instance of the Product class.

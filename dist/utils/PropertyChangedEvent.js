@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const TypedEvent_1 = require("./TypedEvent");
-'use strict';
+"use strict";
 class Component {
     constructor() {
         /**

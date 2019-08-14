@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const GW_SYSTEMTABLE_DATA_1 = require("./GW_SYSTEMTABLE_DATA");
-'use strict';
+"use strict";
 var CommandOriginator;
 (function (CommandOriginator) {
     CommandOriginator[CommandOriginator["User"] = 1] = "User";

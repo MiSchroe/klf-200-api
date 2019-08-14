@@ -1,4 +1,6 @@
-﻿import { Velocity, ActuatorType, NodeVariation, PowerSaveMode, NodeOperatingState, ActuatorAlias } from "./KLF200-API/GW_SYSTEMTABLE_DATA";
+﻿"use strict";
+
+import { Velocity, ActuatorType, NodeVariation, PowerSaveMode, NodeOperatingState, ActuatorAlias } from "./KLF200-API/GW_SYSTEMTABLE_DATA";
 import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
 import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF";
 import { IConnection } from "./connection";
@@ -24,8 +26,6 @@ import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ";
 import { CommandStatus, RunStatus, StatusReply, ParameterActive, convertPositionRaw, convertPosition } from "./KLF200-API/GW_COMMAND";
 import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF";
 import { GW_COMMAND_REMAINING_TIME_NTF } from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF";
-
-'use strict';
 
 /**
  * Each product that is registered at the KLF-200 interface will be created

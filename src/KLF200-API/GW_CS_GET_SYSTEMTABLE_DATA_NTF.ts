@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_FRAME_NTF } from "./common";
 import { SystemTableDataEntry } from "./GW_SYSTEMTABLE_DATA";

@@ -16,7 +16,6 @@ const path_1 = require("path");
 const GW_ERROR_NTF_1 = require("./KLF200-API/GW_ERROR_NTF");
 const _1 = require(".");
 const promise_timeout_1 = require("promise-timeout");
-'use strict';
 const FINGERPRINT = "02:8C:23:A0:89:2B:62:98:C4:99:00:5B:D2:E7:2E:0A:70:3D:71:6A";
 const ca = fs_1.readFileSync(path_1.join(__dirname, "../velux-cert.pem"));
 /**

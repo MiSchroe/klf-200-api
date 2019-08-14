@@ -1,6 +1,6 @@
 /// <reference path="../../types/chai-bytes/index.d.ts" />
 
-'use strict';
+"use strict";
 
 import { GW_NEW_GROUP_REQ, GroupType, readZString } from "../../src";
 import { expect, use } from "chai";

@@ -3,7 +3,7 @@
 import { Component } from "../../src/utils/PropertyChangedEvent";
 import { expect } from "chai";
 
-'use strict';
+"use strict";
 
 class MockComponent extends Component {
     TestProperty: number = 42;

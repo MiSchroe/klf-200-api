@@ -3,7 +3,7 @@ import { FrameRcvFactory } from "../../src/KLF200-API/FrameRcvFactory";
 import { GW_REBOOT_CFM } from "../../src/KLF200-API/GW_REBOOT_CFM";
 import chaiAsPromised from "chai-as-promised";
 
-'use strict';
+"use strict";
 
 use(chaiAsPromised);
 

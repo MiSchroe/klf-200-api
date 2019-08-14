@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_FRAME_NTF } from "./common";
 import { InitializeSceneNotificationStatus } from "./GW_SCENES";

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_FRAME_NTF, readZString } from "./common";
 import { Velocity, ActuatorType, NodeVariation, PowerSaveMode, NodeOperatingState, ActuatorAlias, splitActuatorType } from "./GW_SYSTEMTABLE_DATA";

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_FRAME_REQ } from "./common";
 import { ActuatorType } from "./GW_SYSTEMTABLE_DATA";

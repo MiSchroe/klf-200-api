@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const GW_COMMAND_1 = require("./GW_COMMAND");
-'use strict';
+"use strict";
 exports.KLF200_PORT = 51200;
 var GatewayCommand;
 (function (GatewayCommand) {

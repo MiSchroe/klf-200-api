@@ -1,6 +1,6 @@
 /// <reference path="../../types/chai-bytes/index.d.ts" />
 
-'use strict';
+"use strict";
 
 import { GW_STATUS_REQUEST_REQ, StatusType } from "../../src";
 import { expect, use } from "chai";

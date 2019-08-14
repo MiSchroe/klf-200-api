@@ -1,6 +1,6 @@
 /// <reference path="../../types/chai-bytes/index.d.ts" />
 
-'use strict';
+"use strict";
 
 import { KLF200SocketProtocol, SLIPProtocol, KLF200Protocol, GW_PASSWORD_ENTER_CFM } from "../../src";
 import * as net from "net";

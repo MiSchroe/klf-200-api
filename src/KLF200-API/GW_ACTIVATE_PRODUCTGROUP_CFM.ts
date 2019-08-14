@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_FRAME_CFM } from "./common";
 import { ActivateProductGroupStatus } from "./GW_COMMAND";

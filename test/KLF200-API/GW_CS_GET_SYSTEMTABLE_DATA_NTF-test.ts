@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_CS_GET_SYSTEMTABLE_DATA_NTF, ActuatorType, PowerSaveMode, Manufacturer } from "../../src";
 import { expect } from "chai";

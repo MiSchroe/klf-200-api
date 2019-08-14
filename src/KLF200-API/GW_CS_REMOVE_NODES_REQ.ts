@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_FRAME_REQ } from "./common";
 import { arrayToBitArray } from "../utils/BitArray";

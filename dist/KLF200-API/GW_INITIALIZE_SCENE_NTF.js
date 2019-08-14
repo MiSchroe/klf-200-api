@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./common");
 const BitArray_1 = require("../utils/BitArray");

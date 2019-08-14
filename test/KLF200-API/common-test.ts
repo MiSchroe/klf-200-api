@@ -1,6 +1,6 @@
 /// <reference path="../../types/chai-bytes/index.d.ts" />
 
-'use strict';
+"use strict";
 
 import { expect, use } from "chai";
 import { GW_FRAME, GW_FRAME_REQ, GW_FRAME_COMMAND_REQ, readZString } from "../../src/KLF200-API/common";

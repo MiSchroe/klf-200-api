@@ -22,7 +22,7 @@ const GW_ACTIVATE_PRODUCTGROUP_REQ_1 = require("./KLF200-API/GW_ACTIVATE_PRODUCT
 const GW_COMMAND_1 = require("./KLF200-API/GW_COMMAND");
 const GW_GET_NODE_INFORMATION_REQ_1 = require("./KLF200-API/GW_GET_NODE_INFORMATION_REQ");
 const GW_GET_NODE_INFORMATION_NTF_1 = require("./KLF200-API/GW_GET_NODE_INFORMATION_NTF");
-'use strict';
+"use strict";
 /**
  * The gateway can hold up to 100 groups. A group is a collection of actuator nodes in
 conjunction with a name and some other come characteristics.

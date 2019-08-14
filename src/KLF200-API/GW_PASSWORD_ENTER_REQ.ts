@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 import { GW_FRAME_REQ, C_MAX_PWD_LENGTH } from "./common";
 

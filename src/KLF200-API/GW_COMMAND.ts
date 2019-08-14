@@ -1,6 +1,6 @@
 import { ActuatorType } from "./GW_SYSTEMTABLE_DATA";
 
-'use strict';
+"use strict";
 
 export enum CommandOriginator {
     User = 1,
