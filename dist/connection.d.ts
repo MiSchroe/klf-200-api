@@ -98,6 +98,16 @@ export declare class Connection implements IConnection {
     constructor(host: string, CA?: Buffer, fingerprint?: string);
     readonly KLF200SocketProtocol: KLF200SocketProtocol | undefined;
     /**
+     * This method implements the login process without timeout.
+     * The [loginAsync]{@link Connection#loginAsync} function wraps this into a timed promise.
+     *
+     * @private
+     * @param {string} password The password needed for login. The factory default password is velux123.
+     * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
+     * @memberof Connection
+     */
+    private _loginAsync;
+    /**
      * Logs in to the KLF interface by sending the GW_PASSWORD_ENTER_REQ.
      *
      * @param {string} password The password needed for login. The factory default password is velux123.

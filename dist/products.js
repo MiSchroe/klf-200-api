@@ -638,27 +638,43 @@ class Products {
     }
     initializeProductsAsync() {
         return __awaiter(this, void 0, void 0, function* () {
+            // Setup notification to receive notification with actuator type
+            let dispose;
             try {
-                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                const onNotificationHandler = new Promise((resolve, reject) => {
                     try {
-                        const dispose = this.Connection.on(frame => {
+                        dispose = this.Connection.on(frame => {
                             if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF_1.GW_GET_ALL_NODES_INFORMATION_NTF) {
                                 this.Products[frame.NodeID] = new Product(this.Connection, frame);
                             }
                             else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF_1.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
-                                dispose.dispose();
+                                if (dispose) {
+                                    dispose.dispose();
+                                }
                                 this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
                                 resolve();
                             }
                         }, [common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF]);
-                        yield this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ_1.GW_GET_ALL_NODES_INFORMATION_REQ());
                     }
                     catch (error) {
+                        if (dispose) {
+                            dispose.dispose();
+                        }
                         reject(error);
                     }
-                }));
+                });
+                const getAllNodesInformation = yield this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ_1.GW_GET_ALL_NODES_INFORMATION_REQ());
+                if (getAllNodesInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
+                    if (dispose) {
+                        dispose.dispose();
+                    }
+                    return Promise.reject(new Error(getAllNodesInformation.getError()));
+                }
             }
             catch (error) {
+                if (dispose) {
+                    dispose.dispose();
+                }
                 return Promise.reject(error);
             }
         });
@@ -707,21 +723,39 @@ class Products {
     }
     addNodeAsync(nodeID) {
         return __awaiter(this, void 0, void 0, function* () {
+            // Setup notification to receive notification with actuator type
+            let dispose;
             try {
-                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                const notificationHandler = new Promise((resolve, reject) => {
                     try {
-                        const dispose = this.Connection.on(frame => {
-                            dispose.dispose();
+                        dispose = this.Connection.on(frame => {
+                            if (dispose) {
+                                dispose.dispose();
+                            }
                             resolve(new Product(this.Connection, frame));
                         }, [common_1.GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
-                        yield this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ_1.GW_GET_NODE_INFORMATION_REQ(nodeID));
                     }
                     catch (error) {
+                        if (dispose) {
+                            dispose.dispose();
+                        }
                         reject(error);
                     }
-                }));
+                });
+                const getNodeInformation = yield this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ_1.GW_GET_NODE_INFORMATION_REQ(nodeID));
+                if (getNodeInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
+                    if (dispose) {
+                        dispose.dispose();
+                    }
+                    return Promise.reject(new Error(getNodeInformation.getError()));
+                }
+                // The notifications will resolve the promise
+                return notificationHandler;
             }
             catch (error) {
+                if (dispose) {
+                    dispose.dispose();
+                }
                 return Promise.reject(error);
             }
         });

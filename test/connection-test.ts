@@ -75,7 +75,7 @@ describe("connection", function () {
             expect(conn.logoutAsync()).to.be.fulfilled.and.notify(done);
         });
 
-        it.skip("should fulfill if logged in.", async function() {
+        it("should fulfill if logged in.", async function() {
             this.mitm.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
@@ -84,6 +84,7 @@ describe("connection", function () {
 
             const conn = new Connection(testHOST);
             await conn.loginAsync("velux123");
+
             return expect(conn.logoutAsync()).to.be.fulfilled;
         });
     });

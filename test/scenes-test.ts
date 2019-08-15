@@ -398,8 +398,13 @@ describe("scenes", function() {
                         propertyChangedEventSpy(scene);
                     });
 
+                    conn.valueToReturn.push(new GW_GET_SCENE_INFORMATION_CFM(dataScene3DetailsCfm));
                     const promRefresh = scene.refreshAsync();
-                    conn.sendNotification(new GW_GET_SCENE_INFORMATION_NTF(dataScene3Details), new GW_GET_SCENE_INFORMATION_CFM(dataScene3DetailsCfm));
+
+                    // Just let the asynchronous stuff run before our checks
+                    await new Promise(resolve => { setTimeout(resolve, 0); });
+
+                    conn.sendNotification(new GW_GET_SCENE_INFORMATION_NTF(dataScene3Details), []);
 
                     return expect(promRefresh).to.be.fulfilled;
                 });

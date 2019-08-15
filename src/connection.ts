@@ -117,6 +117,30 @@ export class Connection implements IConnection {
     }
 
     /**
+     * This method implements the login process without timeout.
+     * The [loginAsync]{@link Connection#loginAsync} function wraps this into a timed promise.
+     *
+     * @private
+     * @param {string} password The password needed for login. The factory default password is velux123.
+     * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
+     * @memberof Connection
+     */
+    private async _loginAsync(password: string): Promise<void> {
+        try {
+            await this.initSocketAsync();
+            this.klfProtocol = new KLF200SocketProtocol(<TLSSocket>this.sckt);
+            const passwordCFM = <GW_PASSWORD_ENTER_CFM> await this.sendFrameAsync(new GW_PASSWORD_ENTER_REQ(password));
+            if (passwordCFM.Status !== GW_COMMON_STATUS.SUCCESS) {
+                return Promise.reject(new Error("Login failed."));
+            } else {
+                return Promise.resolve();
+            }
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
+
+    /**
      * Logs in to the KLF interface by sending the GW_PASSWORD_ENTER_REQ.
      *
      * @param {string} password The password needed for login. The factory default password is velux123.
@@ -126,22 +150,7 @@ export class Connection implements IConnection {
      */
     public async loginAsync(password: string, timeout: number = 60): Promise<void> {
         try {
-            return promiseTimeout(
-                new Promise<void>(async (resolve, reject) => {
-                    try {
-                        await this.initSocketAsync();
-                        this.klfProtocol = new KLF200SocketProtocol(<TLSSocket>this.sckt);
-                        const passwordCFM = <GW_PASSWORD_ENTER_CFM> await this.sendFrameAsync(new GW_PASSWORD_ENTER_REQ(password));
-                        if (passwordCFM.Status !== GW_COMMON_STATUS.SUCCESS) {
-                            reject(new Error("Login failed."));
-                        } else {
-                            resolve();
-                        }
-                    } catch (error) {
-                        reject(error);
-                    }
-                }), timeout * 1000
-            );
+            return promiseTimeout(this._loginAsync(password), timeout * 1000);
         } catch (error) {
             return Promise.reject(error);
         }
@@ -166,8 +175,7 @@ export class Connection implements IConnection {
                             // Close socket
                             (<TLSSocket>this.sckt).once("close", () => {
                                 this.sckt = undefined;
-                                resolve();
-                            }).end();
+                            }).end("", resolve);
                         }
                     ), timeout * 1000
                 );

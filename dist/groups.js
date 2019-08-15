@@ -372,27 +372,45 @@ class Groups {
     }
     initializeGroupsAsync() {
         return __awaiter(this, void 0, void 0, function* () {
+            // Setup notification to receive notification with actuator type
+            let dispose;
             try {
-                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                const notificationHandler = new Promise((resolve, reject) => {
                     try {
-                        const dispose = this.Connection.on(frame => {
+                        dispose = this.Connection.on(frame => {
                             if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF_1.GW_GET_ALL_GROUPS_INFORMATION_NTF || frame instanceof GW_GET_GROUP_INFORMATION_NTF_1.GW_GET_GROUP_INFORMATION_NTF) {
                                 this.Groups[frame.GroupID] = new Group(this.Connection, frame);
                             }
                             else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF_1.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
-                                dispose.dispose();
+                                if (dispose) {
+                                    dispose.dispose();
+                                }
                                 this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
                                 resolve();
                             }
                         }, [common_1.GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, common_1.GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
-                        yield this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ_1.GW_GET_ALL_GROUPS_INFORMATION_REQ());
                     }
                     catch (error) {
+                        if (dispose) {
+                            dispose.dispose();
+                        }
                         reject(error);
                     }
-                }));
+                });
+                const getAllGroupsInformation = yield this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ_1.GW_GET_ALL_GROUPS_INFORMATION_REQ());
+                if (getAllGroupsInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
+                    if (dispose) {
+                        dispose.dispose();
+                    }
+                    return Promise.reject(new Error(getAllGroupsInformation.getError()));
+                }
+                // The notifications will resolve the promise
+                return notificationHandler;
             }
             catch (error) {
+                if (dispose) {
+                    dispose.dispose();
+                }
                 return Promise.reject(error);
             }
         });

@@ -26,6 +26,8 @@ import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ";
 import { CommandStatus, RunStatus, StatusReply, ParameterActive, convertPositionRaw, convertPosition } from "./KLF200-API/GW_COMMAND";
 import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF";
 import { GW_COMMAND_REMAINING_TIME_NTF } from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF";
+import { GW_GET_ALL_NODES_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_CFM";
+import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM";
 
 /**
  * Each product that is registered at the KLF-200 interface will be created
@@ -747,25 +749,43 @@ export class Products {
     private constructor(readonly Connection: IConnection) {}
 
     private async initializeProductsAsync(): Promise<void> {
+        // Setup notification to receive notification with actuator type
+        let dispose: Disposable | undefined;
+
         try {
-            return new Promise<void>(async (resolve, reject) => {
+            const onNotificationHandler = new Promise<void>((resolve, reject) => {
                 try {
-                    const dispose = this.Connection.on(frame => {
+                    dispose = this.Connection.on(frame => {
                         if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF) {
                             this.Products[frame.NodeID] = new Product(this.Connection, frame);
                         }
                         else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
-                            dispose.dispose();
+                            if (dispose) {
+                                dispose.dispose();
+                            }
                             this.Connection.on(frame => this.onNotificationHandler(frame), [GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
                             resolve();
                         }
                     }, [GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF]);
-                    await this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ());
                 } catch (error) {
+                    if (dispose) {
+                        dispose.dispose();
+                    }
                     reject(error);
                 }
             });
+
+            const getAllNodesInformation = <GW_GET_ALL_NODES_INFORMATION_CFM> await this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ());
+            if (getAllNodesInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
+                if (dispose) {
+                    dispose.dispose();
+                }
+                return Promise.reject(new Error(getAllNodesInformation.getError()));
+            }
         } catch (error) {
+            if (dispose) {
+                dispose.dispose();
+            }
             return Promise.reject(error);
         }
     }
@@ -821,19 +841,39 @@ export class Products {
     }
 
     private async addNodeAsync(nodeID: number): Promise<Product> {
+        // Setup notification to receive notification with actuator type
+        let dispose: Disposable | undefined;
+
         try {
-            return new Promise<Product>(async (resolve, reject) => {
+            const notificationHandler = new Promise<Product>((resolve, reject) => {
                 try {
-                    const dispose = this.Connection.on(frame => {
-                        dispose.dispose();
+                    dispose = this.Connection.on(frame => {
+                        if (dispose) {
+                            dispose.dispose();
+                        }
                         resolve(new Product(this.Connection, frame as GW_GET_NODE_INFORMATION_NTF));
                     }, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
-                    await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID));
                 } catch (error) {
+                    if (dispose) {
+                        dispose.dispose();
+                    }
                     reject(error);
                 }
             });
+            const getNodeInformation = <GW_GET_NODE_INFORMATION_CFM> await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID));
+            if (getNodeInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
+                if (dispose) {
+                    dispose.dispose();
+                }
+                return Promise.reject(new Error(getNodeInformation.getError()));
+            }
+
+            // The notifications will resolve the promise
+            return notificationHandler;
         } catch (error) {
+            if (dispose) {
+                dispose.dispose();
+            }
             return Promise.reject(error);
         }
     }

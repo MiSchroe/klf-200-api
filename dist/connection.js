@@ -60,6 +60,33 @@ class Connection {
         return this.klfProtocol;
     }
     /**
+     * This method implements the login process without timeout.
+     * The [loginAsync]{@link Connection#loginAsync} function wraps this into a timed promise.
+     *
+     * @private
+     * @param {string} password The password needed for login. The factory default password is velux123.
+     * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
+     * @memberof Connection
+     */
+    _loginAsync(password) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.initSocketAsync();
+                this.klfProtocol = new KLF200SocketProtocol_1.KLF200SocketProtocol(this.sckt);
+                const passwordCFM = yield this.sendFrameAsync(new _1.GW_PASSWORD_ENTER_REQ(password));
+                if (passwordCFM.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
+                    return Promise.reject(new Error("Login failed."));
+                }
+                else {
+                    return Promise.resolve();
+                }
+            }
+            catch (error) {
+                return Promise.reject(error);
+            }
+        });
+    }
+    /**
      * Logs in to the KLF interface by sending the GW_PASSWORD_ENTER_REQ.
      *
      * @param {string} password The password needed for login. The factory default password is velux123.
@@ -70,22 +97,7 @@ class Connection {
     loginAsync(password, timeout = 60) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return promise_timeout_1.timeout(new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                    try {
-                        yield this.initSocketAsync();
-                        this.klfProtocol = new KLF200SocketProtocol_1.KLF200SocketProtocol(this.sckt);
-                        const passwordCFM = yield this.sendFrameAsync(new _1.GW_PASSWORD_ENTER_REQ(password));
-                        if (passwordCFM.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
-                            reject(new Error("Login failed."));
-                        }
-                        else {
-                            resolve();
-                        }
-                    }
-                    catch (error) {
-                        reject(error);
-                    }
-                })), timeout * 1000);
+                return promise_timeout_1.timeout(this._loginAsync(password), timeout * 1000);
             }
             catch (error) {
                 return Promise.reject(error);
@@ -110,8 +122,7 @@ class Connection {
                         // Close socket
                         this.sckt.once("close", () => {
                             this.sckt = undefined;
-                            resolve();
-                        }).end();
+                        }).end("", resolve);
                     }), timeout * 1000);
                 }
                 else {

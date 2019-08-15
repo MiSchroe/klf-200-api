@@ -18,6 +18,7 @@ import { convertPosition, ActivateProductGroupStatus } from "./KLF200-API/GW_COM
 import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM";
 import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
 import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
+import { GW_GET_ALL_GROUPS_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_CFM";
 
 "use strict";
 
@@ -378,25 +379,46 @@ export class Groups {
     private constructor(readonly Connection: IConnection) {}
 
     private async initializeGroupsAsync(): Promise<void> {
+        // Setup notification to receive notification with actuator type
+        let dispose: Disposable | undefined;
+
         try {
-            return new Promise<void>(async (resolve, reject) => {
+            const notificationHandler = new Promise<void>((resolve, reject) => {
                 try {
-                    const dispose = this.Connection.on(frame => {
+                    dispose = this.Connection.on(frame => {
                         if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF || frame instanceof GW_GET_GROUP_INFORMATION_NTF) {
                             this.Groups[frame.GroupID] = new Group(this.Connection, frame);
                         }
                         else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
-                            dispose.dispose();
+                            if (dispose) {
+                                dispose.dispose();
+                            }
                             this.Connection.on(frame => this.onNotificationHandler(frame), [GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
                             resolve();
                         }
                     }, [GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF, GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
-                    await this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ());
                 } catch (error) {
+                    if (dispose) {
+                        dispose.dispose();
+                    }
                     reject(error);
                 }
             });
+
+            const getAllGroupsInformation = <GW_GET_ALL_GROUPS_INFORMATION_CFM> await this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ());
+            if (getAllGroupsInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
+                if (dispose) {
+                    dispose.dispose();
+                }
+                return Promise.reject(new Error(getAllGroupsInformation.getError()));
+            }
+
+            // The notifications will resolve the promise
+            return notificationHandler;
         } catch (error) {
+            if (dispose) {
+                dispose.dispose();
+            }
             return Promise.reject(error);
         }
     }
