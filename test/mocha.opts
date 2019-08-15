@@ -4,4 +4,5 @@
 --full-trace
 --bail
 --reporter mocha-multi-reporters
+--trace-warnings
 test/**/*.ts

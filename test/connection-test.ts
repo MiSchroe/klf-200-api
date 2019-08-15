@@ -181,8 +181,7 @@ describe("connection", function () {
                 const conn = new Connection(testHOST);
                 await conn.loginAsync("velux123");
                 return Promise.resolve(expect(conn.KLF200SocketProtocol).to.be.instanceOf(KLF200SocketProtocol));
-            }
-            catch(error) {
+            } catch(error) {
                 return Promise.reject(error);
             }
         });

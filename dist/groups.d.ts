@@ -164,7 +164,7 @@ export declare class Group extends Component {
      * @returns {Promise<void>}
      * @memberof Group
      */
-    setNodes(newNodes: number[]): Promise<void>;
+    setNodesAsync(newNodes: number[]): Promise<void>;
     /**
      * Sets the target position for all products of the group as raw value.
      *
@@ -172,7 +172,7 @@ export declare class Group extends Component {
      * @returns {Promise<number>}
      * @memberof Group
      */
-    setTargetPositionAsyncRaw(newPositionRaw: number): Promise<number>;
+    setTargetPositionRawAsync(newPositionRaw: number): Promise<number>;
     /**
      * Sets the target position for all products of the group
      *
@@ -212,7 +212,7 @@ export declare class Groups {
      * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
      * @memberof Groups
      */
-    onRemovedGroupd(handler: Listener<number>): Disposable;
+    onRemovedGroup(handler: Listener<number>): Disposable;
     private notifyChangedGroup;
     private notifyRemovedGroup;
     private onNotificationHandler;

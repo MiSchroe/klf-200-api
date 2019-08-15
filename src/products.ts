@@ -178,8 +178,7 @@ export class Product extends Component {
             else {
                 return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        }
-        catch (error) {
+        } catch (error) {
             return Promise.reject(error);
         }
     }
@@ -317,8 +316,7 @@ export class Product extends Component {
             {
                 return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        }
-        catch (error) {
+        } catch (error) {
             return Promise.reject(error);
         }
     }
@@ -763,8 +761,7 @@ export class Products {
                         }
                     }, [GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF]);
                     await this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ());
-                }
-                catch (error) {
+                } catch (error) {
                     reject(error);
                 }
             });
@@ -832,13 +829,11 @@ export class Products {
                         resolve(new Product(this.Connection, frame as GW_GET_NODE_INFORMATION_NTF));
                     }, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
                     await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID));
-                }
-                catch (error) {
+                } catch (error) {
                     reject(error);
                 }
             });
-        }
-        catch (error) {
+        } catch (error) {
             return Promise.reject(error);
         }
     }

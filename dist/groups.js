@@ -182,7 +182,6 @@ class Group extends PropertyChangedEvent_1.Component {
                     return Promise.resolve();
                 const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_SET_GROUP_INFORMATION_REQ_1.GW_SET_GROUP_INFORMATION_REQ(this.GroupID, this._revision, name, this._groupType, nodes, order, placement, velocity, nodeVariation));
                 if (confirmationFrame.Status === common_1.GW_COMMON_STATUS.SUCCESS) {
-                    changedProperties.forEach(propName => this.propertyChanged(propName));
                     return Promise.resolve();
                 }
                 else {
@@ -261,7 +260,7 @@ class Group extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Group
      */
-    setNodes(newNodes) {
+    setNodesAsync(newNodes) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.changeGroupAsync(this._order, this._placement, this._name, this._velocity, this._nodeVariation, newNodes);
         });
@@ -273,7 +272,7 @@ class Group extends PropertyChangedEvent_1.Component {
      * @returns {Promise<number>}
      * @memberof Group
      */
-    setTargetPositionAsyncRaw(newPositionRaw) {
+    setTargetPositionRawAsync(newPositionRaw) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_ACTIVATE_PRODUCTGROUP_REQ_1.GW_ACTIVATE_PRODUCTGROUP_REQ(this.GroupID, newPositionRaw));
@@ -301,20 +300,53 @@ class Group extends PropertyChangedEvent_1.Component {
             try {
                 // Get product type from first node ID for conversion
                 const nodeID = this.Nodes[0];
-                const nodeTypeID = yield new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                    const dispose = this.Connection.on(frame => {
-                        if (frame instanceof GW_GET_NODE_INFORMATION_NTF_1.GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
+                // Setup notification to receive notification with actuator type
+                let dispose;
+                const nodeTypeID = new Promise((resolve, reject) => {
+                    try {
+                        let nodeTypeID;
+                        // Register notification handler
+                        dispose = this.Connection.on(frame => {
+                            try {
+                                if (frame instanceof GW_GET_NODE_INFORMATION_NTF_1.GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
+                                    nodeTypeID = frame.ActuatorType;
+                                    if (dispose) {
+                                        dispose.dispose();
+                                    }
+                                    resolve(nodeTypeID);
+                                }
+                            }
+                            catch (error) {
+                                if (dispose) {
+                                    dispose.dispose();
+                                }
+                                reject(error);
+                            }
+                        }, [common_1.GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+                    }
+                    catch (error) {
+                        if (dispose) {
                             dispose.dispose();
-                            resolve(frame.ActuatorType);
                         }
-                    }, [common_1.GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+                        reject(error);
+                    }
+                });
+                try {
                     const productInformation = yield this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ_1.GW_GET_NODE_INFORMATION_REQ(nodeID));
                     if (productInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
-                        dispose.dispose();
-                        reject(new Error(productInformation.getError()));
+                        if (dispose) {
+                            dispose.dispose();
+                        }
+                        return Promise.reject(new Error(productInformation.getError()));
                     }
-                }));
-                return this.setTargetPositionAsyncRaw(GW_COMMAND_1.convertPosition(newPosition, nodeTypeID));
+                }
+                catch (error) {
+                    if (dispose) {
+                        dispose.dispose();
+                    }
+                    return Promise.reject(error);
+                }
+                return this.setTargetPositionRawAsync(GW_COMMAND_1.convertPosition(newPosition, yield nodeTypeID));
             }
             catch (error) {
                 return Promise.reject(error);
@@ -382,7 +414,7 @@ class Groups {
      * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
      * @memberof Groups
      */
-    onRemovedGroupd(handler) {
+    onRemovedGroup(handler) {
         return this._onRemovedGroup.on(handler);
     }
     notifyChangedGroup(groupId) {

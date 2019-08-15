@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-import { GW_ERROR_NTF, Groups, GW_GET_ALL_GROUPS_INFORMATION_CFM, GW_GET_ALL_GROUPS_INFORMATION_NTF, GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF } from "../src";
+import { GW_ERROR_NTF, Groups, GW_GET_ALL_GROUPS_INFORMATION_CFM, GW_GET_ALL_GROUPS_INFORMATION_NTF, GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, Group, GW_GROUP_INFORMATION_CHANGED_NTF, Velocity, NodeVariation, GroupType, GW_SET_GROUP_INFORMATION_CFM, GW_GET_NODE_INFORMATION_CFM, GW_GET_NODE_INFORMATION_NTF } from "../src";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { MockConnection } from "./mocks/mockConnection";
@@ -14,6 +14,7 @@ use(sinonChai);
 describe("groups", function() {
     // Setup sinon sandbox
     let sandbox: SinonSandbox;
+    let unhandledRejectionHandler;
 
     this.beforeEach(function() {
         sandbox = sinon.createSandbox();
@@ -26,6 +27,7 @@ describe("groups", function() {
     describe("groups class", function () {
         // Error frame
         const dataError = Buffer.from([0x04, 0x00, 0x00, 0x07]);
+        const dataErrorNtf = new GW_ERROR_NTF(dataError);
 
         // Frames for groups list
         const dataAllNodes = Buffer.from([0x05, 0x02, 0x2a, 0x00, 0x0e]);
@@ -46,17 +48,22 @@ describe("groups", function() {
             dataAllNodesCfm
         ];
 
-        describe.only("creategroupsAsync", function() {
+        // A function simplifes the test setup for regular group tests
+        const createRegularGroups = async function(): Promise<Groups> {
+            const conn = new MockConnection(receivedFrames);
+            const promResult = Groups.createGroupsAsync(conn);
+            // Send nodes
+            for (const dataNodeNtf of dataNodesNtf) {
+                conn.sendNotification(dataNodeNtf, []);
+            }
+            // Send finished
+            conn.sendNotification(dataNodeFinishNtf, []);
+            return await promResult;
+        };
+
+        describe("creategroupsAsync", function() {
             it("should create without error with 2 groups.", async function() {
-                const conn = new MockConnection(receivedFrames);
-                const promResult = Groups.createGroupsAsync(conn);
-                // Send nodes
-                for (const dataNodeNtf of dataNodesNtf) {
-                    conn.sendNotification(dataNodeNtf, []);
-                }
-                // Send finished
-                conn.sendNotification(dataNodeFinishNtf, []);
-                const result = await promResult;
+                const result = await createRegularGroups();
                 expect(result).to.be.instanceOf(Groups);
                 expect(result.Groups.reduce((accumulator, current) => {return accumulator + (typeof current === "undefined" ? 0 : 1)}, 0)).to.be.equal(2);
             });
@@ -67,360 +74,555 @@ describe("groups", function() {
             });
         });
         
-        // describe("findByName", function() {
-        //     it("should find group 'Fenster Badezimmer'.", async function() {
-        //         const conn = new MockConnection(receivedFrames);
-        //         const promgroups = Groups.createGroupsAsync(conn);
-        //         // Send nodes
-        //         for (const dataNodeNtf of dataNodesNtf) {
-        //             conn.sendNotification(dataNodeNtf, []);
-        //         }
-        //         // Send finished
-        //         conn.sendNotification(dataNodeFinishNtf, []);
-        //         const groups = await promgroups;
-        //         const result = groups.findByName("Fenster Badezimmer");
-        //         expect(result).to.be.instanceOf(Group).with.property("Name", "Fenster Badezimmer");
-        //     });
-        // });
+        describe("findByName", function() {
+            it("should find group 'Fenster Süden'.", async function() {
+                const expectedGroupName = "Fenster Süden";
+                const groups = await createRegularGroups();
+                const result = groups.findByName(expectedGroupName);
+                expect(result).to.be.instanceOf(Group).with.property("Name", expectedGroupName);
+            });
+        });
         
-        // describe("onNotificationHandler", function() {
-        //     it("should add 1 group and remove 2 groups.", async function() {
-        //         const data = Buffer.from([55, 0x01, 0x12, 
-        //             // Added nodes (0)
-        //             1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        //             // Removed nodes (0, 1)
-        //             3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        //         ]);
-        //         const dataNtf = new GW_CS_SYSTEM_TABLE_UPDATE_NTF(data);
-        //         const dataNodeInformation = Buffer.from([0x05, 0x02, 0x01, 0x00, 0x00]);
-        //         const dataNodeInformationCfm = new GW_GET_NODE_INFORMATION_CFM(dataNodeInformation);
-        //         const dataNodeInfoNotification = Buffer.from([0x7f, 0x02, 0x10, 0x00, 0x00, 0x00, 0x01, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0xd5, 0x07, 0x00, 0x01, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x66, 0x00, 0x66, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00, 0x4f, 0x00, 0x4c, 0x93, 0x01, 0xd8, 0x03, 0xb2, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-        //         const dataNodeInfoNotificationNtf = new GW_GET_NODE_INFORMATION_NTF(dataNodeInfoNotification);
+        describe("onNotificationHandler", function() {
+            it("should remove 1 group.", async function() {
+                const data = Buffer.from([5, 0x02, 0x24, 
+                    // Change type
+                    0,  // Deleted
+                    // Group ID
+                    51
+                ]);
+                const dataNtf = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
+                const groups = await createRegularGroups();
+                const conn = groups.Connection as MockConnection;
 
-        //         const conn = new MockConnection(receivedFrames);
-        //         const promgroups = Groups.creategroupsAsync(conn);
-        //         for (const dataNodeNtf of dataNodesNtf) {
-        //             conn.sendNotification(dataNodeNtf, []);
-        //         }
-        //         // Send finished
-        //         conn.sendNotification(dataNodeFinishNtf, []);
-        //         const groups = await promgroups;
+                // Setups spies for counting notifications
+                const groupRemovedSpy = sinon.spy();
+                groups.onRemovedGroup((groupID) => {
+                    groupRemovedSpy(groupID);
+                });
 
-        //         // Setups spies for counting notifications
-        //         const groupAddedSpy = sinon.spy();
-        //         const groupRemovedSpy = sinon.spy();
-        //         groups.onNewgroup((groupID) => {
-        //             groupAddedSpy(groupID);
-        //         });
-        //         groups.onRemovedgroup((groupID) => {
-        //             groupRemovedSpy(groupID);
-        //         });
+                conn.sendNotification(dataNtf, []);
 
-        //         conn.sendNotification(dataNtf, [dataNodeInformationCfm]);
-        //         conn.sendNotification(dataNodeInfoNotificationNtf, []);
+                // Just let the asynchronous stuff run before our checks
+                await new Promise(resolve => { setTimeout(resolve, 0); });
 
-        //         // Just let the asynchronous stuff run before our checks
-        //         await new Promise(resolve => { setTimeout(resolve, 0); });
+                expect(groupRemovedSpy, `onRemovedgroup should be called once. Instead it was called ${groupRemovedSpy.callCount} times.`).to.be.calledOnceWith(51);
+                expect(groups.Groups[51]).to.be.undefined;
+            });
 
-        //         expect(groupAddedSpy.calledOnce, `onNewgroup should be called once. Instead it was called ${groupAddedSpy.callCount} times.`).to.be.true;
-        //         expect(groupRemovedSpy.calledTwice, `onRemovedgroup should be called twice. Instead it was called ${groupRemovedSpy.callCount} times.`).to.be.true;
-        //     });
-        // });
+            it("should change 1 group.", async function() {
+                const expectedGroup = { GroupID: 51, Name: "Fenster Süde", Order: 2, Placement: 3, Velocity: Velocity.Silent, NodeVariation: NodeVariation.Kip, GroupType: GroupType.Room, Nodes: []};
+                const data = Buffer.from([103, 0x02, 0x24, 1, 0x33, 0x00, 0x02, 0x03, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x53, 0xc3, 0xbc, 0x64, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+                const dataNtf = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
+                const groups = await createRegularGroups();
+                const conn = groups.Connection as MockConnection;
+
+                // Setups spies for counting notifications
+                const groupChangedSpy = sinon.spy();
+                groups.onChangedGroup((groupID) => {
+                    groupChangedSpy(groupID);
+                });
+
+                conn.sendNotification(dataNtf, []);
+
+                // Just let the asynchronous stuff run before our checks
+                await new Promise(resolve => { setTimeout(resolve, 0); });
+
+                expect(groupChangedSpy, `onChangedGroup should be called once. Instead it was called ${groupChangedSpy.callCount} times.`).to.be.calledOnceWith(51);
+                expect(groups.Groups[51]).to.deep.include(expectedGroup);
+            });
+
+            it("should add 1 group.", async function() {
+                const expectedGroup = { GroupID: 55, Name: "Fenster Süden", Order: 1};
+                const data = Buffer.from([103, 0x02, 0x24, 1, 0x37, 0x00, 0x01, 0x00, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x53, 0xc3, 0xbc, 0x64, 0x65, 0x6e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+                const dataNtf = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
+                const groups = await createRegularGroups();
+                const conn = groups.Connection as MockConnection;
+
+                // Setups spies for counting notifications
+                const groupChangedSpy = sinon.spy();
+                groups.onChangedGroup((groupID) => {
+                    groupChangedSpy(groupID);
+                });
+
+                conn.sendNotification(dataNtf, []);
+
+                // Just let the asynchronous stuff run before our checks
+                await new Promise(resolve => { setTimeout(resolve, 0); });
+
+                expect(groupChangedSpy, `onChangedGroup should be called once. Instead it was called ${groupChangedSpy.callCount} times.`).to.be.calledOnceWith(55);
+                expect(groups.Groups[55]).to.include(expectedGroup);
+            });
+        });
         
-        // describe("addNodeAsync", function() {
-        //     it("should throw on error frame.", async function() {
-        //         const data = Buffer.from([55, 0x01, 0x12, 
-        //             // Added nodes (0)
-        //             1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        //             // Removed nodes (0, 1)
-        //             3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        //         ]);
-        //         const dataNtf = new GW_CS_SYSTEM_TABLE_UPDATE_NTF(data);
-        //         const dataNodeInformation = Buffer.from([0x05, 0x02, 0x01, 0x00, 0x00]);
-        //         const dataNodeInfoNotification = Buffer.from([0x7f, 0x02, 0x10, 0x00, 0x00, 0x00, 0x01, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0xd5, 0x07, 0x00, 0x01, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x66, 0x00, 0x66, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00, 0x4f, 0x00, 0x4c, 0x93, 0x01, 0xd8, 0x03, 0xb2, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+        describe("group class", function() {
+            /* Setup is the same for all test cases */
+            let conn: MockConnection;
+            let groups: Groups;
+            let group: Group;
+            this.beforeEach(async () => {
+                groups = await createRegularGroups();
+                conn = groups.Connection as MockConnection;
+                group = groups.Groups[51];     // Use the group 51 for all tests
+            });
 
-        //         const conn = new MockConnection(receivedFrames);
-        //         const promgroups = Groups.createGroupsAsync(conn);
-        //         for (const dataNodeNtf of dataNodesNtf) {
-        //             conn.sendNotification(dataNodeNtf, []);
-        //         }
-        //         // Send finished
-        //         conn.sendNotification(dataNodeFinishNtf, []);
-        //         const groups = await promgroups;
+            describe("Name", function() {
+                it("should return the group name", function() {
+                    const expectedResult = "Alle Fenster";
+                    const result = group.Name;
 
-        //         // Setups spies for counting notifications
-        //         const groupAddedSpy = sinon.spy();
-        //         const groupRemovedSpy = sinon.spy();
-        //         // groups.onNewgroup((groupID) => {
-        //         //     groupAddedSpy(groupID);
-        //         // });
-        //         // groups.onRemovedgroup((groupID) => {
-        //         //     groupRemovedSpy(groupID);
-        //         // });
+                    expect(result).to.be.equal(expectedResult);
+                });
+            });
 
-        //         conn.sendNotification(dataNtf, [dataErrorNtf]);
+            describe("Order", function() {
+                it("should return the group's order", function() {
+                    const expectedResult = 1;
+                    const result = group.Order;
 
-        //         // Just let the asynchronous stuff run before our checks
-        //         await new Promise(resolve => { setTimeout(resolve, 0); });
+                    expect(result).to.be.equal(expectedResult);
+                });
+            });
 
-        //         expect(groupAddedSpy.notCalled, `onNewgroup shouldn't be called at all. Instead it was called ${groupAddedSpy.callCount} times.`).to.be.true;
-        //         expect(groupRemovedSpy.calledTwice, `onRemovedgroup should be called twice. Instead it was called ${groupRemovedSpy.callCount} times.`).to.be.true;
-        //     });
-        // });
+            describe("Placement", function() {
+                it("should return the group's placement", function() {
+                    const expectedResult = 0;
+                    const result = group.Placement;
 
-        // describe("group class", function() {
-        //     /* Setup is the same for all test cases */
-        //     let conn: MockConnection;
-        //     let groups: groups;
-        //     let group: group;
-        //     this.beforeEach(async () => {
-        //         conn = new MockConnection(receivedFrames);
-        //         const promResult = groups.creategroupsAsync(conn);
-        //         // Send nodes
-        //         for (const dataNodeNtf of dataNodesNtf) {
-        //             conn.sendNotification(dataNodeNtf, []);
-        //         }
-        //         // Send finished
-        //         conn.sendNotification(dataNodeFinishNtf, []);
-        //         groups = await promResult;
-        //         group = groups.groups[0];     // Use the first group for all tests
-        //     });
+                    expect(result).to.be.equal(expectedResult);
+                });
+            });
 
-        //     describe("Name", function() {
-        //         it("should return the group name", function() {
-        //             const expectedResult = "Fenster Badezimmer";
-        //             const result = group.Name;
+            describe("Velocity", function() {
+                it("should return the group's Velocity", function() {
+                    const expectedResult = Velocity.Default;
+                    const result = group.Velocity;
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+                    expect(result).to.be.equal(expectedResult);
+                });
+            });
 
-        //     describe("Category", function() {
-        //         [
-        //             { nodeType: 0x0040, category: "Interior venetian blind" },
-        //             { nodeType: 0x0080, category: "Roller shutter" },
-        //             { nodeType: 0x0081, category: "Adjustable slats roller shutter" },
-        //             { nodeType: 0x0082, category: "Roller shutter with projection" },
-        //             { nodeType: 0x00C0, category: "Vertical exterior awning" },
-        //             { nodeType: 0x0100, category: "Window opener" },
-        //             { nodeType: 0x0101, category: "Window opener with integrated rain sensor" },
-        //             { nodeType: 0x0140, category: "Garage door opener" },
-        //             { nodeType: 0x017A, category: "Garage door opener" },
-        //             { nodeType: 0x0180, category: "Light" },
-        //             { nodeType: 0x01BA, category: "Light" },
-        //             { nodeType: 0x01C0, category: "Gate opener" },
-        //             { nodeType: 0x01FA, category: "Gate opener" },
-        //             { nodeType: 0x0240, category: "Door lock" },
-        //             { nodeType: 0x0241, category: "Window lock" },
-        //             { nodeType: 0x0280, category: "Vertical interior blind" },
-        //             { nodeType: 0x0340, category: "Dual roller shutter" },
-        //             { nodeType: 0x03C0, category: "On/Off switch" },
-        //             { nodeType: 0x0400, category: "Horizontal awning" },
-        //             { nodeType: 0x0440, category: "Exterior venetion blind" },
-        //             { nodeType: 0x0480, category: "Louvre blind" },
-        //             { nodeType: 0x04C0, category: "Curtain track" },
-        //             { nodeType: 0x0500, category: "Ventilation point" },
-        //             { nodeType: 0x0501, category: "Air inlet" },
-        //             { nodeType: 0x0502, category: "Air transfer" },
-        //             { nodeType: 0x0503, category: "Air outlet" },
-        //             { nodeType: 0x0540, category: "Exterior heating" },
-        //             { nodeType: 0x057A, category: "Exterior heating" },
-        //             { nodeType: 0x0600, category: "Swinging shutter" },
-        //             { nodeType: 0x0601, category: "Swinging shutter with independent handling of the leaves" },
-        //             { nodeType: 0x0000, category: "0.0" }
-        //         ].forEach((category) => {
-        //             it(`should return the group category ${category.category}`, function() {
-        //                 const dataTest = Buffer.from(dataNodes[0]);
-        //                 // Setup node type
-        //                 dataTest.writeUInt16BE(category.nodeType, 72);
-        //                 const dataTestNtf = new GW_GET_ALL_NODES_INFORMATION_NTF(dataTest);
-        //                 const groupTest = new group(conn, dataTestNtf);
-        //                 const expectedResult = category.category;
-        //                 const result = groupTest.Category;
-    
-        //                 expect(result).to.be.equal(expectedResult);
-        //             });
-        //         });
-        //     });
+            describe("NodeVariation", function() {
+                it("should return the group's NodeVariation", function() {
+                    const expectedResult = NodeVariation.NotSet;
+                    const result = group.NodeVariation;
 
-        //     describe("NodeVariation", function() {
-        //         it("should return the node variation", function() {
-        //             const expectedResult = NodeVariation.NotSet;
-        //             const result = group.NodeVariation;
+                    expect(result).to.be.equal(expectedResult);
+                });
+            });
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+            describe("GroupType", function() {
+                it("should return the group's GroupType", function() {
+                    const expectedResult = GroupType.UserGroup;
+                    const result = group.GroupType;
 
-        //     describe("Order", function() {
-        //         it("should return the node's order", function() {
-        //             const expectedResult = 0;
-        //             const result = group.Order;
+                    expect(result).to.be.equal(expectedResult);
+                });
+            });
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+            describe("Nodes", function() {
+                it("should return the group's Nodes", function() {
+                    const expectedResult = [0, 1, 2, 4];
+                    const result = group.Nodes;
 
-        //     describe("Placement", function() {
-        //         it("should return the node's placement", function() {
-        //             const expectedResult = 1;
-        //             const result = group.Placement;
+                    expect(result).to.have.members(expectedResult);
+                });
+            });
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+            describe("changeGroupAsync", function() {
+                it("should fulfill if all properties are set to different values", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x00, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
 
-        //     describe("State", function() {
-        //         it("should return the node's operating state", function() {
-        //             const expectedResult = NodeOperatingState.Done;
-        //             const result = group.State;
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+                    const result = group.changeGroupAsync(4, 7, "Some windows", Velocity.Silent, NodeVariation.Kip, [2, 4]);
 
-        //     describe("CurrentPositionRaw", function() {
-        //         it("should return the node's current position raw value", function() {
-        //             const expectedResult = 0xC800;
-        //             const result = group.CurrentPositionRaw;
+                    return expect(result).to.be.fulfilled;
+                });
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+                it("should fulfill if all properties are set to same values", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x00, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
 
-        //     describe("TargetPositionRaw", function() {
-        //         it("should return the node's target position raw value", function() {
-        //             const expectedResult = 0xC800;
-        //             const result = group.TargetPositionRaw;
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+                    const result = group.changeGroupAsync(group.Order, group.Placement, group.Name, group.Velocity, group.NodeVariation, [...group.Nodes]);
 
-        //     describe("FP1CurrentPositionRaw", function() {
-        //         it("should return the node's functional parameter 1 position raw value", function() {
-        //             const expectedResult = 0xF7FF;
-        //             const result = group.FP1CurrentPositionRaw;
+                    return expect(result).to.be.fulfilled;
+                });
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+                it("should reject on error status", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x01, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
 
-        //     describe("FP2CurrentPositionRaw", function() {
-        //         it("should return the node's functional parameter 2 position raw value", function() {
-        //             const expectedResult = 0xF7FF;
-        //             const result = group.FP2CurrentPositionRaw;
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+                    const result = group.changeGroupAsync(4, 7, "Some windows", Velocity.Silent, NodeVariation.Kip, [2, 4]);
 
-        //     describe("FP3CurrentPositionRaw", function() {
-        //         it("should return the node's functional parameter 3 position raw value", function() {
-        //             const expectedResult = 0xF7FF;
-        //             const result = group.FP3CurrentPositionRaw;
+                    return expect(result).to.be.rejectedWith(Error);
+                });
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+                it("should reject on error frame", async function() {
+                    // Mock request
+                    conn.valueToReturn.push(dataErrorNtf);
 
-        //     describe("FP4CurrentPositionRaw", function() {
-        //         it("should return the node's functional parameter 4 position raw value", function() {
-        //             const expectedResult = 0xF7FF;
-        //             const result = group.FP4CurrentPositionRaw;
+                    const result = group.changeGroupAsync(4, 7, "Some windows", Velocity.Silent, NodeVariation.Kip, [2, 4]);
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
 
-        //     describe("RemainingTime", function() {
-        //         it("should return the node's remaining time for the current operation", function() {
-        //             const expectedResult = 0;
-        //             const result = group.RemainingTime;
+            describe("setNameAsync", function() {
+                it("should send a set group information request with changed name", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x00, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
 
-        //     describe("TimeStamp", function() {
-        //         it("should return the node's timestamp of the current data", function() {
-        //             const expectedResult = new Date("2012-01-01T11:13:55.000Z");
-        //             const result = group.TimeStamp;
+                    const result = group.setNameAsync("New name");
 
-        //             expect(result).to.be.deep.equal(expectedResult);
-        //         });
-        //     });
+                    return expect(result).to.be.fulfilled;
+                });
 
-        //     describe("RunStatus", function() {
-        //         it("should return the node's run status", function() {
-        //             const expectedResult = RunStatus.ExecutionCompleted;
-        //             const result = group.RunStatus;
+                it("should reject on error status", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x01, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
 
-        //     describe("StatusReply", function() {
-        //         it("should return the node's status reply", function() {
-        //             const expectedResult = StatusReply.Unknown;
-        //             const result = group.StatusReply;
+                    const result = group.setNameAsync("New name");
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+                    return expect(result).to.be.rejectedWith(Error);
+                });
 
-        //     describe("CurrentPosition", function() {
-        //         it("should return the node's interpreted current position", function() {
-        //             const expectedResult = 0;
-        //             const result = group.CurrentPosition;
+                it("should reject on error frame", async function() {
+                    // Mock request
+                    conn.valueToReturn.push(dataErrorNtf);
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+                    const result = group.setNameAsync("New name");
 
-        //     describe("TargetPosition", function() {
-        //         it("should return the node's interpreted target position", function() {
-        //             const expectedResult = 0;
-        //             const result = group.TargetPosition;
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
 
-        //             expect(result).to.be.equal(expectedResult);
-        //         });
-        //     });
+            describe("setOrderAsync", function() {
+                it("should send a set group information request with changed order", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x00, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
 
-        //     describe("setNameAsync", function() {
-        //         it("should send a set node name request", async function() {
-        //             const data = Buffer.from([0x05, 0x02, 0x09, 0x00, 0]);
-        //             const dataCfm = new GW_SET_NODE_NAME_CFM(data);
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
 
-        //             // Mock request
-        //             conn.valueToReturn.push(dataCfm);
+                    const result = group.setOrderAsync(42);
 
-        //             const result = group.setNameAsync("New name");
+                    return expect(result).to.be.fulfilled;
+                });
 
-        //             return expect(result).to.be.fulfilled;
-        //         });
+                it("should reject on error status", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x01, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
 
-        //         it("should reject on error status", async function() {
-        //             const data = Buffer.from([0x05, 0x02, 0x09, 0x01, 0]);
-        //             const dataCfm = new GW_SET_NODE_NAME_CFM(data);
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
 
-        //             // Mock request
-        //             conn.valueToReturn.push(dataCfm);
+                    const result = group.setOrderAsync(42);
 
-        //             const result = group.setNameAsync("New name");
+                    return expect(result).to.be.rejectedWith(Error);
+                });
 
-        //             return expect(result).to.be.rejectedWith(Error);
-        //         });
+                it("should reject on error frame", async function() {
+                    // Mock request
+                    conn.valueToReturn.push(dataErrorNtf);
 
-        //         it("should reject on error frame", async function() {
-        //             // Mock request
-        //             conn.valueToReturn.push(dataErrorNtf);
+                    const result = group.setOrderAsync(42);
 
-        //             const result = group.setNameAsync("New name");
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
 
-        //             return expect(result).to.be.rejectedWith(Error);
-        //         });
-        //     });
+            describe("setPlacementAsync", function() {
+                it("should send a set group information request with changed placement", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x00, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = group.setPlacementAsync(42);
+
+                    return expect(result).to.be.fulfilled;
+                });
+
+                it("should reject on error status", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x01, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = group.setPlacementAsync(42);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+
+                it("should reject on error frame", async function() {
+                    // Mock request
+                    conn.valueToReturn.push(dataErrorNtf);
+
+                    const result = group.setPlacementAsync(42);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
+
+            describe("setVelocityAsync", function() {
+                it("should send a set group information request with changed velocity", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x00, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = group.setVelocityAsync(Velocity.Fast);
+
+                    return expect(result).to.be.fulfilled;
+                });
+
+                it("should reject on error status", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x01, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = group.setVelocityAsync(Velocity.Fast);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+
+                it("should reject on error frame", async function() {
+                    // Mock request
+                    conn.valueToReturn.push(dataErrorNtf);
+
+                    const result = group.setVelocityAsync(Velocity.Fast);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
+
+            describe("setNodeVariationAsync", function() {
+                it("should send a set group information request with changed node variation", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x00, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = group.setNodeVariationAsync(NodeVariation.Kip);
+
+                    return expect(result).to.be.fulfilled;
+                });
+
+                it("should reject on error status", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x01, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = group.setNodeVariationAsync(NodeVariation.Kip);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+
+                it("should reject on error frame", async function() {
+                    // Mock request
+                    conn.valueToReturn.push(dataErrorNtf);
+
+                    const result = group.setNodeVariationAsync(NodeVariation.Kip);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
+
+            describe("setNodesAsync", function() {
+                it("should send a set group information request with changed node variation", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x00, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = group.setNodesAsync([0, 4]);
+
+                    return expect(result).to.be.fulfilled;
+                });
+
+                it("should reject on error status", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x01, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = group.setNodesAsync([0, 4]);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+
+                it("should reject on error frame", async function() {
+                    // Mock request
+                    conn.valueToReturn.push(dataErrorNtf);
+
+                    const result = group.setNodesAsync([0, 4]);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
+
+            describe("setTargetPositionRawAsync", function() {
+                it("should send a set group information request with changed node variation", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x00, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = group.setTargetPositionRawAsync(0xC000);
+
+                    return expect(result).to.be.fulfilled;
+                });
+
+                it("should reject on error status", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x01, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = group.setTargetPositionRawAsync(0xC000);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+
+                it("should reject on error frame", async function() {
+                    // Mock request
+                    conn.valueToReturn.push(dataErrorNtf);
+
+                    const result = group.setTargetPositionRawAsync(0xC000);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
+
+            describe("setTargetPositionAsync", function() {
+                it("should send a set group information request with changed node variation", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x23, 0x00, 51]);
+                    const dataCfm = new GW_SET_GROUP_INFORMATION_CFM(data);
+
+                    const dataGetNodeInfo = Buffer.from([0x05, 0x02, 0x01, 0x00, 51]);
+                    const dataGetNodeInfoCfm = new GW_GET_NODE_INFORMATION_CFM(dataGetNodeInfo);
+
+                    const dataNodeInfo = Buffer.from([127, 0x02, 0x10, 
+                        // Node ID
+                        0,
+                        // Order
+                        0x00, 0x02,
+                        // Placement
+                        3,
+                        // Name
+                        0x44, 0x75, 0x6D, 0x6D, 0x79, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        // Velocity
+                        0,  // DEFAULT
+                        // Node Type / Sub type
+                        0x01, 0x01,
+                        // Product Type
+                        0, 41,
+                        // Node Variation
+                        2,  // KIP
+                        // Power Mode
+                        0,
+                        // Serial number
+                        1, 2, 3, 4, 5, 6, 7, 8,
+                        // ???
+                        0,
+                        // State
+                        4,  // Executing
+                        // Current Position
+                        0xC0, 0x00,
+                        // Target
+                        0xC8, 0x00,
+                        // FP1 Current Position
+                        0xF7, 0xFF,
+                        // FP2 Current Position
+                        0xF7, 0xFF,
+                        // FP3 Current Position
+                        0xF7, 0xFF,
+                        // FP4 Current Position
+                        0xF7, 0xFF,
+                        // Remaining Time
+                        0, 5,
+                        // Time stamp
+                        0x00, 0xF9, 0x39, 0x90,
+                        // # of aliases
+                        1,
+                        // Aliases array
+                        0xD8, 0x03, 0xC4, 0x00,
+                        0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00
+                    ]);
+                    const dataNodeInfoNtf = new GW_GET_NODE_INFORMATION_NTF(dataNodeInfo);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataGetNodeInfoCfm);
+
+                    const result = group.setTargetPositionAsync(0.5);
+
+                    // Send notification
+                    conn.sendNotification(dataNodeInfoNtf, [dataCfm]);
+
+                    // Just let the asynchronous stuff run before our checks
+                    await new Promise(resolve => { setTimeout(resolve, 0); });
+
+                    return expect(result).to.be.fulfilled;
+                });
+
+                it("should reject on error status", async function() {
+                    const dataGetNodeInfo = Buffer.from([0x05, 0x02, 0x01, 0x01, 51]);
+                    const dataGetNodeInfoCfm = new GW_GET_NODE_INFORMATION_CFM(dataGetNodeInfo);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataGetNodeInfoCfm);
+
+                    const result = group.setTargetPositionAsync(0.5);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+
+                it("should reject on error frame", async function() {
+                    // Mock request
+                    conn.valueToReturn.push(dataErrorNtf);
+
+                    const result = group.setTargetPositionAsync(0.5);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
 
         //     describe("setNodeVariationAsync", function() {
         //         it("should send a set node variation request", async function() {
@@ -874,6 +1076,6 @@ describe("groups", function() {
         //             });
         //         });
         //     });
-        // });
+        });
     });
 });
