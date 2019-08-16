@@ -2,15 +2,35 @@
 This module provides a wrapper to the official API of a KLF-200 interface.
 You can find the links to the firmware and the documentation at https://www.velux.com/api/klf200.
 
+> **ATTENTION: This version supports the officially documented API that was introduced
+>   with firmware version 2.0.0.71. It is not compatible with older firmware versions.
+>   It is recommended that you update your KLF-200 with the new firmware version.**
+
+
 ## Installation
 ```
 npm install klf-200-api --save
 ```
 
 ### Generate Certificate
+The KLF-200 uses a self-signed certificate to secure the TLS protocol. This package contains
+the fingerprint and certificate that I have extracted from my KLF-200.
+
+In case that your connection doesn't work due to a different certificate you have to extract the certificate from your box with the following command:
+
+```Shell
+$ echo -n | openssl s_client -connect <ip adress of your KLF-200>:51200 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > velux-cert.pem
 ```
-echo -n | openssl s_client -connect <your ip adress>:51200 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > velux-cert.pem
+
+After extracting the certificate you have to generate the fingerprint with the following command:
+
+```Shell
+$ openssl x509 -noout -fingerprint -sha1 -inform pem -in velux-cert.pem
 ```
+This will print a fingerprint like `12:34:56:78:9a:bc:de:f0:12:34:56:78:9a:bc:de:f0:12:34:56:78`.
+
+See below for a sample usage with user defined certificate data.
+
 
 ## Usage
 
@@ -22,51 +42,103 @@ To work with this module you have to complete the following tasks:
 
 1. Setup your KLF-200 to work in the *interface* mode.
    (See the interface manual on how to do it.)
-1. Setup your products by either copying them from another remote control
+2. Setup your products by either copying them from another remote control
    or by using the search functionality of the KLF-200 interface.
-1. Setup scenes to control your products in the KLF-200 interface.
-   You need one scene for each desired state of your product(s).
-   You can group multiple products in one scene.
-   (E.g. to be able to open and close a window you need two scenes:
-   the first scene is set to a fully opened window (100%) and 
-   the second scene is set to a closed window (0%).)
+3. *Optional:* Setup scenes to control your products in the KLF-200 interface.
 
-> Note: If you don't want to use wired switches
-        you don't have to use the provided wires.
+> **Note 1:** You no longer need to setup a scene for each desired position.
+>             With the new firmware it is possible to control the products directly.
+ 
+> **Note 2:** If you don't want to use wired switches
+              you don't have to use the provided wires.
 
-To use this module with the interface to run a scene you have to do the following steps:
+To use this module with the interface to run a product you have to do the following steps:
 
-1. Create a `connection` object and login with `loginAsync`.
-1. Create a `scenes` object and run a scene with `runAsync`.
-1. Close the connection using `logoutAsync`.
+1. Create a `Connection` object and login with `loginAsync`.
+2. Create a `Products` object with `createProductsAsync`.
+   This will load the registered products from the KLF-200.
+3. Call `Product.setTargetPositionAsync` to set your product to the desired value.
+4. Close the connection using `logoutAsync`.
+
 
 ### Sample
 
-The following sample code shows how to run a scene
-named 'Window kitchen 50%'.
+The following sample code shows how to open the window
+named 'Window kitchen' to 50%.
 
-````javascript
-// Use either the IP address or the name of *your* interface
-// 'velux-klf-12ab' is just a placeholder example.
-let conn = new connection('http://velux-klf-12ab');
-// Login with *your* password
-// 'velux123' is the default password
-// and for security reason you should change it.
-conn.loginAsync('velux123')
-    .then(() => {
-        let sc = new scenes(conn);
-        return sc.runAsync('Window kitchen 50%');
-    })
-    .then(() => {
-        // Always logout so that you don't block the interface!
-        return conn.logoutAsync();
-    })
-    .catch((err) => {    // always close the connection
-        return conn.logoutAsync().reject(err);
-    });
+````Typescript
+import { Connection, Products, Product } from "klf-200-api";
+
+/*
+    Use either the IP address or the name of *your* interface
+    'velux-klf-12ab' is just a placeholder in this example.
+*/
+const conn = new Connection('http://velux-klf-12ab');
+
+/*
+    Login with *your* password
+    'velux123' is the default password
+    and for security reason you should change it.
+*/
+await conn.loginAsync('velux123');
+try {
+    // Read the product's data:
+    const myProducts = await Products.createProductsAsync(conn);
+
+    // Find the window by it's name:
+    const myKitchenWindow = myProducts.findByName("Windows kitchen");
+    if (myKitchenWindow) {
+        await myKitchenWindow.setTargetPositionAsync(0.5);
+    } else {
+        throw(new Error("Could not find kitchen window."));
+    }
+} finally {
+    await conn.logoutAsync();
+}
 ````
 
+If you have to provide your own certificate data use the following code for login:
+
+````Typescript
+import { Connection, Products, Product } from "klf-200-api";
+import { readFileSync } from "fs";
+
+const myFingerprint = "12:34:56:78:9a:bc:de:f0:12:34:56:78:9a:bc:de:f0:12:34:56:78";
+const myCA = readFileSync("velux-cert.pem");
+
+// Connect using your own certificate data:
+const conn = new Connection('http://velux-klf-12ab', myCA, myFingerprint);
+...
+````
+
+For some basic usage scenarios you can use the following classes:
+
+- `Gateway`: Represents the KLF-200. E.g. you can enable the
+             house status monitor, change the password or
+             query the current state.
+- `Products` and `Product`: Get a list of the products and control
+                            a product, e.g. open a window.
+- `Groups` and `Group`: Get a list of groups and control them,
+                        e.g. open all windows of a group together.
+- `Scenes` and `Scene`: Get a list of defined scenes and run a scene.
+                        E.g. you can open different windows at different
+                        positions.
+
+For other scenarios you may want to send a command directly to the KLF-200.
+You can do so by using the method `Connection.sendFrameAsync`.
+This method handles the command handshake for you already.
+The `Promise` that is returned will fulfill when the corresponding
+confirmation frame is received.
+
+Depending on the request, it can be finished when the confirmation frame
+is received. With other request, like opening a window, you will receive
+additional notifications, which will be provided by event handlers to you.
+
+
 ## Status of implemented messages
+
+The following list shows the implemented messages that can be used:
+
 - [x] GW_ERROR_NTF                               
 - [x] GW_REBOOT_REQ                              
 - [x] GW_REBOOT_CFM                              
@@ -216,11 +288,13 @@ conn.loginAsync('velux123')
 - [x] GW_PASSWORD_ENTER_CFM                      
 - [x] GW_PASSWORD_CHANGE_REQ                     
 - [x] GW_PASSWORD_CHANGE_CFM                     
-- [x] GW_PASSWORD_CHANGE_NTF                     
+- [x] GW_PASSWORD_CHANGE_NTF    
+
 
 ## Changelog
 ### 3.0.0
 * Completely reworked to support the official VELUX Socket-API
+* Converted to Typescript
 
 ### 2.0.0
 * Removed request header from function returns (no dependency on used

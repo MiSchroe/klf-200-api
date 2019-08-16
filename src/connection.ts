@@ -78,7 +78,8 @@ const ca: Buffer = readFileSync(join(__dirname, "../velux-cert.pem"));
  * The Connection class is used to handle the communication with the Velux KLF interface.
  * It provides login and logout functionality and provides methods to run other commands
  * on the socket API.
- * @example
+ * 
+ * ```
  * const Connection = require('velux-api').Connection;
  *
  * let conn = new Connection('velux-klf-12ab');
@@ -90,7 +91,8 @@ const ca: Buffer = readFileSync(join(__dirname, "../velux-cert.pem"));
  *     .catch((err) => {    // always close the connection
  *         return conn.logoutAsync().reject(err);
  *      });
- *
+ * ```
+ * 
  * @export
  * @class Connection
  */
@@ -113,13 +115,20 @@ export class Connection implements IConnection {
     constructor(readonly host: string, readonly CA: Buffer = ca, readonly fingerprint: string = FINGERPRINT) {
     }
 
+    /**
+     * Gets the [[KLF200SocketProtocol]] object used by this connection.
+     * This property has a value after calling [[loginAsync]], only.
+     *
+     * @readonly
+     * @memberof Connection
+     */
     public get KLF200SocketProtocol(): KLF200SocketProtocol | undefined {
         return this.klfProtocol;
     }
 
     /**
      * This method implements the login process without timeout.
-     * The [loginAsync]{@link Connection#loginAsync} function wraps this into a timed promise.
+     * The [[loginAsync]] function wraps this into a timed promise.
      *
      * @private
      * @param {string} password The password needed for login. The factory default password is velux123.
@@ -264,7 +273,7 @@ export class Connection implements IConnection {
 
     /**
      * Start a keep-alive timer to send a message
-     * at least every [interval] minutes to the interface.
+     * at least every [[interval]] minutes to the interface.
      * The KLF-200 interface will close the connection
      * after 15 minutes of inactivity.
      *
@@ -276,6 +285,12 @@ export class Connection implements IConnection {
         this.keepAliveTimer = setInterval(() => { this.sendKeepAlive(); }, interval);
     }
 
+    /**
+     * Stops the keep-alive timer.
+     * If not timer is set nothing happens.
+     *
+     * @memberof Connection
+     */
     public stopKeepAlive() {
         if (this.keepAliveTimer) {
             clearInterval(this.keepAliveTimer);

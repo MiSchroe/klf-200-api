@@ -174,7 +174,7 @@ export class Gateway {
 
     /**
      * If the gateway has been put into learn state by pressing the learn button
-     * then leaveLearnState can be called to leave the learn state.
+     * then leaveLearnStateAsync can be called to leave the learn state.
      *
      * @returns {Promise<void>}
      * @memberof Gateway

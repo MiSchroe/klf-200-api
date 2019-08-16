@@ -36,7 +36,10 @@ const GW_COMMAND_REMAINING_TIME_NTF_1 = require("./KLF200-API/GW_COMMAND_REMAINI
  */
 class Product extends PropertyChangedEvent_1.Component {
     /**
-     *Creates an instance of Product.
+     * Creates an instance of Product. You shouldn't create instances
+     * of the [[Product]] class by yourself. Instead, use the [[Products]] class
+     * to read all installed products from the KLF-200.
+     *
      * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
      * @param {(GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF)} frame Notification frame that is used to set the properties of the Product class instance.
      * @memberof Product
@@ -788,6 +791,13 @@ class Products {
             }
         });
     }
+    /**
+     * Find a product by its name.
+     *
+     * @param {string} productName Name of the product
+     * @returns {(Product | undefined)} Returns a [[Product]] instance if found, otherwise undefined.
+     * @memberof Products
+     */
     findByName(productName) {
         return this.Products.find(pr => typeof pr !== "undefined" && pr.Name === productName);
     }

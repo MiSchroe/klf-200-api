@@ -29,7 +29,7 @@ conjunction with a name and some other come characteristics.
 There are three different group types. House, Room and User defined. There can be only
 one instance of the group type house. The GroupID = 0 is reserved for the house group.
 An actuator can only be represented in one room group. So, if an actuator is assigned to
-a room group is will automatically be removed from another existing room group.
+a room group it will automatically be removed from another existing room group.
  *
  * @export
  * @class Group
@@ -60,7 +60,9 @@ export class Group extends Component {
     private _revision: number;
 
     /**
-     * Creates an instance of Group.
+     * Creates an instance of Group based on the provided notification frame.
+     * You shouldn't create groups by yourself but rather use the [[Groups]] class
+     * to provide you with a list of all groups.
      * @param {IConnection} Connection The connection that will be used to send and receive commands.
      * @param {(GW_GET_GROUP_INFORMATION_NTF | GW_GET_ALL_GROUPS_INFORMATION_NTF | GW_GROUP_INFORMATION_CHANGED_NTF)} frame Notification frame that is used to set the properties of the Group class instance.
      * @memberof Group
@@ -79,6 +81,15 @@ export class Group extends Component {
         this._revision = frame.Revision;
     }
 
+    /**
+     * This method fires PropertyChanged events based on the changes
+     * in the frame provided by the parameter.
+     * This method will be used internally and you shouldn't need to
+     * use it on your own.
+     *
+     * @param {GW_GROUP_INFORMATION_CHANGED_NTF_Modified} frame Change notification frame to calculate the changes.
+     * @memberof Group
+     */
     public changeFromNotification(frame: GW_GROUP_INFORMATION_CHANGED_NTF_Modified): void {
         if (this._order !== frame.Order) {
             this._order = frame.Order;
@@ -362,6 +373,12 @@ export class Group extends Component {
     }
 }
 
+/**
+ * The Groups class represent all groups defined in the KLF-200.
+ *
+ * @export
+ * @class Groups
+ */
 export class Groups {
     private _onChangedGroup = new TypedEvent<number>();
     private _onRemovedGroup = new TypedEvent<number>();

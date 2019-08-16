@@ -61,7 +61,8 @@ export interface IConnection {
  * The Connection class is used to handle the communication with the Velux KLF interface.
  * It provides login and logout functionality and provides methods to run other commands
  * on the socket API.
- * @example
+ *
+ * ```
  * const Connection = require('velux-api').Connection;
  *
  * let conn = new Connection('velux-klf-12ab');
@@ -73,6 +74,7 @@ export interface IConnection {
  *     .catch((err) => {    // always close the connection
  *         return conn.logoutAsync().reject(err);
  *      });
+ * ```
  *
  * @export
  * @class Connection
@@ -96,10 +98,17 @@ export declare class Connection implements IConnection {
      * @memberof Connection
      */
     constructor(host: string, CA?: Buffer, fingerprint?: string);
+    /**
+     * Gets the [[KLF200SocketProtocol]] object used by this connection.
+     * This property has a value after calling [[loginAsync]], only.
+     *
+     * @readonly
+     * @memberof Connection
+     */
     readonly KLF200SocketProtocol: KLF200SocketProtocol | undefined;
     /**
      * This method implements the login process without timeout.
-     * The [loginAsync]{@link Connection#loginAsync} function wraps this into a timed promise.
+     * The [[loginAsync]] function wraps this into a timed promise.
      *
      * @private
      * @param {string} password The password needed for login. The factory default password is velux123.
@@ -151,7 +160,7 @@ export declare class Connection implements IConnection {
     private keepAliveInterval;
     /**
      * Start a keep-alive timer to send a message
-     * at least every [interval] minutes to the interface.
+     * at least every [[interval]] minutes to the interface.
      * The KLF-200 interface will close the connection
      * after 15 minutes of inactivity.
      *
@@ -159,6 +168,12 @@ export declare class Connection implements IConnection {
      * @memberof Connection
      */
     startKeepAlive(interval?: number): void;
+    /**
+     * Stops the keep-alive timer.
+     * If not timer is set nothing happens.
+     *
+     * @memberof Connection
+     */
     stopKeepAlive(): void;
     /**
      * Sends a keep-alive message to the interface
