@@ -2,11 +2,13 @@
 
 import Mitm from "mitm";
 import { Socket } from "net";
-import { SLIPProtocol, KLF200Protocol } from "../src/KLF200-API/common";
+import { SLIPProtocol, KLF200Protocol, GatewayCommand } from "../src/KLF200-API/common";
 import { Connection } from "../src/connection";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { GW_PASSWORD_ENTER_REQ, KLF200SocketProtocol } from "../src";
+import { GW_PASSWORD_ENTER_REQ, KLF200SocketProtocol, GW_GET_STATE_REQ, GW_GET_STATE_CFM, GW_SET_UTC_REQ } from "../src";
+import sinon, { SinonFakeTimers } from "sinon";
+import { install } from "lolex";
 
 use(chaiAsPromised);
 
@@ -182,6 +184,196 @@ describe("connection", function () {
                 const conn = new Connection(testHOST);
                 await conn.loginAsync("velux123");
                 return Promise.resolve(expect(conn.KLF200SocketProtocol).to.be.instanceOf(KLF200SocketProtocol));
+            } catch(error) {
+                return Promise.reject(error);
+            }
+        });
+    });
+
+    describe("on", function() {
+        it("should receive a frame in the registered event handler", async function() {
+            let s: Socket | undefined;
+            this.mitm.on("connection", function(socket: Socket) {
+                socket.on("data", () => {
+                    socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
+                });
+                s = socket; // Use outside
+            });
+
+            try
+            {
+                const conn = new Connection(testHOST);
+                await conn.loginAsync("velux123");
+                
+                const handlerSpy = sinon.spy();
+                conn.on(handlerSpy);
+                // Send a frame
+                (s as Socket).write(rawBufferFrom([0x30, 0x01, 0x00]));
+                // Just let the asynchronous stuff run before our checks
+                await new Promise(resolve => { setTimeout(resolve, 0); });
+
+                return Promise.resolve(expect(handlerSpy).to.be.calledOnce);
+            } catch(error) {
+                return Promise.reject(error);
+            }
+        });
+
+        it("should receive a frame in the filtered registered event handler on match", async function() {
+            let s: Socket | undefined;
+            this.mitm.on("connection", function(socket: Socket) {
+                socket.on("data", () => {
+                    socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
+                });
+                s = socket; // Use outside
+            });
+
+            try
+            {
+                const conn = new Connection(testHOST);
+                await conn.loginAsync("velux123");
+                
+                const handlerSpy = sinon.spy();
+                conn.on(handlerSpy, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
+                // Send a frame
+                (s as Socket).write(rawBufferFrom([0x30, 0x01, 0x00]));
+                // Just let the asynchronous stuff run before our checks
+                await new Promise(resolve => { setTimeout(resolve, 0); });
+
+                return Promise.resolve(expect(handlerSpy).to.be.calledOnce);
+            } catch(error) {
+                return Promise.reject(error);
+            }
+        });
+
+        it("shouldn't receive a frame in the filtered registered event handler on no match", async function() {
+            let s: Socket | undefined;
+            this.mitm.on("connection", function(socket: Socket) {
+                socket.on("data", () => {
+                    socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
+                });
+                s = socket; // Use outside
+            });
+
+            try
+            {
+                const conn = new Connection(testHOST);
+                await conn.loginAsync("velux123");
+                
+                const handlerSpy = sinon.spy();
+                conn.on(handlerSpy, [GatewayCommand.GW_PASSWORD_CHANGE_CFM]);
+                // Send a frame
+                (s as Socket).write(rawBufferFrom([0x30, 0x01, 0x00]));
+                // Just let the asynchronous stuff run before our checks
+                await new Promise(resolve => { setTimeout(resolve, 0); });
+
+                return Promise.resolve(expect(handlerSpy).not.to.be.called);
+            } catch(error) {
+                return Promise.reject(error);
+            }
+        });
+    });
+
+    describe("startKeepAlive", function() {
+        this.beforeEach(function() {
+            // this.clock = sinon.useFakeTimers();
+        });
+
+        this.afterEach(function() {
+            // (this.clock as SinonFakeTimers).restore();
+        });
+
+        it("should send a GW_GET_STATE_REQ after 10 minutes", async function() {
+            const expectedRequest = [192, 0, 3, 0, 12, 15, 192];
+
+            const dataStub = sinon.stub<any, Buffer>()
+                .onFirstCall().returns(rawBufferFrom([0x30, 0x01, 0x00]))
+                .onSecondCall().returns(rawBufferFrom([0x00, 0x0D, 2, 0x80, 0, 0, 0, 0]));
+
+            const sentDataSpy = sinon.spy();
+
+            this.mitm.on("connection", function(socket: Socket) {
+                socket.on("data", (d) => {
+                    sentDataSpy([...d.values()]);
+                    socket.write(dataStub());
+                });
+            });
+
+            try
+            {
+                const conn = new Connection(testHOST);
+                await conn.loginAsync("velux123");
+
+                const clock = sinon.useFakeTimers({toFake: ["setInterval", "clearInterval"]});
+
+                try {
+                    conn.startKeepAlive();
+
+                    clock.tick("10:00");
+
+                    // Wait for asynchronous operation
+                    await new Promise(resolve => setTimeout(resolve, 0));
+
+                    expect(sentDataSpy).to.be.calledTwice;
+                    expect(sentDataSpy).to.be.calledWith(sinon.match.array.deepEquals(expectedRequest));
+
+                    return Promise.resolve();
+                } finally {
+                    clock.restore();
+                }
+            } catch(error) {
+                return Promise.reject(error);
+            }
+        });
+
+        it.only("should postpone the GW_GET_STATE_REQ if other data is sent before 10 minutes", async function() {
+            const expectedRequest = [192, 0, 3, 0, 12, 15, 192];
+
+            const dataStub = sinon.stub<any, Buffer>()
+                .onFirstCall().returns(rawBufferFrom([0x30, 0x01, 0x00]))
+                .onSecondCall().returns(rawBufferFrom([0x20, 0x01]))
+                .onThirdCall().returns(rawBufferFrom([0x00, 0x0D, 2, 0x80, 0, 0, 0, 0]));
+
+            const sentDataSpy = sinon.spy();
+
+            this.mitm.on("connection", function(socket: Socket) {
+                socket.on("data", (d) => {
+                    sentDataSpy([...d.values()]);
+                    socket.write(dataStub());
+                });
+            });
+
+            try
+            {
+                const conn = new Connection(testHOST);
+                await conn.loginAsync("velux123");
+
+                const clock = sinon.useFakeTimers({toFake: ["setInterval", "clearInterval"]});
+
+                try {
+                    conn.startKeepAlive();
+
+                    // Wait 5 minutes
+                    clock.tick("05:00");
+
+                    // Send a message in between
+                    await conn.sendFrameAsync(new GW_SET_UTC_REQ());
+
+                    // // Wait for asynchronous operation
+                    // await new Promise(resolve => setTimeout(resolve, 0));
+
+                    // Wait another 5 minutes
+                    clock.tick("05:00");
+
+                    // Wait for asynchronous operation
+                    await new Promise(resolve => setTimeout(resolve, 0));
+
+                    expect(sentDataSpy).to.be.calledTwice;
+                    expect(sentDataSpy).not.to.be.calledWith(sinon.match.array.deepEquals(expectedRequest));
+
+                    return Promise.resolve();
+                } finally {
+                    clock.restore();
+                }
             } catch(error) {
                 return Promise.reject(error);
             }

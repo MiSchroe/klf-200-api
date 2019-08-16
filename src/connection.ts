@@ -9,6 +9,7 @@ import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF";
 import { GW_PASSWORD_ENTER_CFM, GW_PASSWORD_ENTER_REQ } from ".";
 import { Disposable, Listener } from "./utils/TypedEvent";
 import { timeout as promiseTimeout } from "promise-timeout";
+import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ";
 
 /**
  * Interface for the connection.
@@ -223,6 +224,7 @@ export class Connection implements IConnection {
                                 reject(error);
                             }
                         });
+                        this.shiftKeepAlive();
                         (this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
                     } catch (error) {
                         reject(error);
@@ -254,6 +256,50 @@ export class Connection implements IConnection {
                     handler(frame);
                 }
             });
+        }
+    }
+
+    private keepAliveTimer?: NodeJS.Timeout;
+    private keepAliveInterval: number = 10 * 60 * 1000;
+
+    /**
+     * Start a keep-alive timer to send a message
+     * at least every [interval] minutes to the interface.
+     * The KLF-200 interface will close the connection
+     * after 15 minutes of inactivity.
+     *
+     * @param {number} [interval=600000] Keep-alive interval in minutes. Defaults to 10 min.
+     * @memberof Connection
+     */
+    public startKeepAlive(interval: number = 10 * 60 * 1000) {
+        this.keepAliveInterval = interval;
+        this.keepAliveTimer = setInterval(() => { this.sendKeepAlive(); }, interval);
+    }
+
+    /**
+     * Sends a keep-alive message to the interface
+     * to keep the socket connection open.
+     *
+     * @private
+     * @returns {Promise<void>} Resolves if successful, otherwise reject
+     * @memberof Connection
+     */
+    private async sendKeepAlive(): Promise<void> {
+        await this.sendFrameAsync(new GW_GET_STATE_REQ());
+        return;
+    }
+
+    /**
+     * Shifts the keep-alive timer to restart its counter.
+     * If no keep-alive timer is active nothing happens.
+     *
+     * @private
+     * @memberof Connection
+     */
+    private shiftKeepAlive() {
+        if (this.keepAliveTimer) {
+            clearInterval(this.keepAliveTimer);
+            this.startKeepAlive(this.keepAliveInterval);
         }
     }
 

@@ -16,6 +16,7 @@ const path_1 = require("path");
 const GW_ERROR_NTF_1 = require("./KLF200-API/GW_ERROR_NTF");
 const _1 = require(".");
 const promise_timeout_1 = require("promise-timeout");
+const GW_GET_STATE_REQ_1 = require("./KLF200-API/GW_GET_STATE_REQ");
 const FINGERPRINT = "02:8C:23:A0:89:2B:62:98:C4:99:00:5B:D2:E7:2E:0A:70:3D:71:6A";
 const ca = fs_1.readFileSync(path_1.join(__dirname, "../velux-cert.pem"));
 /**
@@ -55,6 +56,7 @@ class Connection {
         this.host = host;
         this.CA = CA;
         this.fingerprint = fingerprint;
+        this.keepAliveInterval = 10 * 60 * 1000;
     }
     get KLF200SocketProtocol() {
         return this.klfProtocol;
@@ -169,6 +171,7 @@ class Connection {
                                 reject(error);
                             }
                         });
+                        this.shiftKeepAlive();
                         this.klfProtocol.write(frame.Data);
                     }
                     catch (error) {
@@ -201,6 +204,46 @@ class Connection {
                     handler(frame);
                 }
             });
+        }
+    }
+    /**
+     * Start a keep-alive timer to send a message
+     * at least every [interval] minutes to the interface.
+     * The KLF-200 interface will close the connection
+     * after 15 minutes of inactivity.
+     *
+     * @param {number} [interval=600000] Keep-alive interval in minutes. Defaults to 10 min.
+     * @memberof Connection
+     */
+    startKeepAlive(interval = 10 * 60 * 1000) {
+        this.keepAliveInterval = interval;
+        this.keepAliveTimer = setInterval(() => { this.sendKeepAlive(); }, interval);
+    }
+    /**
+     * Sends a keep-alive message to the interface
+     * to keep the socket connection open.
+     *
+     * @private
+     * @returns {Promise<void>} Resolves if successful, otherwise reject
+     * @memberof Connection
+     */
+    sendKeepAlive() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.sendFrameAsync(new GW_GET_STATE_REQ_1.GW_GET_STATE_REQ());
+            return;
+        });
+    }
+    /**
+     * Shifts the keep-alive timer to restart its counter.
+     * If no keep-alive timer is active nothing happens.
+     *
+     * @private
+     * @memberof Connection
+     */
+    shiftKeepAlive() {
+        if (this.keepAliveTimer) {
+            clearInterval(this.keepAliveTimer);
+            this.startKeepAlive(this.keepAliveInterval);
         }
     }
     initSocketAsync() {

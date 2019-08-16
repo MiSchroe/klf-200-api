@@ -147,6 +147,35 @@ export declare class Connection implements IConnection {
      * @memberof Connection
      */
     on(handler: Listener<IGW_FRAME_RCV>, filter?: GatewayCommand[]): Disposable;
+    private keepAliveTimer?;
+    private keepAliveInterval;
+    /**
+     * Start a keep-alive timer to send a message
+     * at least every [interval] minutes to the interface.
+     * The KLF-200 interface will close the connection
+     * after 15 minutes of inactivity.
+     *
+     * @param {number} [interval=600000] Keep-alive interval in minutes. Defaults to 10 min.
+     * @memberof Connection
+     */
+    startKeepAlive(interval?: number): void;
+    /**
+     * Sends a keep-alive message to the interface
+     * to keep the socket connection open.
+     *
+     * @private
+     * @returns {Promise<void>} Resolves if successful, otherwise reject
+     * @memberof Connection
+     */
+    private sendKeepAlive;
+    /**
+     * Shifts the keep-alive timer to restart its counter.
+     * If no keep-alive timer is active nothing happens.
+     *
+     * @private
+     * @memberof Connection
+     */
+    private shiftKeepAlive;
     private initSocketAsync;
     private checkServerIdentity;
 }
