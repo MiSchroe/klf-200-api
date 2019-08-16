@@ -325,7 +325,7 @@ describe("connection", function () {
             }
         });
 
-        it.only("should postpone the GW_GET_STATE_REQ if other data is sent before 10 minutes", async function() {
+        it("should postpone the GW_GET_STATE_REQ if other data is sent before 10 minutes", async function() {
             const expectedRequest = [192, 0, 3, 0, 12, 15, 192];
 
             const dataStub = sinon.stub<any, Buffer>()
@@ -368,6 +368,63 @@ describe("connection", function () {
                     await new Promise(resolve => setTimeout(resolve, 0));
 
                     expect(sentDataSpy).to.be.calledTwice;
+                    expect(sentDataSpy).not.to.be.calledWith(sinon.match.array.deepEquals(expectedRequest));
+
+                    return Promise.resolve();
+                } finally {
+                    clock.restore();
+                }
+            } catch(error) {
+                return Promise.reject(error);
+            }
+        });
+    });
+
+    describe("stopKeepAlive", function() {
+        this.beforeEach(function() {
+            // this.clock = sinon.useFakeTimers();
+        });
+
+        this.afterEach(function() {
+            // (this.clock as SinonFakeTimers).restore();
+        });
+
+        it("shouldn't send a GW_GET_STATE_REQ after 10 minutes after stopping the keep-alive", async function() {
+            const expectedRequest = [192, 0, 3, 0, 12, 15, 192];
+
+            const dataStub = sinon.stub<any, Buffer>()
+                .onFirstCall().returns(rawBufferFrom([0x30, 0x01, 0x00]))
+                .onSecondCall().returns(rawBufferFrom([0x00, 0x0D, 2, 0x80, 0, 0, 0, 0]));
+
+            const sentDataSpy = sinon.spy();
+
+            this.mitm.on("connection", function(socket: Socket) {
+                socket.on("data", (d) => {
+                    sentDataSpy([...d.values()]);
+                    socket.write(dataStub());
+                });
+            });
+
+            try
+            {
+                const conn = new Connection(testHOST);
+                await conn.loginAsync("velux123");
+
+                const clock = sinon.useFakeTimers({toFake: ["setInterval", "clearInterval"]});
+
+                try {
+                    conn.startKeepAlive();
+
+                    clock.tick("05:00");
+
+                    conn.stopKeepAlive();
+
+                    clock.tick("05:00");
+
+                    // Wait for asynchronous operation
+                    await new Promise(resolve => setTimeout(resolve, 0));
+
+                    expect(sentDataSpy).to.be.calledOnce;
                     expect(sentDataSpy).not.to.be.calledWith(sinon.match.array.deepEquals(expectedRequest));
 
                     return Promise.resolve();

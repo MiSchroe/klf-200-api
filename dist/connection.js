@@ -219,6 +219,12 @@ class Connection {
         this.keepAliveInterval = interval;
         this.keepAliveTimer = setInterval(() => { this.sendKeepAlive(); }, interval);
     }
+    stopKeepAlive() {
+        if (this.keepAliveTimer) {
+            clearInterval(this.keepAliveTimer);
+            this.keepAliveTimer = undefined;
+        }
+    }
     /**
      * Sends a keep-alive message to the interface
      * to keep the socket connection open.

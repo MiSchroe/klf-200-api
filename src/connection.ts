@@ -276,6 +276,13 @@ export class Connection implements IConnection {
         this.keepAliveTimer = setInterval(() => { this.sendKeepAlive(); }, interval);
     }
 
+    public stopKeepAlive() {
+        if (this.keepAliveTimer) {
+            clearInterval(this.keepAliveTimer);
+            this.keepAliveTimer = undefined;
+        }
+    }
+
     /**
      * Sends a keep-alive message to the interface
      * to keep the socket connection open.

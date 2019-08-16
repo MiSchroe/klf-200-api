@@ -159,6 +159,7 @@ export declare class Connection implements IConnection {
      * @memberof Connection
      */
     startKeepAlive(interval?: number): void;
+    stopKeepAlive(): void;
     /**
      * Sends a keep-alive message to the interface
      * to keep the socket connection open.
