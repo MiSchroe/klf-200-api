@@ -114,15 +114,14 @@ const conn = new Connection('http://velux-klf-12ab', myCA, myFingerprint);
 For some basic usage scenarios you can use the following classes:
 
 - `Gateway`: Represents the KLF-200. E.g. you can enable the
-             house status monitor, change the password or
-             query the current state.
+house status monitor, change the password or
+query the current state.
 - `Products` and `Product`: Get a list of the products and control
-                            a product, e.g. open a window.
+a product, e.g. open a window.
 - `Groups` and `Group`: Get a list of groups and control them,
-                        e.g. open all windows of a group together.
+e.g. open all windows of a group together.
 - `Scenes` and `Scene`: Get a list of defined scenes and run a scene.
-                        E.g. you can open different windows at different
-                        positions.
+E.g. you can open different windows at different positions.
 
 For other scenarios you may want to send a command directly to the KLF-200.
 You can do so by using the method `Connection.sendFrameAsync`.
@@ -308,7 +307,7 @@ request library any more)
 
 MIT License
 
-Copyright (c) 2017 Michael Schroeder
+Copyright (c) 2019 Michael Schroeder
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
