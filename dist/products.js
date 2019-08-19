@@ -673,6 +673,7 @@ class Products {
                     }
                     return Promise.reject(new Error(getAllNodesInformation.getError()));
                 }
+                return onNotificationHandler;
             }
             catch (error) {
                 if (dispose) {

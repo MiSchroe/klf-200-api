@@ -1,4 +1,9 @@
 # klf-200-api
+
+[![Known Vulnerabilities](https://snyk.io//test/github/MiSchroe/klf-200-api/badge.svg?targetFile=package.json)](https://snyk.io//test/github/MiSchroe/klf-200-api?targetFile=package.json)
+[![Build Status](https://dev.azure.com/michaelschroeder-github/GitHub%20projects/_apis/build/status/MiSchroe.klf-200-api?branchName=master)](https://dev.azure.com/michaelschroeder-github/GitHub%20projects/_build/latest?definitionId=1&branchName=master)
+
+
 This module provides a wrapper to the official API of a KLF-200 interface.
 You can find the links to the firmware and the documentation at https://www.velux.com/api/klf200.
 

@@ -265,14 +265,11 @@ export class Scenes {
             await notificationHandlerSceneList;
 
             // Get more detailed information for each scene
-            const sceneDetailPromises: Promise<void>[] = [];
             for (const scene of this.Scenes) {
                 if (typeof scene !== "undefined") {
-                    sceneDetailPromises.push(scene.refreshAsync());
+                    await scene.refreshAsync();
                 }
             }
-            // Wait for all scene details notifications
-            await Promise.all(sceneDetailPromises);
 
             // Setup notification handler
             this.Connection.on(frame => this.onNotificationHandler(frame), [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);

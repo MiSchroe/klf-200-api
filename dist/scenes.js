@@ -264,14 +264,11 @@ class Scenes {
                 // Wait for GW_GET_SCENE_LIST_NTF
                 yield notificationHandlerSceneList;
                 // Get more detailed information for each scene
-                const sceneDetailPromises = [];
                 for (const scene of this.Scenes) {
                     if (typeof scene !== "undefined") {
-                        sceneDetailPromises.push(scene.refreshAsync());
+                        yield scene.refreshAsync();
                     }
                 }
-                // Wait for all scene details notifications
-                yield Promise.all(sceneDetailPromises);
                 // Setup notification handler
                 this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
                 return Promise.resolve();
