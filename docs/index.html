@@ -67,6 +67,8 @@
 				<a href="#klf-200-api" id="klf-200-api" style="color: inherit; text-decoration: none;">
 					<h1>klf-200-api</h1>
 				</a>
+				<p><a href="https://snyk.io//test/github/MiSchroe/klf-200-api?targetFile=package.json"><img src="https://snyk.io//test/github/MiSchroe/klf-200-api/badge.svg?targetFile=package.json" alt="Known Vulnerabilities"></a>
+				<a href="https://dev.azure.com/michaelschroeder-github/GitHub%20projects/_build/latest?definitionId=1&amp;branchName=master"><img src="https://dev.azure.com/michaelschroeder-github/GitHub%20projects/_apis/build/status/MiSchroe.klf-200-api?branchName=master" alt="Build Status"></a></p>
 				<p>This module provides a wrapper to the official API of a KLF-200 interface.
 				You can find the links to the firmware and the documentation at <a href="https://www.velux.com/api/klf200">https://www.velux.com/api/klf200</a>.</p>
 				<blockquote>
@@ -130,7 +132,7 @@
     Use either the IP address or the name of *your* interface
     'velux-klf-12ab' is just a placeholder in this example.
 */</span>
-<span class="hljs-keyword">const</span> conn = <span class="hljs-keyword">new</span> Connection(<span class="hljs-string">'http://velux-klf-12ab'</span>);
+<span class="hljs-keyword">const</span> conn = <span class="hljs-keyword">new</span> Connection(<span class="hljs-string">'velux-klf-12ab'</span>);
 
 <span class="hljs-comment">/*
     Login with *your* password
@@ -143,7 +145,7 @@
     <span class="hljs-keyword">const</span> myProducts = <span class="hljs-keyword">await</span> Products.createProductsAsync(conn);
 
     <span class="hljs-comment">// Find the window by it's name:</span>
-    <span class="hljs-keyword">const</span> myKitchenWindow = myProducts.findByName(<span class="hljs-string">"Windows kitchen"</span>);
+    <span class="hljs-keyword">const</span> myKitchenWindow = myProducts.findByName(<span class="hljs-string">"Window kitchen"</span>);
     <span class="hljs-keyword">if</span> (myKitchenWindow) {
         <span class="hljs-keyword">await</span> myKitchenWindow.setTargetPositionAsync(<span class="hljs-number">0.5</span>);
     } <span class="hljs-keyword">else</span> {
@@ -160,7 +162,7 @@
 <span class="hljs-keyword">const</span> myCA = readFileSync(<span class="hljs-string">"velux-cert.pem"</span>);
 
 <span class="hljs-comment">// Connect using your own certificate data:</span>
-<span class="hljs-keyword">const</span> conn = <span class="hljs-keyword">new</span> Connection(<span class="hljs-string">'http://velux-klf-12ab'</span>, myCA, myFingerprint);
+<span class="hljs-keyword">const</span> conn = <span class="hljs-keyword">new</span> Connection(<span class="hljs-string">'velux-klf-12ab'</span>, myCA, myFingerprint);
 ...</code></pre>
 				<p>For some basic usage scenarios you can use the following classes:</p>
 				<ul>
