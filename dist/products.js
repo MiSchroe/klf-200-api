@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const GW_SYSTEMTABLE_DATA_1 = require("./KLF200-API/GW_SYSTEMTABLE_DATA");
 const GW_GET_ALL_NODES_INFORMATION_NTF_1 = require("./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF");
@@ -92,22 +84,20 @@ class Product extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Product
      */
-    setNameAsync(newName) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_SET_NODE_NAME_REQ_1.GW_SET_NODE_NAME_REQ(this.NodeID, newName));
-                if (confirmationFrame.Status === common_1.GW_COMMON_STATUS.SUCCESS) {
-                    this._name = newName;
-                    return Promise.resolve();
-                }
-                else {
-                    return Promise.reject(new Error(confirmationFrame.getError()));
-                }
+    async setNameAsync(newName) {
+        try {
+            const confirmationFrame = await this.Connection.sendFrameAsync(new GW_SET_NODE_NAME_REQ_1.GW_SET_NODE_NAME_REQ(this.NodeID, newName));
+            if (confirmationFrame.Status === common_1.GW_COMMON_STATUS.SUCCESS) {
+                this._name = newName;
+                return Promise.resolve();
             }
-            catch (error) {
-                return Promise.reject(error);
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        });
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
     /**
      * String representation of the TypeID and SubType.
@@ -204,22 +194,20 @@ class Product extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Product
      */
-    setNodeVariationAsync(newNodeVariation) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_SET_NODE_VARIATION_REQ_1.GW_SET_NODE_VARIATION_REQ(this.NodeID, newNodeVariation));
-                if (confirmationFrame.Status === common_1.GW_COMMON_STATUS.SUCCESS) {
-                    this._nodeVariation = newNodeVariation;
-                    return Promise.resolve();
-                }
-                else {
-                    return Promise.reject(new Error(confirmationFrame.getError()));
-                }
+    async setNodeVariationAsync(newNodeVariation) {
+        try {
+            const confirmationFrame = await this.Connection.sendFrameAsync(new GW_SET_NODE_VARIATION_REQ_1.GW_SET_NODE_VARIATION_REQ(this.NodeID, newNodeVariation));
+            if (confirmationFrame.Status === common_1.GW_COMMON_STATUS.SUCCESS) {
+                this._nodeVariation = newNodeVariation;
+                return Promise.resolve();
             }
-            catch (error) {
-                return Promise.reject(error);
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        });
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
     /**
      * Sets the order and placement of the product.
@@ -229,23 +217,21 @@ class Product extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Product
      */
-    setOrderAndPlacementAsync(newOrder, newPlacement) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_SET_NODE_ORDER_AND_PLACEMENT_REQ_1.GW_SET_NODE_ORDER_AND_PLACEMENT_REQ(this.NodeID, newOrder, newPlacement));
-                if (confirmationFrame.Status === common_1.GW_COMMON_STATUS.SUCCESS) {
-                    this._order = newOrder;
-                    this._placement = newPlacement;
-                    return Promise.resolve();
-                }
-                else {
-                    return Promise.reject(new Error(confirmationFrame.getError()));
-                }
+    async setOrderAndPlacementAsync(newOrder, newPlacement) {
+        try {
+            const confirmationFrame = await this.Connection.sendFrameAsync(new GW_SET_NODE_ORDER_AND_PLACEMENT_REQ_1.GW_SET_NODE_ORDER_AND_PLACEMENT_REQ(this.NodeID, newOrder, newPlacement));
+            if (confirmationFrame.Status === common_1.GW_COMMON_STATUS.SUCCESS) {
+                this._order = newOrder;
+                this._placement = newPlacement;
+                return Promise.resolve();
             }
-            catch (error) {
-                return Promise.reject(error);
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        });
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
     /**
      * The order in which the products should be displayed by a client application.
@@ -262,10 +248,8 @@ class Product extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Product
      */
-    setOrderAsync(newOrder) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.setOrderAndPlacementAsync(newOrder, this._placement);
-        });
+    async setOrderAsync(newOrder) {
+        return this.setOrderAndPlacementAsync(newOrder, this._placement);
     }
     /**
      * The placement of the product. Either a house index or a room index number.
@@ -282,10 +266,8 @@ class Product extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Product
      */
-    setPlacementAsync(newPlacement) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.setOrderAndPlacementAsync(this._order, newPlacement);
-        });
+    async setPlacementAsync(newPlacement) {
+        return this.setOrderAndPlacementAsync(this._order, newPlacement);
     }
     /**
      * Current operating state of the product.
@@ -397,27 +379,25 @@ class Product extends PropertyChangedEvent_1.Component {
      * @returns {Promise<number>}
      * @memberof Product
      */
-    setTargetPositionAsync(newPosition) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const req = new GW_COMMAND_SEND_REQ_1.GW_COMMAND_SEND_REQ(this.NodeID, GW_COMMAND_1.convertPosition(newPosition, this.TypeID));
-                // const dispose = this.connection.on(frame => {
-                //     if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === req.SessionID) {
-                //         dispose.dispose();
-                //     }
-                // }, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
-                const confirmationFrame = yield this.Connection.sendFrameAsync(req);
-                if (confirmationFrame.CommandStatus === GW_COMMAND_1.CommandStatus.CommandAccepted) {
-                    return confirmationFrame.SessionID;
-                }
-                else {
-                    return Promise.reject(new Error(confirmationFrame.getError()));
-                }
+    async setTargetPositionAsync(newPosition) {
+        try {
+            const req = new GW_COMMAND_SEND_REQ_1.GW_COMMAND_SEND_REQ(this.NodeID, GW_COMMAND_1.convertPosition(newPosition, this.TypeID));
+            // const dispose = this.connection.on(frame => {
+            //     if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === req.SessionID) {
+            //         dispose.dispose();
+            //     }
+            // }, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+            const confirmationFrame = await this.Connection.sendFrameAsync(req);
+            if (confirmationFrame.CommandStatus === GW_COMMAND_1.CommandStatus.CommandAccepted) {
+                return confirmationFrame.SessionID;
             }
-            catch (error) {
-                return Promise.reject(error);
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        });
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
     /**
      * The target position in percent.
@@ -435,21 +415,19 @@ class Product extends PropertyChangedEvent_1.Component {
      * @returns {Promise<number>}
      * @memberof Product
      */
-    stopAsync() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_COMMAND_SEND_REQ_1.GW_COMMAND_SEND_REQ(this.NodeID, 0xD200));
-                if (confirmationFrame.CommandStatus === GW_COMMAND_1.CommandStatus.CommandAccepted) {
-                    return confirmationFrame.SessionID;
-                }
-                else {
-                    return Promise.reject(new Error(confirmationFrame.getError()));
-                }
+    async stopAsync() {
+        try {
+            const confirmationFrame = await this.Connection.sendFrameAsync(new GW_COMMAND_SEND_REQ_1.GW_COMMAND_SEND_REQ(this.NodeID, 0xD200));
+            if (confirmationFrame.CommandStatus === GW_COMMAND_1.CommandStatus.CommandAccepted) {
+                return confirmationFrame.SessionID;
             }
-            catch (error) {
-                return Promise.reject(error);
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        });
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
     /**
      * Let the product "wink". Its main intention is to identify a product.
@@ -460,21 +438,19 @@ class Product extends PropertyChangedEvent_1.Component {
      * @returns {Promise<number>}
      * @memberof Product
      */
-    winkAsync() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_WINK_SEND_REQ_1.GW_WINK_SEND_REQ(this.NodeID));
-                if (confirmationFrame.Status === common_1.GW_INVERSE_STATUS.SUCCESS) {
-                    return confirmationFrame.SessionID;
-                }
-                else {
-                    return Promise.reject(new Error(confirmationFrame.getError()));
-                }
+    async winkAsync() {
+        try {
+            const confirmationFrame = await this.Connection.sendFrameAsync(new GW_WINK_SEND_REQ_1.GW_WINK_SEND_REQ(this.NodeID));
+            if (confirmationFrame.Status === common_1.GW_INVERSE_STATUS.SUCCESS) {
+                return confirmationFrame.SessionID;
             }
-            catch (error) {
-                return Promise.reject(error);
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        });
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
     onNotificationHandler(frame) {
         if (typeof this === "undefined")
@@ -639,49 +615,47 @@ class Products {
          */
         this.Products = [];
     }
-    initializeProductsAsync() {
-        return __awaiter(this, void 0, void 0, function* () {
-            // Setup notification to receive notification with actuator type
-            let dispose;
-            try {
-                const onNotificationHandler = new Promise((resolve, reject) => {
-                    try {
-                        dispose = this.Connection.on(frame => {
-                            if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF_1.GW_GET_ALL_NODES_INFORMATION_NTF) {
-                                this.Products[frame.NodeID] = new Product(this.Connection, frame);
-                            }
-                            else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF_1.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
-                                if (dispose) {
-                                    dispose.dispose();
-                                }
-                                this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
-                                resolve();
-                            }
-                        }, [common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF]);
-                    }
-                    catch (error) {
-                        if (dispose) {
-                            dispose.dispose();
+    async initializeProductsAsync() {
+        // Setup notification to receive notification with actuator type
+        let dispose;
+        try {
+            const onNotificationHandler = new Promise((resolve, reject) => {
+                try {
+                    dispose = this.Connection.on(frame => {
+                        if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF_1.GW_GET_ALL_NODES_INFORMATION_NTF) {
+                            this.Products[frame.NodeID] = new Product(this.Connection, frame);
                         }
-                        reject(error);
-                    }
-                });
-                const getAllNodesInformation = yield this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ_1.GW_GET_ALL_NODES_INFORMATION_REQ());
-                if (getAllNodesInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
+                        else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF_1.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
+                            if (dispose) {
+                                dispose.dispose();
+                            }
+                            this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
+                            resolve();
+                        }
+                    }, [common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF]);
+                }
+                catch (error) {
                     if (dispose) {
                         dispose.dispose();
                     }
-                    return Promise.reject(new Error(getAllNodesInformation.getError()));
+                    reject(error);
                 }
-                return onNotificationHandler;
-            }
-            catch (error) {
+            });
+            const getAllNodesInformation = await this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ_1.GW_GET_ALL_NODES_INFORMATION_REQ());
+            if (getAllNodesInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
                 if (dispose) {
                     dispose.dispose();
                 }
-                return Promise.reject(error);
+                return Promise.reject(new Error(getAllNodesInformation.getError()));
             }
-        });
+            return onNotificationHandler;
+        }
+        catch (error) {
+            if (dispose) {
+                dispose.dispose();
+            }
+            return Promise.reject(error);
+        }
     }
     /**
      * Adds a handler that will be called if a new product is added to the KLF-200 interface.
@@ -717,52 +691,50 @@ class Products {
                 this.notifiyRemovedProduct(nodeID);
             }
             // Add nodes
-            (() => __awaiter(this, void 0, void 0, function* () {
+            (async () => {
                 for (const nodeID of frame.AddedNodes) {
-                    this.Products[nodeID] = yield this.addNodeAsync(nodeID);
+                    this.Products[nodeID] = await this.addNodeAsync(nodeID);
                     this.notifyNewProduct(nodeID);
                 }
-            }))().catch(() => { });
+            })().catch(() => { });
         }
     }
-    addNodeAsync(nodeID) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // Setup notification to receive notification with actuator type
-            let dispose;
-            try {
-                const notificationHandler = new Promise((resolve, reject) => {
-                    try {
-                        dispose = this.Connection.on(frame => {
-                            if (dispose) {
-                                dispose.dispose();
-                            }
-                            resolve(new Product(this.Connection, frame));
-                        }, [common_1.GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
-                    }
-                    catch (error) {
+    async addNodeAsync(nodeID) {
+        // Setup notification to receive notification with actuator type
+        let dispose;
+        try {
+            const notificationHandler = new Promise((resolve, reject) => {
+                try {
+                    dispose = this.Connection.on(frame => {
                         if (dispose) {
                             dispose.dispose();
                         }
-                        reject(error);
-                    }
-                });
-                const getNodeInformation = yield this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ_1.GW_GET_NODE_INFORMATION_REQ(nodeID));
-                if (getNodeInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
+                        resolve(new Product(this.Connection, frame));
+                    }, [common_1.GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+                }
+                catch (error) {
                     if (dispose) {
                         dispose.dispose();
                     }
-                    return Promise.reject(new Error(getNodeInformation.getError()));
+                    reject(error);
                 }
-                // The notifications will resolve the promise
-                return notificationHandler;
-            }
-            catch (error) {
+            });
+            const getNodeInformation = await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ_1.GW_GET_NODE_INFORMATION_REQ(nodeID));
+            if (getNodeInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
                 if (dispose) {
                     dispose.dispose();
                 }
-                return Promise.reject(error);
+                return Promise.reject(new Error(getNodeInformation.getError()));
             }
-        });
+            // The notifications will resolve the promise
+            return notificationHandler;
+        }
+        catch (error) {
+            if (dispose) {
+                dispose.dispose();
+            }
+            return Promise.reject(error);
+        }
     }
     /**
      * Creates a new instance of the Products class.
@@ -780,17 +752,15 @@ class Products {
      * @returns {Promise<Products>} Resolves to a new instance of the Products class.
      * @memberof Products
      */
-    static createProductsAsync(Connection) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const result = new Products(Connection);
-                yield result.initializeProductsAsync();
-                return result;
-            }
-            catch (error) {
-                return Promise.reject(error);
-            }
-        });
+    static async createProductsAsync(Connection) {
+        try {
+            const result = new Products(Connection);
+            await result.initializeProductsAsync();
+            return result;
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
     /**
      * Find a product by its name.

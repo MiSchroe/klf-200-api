@@ -8,6 +8,7 @@
 /.vs
 /.nyc_output
 /coverage
+/dist
 /velux-api/TestResults
 /velux-api/.vs
 *.user

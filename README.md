@@ -78,7 +78,7 @@ import { Connection, Products, Product } from "klf-200-api";
     Use either the IP address or the name of *your* interface
     'velux-klf-12ab' is just a placeholder in this example.
 */
-const conn = new Connection('http://velux-klf-12ab');
+const conn = new Connection('velux-klf-12ab');
 
 /*
     Login with *your* password
@@ -91,7 +91,7 @@ try {
     const myProducts = await Products.createProductsAsync(conn);
 
     // Find the window by it's name:
-    const myKitchenWindow = myProducts.findByName("Windows kitchen");
+    const myKitchenWindow = myProducts.findByName("Window kitchen");
     if (myKitchenWindow) {
         await myKitchenWindow.setTargetPositionAsync(0.5);
     } else {
@@ -112,7 +112,7 @@ const myFingerprint = "12:34:56:78:9a:bc:de:f0:12:34:56:78:9a:bc:de:f0:12:34:56:
 const myCA = readFileSync("velux-cert.pem");
 
 // Connect using your own certificate data:
-const conn = new Connection('http://velux-klf-12ab', myCA, myFingerprint);
+const conn = new Connection('velux-klf-12ab', myCA, myFingerprint);
 ...
 ````
 

@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const PropertyChangedEvent_1 = require("./utils/PropertyChangedEvent");
 const GW_GET_GROUP_INFORMATION_NTF_1 = require("./KLF200-API/GW_GET_GROUP_INFORMATION_NTF");
@@ -172,37 +164,35 @@ class Group extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Group
      */
-    changeGroupAsync(order, placement, name, velocity, nodeVariation, nodes) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const changedProperties = [];
-                if (order !== this._order)
-                    changedProperties.push("Order");
-                if (placement !== this._placement)
-                    changedProperties.push("Placement");
-                if (name !== this._name)
-                    changedProperties.push("Name");
-                if (velocity !== this._velocity)
-                    changedProperties.push("Velocity");
-                if (nodeVariation !== this._nodeVariation)
-                    changedProperties.push("NodeVariation");
-                if (!UtilityFunctions_1.isArrayEqual(nodes, this.Nodes))
-                    changedProperties.push("Nodes");
-                // If there are no changes in the properties return directly with a resolved promise.
-                if (changedProperties.length === 0)
-                    return Promise.resolve();
-                const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_SET_GROUP_INFORMATION_REQ_1.GW_SET_GROUP_INFORMATION_REQ(this.GroupID, this._revision, name, this._groupType, nodes, order, placement, velocity, nodeVariation));
-                if (confirmationFrame.Status === common_1.GW_COMMON_STATUS.SUCCESS) {
-                    return Promise.resolve();
-                }
-                else {
-                    return Promise.reject(new Error(confirmationFrame.getError()));
-                }
+    async changeGroupAsync(order, placement, name, velocity, nodeVariation, nodes) {
+        try {
+            const changedProperties = [];
+            if (order !== this._order)
+                changedProperties.push("Order");
+            if (placement !== this._placement)
+                changedProperties.push("Placement");
+            if (name !== this._name)
+                changedProperties.push("Name");
+            if (velocity !== this._velocity)
+                changedProperties.push("Velocity");
+            if (nodeVariation !== this._nodeVariation)
+                changedProperties.push("NodeVariation");
+            if (!UtilityFunctions_1.isArrayEqual(nodes, this.Nodes))
+                changedProperties.push("Nodes");
+            // If there are no changes in the properties return directly with a resolved promise.
+            if (changedProperties.length === 0)
+                return Promise.resolve();
+            const confirmationFrame = await this.Connection.sendFrameAsync(new GW_SET_GROUP_INFORMATION_REQ_1.GW_SET_GROUP_INFORMATION_REQ(this.GroupID, this._revision, name, this._groupType, nodes, order, placement, velocity, nodeVariation));
+            if (confirmationFrame.Status === common_1.GW_COMMON_STATUS.SUCCESS) {
+                return Promise.resolve();
             }
-            catch (error) {
-                return Promise.reject(error);
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        });
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
     /**
      * Sets a new value for the order number of the group.
@@ -211,10 +201,8 @@ class Group extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Group
      */
-    setOrderAsync(newOrder) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.changeGroupAsync(newOrder, this._placement, this._name, this._velocity, this._nodeVariation, this.Nodes);
-        });
+    async setOrderAsync(newOrder) {
+        return this.changeGroupAsync(newOrder, this._placement, this._name, this._velocity, this._nodeVariation, this.Nodes);
     }
     /**
      * Sets a new value for the placement of the group.
@@ -223,10 +211,8 @@ class Group extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Group
      */
-    setPlacementAsync(newPlacement) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.changeGroupAsync(this._order, newPlacement, this._name, this._velocity, this._nodeVariation, this.Nodes);
-        });
+    async setPlacementAsync(newPlacement) {
+        return this.changeGroupAsync(this._order, newPlacement, this._name, this._velocity, this._nodeVariation, this.Nodes);
     }
     /**
      * Renames the group.
@@ -235,10 +221,8 @@ class Group extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Group
      */
-    setNameAsync(newName) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.changeGroupAsync(this._order, this._placement, newName, this._velocity, this._nodeVariation, this.Nodes);
-        });
+    async setNameAsync(newName) {
+        return this.changeGroupAsync(this._order, this._placement, newName, this._velocity, this._nodeVariation, this.Nodes);
     }
     /**
      * Sets the velocity for the group.
@@ -247,10 +231,8 @@ class Group extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Group
      */
-    setVelocityAsync(newVelocity) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.changeGroupAsync(this._order, this._placement, this._name, newVelocity, this._nodeVariation, this.Nodes);
-        });
+    async setVelocityAsync(newVelocity) {
+        return this.changeGroupAsync(this._order, this._placement, this._name, newVelocity, this._nodeVariation, this.Nodes);
     }
     /**
      * Sets the variation of the group to a new value.
@@ -259,10 +241,8 @@ class Group extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Group
      */
-    setNodeVariationAsync(newNodeVariation) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.changeGroupAsync(this._order, this._placement, this._name, this._velocity, newNodeVariation, this.Nodes);
-        });
+    async setNodeVariationAsync(newNodeVariation) {
+        return this.changeGroupAsync(this._order, this._placement, this._name, this._velocity, newNodeVariation, this.Nodes);
     }
     /**
      * Sets the group to contain the provided list of node IDs in the group.
@@ -271,10 +251,8 @@ class Group extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Group
      */
-    setNodesAsync(newNodes) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.changeGroupAsync(this._order, this._placement, this._name, this._velocity, this._nodeVariation, newNodes);
-        });
+    async setNodesAsync(newNodes) {
+        return this.changeGroupAsync(this._order, this._placement, this._name, this._velocity, this._nodeVariation, newNodes);
     }
     /**
      * Sets the target position for all products of the group as raw value.
@@ -283,21 +261,19 @@ class Group extends PropertyChangedEvent_1.Component {
      * @returns {Promise<number>}
      * @memberof Group
      */
-    setTargetPositionRawAsync(newPositionRaw) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_ACTIVATE_PRODUCTGROUP_REQ_1.GW_ACTIVATE_PRODUCTGROUP_REQ(this.GroupID, newPositionRaw));
-                if (confirmationFrame.Status === GW_COMMAND_1.ActivateProductGroupStatus.OK) {
-                    return confirmationFrame.SessionID;
-                }
-                else {
-                    return Promise.reject(new Error(confirmationFrame.getError()));
-                }
+    async setTargetPositionRawAsync(newPositionRaw) {
+        try {
+            const confirmationFrame = await this.Connection.sendFrameAsync(new GW_ACTIVATE_PRODUCTGROUP_REQ_1.GW_ACTIVATE_PRODUCTGROUP_REQ(this.GroupID, newPositionRaw));
+            if (confirmationFrame.Status === GW_COMMAND_1.ActivateProductGroupStatus.OK) {
+                return confirmationFrame.SessionID;
             }
-            catch (error) {
-                return Promise.reject(error);
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        });
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
     /**
      * Sets the target position for all products of the group
@@ -306,63 +282,61 @@ class Group extends PropertyChangedEvent_1.Component {
      * @returns {Promise<number>}
      * @memberof Group
      */
-    setTargetPositionAsync(newPosition) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                // Get product type from first node ID for conversion
-                const nodeID = this.Nodes[0];
-                // Setup notification to receive notification with actuator type
-                let dispose;
-                const nodeTypeID = new Promise((resolve, reject) => {
-                    try {
-                        let nodeTypeID;
-                        // Register notification handler
-                        dispose = this.Connection.on(frame => {
-                            try {
-                                if (frame instanceof GW_GET_NODE_INFORMATION_NTF_1.GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
-                                    nodeTypeID = frame.ActuatorType;
-                                    if (dispose) {
-                                        dispose.dispose();
-                                    }
-                                    resolve(nodeTypeID);
-                                }
-                            }
-                            catch (error) {
+    async setTargetPositionAsync(newPosition) {
+        try {
+            // Get product type from first node ID for conversion
+            const nodeID = this.Nodes[0];
+            // Setup notification to receive notification with actuator type
+            let dispose;
+            const nodeTypeID = new Promise((resolve, reject) => {
+                try {
+                    let nodeTypeID;
+                    // Register notification handler
+                    dispose = this.Connection.on(frame => {
+                        try {
+                            if (frame instanceof GW_GET_NODE_INFORMATION_NTF_1.GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
+                                nodeTypeID = frame.ActuatorType;
                                 if (dispose) {
                                     dispose.dispose();
                                 }
-                                reject(error);
+                                resolve(nodeTypeID);
                             }
-                        }, [common_1.GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
-                    }
-                    catch (error) {
-                        if (dispose) {
-                            dispose.dispose();
                         }
-                        reject(error);
-                    }
-                });
-                try {
-                    const productInformation = yield this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ_1.GW_GET_NODE_INFORMATION_REQ(nodeID));
-                    if (productInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
-                        if (dispose) {
-                            dispose.dispose();
+                        catch (error) {
+                            if (dispose) {
+                                dispose.dispose();
+                            }
+                            reject(error);
                         }
-                        return Promise.reject(new Error(productInformation.getError()));
-                    }
+                    }, [common_1.GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
                 }
                 catch (error) {
                     if (dispose) {
                         dispose.dispose();
                     }
-                    return Promise.reject(error);
+                    reject(error);
                 }
-                return this.setTargetPositionRawAsync(GW_COMMAND_1.convertPosition(newPosition, yield nodeTypeID));
+            });
+            try {
+                const productInformation = await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ_1.GW_GET_NODE_INFORMATION_REQ(nodeID));
+                if (productInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
+                    if (dispose) {
+                        dispose.dispose();
+                    }
+                    return Promise.reject(new Error(productInformation.getError()));
+                }
             }
             catch (error) {
+                if (dispose) {
+                    dispose.dispose();
+                }
                 return Promise.reject(error);
             }
-        });
+            return this.setTargetPositionRawAsync(GW_COMMAND_1.convertPosition(newPosition, await nodeTypeID));
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
 }
 exports.Group = Group;
@@ -387,50 +361,48 @@ class Groups {
          */
         this.Groups = [];
     }
-    initializeGroupsAsync() {
-        return __awaiter(this, void 0, void 0, function* () {
-            // Setup notification to receive notification with actuator type
-            let dispose;
-            try {
-                const notificationHandler = new Promise((resolve, reject) => {
-                    try {
-                        dispose = this.Connection.on(frame => {
-                            if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF_1.GW_GET_ALL_GROUPS_INFORMATION_NTF || frame instanceof GW_GET_GROUP_INFORMATION_NTF_1.GW_GET_GROUP_INFORMATION_NTF) {
-                                this.Groups[frame.GroupID] = new Group(this.Connection, frame);
-                            }
-                            else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF_1.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
-                                if (dispose) {
-                                    dispose.dispose();
-                                }
-                                this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
-                                resolve();
-                            }
-                        }, [common_1.GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, common_1.GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
-                    }
-                    catch (error) {
-                        if (dispose) {
-                            dispose.dispose();
+    async initializeGroupsAsync() {
+        // Setup notification to receive notification with actuator type
+        let dispose;
+        try {
+            const notificationHandler = new Promise((resolve, reject) => {
+                try {
+                    dispose = this.Connection.on(frame => {
+                        if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF_1.GW_GET_ALL_GROUPS_INFORMATION_NTF || frame instanceof GW_GET_GROUP_INFORMATION_NTF_1.GW_GET_GROUP_INFORMATION_NTF) {
+                            this.Groups[frame.GroupID] = new Group(this.Connection, frame);
                         }
-                        reject(error);
-                    }
-                });
-                const getAllGroupsInformation = yield this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ_1.GW_GET_ALL_GROUPS_INFORMATION_REQ());
-                if (getAllGroupsInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
+                        else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF_1.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
+                            if (dispose) {
+                                dispose.dispose();
+                            }
+                            this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
+                            resolve();
+                        }
+                    }, [common_1.GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF, common_1.GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, common_1.GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
+                }
+                catch (error) {
                     if (dispose) {
                         dispose.dispose();
                     }
-                    return Promise.reject(new Error(getAllGroupsInformation.getError()));
+                    reject(error);
                 }
-                // The notifications will resolve the promise
-                return notificationHandler;
-            }
-            catch (error) {
+            });
+            const getAllGroupsInformation = await this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ_1.GW_GET_ALL_GROUPS_INFORMATION_REQ());
+            if (getAllGroupsInformation.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
                 if (dispose) {
                     dispose.dispose();
                 }
-                return Promise.reject(error);
+                return Promise.reject(new Error(getAllGroupsInformation.getError()));
             }
-        });
+            // The notifications will resolve the promise
+            return notificationHandler;
+        }
+        catch (error) {
+            if (dispose) {
+                dispose.dispose();
+            }
+            return Promise.reject(error);
+        }
     }
     /**
      * Adds a handler that will be called if a new group is added to the KLF-200 interface or a group has been changed.
@@ -498,17 +470,15 @@ class Groups {
      * @returns {Promise<Groups>} Resolves to a new instance of the Groups class.
      * @memberof Groups
      */
-    static createGroupsAsync(Connection) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const result = new Groups(Connection);
-                yield result.initializeGroupsAsync();
-                return result;
-            }
-            catch (error) {
-                return Promise.reject(error);
-            }
-        });
+    static async createGroupsAsync(Connection) {
+        try {
+            const result = new Groups(Connection);
+            await result.initializeGroupsAsync();
+            return result;
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
     /**
      * Finds a group by its name and returns the group object.

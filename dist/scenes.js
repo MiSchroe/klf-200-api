@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./KLF200-API/common");
 const GW_GET_SCENE_LIST_NTF_1 = require("./KLF200-API/GW_GET_SCENE_LIST_NTF");
@@ -75,24 +67,22 @@ class Scene extends PropertyChangedEvent_1.Component {
      * @returns {Promise<number>} Returns the session ID. You can listen for the GW_SESSION_FINISHED_NTF notification to determine when the scene has finished.
      * @memberof Scene
      */
-    runAsync() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_ACTIVATE_SCENE_REQ_1.GW_ACTIVATE_SCENE_REQ(this.SceneID));
-                if (confirmationFrame.Status === GW_SCENES_1.ActivateSceneStatus.OK) {
-                    this._isRunning = true;
-                    this._runningSession = confirmationFrame.SessionID;
-                    this.propertyChanged("IsRunning");
-                    return confirmationFrame.SessionID;
-                }
-                else {
-                    return Promise.reject(new Error(confirmationFrame.getError()));
-                }
+    async runAsync() {
+        try {
+            const confirmationFrame = await this.Connection.sendFrameAsync(new GW_ACTIVATE_SCENE_REQ_1.GW_ACTIVATE_SCENE_REQ(this.SceneID));
+            if (confirmationFrame.Status === GW_SCENES_1.ActivateSceneStatus.OK) {
+                this._isRunning = true;
+                this._runningSession = confirmationFrame.SessionID;
+                this.propertyChanged("IsRunning");
+                return confirmationFrame.SessionID;
             }
-            catch (error) {
-                return Promise.reject(error);
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        });
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
     /**
      * Stops a running scene.
@@ -100,24 +90,22 @@ class Scene extends PropertyChangedEvent_1.Component {
      * @returns {Promise<number>} Returns the session ID.
      * @memberof Scene
      */
-    stopAsync() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_STOP_SCENE_REQ_1.GW_STOP_SCENE_REQ(this.SceneID));
-                if (confirmationFrame.Status === GW_SCENES_1.ActivateSceneStatus.OK) {
-                    this._isRunning = false;
-                    this._runningSession = confirmationFrame.SessionID;
-                    this.propertyChanged("IsRunning");
-                    return confirmationFrame.SessionID;
-                }
-                else {
-                    return Promise.reject(new Error(confirmationFrame.getError()));
-                }
+    async stopAsync() {
+        try {
+            const confirmationFrame = await this.Connection.sendFrameAsync(new GW_STOP_SCENE_REQ_1.GW_STOP_SCENE_REQ(this.SceneID));
+            if (confirmationFrame.Status === GW_SCENES_1.ActivateSceneStatus.OK) {
+                this._isRunning = false;
+                this._runningSession = confirmationFrame.SessionID;
+                this.propertyChanged("IsRunning");
+                return confirmationFrame.SessionID;
             }
-            catch (error) {
-                return Promise.reject(error);
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
             }
-        });
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
     /**
      * Refreshes the Products array.
@@ -127,57 +115,55 @@ class Scene extends PropertyChangedEvent_1.Component {
      * @returns {Promise<void>}
      * @memberof Scene
      */
-    refreshAsync() {
-        return __awaiter(this, void 0, void 0, function* () {
-            // Setup notification to receive notification with actuator type
-            let dispose;
-            try {
-                const tempResult = []; // Store results temporary until finished without error.
-                const notificationHandler = new Promise((resolve, reject) => {
-                    try {
-                        dispose = this.Connection.on(frame => {
-                            if (frame instanceof GW_GET_SCENE_INFORMATION_NTF_1.GW_GET_SCENE_INFORMATION_NTF) {
-                                tempResult.push(...frame.Nodes);
-                                // Check, if last notification message
-                                if (frame.NumberOfRemainingNodes === 0) {
-                                    if (dispose) {
-                                        dispose.dispose();
-                                    }
-                                    // Finished without error -> update Products array
-                                    this.Products.length = 0; // Clear array of products
-                                    this.Products.push(...tempResult);
-                                    this.propertyChanged("Products");
-                                    resolve();
+    async refreshAsync() {
+        // Setup notification to receive notification with actuator type
+        let dispose;
+        try {
+            const tempResult = []; // Store results temporary until finished without error.
+            const notificationHandler = new Promise((resolve, reject) => {
+                try {
+                    dispose = this.Connection.on(frame => {
+                        if (frame instanceof GW_GET_SCENE_INFORMATION_NTF_1.GW_GET_SCENE_INFORMATION_NTF) {
+                            tempResult.push(...frame.Nodes);
+                            // Check, if last notification message
+                            if (frame.NumberOfRemainingNodes === 0) {
+                                if (dispose) {
+                                    dispose.dispose();
                                 }
+                                // Finished without error -> update Products array
+                                this.Products.length = 0; // Clear array of products
+                                this.Products.push(...tempResult);
+                                this.propertyChanged("Products");
+                                resolve();
                             }
-                        }, [common_1.GatewayCommand.GW_GET_SCENE_INFORMATION_NTF]);
-                    }
-                    catch (error) {
-                        if (dispose) {
-                            dispose.dispose();
                         }
-                        reject(error);
-                    }
-                });
-                const confirmationFrame = yield this.Connection.sendFrameAsync(new GW_GET_SCENE_INFORMATION_REQ_1.GW_GET_SCENE_INFORMATION_REQ(this.SceneID));
-                if (confirmationFrame.SceneID === this.SceneID) {
-                    if (confirmationFrame.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
-                        if (dispose) {
-                            dispose.dispose();
-                        }
-                        return Promise.reject(new Error(confirmationFrame.getError()));
-                    }
+                    }, [common_1.GatewayCommand.GW_GET_SCENE_INFORMATION_NTF]);
                 }
-                // The notifications will resolve the promise
-                return notificationHandler;
-            }
-            catch (error) {
-                if (dispose) {
-                    dispose.dispose();
+                catch (error) {
+                    if (dispose) {
+                        dispose.dispose();
+                    }
+                    reject(error);
                 }
-                return Promise.reject(error);
+            });
+            const confirmationFrame = await this.Connection.sendFrameAsync(new GW_GET_SCENE_INFORMATION_REQ_1.GW_GET_SCENE_INFORMATION_REQ(this.SceneID));
+            if (confirmationFrame.SceneID === this.SceneID) {
+                if (confirmationFrame.Status !== common_1.GW_COMMON_STATUS.SUCCESS) {
+                    if (dispose) {
+                        dispose.dispose();
+                    }
+                    return Promise.reject(new Error(confirmationFrame.getError()));
+                }
             }
-        });
+            // The notifications will resolve the promise
+            return notificationHandler;
+        }
+        catch (error) {
+            if (dispose) {
+                dispose.dispose();
+            }
+            return Promise.reject(error);
+        }
     }
     onNotificationHandler(frame) {
         if (frame instanceof GW_SESSION_FINISHED_NTF_1.GW_SESSION_FINISHED_NTF) {
@@ -222,64 +208,60 @@ class Scenes {
      * @returns {Promise<Scenes>} Returns a new Scenes object that is initialized, already.
      * @memberof Scenes
      */
-    static createScenesAsync(Connection) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const result = new Scenes(Connection);
-                yield result.initializeScenesAsync();
-                return result;
-            }
-            catch (error) {
-                return Promise.reject(error);
-            }
-        });
+    static async createScenesAsync(Connection) {
+        try {
+            const result = new Scenes(Connection);
+            await result.initializeScenesAsync();
+            return result;
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
     }
-    initializeScenesAsync() {
-        return __awaiter(this, void 0, void 0, function* () {
-            // Setup notification to receive notification with actuator type
-            let dispose;
-            try {
-                const notificationHandlerSceneList = new Promise((resolve, reject) => {
-                    try {
-                        dispose = this.Connection.on(frame => {
-                            if (frame instanceof GW_GET_SCENE_LIST_NTF_1.GW_GET_SCENE_LIST_NTF) {
-                                frame.Scenes.forEach(scene => this.Scenes[scene.SceneID] = new Scene(this.Connection, scene.SceneID, scene.Name));
-                                if (frame.NumberOfRemainingScenes === 0) {
-                                    if (dispose) {
-                                        dispose.dispose();
-                                    }
-                                    resolve();
+    async initializeScenesAsync() {
+        // Setup notification to receive notification with actuator type
+        let dispose;
+        try {
+            const notificationHandlerSceneList = new Promise((resolve, reject) => {
+                try {
+                    dispose = this.Connection.on(frame => {
+                        if (frame instanceof GW_GET_SCENE_LIST_NTF_1.GW_GET_SCENE_LIST_NTF) {
+                            frame.Scenes.forEach(scene => this.Scenes[scene.SceneID] = new Scene(this.Connection, scene.SceneID, scene.Name));
+                            if (frame.NumberOfRemainingScenes === 0) {
+                                if (dispose) {
+                                    dispose.dispose();
                                 }
+                                resolve();
                             }
-                        }, [common_1.GatewayCommand.GW_GET_SCENE_LIST_NTF]);
-                    }
-                    catch (error) {
-                        if (dispose) {
-                            dispose.dispose();
                         }
-                        reject(error);
-                    }
-                });
-                yield this.Connection.sendFrameAsync(new GW_GET_SCENE_LIST_REQ_1.GW_GET_SCENE_LIST_REQ());
-                // Wait for GW_GET_SCENE_LIST_NTF
-                yield notificationHandlerSceneList;
-                // Get more detailed information for each scene
-                for (const scene of this.Scenes) {
-                    if (typeof scene !== "undefined") {
-                        yield scene.refreshAsync();
-                    }
+                    }, [common_1.GatewayCommand.GW_GET_SCENE_LIST_NTF]);
                 }
-                // Setup notification handler
-                this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
-                return Promise.resolve();
-            }
-            catch (error) {
-                if (dispose) {
-                    dispose.dispose();
+                catch (error) {
+                    if (dispose) {
+                        dispose.dispose();
+                    }
+                    reject(error);
                 }
-                return Promise.reject(error);
+            });
+            await this.Connection.sendFrameAsync(new GW_GET_SCENE_LIST_REQ_1.GW_GET_SCENE_LIST_REQ());
+            // Wait for GW_GET_SCENE_LIST_NTF
+            await notificationHandlerSceneList;
+            // Get more detailed information for each scene
+            for (const scene of this.Scenes) {
+                if (typeof scene !== "undefined") {
+                    await scene.refreshAsync();
+                }
             }
-        });
+            // Setup notification handler
+            this.Connection.on(frame => this.onNotificationHandler(frame), [common_1.GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
+            return Promise.resolve();
+        }
+        catch (error) {
+            if (dispose) {
+                dispose.dispose();
+            }
+            return Promise.reject(error);
+        }
     }
     onNotificationHandler(frame) {
         if (frame instanceof GW_SCENE_INFORMATION_CHANGED_NTF_1.GW_SCENE_INFORMATION_CHANGED_NTF) {

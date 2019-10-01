@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const common_1 = require("./common");
 const TypedEvent_1 = require("../utils/TypedEvent");
@@ -90,20 +82,18 @@ class KLF200SocketProtocol {
     offError(handler) {
         this._onError.off(handler);
     }
-    send(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                this._onDataReceived.emit(data);
-                const frameBuffer = common_1.KLF200Protocol.Decode(common_1.SLIPProtocol.Decode(data));
-                const frame = yield FrameRcvFactory_1.FrameRcvFactory.CreateRcvFrame(frameBuffer);
-                this._onFrameReceived.emit(frame);
-                return Promise.resolve();
-            }
-            catch (e) {
-                this._onError.emit(e);
-                return Promise.resolve();
-            }
-        });
+    async send(data) {
+        try {
+            this._onDataReceived.emit(data);
+            const frameBuffer = common_1.KLF200Protocol.Decode(common_1.SLIPProtocol.Decode(data));
+            const frame = await FrameRcvFactory_1.FrameRcvFactory.CreateRcvFrame(frameBuffer);
+            this._onFrameReceived.emit(frame);
+            return Promise.resolve();
+        }
+        catch (e) {
+            this._onError.emit(e);
+            return Promise.resolve();
+        }
     }
     write(data) {
         this._onDataSent.emit(data);
