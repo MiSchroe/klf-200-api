@@ -8,27 +8,18 @@ trigger:
 
 strategy:
   matrix:
-    linux_node6:
-      imageName: "ubuntu-latest"
-      versionName: "6.x"
     linux_node8:
       imageName: "ubuntu-latest"
       versionName: "8.x"
     linux_node10:
       imageName: "ubuntu-latest"
       versionName: "10.x"
-    mac_node6:
-      imageName: "macos-latest"
-      versionName: "6.x"
     mac_node8:
       imageName: "macos-latest"
       versionName: "8.x"
     mac_node10:
       imageName: "macos-latest"
       versionName: "10.x"
-    windows_node6:
-      imageName: "windows-latest"
-      versionName: "6.x"
     windows_node8:
       imageName: "windows-latest"
       versionName: "8.x"
