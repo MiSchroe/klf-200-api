@@ -5,6 +5,7 @@
 ### Fixes:
 
 * [#12](https://github.com/MiSchroe/klf-200-api/issues/12) Wrong password in the [README.md](README.md)
+* Fix some dependency vulnerabilities
 
 ## 3.0.0 (2019-10-01)
 * Completely reworked to support the official VELUX Socket-API
