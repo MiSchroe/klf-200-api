@@ -81,9 +81,13 @@ import { Connection, Products, Product } from "klf-200-api";
 const conn = new Connection('velux-klf-12ab');
 
 /*
-    Login with *your* password
-    'velux123' is the default password
-    and for security reason you should change it.
+    Login with *your* password.
+    The default password is the same as the WiFi password
+    that is written on back side of the KLF200.
+    For security reason you should change it.
+
+    In the following example we assume
+    that the password is `velux123`.
 */
 await conn.loginAsync('velux123');
 try {
@@ -296,23 +300,14 @@ The following list shows the implemented messages that can be used:
 
 
 ## Changelog
-### 3.0.0
-* Completely reworked to support the official VELUX Socket-API
-* Converted to Typescript
 
-### 2.0.0
-* Removed request header from function returns (no dependency on used
-request library any more)
-* Added basic documentation
-
-### 1.0.0 (2017-07-27)
-* Initial version
+For full details see [CHANGELOG.md](CHANGELOG.md).
 
 ## Licence
 
 MIT License
 
-Copyright (c) 2019 Michael Schroeder
+Copyright (c) 2019-2020 Michael Schroeder
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
