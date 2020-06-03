@@ -183,9 +183,7 @@ export class Connection implements IConnection {
                     new Promise<void>(
                         (resolve) => {
                             // Close socket
-                            (<TLSSocket>this.sckt).once("close", () => {
-                                this.sckt = undefined;
-                            }).end("", resolve);
+                            this.sckt?.end("", resolve);
                         }
                     ), timeout * 1000
                 );
@@ -347,6 +345,12 @@ export class Connection implements IConnection {
                                     reject(err);
                                 }
                             });
+                        this.sckt?.once("close", () => {
+                            // Socket has been closed -> clean up everything
+                            this.stopKeepAlive();
+                            this.klfProtocol = undefined;
+                            this.sckt = undefined;
+                        });
                     }
                 );
             }
