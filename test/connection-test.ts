@@ -69,6 +69,25 @@ describe("connection", function () {
             const conn = new Connection(testHOST);
             expect(conn.loginAsync("velux123", 1)).to.be.rejectedWith(Error).and.notify(done);
         });
+
+        it(`should reconnect without error after the connection is lost.`, async function() {
+            this.slow(100);
+            let isFirstConnect = true;
+            this.mitm.on("connection", function(socket: Socket) {
+                socket.on("data", () => {
+                    socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
+                    if (isFirstConnect) {
+                        isFirstConnect = false;
+                        // Close the socket
+                        socket.destroy();
+                    }
+                });
+            });
+
+            const conn = new Connection(testHOST);
+            await conn.loginAsync("velux123");
+            expect(async () => await conn.loginAsync("velux123")).not.to.throw();
+        });
     });
 
     describe("logoutAsync", function() {
