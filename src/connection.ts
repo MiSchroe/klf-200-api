@@ -335,23 +335,36 @@ export class Connection implements IConnection {
                     (resolve, reject) => {
                         try
                         {
+                            const loginErrorHandler = (error: any) => {
+                                this.sckt = undefined;
+                                reject(error); 
+                            };
+
                             this.sckt = connect(KLF200_PORT, this.host,
-                            {
-                                rejectUnauthorized: true,
-                                ca: [ this.CA ],
-                                checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert)
-                                }, () => {
+                                {
+                                    rejectUnauthorized: true,
+                                    ca: [ this.CA ],
+                                    checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert)
+                                },
+                                () => {
                                     // Callback on event "secureConnect":
                                     // Resolve promise if connection is authorized, otherwise reject it.
-                                    if ((<TLSSocket>this.sckt).authorized) {
+                                    if (this.sckt?.authorized) {
+                                        // Remove login error handler
+                                        this.sckt?.off("error", loginErrorHandler);
                                         resolve();
                                     }
                                     else {
-                                        const err = (<TLSSocket>this.sckt).authorizationError;
+                                        const err = this.sckt?.authorizationError;
                                         this.sckt = undefined;
                                         reject(err);
                                     }
-                            });
+                                }
+                            );
+                            
+                            // Add error handler to reject the promise on login problems 
+                            this.sckt?.on("error", loginErrorHandler);
+
                             this.sckt?.once("close", () => {
                                 // Socket has been closed -> clean up everything
                                 this.stopKeepAlive();
