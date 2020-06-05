@@ -181,9 +181,14 @@ export class Connection implements IConnection {
                 }
                 return promiseTimeout(
                     new Promise<void>(
-                        (resolve) => {
-                            // Close socket
-                            this.sckt?.end("", resolve);
+                        (resolve, reject) => {
+                            try
+                            {
+                                // Close socket
+                                this.sckt?.end("", resolve);
+                            } catch (error) {
+                                reject(error);
+                            }
                         }
                     ), timeout * 1000
                 );
@@ -328,29 +333,47 @@ export class Connection implements IConnection {
             if (this.sckt === undefined) {
                 return new Promise<void>(
                     (resolve, reject) => {
-                        this.sckt = connect(KLF200_PORT, this.host,
-                            {
-                            rejectUnauthorized: true,
-                            ca: [ this.CA ],
-                            checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert)
-                            }, () => {
-                                // Callback on event "secureConnect":
-                                // Resolve promise if connection is authorized, otherwise reject it.
-                                if ((<TLSSocket>this.sckt).authorized) {
-                                    resolve();
+                        try
+                        {
+                            const loginErrorHandler = (error: any) => {
+                                this.sckt = undefined;
+                                reject(error); 
+                            };
+
+                            this.sckt = connect(KLF200_PORT, this.host,
+                                {
+                                    rejectUnauthorized: true,
+                                    ca: [ this.CA ],
+                                    checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert)
+                                },
+                                () => {
+                                    // Callback on event "secureConnect":
+                                    // Resolve promise if connection is authorized, otherwise reject it.
+                                    if (this.sckt?.authorized) {
+                                        // Remove login error handler
+                                        this.sckt?.off("error", loginErrorHandler);
+                                        resolve();
+                                    }
+                                    else {
+                                        const err = this.sckt?.authorizationError;
+                                        this.sckt = undefined;
+                                        reject(err);
+                                    }
                                 }
-                                else {
-                                    const err = (<TLSSocket>this.sckt).authorizationError;
-                                    this.sckt = undefined;
-                                    reject(err);
-                                }
+                            );
+                            
+                            // Add error handler to reject the promise on login problems 
+                            this.sckt?.on("error", loginErrorHandler);
+
+                            this.sckt?.once("close", () => {
+                                // Socket has been closed -> clean up everything
+                                this.stopKeepAlive();
+                                this.klfProtocol = undefined;
+                                this.sckt = undefined;
                             });
-                        this.sckt?.once("close", () => {
-                            // Socket has been closed -> clean up everything
-                            this.stopKeepAlive();
-                            this.klfProtocol = undefined;
-                            this.sckt = undefined;
-                        });
+                        } catch (error) {
+                            reject(error);
+                        }
                     }
                 );
             }
