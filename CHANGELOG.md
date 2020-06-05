@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.0.2 (2020-06-05)
+
+### Fixes:
+
+* [#22](https://github.com/MiSchroe/klf-200-api/issues/22) Uncaught exception in loginAsync
+
 ## 3.0.1 (2020-06-04)
 
 ### Fixes:
