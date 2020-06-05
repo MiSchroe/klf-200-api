@@ -56,7 +56,8 @@
   "scripts": {
     "build": "tsc",
     "test": "nyc mocha",
-    "document": "typedoc"
+    "document": "typedoc",
+    "prepare": "npm run build"
   },
   "nyc": {
     "include": [
