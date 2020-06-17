@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 import Mitm from "mitm";
 import { Socket } from "net";
@@ -89,10 +89,10 @@ describe("connection", function () {
             
             // Wait for the close event of the socket to be emitted
             await new Promise((resolve) => {
-                setImmediate(() => resolve());
+                setTimeout(() => resolve(), 0);
             });
 
-            expect(async () => await conn.loginAsync("velux123")).not.to.throw();
+            expect(conn.loginAsync("velux123")).not.to.be.rejected;
         });
     });
 
