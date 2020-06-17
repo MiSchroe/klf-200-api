@@ -8,24 +8,33 @@ trigger:
 
 strategy:
   matrix:
-    linux_node8:
-      imageName: "ubuntu-latest"
-      versionName: "8.x"
     linux_node10:
       imageName: "ubuntu-latest"
       versionName: "10.x"
-    mac_node8:
-      imageName: "macos-latest"
-      versionName: "8.x"
+    linux_node12:
+      imageName: "ubuntu-latest"
+      versionName: "12.x"
+    linux_node14:
+      imageName: "ubuntu-latest"
+      versionName: "14.x"
     mac_node10:
       imageName: "macos-latest"
       versionName: "10.x"
-    windows_node8:
-      imageName: "windows-latest"
-      versionName: "8.x"
+    mac_node12:
+      imageName: "macos-latest"
+      versionName: "12.x"
+    mac_node14:
+      imageName: "macos-latest"
+      versionName: "14.x"
     windows_node10:
       imageName: "windows-latest"
       versionName: "10.x"
+    windows_node12:
+      imageName: "windows-latest"
+      versionName: "12.x"
+    windows_node14:
+      imageName: "windows-latest"
+      versionName: "14.x"
   maxParallel: 10
 
 pool:
