@@ -40,6 +40,8 @@ describe("KLF200-API", function() {
                     console.log("Socket server stopped.");
                     done();
                 });
+            } else {
+                done();
             }
         });
 

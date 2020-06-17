@@ -20,12 +20,15 @@ const testHOST = 'velux1234';
 
 describe("connection", function () {
     this.timeout(10000);
-    this.beforeEach(function() { this.mitm = Mitm(); });
-    this.afterEach(function() { this.mitm.disable(); });
+
+    let mitmInstance: any;
+
+    this.beforeEach(function() { mitmInstance = Mitm(); });
+    this.afterEach(function() { mitmInstance.disable(); });
 
     describe("loginAsync", function() {
         it("should succeed with correct passowrd.", function(done) {
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                 });
@@ -36,7 +39,7 @@ describe("connection", function () {
         });
 
         it("should throw an error with incorrect passowrd.", function(done) {
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x01]));
                 });
@@ -47,7 +50,7 @@ describe("connection", function () {
         });
 
         it("should throw an error on GW_ERROR_NTF.", function(done) {
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x00, 0x00, 0x0c]));
                 });
@@ -58,7 +61,7 @@ describe("connection", function () {
         });
 
         it("should throw an error after timeout.", function(done) {
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     setTimeout(function() {
                         socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
@@ -71,10 +74,12 @@ describe("connection", function () {
         });
 
         it(`should reconnect without error after the connection is lost.`, async function() {
-            this.slow(100);
+            this.slow(200);
             let isFirstConnect = true;
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
+                console.log('1');
                 socket.on("data", () => {
+                    console.log('2');
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                     if (isFirstConnect) {
                         isFirstConnect = false;
@@ -86,13 +91,37 @@ describe("connection", function () {
 
             const conn = new Connection(testHOST);
             await conn.loginAsync("velux123");
-            
+
+            console.log('3');
             // Wait for the close event of the socket to be emitted
             await new Promise((resolve) => {
-                setImmediate(() => resolve());
+                setTimeout(resolve, 0);
             });
 
-            await expect(conn.loginAsync("velux123")).not.to.be.rejectedWith(Error);
+            console.log('4');
+            // Check, that KLF200Protocol is undefined
+            expect(conn.KLF200SocketProtocol).to.be.undefined;
+
+            console.log('5');
+            // Reset mitm
+            mitmInstance.disable();
+            mitmInstance = Mitm();
+            mitmInstance.on("connection", function(socket: Socket) {
+                console.log('6');
+                socket.on("data", () => {
+                    console.log('7');
+                    socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
+                    if (isFirstConnect) {
+                        isFirstConnect = false;
+                        // Close the socket
+                        socket.destroy();
+                    }
+                });
+            });
+
+            console.log('8');
+            await expect(conn.loginAsync("velux123")).to.be.fulfilled;
+            console.log('9');
         });
     });
 
@@ -103,7 +132,7 @@ describe("connection", function () {
         });
 
         it("should fulfill if logged in.", async function() {
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                 });
@@ -118,7 +147,7 @@ describe("connection", function () {
 
     describe("sendFrameAsync", function() {
         it("should return the corresponding confirmation.", function(done) {
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                 });
@@ -134,7 +163,7 @@ describe("connection", function () {
         it("should timeout on missing confirmation.", function(done) {
             this.timeout(2000);
             let isFirstData = true;
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     if (isFirstData) {
                         socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
@@ -153,7 +182,7 @@ describe("connection", function () {
         it("should reject on error frame.", function(done) {
             this.timeout(2000);
             let isFirstData = true;
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     if (isFirstData) {
                         socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
@@ -175,7 +204,7 @@ describe("connection", function () {
         it("should ignore wrong confirmation.", function(done) {
             this.timeout(2000);
             let isFirstData = true;
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     if (isFirstData) {
                         socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
@@ -198,7 +227,7 @@ describe("connection", function () {
 
     describe("KLF200SocketProtocol", function() {
         it("should get the protocol after login.", async function() {
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                 });
@@ -218,7 +247,7 @@ describe("connection", function () {
     describe("on", function() {
         it("should receive a frame in the registered event handler", async function() {
             let s: Socket | undefined;
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                 });
@@ -245,7 +274,7 @@ describe("connection", function () {
 
         it("should receive a frame in the filtered registered event handler on match", async function() {
             let s: Socket | undefined;
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                 });
@@ -272,7 +301,7 @@ describe("connection", function () {
 
         it("shouldn't receive a frame in the filtered registered event handler on no match", async function() {
             let s: Socket | undefined;
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
                 });
@@ -316,7 +345,7 @@ describe("connection", function () {
 
             const sentDataSpy = sinon.spy();
 
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", (d) => {
                     sentDataSpy([...d.values()]);
                     socket.write(dataStub());
@@ -360,7 +389,7 @@ describe("connection", function () {
 
             const sentDataSpy = sinon.spy();
 
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", (d) => {
                     sentDataSpy([...d.values()]);
                     socket.write(dataStub());
@@ -423,7 +452,7 @@ describe("connection", function () {
 
             const sentDataSpy = sinon.spy();
 
-            this.mitm.on("connection", function(socket: Socket) {
+            mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", (d) => {
                     sentDataSpy([...d.values()]);
                     socket.write(dataStub());
