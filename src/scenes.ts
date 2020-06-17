@@ -259,10 +259,18 @@ export class Scenes {
                     reject(error);
                 }
             });
-            await this.Connection.sendFrameAsync(new GW_GET_SCENE_LIST_REQ());
+            const getSceneListConfirmation = await this.Connection.sendFrameAsync(new GW_GET_SCENE_LIST_REQ()) as GW_GET_SCENE_LIST_CFM;
 
-            // Wait for GW_GET_SCENE_LIST_NTF
-            await notificationHandlerSceneList;
+            // Wait for GW_GET_SCENE_LIST_NTF, but only if there are scenes defined
+            if (getSceneListConfirmation.NumberOfScenes > 0)
+            {
+                await notificationHandlerSceneList;
+            } else {
+                // Otherwise dispose the event handler, because the won't be any events
+                if (dispose) {
+                    dispose.dispose();
+                }
+            }
 
             // Get more detailed information for each scene
             for (const scene of this.Scenes) {
