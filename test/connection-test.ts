@@ -86,6 +86,12 @@ describe("connection", function () {
 
             const conn = new Connection(testHOST);
             await conn.loginAsync("velux123");
+            
+            // Wait for the close event of the socket to be emitted
+            await new Promise((resolve) => {
+                setImmediate(() => resolve());
+            });
+
             expect(async () => await conn.loginAsync("velux123")).not.to.throw();
         });
     });
