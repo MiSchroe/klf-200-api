@@ -61,6 +61,7 @@ describe("connection", function () {
         });
 
         it("should throw an error after timeout.", function(done) {
+            this.slow(2000);
             mitmInstance.on("connection", function(socket: Socket) {
                 socket.on("data", () => {
                     setTimeout(function() {
@@ -74,7 +75,7 @@ describe("connection", function () {
         });
 
         it(`should reconnect without error after the connection is lost.`, async function() {
-            this.slow(200);
+            this.slow(2000);
             let isFirstConnect = true;
             mitmInstance.on("connection", function(socket: Socket) {
                 console.log('1');
@@ -95,7 +96,7 @@ describe("connection", function () {
             console.log('3');
             // Wait for the close event of the socket to be emitted
             await new Promise((resolve) => {
-                setTimeout(resolve, 0);
+                setTimeout(resolve, 100);
             });
 
             console.log('4');
