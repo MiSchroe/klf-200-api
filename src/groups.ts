@@ -430,8 +430,14 @@ export class Groups {
                 return Promise.reject(new Error(getAllGroupsInformation.getError()));
             }
 
-            // The notifications will resolve the promise
-            return notificationHandler;
+            // Only wait for notifications if there are groups defined
+            if (getAllGroupsInformation.NumberOfGroups > 0) {
+                await notificationHandler;
+            } else {
+                if (dispose) {
+                    dispose.dispose();
+                }
+            }
         } catch (error) {
             if (dispose) {
                 dispose.dispose();

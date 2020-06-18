@@ -32,6 +32,8 @@ describe("groups", function() {
         // Frames for groups list
         const dataAllNodes = Buffer.from([0x05, 0x02, 0x2a, 0x00, 0x0e]);
         const dataAllNodesCfm = new GW_GET_ALL_GROUPS_INFORMATION_CFM(dataAllNodes);
+        const dataAllNodesEmptyGroups = Buffer.from([0x05, 0x02, 0x2a, 0x00, 0x00]);
+        const dataAllNodesCfmEmptyGroups = new GW_GET_ALL_GROUPS_INFORMATION_CFM(dataAllNodesEmptyGroups);
 
         const dataNodes = [
             Buffer.from([0x66, 0x02, 0x2b, 0x32, 0x00, 0x00, 0x00, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x53, 0xc3, 0xbc, 0x64, 0x65, 0x6e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
@@ -48,6 +50,10 @@ describe("groups", function() {
             dataAllNodesCfm
         ];
 
+        const receivedFramesEmptyGroups = [
+            dataAllNodesCfmEmptyGroups
+        ];
+
         // A function simplifes the test setup for regular group tests
         const createRegularGroups = async function(): Promise<Groups> {
             const conn = new MockConnection(receivedFrames);
@@ -61,6 +67,13 @@ describe("groups", function() {
             return await promResult;
         };
 
+        // A function simplifes the test setup for empty group tests
+        const createEmptyGroups = async function(): Promise<Groups> {
+            const conn = new MockConnection(receivedFramesEmptyGroups);
+            const promResult = Groups.createGroupsAsync(conn);
+            return await promResult;
+        };
+
         describe("creategroupsAsync", function() {
             it("should create without error with 2 groups.", async function() {
                 const result = await createRegularGroups();
@@ -71,6 +84,12 @@ describe("groups", function() {
             it("should throw an error on invalid frames.", async function() {
                 const conn = new MockConnection([]);
                 return expect(Groups.createGroupsAsync(conn)).to.rejectedWith(Error);
+            });
+
+            it("should create without error without groups.", async function() {
+                const result = await createEmptyGroups();
+                expect(result).to.be.instanceOf(Groups);
+                expect(result.Groups.reduce((accumulator, current) => {return accumulator + (typeof current === "undefined" ? 0 : 1)}, 0)).to.be.equal(0);
             });
         });
         
