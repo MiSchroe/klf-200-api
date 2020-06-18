@@ -787,7 +787,15 @@ export class Products {
                 return Promise.reject(new Error(getAllNodesInformation.getError()));
             }
 
-            return onNotificationHandler;
+            // Wait for nodes information notifications, but only, if there are nodes
+            if (getAllNodesInformation.NumberOfNode > 0) {
+                await onNotificationHandler;
+            } else {
+                // Otherwise, dispose the notification handler
+                if (dispose) {
+                    dispose.dispose();
+                }
+            }
         } catch (error) {
             if (dispose) {
                 dispose.dispose();
