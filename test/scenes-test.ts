@@ -77,6 +77,7 @@ describe("scenes", function() {
             0
         ]);
         const dataScenesListCfm = Buffer.from([0x06, 0x04, 0x0D, 4]);
+        const dataScenesListCfmForEmptyScenes = Buffer.from([0x06, 0x04, 0x0D, 0]);
 
         // Frames for scenes detail data
         const dataScene1Details = Buffer.from([78, 
@@ -195,6 +196,10 @@ describe("scenes", function() {
             new GW_GET_SCENE_INFORMATION_CFM(dataScene4DetailsCfm)
         ];
 
+        const receivedFramesForEmptyScenes = [
+            new GW_GET_SCENE_LIST_CFM(dataScenesListCfmForEmptyScenes)
+        ];
+
         describe("createScenesAsync", async function() {
             it("should create without error with 4 scenes.", async function() {
                 const conn = new MockConnection(receivedFrames);
@@ -215,6 +220,13 @@ describe("scenes", function() {
             it("should throw an error on invalid frames.", async function() {
                 const conn = new MockConnection([]);
                 return expect(Scenes.createScenesAsync(conn)).to.rejectedWith(Error);
+            });
+
+            it("should create without error with no scenes.", async function() {
+                const conn = new MockConnection(receivedFramesForEmptyScenes);
+                const result = await Scenes.createScenesAsync(conn);
+                expect(result).to.be.instanceOf(Scenes);
+                expect(result.Scenes.length).to.be.equal(0, "Number of scenes wrong.");
             });
         });
         
