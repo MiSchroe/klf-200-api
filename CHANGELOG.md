@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.0.3 (2020-07-24)
+
+### Fixes:
+
+* [[#21](https://github.com/MiSchroe/klf-200-api/issues/21)] Fix GW_GET_LIMITATION_STATUS_REQ
+
 ## 3.0.2 (2020-06-05)
 
 ### Fixes:
