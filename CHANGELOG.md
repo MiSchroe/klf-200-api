@@ -1,10 +1,16 @@
 # CHANGELOG
 
-## 3.0.3 (2020-07-24)
+## 3.0.4 (2020-07-24)
 
 ### Fixes:
 
 * [[#21](https://github.com/MiSchroe/klf-200-api/issues/21)] Fix GW_GET_LIMITATION_STATUS_REQ
+
+## 3.0.3 (2020-06-19)
+
+### Fixes:
+
+* [[#25](https://github.com/MiSchroe/klf-200-api/issues/25)] Blocked execution on reading scenes, products or groups if the resulting list would have been empty
 
 ## 3.0.2 (2020-06-05)
 
