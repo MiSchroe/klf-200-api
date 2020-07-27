@@ -27,8 +27,10 @@ describe("KLF200-API", function() {
                 0,  // DEFAULT
                 // Node Type / Sub type
                 0x01, 0x01,
+                // Product Group
+                0,
                 // Product Type
-                0, 41,
+                41,
                 // Node Variation
                 2,  // KIP
                 // Power Mode
@@ -102,6 +104,11 @@ describe("KLF200-API", function() {
             it("should return the node sub type", function() {
                 const result = new GW_GET_ALL_NODES_INFORMATION_NTF(data);
                 expect(result.ActuatorSubType).to.equal(1);
+            });
+
+            it("should return the product group", function() {
+                const result = new GW_GET_ALL_NODES_INFORMATION_NTF(data);
+                expect(result.ProductGroup).to.equal(0);
             });
 
             it("should return the product type", function() {
