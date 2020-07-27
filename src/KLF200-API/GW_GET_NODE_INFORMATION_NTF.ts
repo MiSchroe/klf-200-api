@@ -11,6 +11,7 @@ export class GW_GET_NODE_INFORMATION_NTF extends GW_FRAME_NTF {
     public readonly Velocity: Velocity;
     public readonly ActuatorType: ActuatorType;
     public readonly ActuatorSubType: number;
+    public readonly ProductGroup: number;
     public readonly ProductType: number;
     public readonly NodeVariation: NodeVariation;
     public readonly PowerSaveMode: PowerSaveMode;
@@ -37,7 +38,8 @@ export class GW_GET_NODE_INFORMATION_NTF extends GW_FRAME_NTF {
         const actuatorTypes = splitActuatorType(this.Data.readUInt16BE(69));
         this.ActuatorType = actuatorTypes.ActuatorType;
         this.ActuatorSubType = actuatorTypes.ActuatorSubType;
-        this.ProductType = this.Data.readUInt16BE(71);
+        this.ProductGroup = this.Data.readUInt8(71);
+        this.ProductType = this.Data.readUInt8(72);
         this.NodeVariation = this.Data.readUInt8(73);
         this.PowerSaveMode = this.Data.readUInt8(74);
         this.SerialNumber = this.Data.slice(75, 83);
