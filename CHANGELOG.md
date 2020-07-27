@@ -4,7 +4,7 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
-## __WORK IN PROGRESS__
+## 3.0.4 (2020-07-27)
 
 ### Fixes:
 
