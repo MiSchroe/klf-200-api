@@ -1,6 +1,6 @@
 {
   "name": "klf-200-api",
-  "version": "3.0.4",
+  "version": "3.0.3",
   "description": "This module provides a wrapper to the socket API of a Velux KLF-200 interface. You will need at least firmware 0.2.0.0.71 on your KLF interface for this library to work.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,6 +12,7 @@
     "promise-timeout": "^1.3.0"
   },
   "devDependencies": {
+    "@alcalzone/release-script": "^1.6.0",
     "@types/chai": "^4.2.11",
     "@types/chai-as-promised": "^7.1.2",
     "@types/chai-datetime": "0.0.33",
@@ -32,7 +33,6 @@
     "eslint-config-defaults": "^9.0.0",
     "eslint-plugin-react": "^7.20.0",
     "gulp": "^4.0.2",
-    "gulp-release-it": "^2.1.0",
     "gulp-typescript": "^5.0.1",
     "gulp-uglify": "^3.0.2",
     "istanbul": "^0.4.5",
@@ -56,6 +56,7 @@
   "scripts": {
     "build": "tsc",
     "test": "nyc mocha",
+    "release": "release-script",
     "document": "typedoc"
   },
   "nyc": {
@@ -82,6 +83,8 @@
   },
   "keywords": [
     "klf-200",
+    "klf200",
+    "VELUX",
     "IoT"
   ],
   "license": "MIT",
