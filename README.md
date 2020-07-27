@@ -238,7 +238,7 @@ The following list shows the implemented messages that can be used:
 - [x] GW_WINK_SEND_NTF                           
 - [x] GW_SET_LIMITATION_REQ                      
 - [x] GW_SET_LIMITATION_CFM                      
-- [x] ~~GW_GET_LIMITATION_STATUS_REQ~~ \(this one throws invalid frame error\)
+- [x] GW_GET_LIMITATION_STATUS_REQ
 - [x] GW_GET_LIMITATION_STATUS_CFM               
 - [x] GW_LIMITATION_STATUS_NTF                   
 - [x] GW_MODE_SEND_REQ                           
