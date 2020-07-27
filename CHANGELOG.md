@@ -8,14 +8,15 @@
 
 ### Fixes:
 
-* [[#21](https://github.com/MiSchroe/klf-200-api/issues/21)] Fix GW_GET_LIMITATION_STATUS_REQ
+* [#20](https://github.com/MiSchroe/klf-200-api/issues/20) Fix GW_GET_NODE_INFORMATION_NTF and GW_GET_ALL_NODES_INFORMATION_NTF
+* [#21](https://github.com/MiSchroe/klf-200-api/issues/21) Fix GW_GET_LIMITATION_STATUS_REQ
 * Fix security audit dependencies
 
 ## 3.0.3 (2020-06-19)
 
 ### Fixes:
 
-* [[#25](https://github.com/MiSchroe/klf-200-api/issues/25)] Blocked execution on reading scenes, products or groups if the resulting list would have been empty
+* [#25](https://github.com/MiSchroe/klf-200-api/issues/25) Blocked execution on reading scenes, products or groups if the resulting list would have been empty
 
 ## 3.0.2 (2020-06-05)
 
