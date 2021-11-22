@@ -7,7 +7,7 @@
 ## __WORK IN PROGRESS__
 
 ### Fixes:
-* Fix security audit dependencies ([#32](https://github.com/MiSchroe/klf-200-api/issues/32), [#37](https://github.com/MiSchroe/klf-200-api/issues/37))
+* Fix security audit dependencies ([#32](https://github.com/MiSchroe/klf-200-api/issues/32), [#35](https://github.com/MiSchroe/klf-200-api/issues/35), [#37](https://github.com/MiSchroe/klf-200-api/issues/37))
 
 ## 3.0.4 (2020-07-27)
 
