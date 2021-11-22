@@ -4,6 +4,11 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
+## __WORK IN PROGRESS__
+
+### Fixes:
+* Fix security audit dependencies ([#32](https://github.com/MiSchroe/klf-200-api/issues/32), [#37](https://github.com/MiSchroe/klf-200-api/issues/37))
+
 ## 3.0.4 (2020-07-27)
 
 ### Fixes:
