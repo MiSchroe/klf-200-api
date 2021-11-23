@@ -116,7 +116,7 @@ export class KLF200SocketProtocol {
             this._onFrameReceived.emit(frame);
             return Promise.resolve();
         } catch (e) {
-            this._onError.emit(e);
+            this._onError.emit(e as Error);
             return Promise.resolve();
         }
     }
