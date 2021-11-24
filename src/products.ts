@@ -602,6 +602,16 @@ export class Product extends Component {
         }
     }
 
+    /**
+     * Refresh the data of this product and read the attributes from the gateway.
+     * 
+     * You can use this method to refresh the state of the product in case
+     * that you have missed changes, e.g. a simple remote control may change
+     * the state of the product and you won't receive an event for it.
+     * 
+     * @returns {Promise<void>}
+     * @memberof Product
+     */
     public async refreshAsync(): Promise<void> {
         try {
             const confirmationFrame = <GW_GET_NODE_INFORMATION_CFM> await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(this.NodeID));
