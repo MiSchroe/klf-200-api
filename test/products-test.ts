@@ -639,6 +639,41 @@ describe("products", function() {
                 });
             });
 
+            describe("refreshAsync", function() {
+                it("should send a command request", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x01, 0x00, 0x00]);
+                    const dataCfm = new GW_GET_NODE_INFORMATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = product.refreshAsync();
+
+                    return expect(result).to.be.fulfilled;
+                });
+
+                it("should reject on error status", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x01, 0x01, 0x00]);
+                    const dataCfm = new GW_GET_NODE_INFORMATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = product.refreshAsync();
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+
+                it("should reject on error frame", async function() {
+                    // Mock request
+                    conn.valueToReturn.push(dataErrorNtf);
+
+                    const result = product.refreshAsync();
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
+
             describe("onNotificationHandler", function() {
                 let propertyChangedSpy: SinonSpy<PropertyChangedEvent[]>;
 
@@ -891,6 +926,17 @@ describe("products", function() {
                         conn.sendNotification(dataNtf, []);
     
                         expect(propertyChangedSpy).not.to.be.called;
+                    });
+                });
+
+                describe("GW_GET_NODE_INFORMATION_NTF", function() {
+                    it("should send notifications for Name only", function() {
+                        const data = Buffer.from([0x7f, 0x02, 0x10, 0x00, 0x00, 0x00, 0x01, 0x47, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0xd5, 0x07, 0x00, 0x01, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0xc8, 0x00, 0xc8, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00, 0x4f, 0x00, 0x3f, 0xf3, 0x01, 0xd8, 0x03, 0xb2, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "Name").to.be.calledWith(sinon.match({o: product, propertyName: "Name", propertyValue: "Genster Badezimmer"}));
                     });
                 });
             });

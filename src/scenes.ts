@@ -135,7 +135,7 @@ export class Scene extends Component {
             const notificationHandler = new Promise<void>((resolve, reject) => {
                 try {
                     dispose = this.Connection.on(frame => {
-                        if (frame instanceof GW_GET_SCENE_INFORMATION_NTF) {
+                        if (frame instanceof GW_GET_SCENE_INFORMATION_NTF && frame.SceneID === this.SceneID) {
                             tempResult.push(...frame.Nodes);
                             // Check, if last notification message
                             if (frame.NumberOfRemainingNodes === 0) {
@@ -147,6 +147,11 @@ export class Scene extends Component {
                                 this.Products.length = 0;   // Clear array of products
                                 this.Products.push(...tempResult);
                                 this.propertyChanged("Products");
+
+                                if (frame.Name !== this._sceneName) {
+                                    this._sceneName = frame.Name;
+                                    this.propertyChanged("SceneName");
+                                }
                                 resolve();
                             }
                         }

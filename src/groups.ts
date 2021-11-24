@@ -19,6 +19,8 @@ import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATIO
 import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
 import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
 import { GW_GET_ALL_GROUPS_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_CFM";
+import { GW_GET_GROUP_INFORMATION_CFM } from "./KLF200-API/GW_GET_GROUP_INFORMATION_CFM";
+import { GW_GET_GROUP_INFORMATION_REQ } from "./KLF200-API/GW_GET_GROUP_INFORMATION_REQ";
 
 "use strict";
 
@@ -56,7 +58,10 @@ export class Group extends Component {
      * @type {number[]}
      * @memberof Group
      */
-    public readonly Nodes: number[] = [];
+    private readonly _Nodes: number[] = [];
+    public get Nodes(): number[] {
+        return this._Nodes;
+    }
     private _revision: number;
 
     /**
@@ -79,6 +84,10 @@ export class Group extends Component {
         this._groupType = frame.GroupType;
         this.Nodes.push(...frame.Nodes);
         this._revision = frame.Revision;
+
+        this.Connection.on(frame => this.onNotificationHandler(frame), [
+            GatewayCommand.GW_GET_GROUP_INFORMATION_NTF
+        ]);
     }
 
     /**
@@ -369,6 +378,76 @@ export class Group extends Component {
             return this.setTargetPositionRawAsync(convertPosition(newPosition, await nodeTypeID));
         } catch (error) {
             return Promise.reject(error);
+        }
+    }
+
+    /**
+     * Refresh the data of this group and read the attributes from the gateway.
+     * 
+     * You can use this method to refresh the state of the group in case
+     * that you have missed changes, e.g. a simple remote control may change
+     * the state of the group and you won't receive an event for it.
+     * 
+     * @returns {Promise<void>}
+     * @memberof Group
+     */
+     public async refreshAsync(): Promise<void> {
+        try {
+            const confirmationFrame = <GW_GET_GROUP_INFORMATION_CFM> await this.Connection.sendFrameAsync(new GW_GET_GROUP_INFORMATION_REQ(this.GroupID));
+            if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
+                return Promise.resolve();
+            }
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
+            }
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
+
+    private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+        if (typeof this === "undefined")
+            return;
+
+        if (frame instanceof GW_GET_GROUP_INFORMATION_NTF) {
+            this.onGetGroupInformation(frame);
+        }
+    }
+
+    private onGetGroupInformation(frame: GW_GET_GROUP_INFORMATION_NTF): void {
+        if (frame.GroupID === this.GroupID) {
+            if (frame.Order !== this._order) {
+                this._order = frame.Order;
+                this.propertyChanged("Order");
+            }
+            if (frame.Placement !== this._placement) {
+                this._placement = frame.Placement;
+                this.propertyChanged("Placement");
+            }
+            if (frame.Name !== this._name) {
+                this._name = frame.Name;
+                this.propertyChanged("Name");
+            }
+            if (frame.Velocity !== this._velocity) {
+                this._velocity = frame.Velocity;
+                this.propertyChanged("Velocity");
+            }
+            if (frame.NodeVariation !== this._nodeVariation) {
+                this._nodeVariation = frame.NodeVariation;
+                this.propertyChanged("NodeVariation");
+            }
+            if (frame.GroupType !== this._groupType) {
+                this._groupType = frame.GroupType;
+                this.propertyChanged("GroupType");
+            }
+            const hasRemovedNodes = this.Nodes.every(item => frame.Nodes.includes(item));
+            const hasNewNodes = frame.Nodes.every(item => this.Nodes.includes(item));
+            if (hasRemovedNodes || hasNewNodes) {
+                this.Nodes.length = 0;
+                this.Nodes.push(...frame.Nodes);
+                this.propertyChanged("Nodes");
+            }
+            this._revision = frame.Revision;
         }
     }
 }

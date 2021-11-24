@@ -1,11 +1,12 @@
 ﻿"use strict";
 
-import { GW_ERROR_NTF, Groups, GW_GET_ALL_GROUPS_INFORMATION_CFM, GW_GET_ALL_GROUPS_INFORMATION_NTF, GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, Group, GW_GROUP_INFORMATION_CHANGED_NTF, Velocity, NodeVariation, GroupType, GW_SET_GROUP_INFORMATION_CFM, GW_GET_NODE_INFORMATION_CFM, GW_GET_NODE_INFORMATION_NTF } from "../src";
+import { GW_ERROR_NTF, Groups, GW_GET_ALL_GROUPS_INFORMATION_CFM, GW_GET_ALL_GROUPS_INFORMATION_NTF, GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, Group, GW_GROUP_INFORMATION_CHANGED_NTF, Velocity, NodeVariation, GroupType, GW_SET_GROUP_INFORMATION_CFM, GW_GET_NODE_INFORMATION_CFM, GW_GET_NODE_INFORMATION_NTF, GW_GET_GROUP_INFORMATION_CFM, GW_GET_GROUP_INFORMATION_NTF } from "../src";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { MockConnection } from "./mocks/mockConnection";
-import sinon, { SinonSandbox } from "sinon";
+import sinon, { SinonSandbox, SinonSpy } from "sinon";
 import sinonChai from "sinon-chai";
+import { PropertyChangedEvent } from "../src/utils/PropertyChangedEvent";
 
 use(chaiAsPromised);
 use(sinonChai);
@@ -643,458 +644,65 @@ describe("groups", function() {
                 });
             });
 
-        //     describe("setNodeVariationAsync", function() {
-        //         it("should send a set node variation request", async function() {
-        //             const data = Buffer.from([0x05, 0x02, 0x07, 0x00, 0]);
-        //             const dataCfm = new GW_SET_NODE_VARIATION_CFM(data);
+            describe("refreshAsync", function() {
+                it("should send a command request", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x21, 0x00, 51]);
+                    const dataCfm = new GW_GET_GROUP_INFORMATION_CFM(data);
 
-        //             // Mock request
-        //             conn.valueToReturn.push(dataCfm);
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
 
-        //             const result = group.setNodeVariationAsync(NodeVariation.Kip);
+                    const result = group.refreshAsync();
 
-        //             return expect(result).to.be.fulfilled;
-        //         });
+                    return expect(result).to.be.fulfilled;
+                });
 
-        //         it("should reject on error status", async function() {
-        //             const data = Buffer.from([0x05, 0x02, 0x07, 0x01, 0]);
-        //             const dataCfm = new GW_SET_NODE_VARIATION_CFM(data);
+                it("should reject on error status", async function() {
+                    const data = Buffer.from([0x05, 0x02, 0x21, 0x01, 51]);
+                    const dataCfm = new GW_GET_GROUP_INFORMATION_CFM(data);
 
-        //             // Mock request
-        //             conn.valueToReturn.push(dataCfm);
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
 
-        //             const result = group.setNodeVariationAsync(NodeVariation.Kip);
+                    const result = group.refreshAsync();
 
-        //             return expect(result).to.be.rejectedWith(Error);
-        //         });
+                    return expect(result).to.be.rejectedWith(Error);
+                });
 
-        //         it("should reject on error frame", async function() {
-        //             // Mock request
-        //             conn.valueToReturn.push(dataErrorNtf);
+                it("should reject on error frame", async function() {
+                    // Mock request
+                    conn.valueToReturn.push(dataErrorNtf);
 
-        //             const result = group.setNodeVariationAsync(NodeVariation.Kip);
+                    const result = group.refreshAsync();
 
-        //             return expect(result).to.be.rejectedWith(Error);
-        //         });
-        //     });
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
 
-        //     describe("setOrderAndPlacementAsync", function() {
-        //         it("should send a set order and placement request", async function() {
-        //             const data = Buffer.from([0x05, 0x02, 0x0E, 0x00, 0]);
-        //             const dataCfm = new GW_SET_NODE_ORDER_AND_PLACEMENT_CFM(data);
+            describe("onNotificationHandler", function() {
+                let propertyChangedSpy: SinonSpy<PropertyChangedEvent[]>;
 
-        //             // Mock request
-        //             conn.valueToReturn.push(dataCfm);
+                this.beforeEach(function() {
+                    propertyChangedSpy = sandbox.spy();
+                    group.propertyChangedEvent.on((event) => {
+                        propertyChangedSpy(event);
+                    });
+                });
 
-        //             const result = group.setOrderAndPlacementAsync(1, 2);
-
-        //             return expect(result).to.be.fulfilled;
-        //         });
-
-        //         it("should reject on error status", async function() {
-        //             const data = Buffer.from([0x05, 0x02, 0x0E, 0x01, 0]);
-        //             const dataCfm = new GW_SET_NODE_ORDER_AND_PLACEMENT_CFM(data);
-
-        //             // Mock request
-        //             conn.valueToReturn.push(dataCfm);
-
-        //             const result = group.setOrderAndPlacementAsync(1, 2);
-
-        //             return expect(result).to.be.rejectedWith(Error);
-        //         });
-
-        //         it("should reject on error frame", async function() {
-        //             // Mock request
-        //             conn.valueToReturn.push(dataErrorNtf);
-
-        //             const result = group.setOrderAndPlacementAsync(1, 2);
-
-        //             return expect(result).to.be.rejectedWith(Error);
-        //         });
-        //     });
-
-        //     describe("setOrderAsync", function() {
-        //         it("should call setOrderAndPlacementAsync", async function() {
-        //             const expectedResult = 42;
-        //             const setOrderAndPlacementAsyncStub = sandbox.stub(group, "setOrderAndPlacementAsync").resolves();
-
-        //             const result = group.setOrderAsync(expectedResult);
-        //             expect(setOrderAndPlacementAsyncStub).to.be.calledOnceWithExactly(expectedResult, group.Placement);
-        //             return expect(result).to.be.fulfilled;
-        //         });
-        //     });
-
-        //     describe("setPlacementAsync", function() {
-        //         it("should call setOrderAndPlacementAsync", async function() {
-        //             const expectedResult = 42;
-        //             const setOrderAndPlacementAsyncStub = sandbox.stub(group, "setOrderAndPlacementAsync").resolves();
-
-        //             const result = group.setPlacementAsync(expectedResult);
-        //             expect(setOrderAndPlacementAsyncStub).to.be.calledOnceWithExactly(group.Order, expectedResult);
-        //             return expect(result).to.be.fulfilled;
-        //         });
-        //     });
-
-        //     describe("setTargetPositionAsync", function() {
-        //         it("should send a command request", async function() {
-        //             const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x01]);
-        //             const dataCfm = new GW_COMMAND_SEND_CFM(data);
-
-        //             // Mock request
-        //             conn.valueToReturn.push(dataCfm);
-
-        //             const result = group.setTargetPositionAsync(0.42);
-
-        //             return expect(result).to.be.eventually.equal(0x4711);
-        //         });
-
-        //         it("should reject on error status", async function() {
-        //             const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x00]);
-        //             const dataCfm = new GW_COMMAND_SEND_CFM(data);
-
-        //             // Mock request
-        //             conn.valueToReturn.push(dataCfm);
-
-        //             const result = group.setTargetPositionAsync(0.42);
-
-        //             return expect(result).to.be.rejectedWith(Error);
-        //         });
-
-        //         it("should reject on error frame", async function() {
-        //             // Mock request
-        //             conn.valueToReturn.push(dataErrorNtf);
-
-        //             const result = group.setTargetPositionAsync(0.42);
-
-        //             return expect(result).to.be.rejectedWith(Error);
-        //         });
-        //     });
-
-        //     describe("stopAsync", function() {
-        //         it("should send a command request", async function() {
-        //             const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x01]);
-        //             const dataCfm = new GW_COMMAND_SEND_CFM(data);
-
-        //             // Mock request
-        //             conn.valueToReturn.push(dataCfm);
-
-        //             const result = group.stopAsync();
-
-        //             return expect(result).to.be.eventually.equal(0x4711);
-        //         });
-
-        //         it("should reject on error status", async function() {
-        //             const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x00]);
-        //             const dataCfm = new GW_COMMAND_SEND_CFM(data);
-
-        //             // Mock request
-        //             conn.valueToReturn.push(dataCfm);
-
-        //             const result = group.stopAsync();
-
-        //             return expect(result).to.be.rejectedWith(Error);
-        //         });
-
-        //         it("should reject on error frame", async function() {
-        //             // Mock request
-        //             conn.valueToReturn.push(dataErrorNtf);
-
-        //             const result = group.stopAsync();
-
-        //             return expect(result).to.be.rejectedWith(Error);
-        //         });
-        //     });
-
-        //     describe("winkAsync", function() {
-        //         it("should send a command request", async function() {
-        //             const data = Buffer.from([0x06, 0x03, 0x09, 0x47, 0x11, 0x01]);
-        //             const dataCfm = new GW_WINK_SEND_CFM(data);
-
-        //             // Mock request
-        //             conn.valueToReturn.push(dataCfm);
-
-        //             const result = group.winkAsync();
-
-        //             return expect(result).to.be.eventually.equal(0x4711);
-        //         });
-
-        //         it("should reject on error status", async function() {
-        //             const data = Buffer.from([0x06, 0x03, 0x09, 0x47, 0x11, 0x00]);
-        //             const dataCfm = new GW_WINK_SEND_CFM(data);
-
-        //             // Mock request
-        //             conn.valueToReturn.push(dataCfm);
-
-        //             const result = group.winkAsync();
-
-        //             return expect(result).to.be.rejectedWith(Error);
-        //         });
-
-        //         it("should reject on error frame", async function() {
-        //             // Mock request
-        //             conn.valueToReturn.push(dataErrorNtf);
-
-        //             const result = group.winkAsync();
-
-        //             return expect(result).to.be.rejectedWith(Error);
-        //         });
-        //     });
-
-        //     describe("onNotificationHandler", function() {
-        //         let propertyChangedSpy: SinonSpy<PropertyChangedEvent[]>;
-
-        //         this.beforeEach(function() {
-        //             propertyChangedSpy = sandbox.spy();
-        //             group.propertyChangedEvent.on((event) => {
-        //                 propertyChangedSpy(event);
-        //             });
-        //         });
-
-        //         describe("GW_NODE_INFORMATION_CHANGED_NTF", function() {
-        //             it("should send notifications for Name, NodeVariation, Order and Placement", function() {
-        //                 const data = Buffer.from([72, 0x02, 0x0C, 
-        //                     // Node ID
-        //                     0,
-        //                     // Name
-        //                     0x44, 0x75, 0x6D, 0x6D, 0x79, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     // Order
-        //                     0x00, 0x02,
-        //                     // Placement
-        //                     3,
-        //                     // Node Variation
-        //                     2  // KIP
-        //                 ]);
-        //                 const dataNtf = new GW_NODE_INFORMATION_CHANGED_NTF(data);
+                describe("GW_GET_GROUP_INFORMATION_NTF", function() {
+                    it("should send notifications for Name", async function() {
+                        const data = Buffer.from([102, 0x02, 0x30, 0x33, 0x00, 0x01, 0x00, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x53, 0xc3, 0xbc, 0x64, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+                        const dataNtf = new GW_GET_GROUP_INFORMATION_NTF(data);
     
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy, "Name").to.be.calledWithMatch({o: group, propertyName: "Name", propertyValue: "Dummy"});
-        //                 expect(propertyChangedSpy, "NodeVariation").to.be.calledWithMatch({o: group, propertyName: "NodeVariation", propertyValue: NodeVariation.Kip});
-        //                 expect(propertyChangedSpy, "Order").to.be.calledWithMatch({o: group, propertyName: "Order", propertyValue: 2});
-        //                 expect(propertyChangedSpy, "Placement").to.be.calledWithMatch({o: group, propertyName: "Placement", propertyValue: 3});
-        //             });
+                        conn.sendNotification(dataNtf, []);
 
-        //             it("should send notifications for Name only", function() {
-        //                 const data = Buffer.from([72, 0x02, 0x0C, 
-        //                     // Node ID
-        //                     0,
-        //                     // Name
-        //                     0x44, 0x75, 0x6D, 0x6D, 0x79, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     // Order
-        //                     0x00, 0x00,
-        //                     // Placement
-        //                     1,
-        //                     // Node Variation
-        //                     0
-        //                 ]);
-        //                 const dataNtf = new GW_NODE_INFORMATION_CHANGED_NTF(data);
-    
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy, "Name").to.be.calledOnceWith(sinon.match({o: group, propertyName: "Name", propertyValue: "Dummy"}));
-        //             });
+                        // Just let the asynchronous stuff run before our checks
+                        await new Promise(resolve => { setTimeout(resolve, 0); });
 
-        //             it("shouldn't send any notifications", function() {
-        //                 const data = Buffer.from([72, 0x02, 0x0C, 
-        //                     // Node ID
-        //                     0,
-        //                     // Name
-        //                     0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20,
-        //                     0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d,
-        //                     0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        //                     // Order
-        //                     0x00, 0x00,
-        //                     // Placement
-        //                     1,
-        //                     // Node Variation
-        //                     0
-        //                 ]);
-        //                 const dataNtf = new GW_NODE_INFORMATION_CHANGED_NTF(data);
-    
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy).not.to.be.called;
-        //             });
-        //         });
-
-        //         describe("GW_NODE_STATE_POSITION_CHANGED_NTF", function() {
-        //             it("should send notifications for State, CurrentPositionRaw, CurrentPosition, TargetPositionRaw, TargetPosition, FP1CurrentPositionRaw, FP2CurrentPositionRaw, FP3CurrentPositionRaw, FP4CurrentPositionRaw, RemainingTime, TimeStamp", function() {
-        //                 const data = Buffer.from([23, 0x02, 0x11, 
-        //                     // Node ID
-        //                     0,
-        //                     // State
-        //                     4,  // Executing
-        //                     // Current Position
-        //                     0xC0, 0x00,
-        //                     // Target
-        //                     0xC7, 0x00,
-        //                     // FP1 Current Position
-        //                     0xF7, 0xFE,
-        //                     // FP2 Current Position
-        //                     0xF7, 0xFE,
-        //                     // FP3 Current Position
-        //                     0xF7, 0xFE,
-        //                     // FP4 Current Position
-        //                     0xF7, 0xFE,
-        //                     // Remaining Time
-        //                     0, 5,
-        //                     // Time stamp
-        //                     0x00, 0xF9, 0x39, 0x90
-        //                 ]);
-        //                 const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
-    
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy, "State").to.be.calledWithMatch({o: group, propertyName: "State", propertyValue: NodeOperatingState.Executing});
-        //                 expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({o: group, propertyName: "CurrentPositionRaw", propertyValue: 0xC000});
-        //                 expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({o: group, propertyName: "CurrentPosition", propertyValue: 0.040000000000000036});
-        //                 expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWithMatch({o: group, propertyName: "TargetPositionRaw", propertyValue: 0xC700});
-        //                 expect(propertyChangedSpy, "TargetPosition").to.be.calledWithMatch({o: group, propertyName: "TargetPosition", propertyValue: 0.0050000000000000044});
-        //                 expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledWithMatch({o: group, propertyName: "FP1CurrentPositionRaw", propertyValue: 0xF7FE});
-        //                 expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({o: group, propertyName: "FP2CurrentPositionRaw", propertyValue: 0xF7FE});
-        //                 expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledWithMatch({o: group, propertyName: "FP3CurrentPositionRaw", propertyValue: 0xF7FE});
-        //                 expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledWithMatch({o: group, propertyName: "FP4CurrentPositionRaw", propertyValue: 0xF7FE});
-        //                 expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({o: group, propertyName: "RemainingTime", propertyValue: 5});
-        //                 expect(propertyChangedSpy, "TimeStamp").to.be.calledWithMatch({o: group, propertyName: "TimeStamp", propertyValue: new Date("1970-07-09 02:00:00 GMT+0100")});
-        //             });
-
-        //             it("shouldn't send any notifications", function() {
-        //                 const data = Buffer.from([23, 0x02, 0x11, 
-        //                     // Node ID
-        //                     0,
-        //                     // State
-        //                     5,  // Done
-        //                     // Current Position
-        //                     0xC8, 0x00,
-        //                     // Target
-        //                     0xC8, 0x00,
-        //                     // FP1 Current Position
-        //                     0xF7, 0xFF,
-        //                     // FP2 Current Position
-        //                     0xF7, 0xFF,
-        //                     // FP3 Current Position
-        //                     0xF7, 0xFF,
-        //                     // FP4 Current Position
-        //                     0xF7, 0xFF,
-        //                     // Remaining Time
-        //                     0, 0,
-        //                     // Time stamp
-        //                     0x4f, 0x00, 0x3f, 0xf3
-        //                 ]);
-        //                 const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
-    
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy).not.to.be.called;
-        //             });
-        //         });
-
-        //         describe("GW_COMMAND_RUN_STATUS_NTF", function() {
-        //             it("should send notifications for CurrentPositionRaw, CurrentPosition, RunStatus, StatusReply", function() {
-        //                 const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x00, 0xC0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00]);
-        //                 const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
-    
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({o: group, propertyName: "CurrentPositionRaw", propertyValue: 0xC000});
-        //                 expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({o: group, propertyName: "CurrentPosition", propertyValue: 0.040000000000000036});
-        //                 expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({o: group, propertyName: "RunStatus", propertyValue: RunStatus.ExecutionActive});
-        //                 expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({o: group, propertyName: "StatusReply", propertyValue: StatusReply.Ok});
-        //             });
-
-        //             it("should send notifications for FP1CurrentPositionRaw, RunStatus, StatusReply", function() {
-        //                 const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x01, 0xC0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00]);
-        //                 const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
-    
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledWithMatch({o: group, propertyName: "FP1CurrentPositionRaw", propertyValue: 0xC000});
-        //                 expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({o: group, propertyName: "RunStatus", propertyValue: RunStatus.ExecutionActive});
-        //                 expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({o: group, propertyName: "StatusReply", propertyValue: StatusReply.Ok});
-        //             });
-
-        //             it("should send notifications for FP2CurrentPositionRaw, RunStatus, StatusReply", function() {
-        //                 const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x02, 0xC0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00]);
-        //                 const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
-    
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({o: group, propertyName: "FP2CurrentPositionRaw", propertyValue: 0xC000});
-        //                 expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({o: group, propertyName: "RunStatus", propertyValue: RunStatus.ExecutionActive});
-        //                 expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({o: group, propertyName: "StatusReply", propertyValue: StatusReply.Ok});
-        //             });
-
-        //             it("should send notifications for FP3CurrentPositionRaw, RunStatus, StatusReply", function() {
-        //                 const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x03, 0xC0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00]);
-        //                 const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
-    
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledWithMatch({o: group, propertyName: "FP3CurrentPositionRaw", propertyValue: 0xC000});
-        //                 expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({o: group, propertyName: "RunStatus", propertyValue: RunStatus.ExecutionActive});
-        //                 expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({o: group, propertyName: "StatusReply", propertyValue: StatusReply.Ok});
-        //             });
-
-        //             it("should send notifications for FP4CurrentPositionRaw, RunStatus, StatusReply", function() {
-        //                 const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x04, 0xC0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00]);
-        //                 const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
-    
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledWithMatch({o: group, propertyName: "FP4CurrentPositionRaw", propertyValue: 0xC000});
-        //                 expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({o: group, propertyName: "RunStatus", propertyValue: RunStatus.ExecutionActive});
-        //                 expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({o: group, propertyName: "StatusReply", propertyValue: StatusReply.Ok});
-        //             });
-
-        //             it("shouldn't send any notifications", function() {
-        //                 const data = Buffer.from([0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x00, 0xC8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-        //                 const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
-    
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy).not.to.be.called;
-        //             });
-        //         });
-
-        //         describe("GW_COMMAND_REMAINING_TIME_NTF", function() {
-        //             it("should send notifications for RemainingTime", function() {
-        //                 const data = Buffer.from([0x06, 0x03, 0x03, 0x47, 0x11, 0x00, 0x00, 0x00, 0x2A]);
-        //                 const dataNtf = new GW_COMMAND_REMAINING_TIME_NTF(data);
-    
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({o: group, propertyName: "RemainingTime", propertyValue: 42});
-        //             });
-
-        //             it("shouldn't send any notifications", function() {
-        //                 const data = Buffer.from([0x06, 0x03, 0x03, 0x47, 0x11, 0x00, 0x00, 0x00, 0x00]);
-        //                 const dataNtf = new GW_COMMAND_REMAINING_TIME_NTF(data);
-    
-        //                 conn.sendNotification(dataNtf, []);
-    
-        //                 expect(propertyChangedSpy).not.to.be.called;
-        //             });
-        //         });
-        //     });
+                        expect(propertyChangedSpy, "Name").to.be.calledWith(sinon.match({o: group, propertyName: "Name", propertyValue: "Fenster Süde"}));
+                    });
+                });
+            });
         });
     });
 });
