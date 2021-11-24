@@ -7,6 +7,8 @@
 ## __WORK IN PROGRESS__
 
 ### Fixes:
+
+* [#27](https://github.com/MiSchroe/klf-200-api/issues/27) Add `refresh()` method to re-read object data from the gateway
 * Fix security audit dependencies ([#32](https://github.com/MiSchroe/klf-200-api/issues/32), [#35](https://github.com/MiSchroe/klf-200-api/issues/35), [#37](https://github.com/MiSchroe/klf-200-api/issues/37))
 
 ## 3.0.4 (2020-07-27)

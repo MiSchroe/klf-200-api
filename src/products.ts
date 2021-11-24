@@ -46,51 +46,73 @@ export class Product extends Component {
      * @memberof Product
      */
     public readonly NodeID: number;
+    private _TypeID: ActuatorType;
     /**
      * Indicates the node type, ex. Window, Roller shutter, Light etc.
      *
+     * @readonly
      * @type {ActuatorType}
      * @memberof Product
      */
-    public readonly TypeID: ActuatorType;
+    public get TypeID(): ActuatorType {
+        return this._TypeID;
+    }
+    private _SubType: number;
     /**
      * Details the node type and depends on the TypeID property.
      *
+     * @readonly
      * @type {number}
      * @memberof Product
      */
-    public readonly SubType: number;
+    public get SubType(): number {
+        return this._SubType;
+    }
     private _order: number;
     private _placement: number;
+    private _velocity: Velocity;
     /**
      * Velocity the node is operated with.
      *
+     * @readonly
      * @type {Velocity}
      * @memberof Product
      */
-    public readonly Velocity: Velocity;
+    public get Velocity(): Velocity { return this._velocity; };
     private _nodeVariation: NodeVariation;
+    private _PowerSaveMode: PowerSaveMode;
     /**
      * The power mode of the node.
      *
+     * @readonly
      * @type {PowerSaveMode}
      * @memberof Product
      */
-    public readonly PowerSaveMode: PowerSaveMode;
+    public get PowerSaveMode(): PowerSaveMode {
+        return this._PowerSaveMode;
+    }
+    private _SerialNumber: Buffer;
     /**
      * The serial number of the product.
      *
+     * @readonly
      * @type {Buffer}
      * @memberof Product
      */
-    public readonly SerialNumber: Buffer;
+    public get SerialNumber(): Buffer {
+        return this._SerialNumber;
+    }
+    private _ProductType: number;
     /**
      * Type of the product, eg. KMG, KMX.
      *
+     * @readonly
      * @type {number}
      * @memberof Product
      */
-    public readonly ProductType: number;
+    public get ProductType(): number {
+        return this._ProductType;
+    }
     private _state: NodeOperatingState;
     private _currentPositionRaw: number;
     private _targetPositionRaw: number;
@@ -100,6 +122,7 @@ export class Product extends Component {
     private _fp4CurrentPositionRaw: number;
     private _remainingTime: number;
     private _timeStamp: Date;
+    private _ProductAlias: ActuatorAlias[];
     /**
      * Contains the position values to move the product to a special position.
      * The special position is defined by the alias value.
@@ -113,7 +136,9 @@ export class Product extends Component {
      * @type {ActuatorAlias[]}
      * @memberof Product
      */
-    public readonly ProductAlias: ActuatorAlias[];
+    public get ProductAlias(): ActuatorAlias[] {
+        return this._ProductAlias;
+    }
     private _runStatus: RunStatus = RunStatus.ExecutionCompleted;
     private _statusReply: StatusReply = StatusReply.Unknown;
 
@@ -131,15 +156,15 @@ export class Product extends Component {
         
         this.NodeID = frame.NodeID;
         this._name = frame.Name;
-        this.TypeID = frame.ActuatorType;
-        this.SubType = frame.ActuatorSubType;
+        this._TypeID = frame.ActuatorType;
+        this._SubType = frame.ActuatorSubType;
         this._order = frame.Order;
         this._placement = frame.Placement;
-        this.Velocity = frame.Velocity;
+        this._velocity = frame.Velocity;
         this._nodeVariation = frame.NodeVariation;
-        this.PowerSaveMode = frame.PowerSaveMode;
-        this.SerialNumber = frame.SerialNumber;
-        this.ProductType = frame.ProductType;
+        this._PowerSaveMode = frame.PowerSaveMode;
+        this._SerialNumber = frame.SerialNumber;
+        this._ProductType = frame.ProductType;
         this._state = frame.OperatingState;
         this._currentPositionRaw = frame.CurrentPosition;
         this._targetPositionRaw = frame.TargetPosition;
@@ -149,13 +174,14 @@ export class Product extends Component {
         this._fp4CurrentPositionRaw = frame.FunctionalPosition4CurrentPosition;
         this._remainingTime = frame.RemainingTime;
         this._timeStamp = frame.TimeStamp;
-        this.ProductAlias = frame.ActuatorAliases;
+        this._ProductAlias = frame.ActuatorAliases;
 
         this.Connection.on(frame => this.onNotificationHandler(frame), [
             GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF, 
             GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
             GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
-            GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF
+            GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF,
+            GatewayCommand.GW_GET_NODE_INFORMATION_NTF
         ]);
     }
 
@@ -576,6 +602,20 @@ export class Product extends Component {
         }
     }
 
+    public async refreshAsync(): Promise<void> {
+        try {
+            const confirmationFrame = <GW_GET_NODE_INFORMATION_CFM> await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(this.NodeID));
+            if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
+                return Promise.resolve();
+            }
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
+            }
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
+
     private onNotificationHandler(frame: IGW_FRAME_RCV): void {
         if (typeof this === "undefined")
             return;
@@ -591,6 +631,9 @@ export class Product extends Component {
         }
         else if (frame instanceof GW_COMMAND_REMAINING_TIME_NTF) {
             this.onRemainingTime(frame);
+        }
+        else if (frame instanceof GW_GET_NODE_INFORMATION_NTF) {
+            this.onGetNodeInformation(frame);
         }
     }
 
@@ -717,6 +760,91 @@ export class Product extends Component {
         if (frame.NodeID === this.NodeID && frame.NodeParameter === ParameterActive.MP && frame.RemainingTime !== this._remainingTime) {
             this._remainingTime = frame.RemainingTime;
             this.propertyChanged("RemainingTime");
+        }
+    }
+
+    private onGetNodeInformation(frame: GW_GET_NODE_INFORMATION_NTF): void {
+        if (frame.NodeID === this.NodeID) {
+            if (frame.Order !== this._order) {
+                this._order = frame.Order;
+                this.propertyChanged("Order");
+            }
+            if (frame.Placement !== this._placement) {
+                this._placement = frame.Placement;
+                this.propertyChanged("Placement");
+            }
+            if (frame.Name !== this._name) {
+                this._name = frame.Name;
+                this.propertyChanged("Name");
+            }
+            if (frame.Velocity !== this._velocity) {
+                this._velocity = frame.Velocity;
+                this.propertyChanged("Velocity");
+            }
+            if (frame.ActuatorType !== this._TypeID) {
+                this._TypeID = frame.ActuatorType;
+                this.propertyChanged("TypeID");
+            }
+            if (frame.ActuatorSubType !== this._SubType) {
+                this._SubType = frame.ActuatorSubType;
+                this.propertyChanged("SubType");
+            }
+            if (frame.ProductType !== this._ProductType) {
+                this._ProductType = frame.ProductType;
+                this.propertyChanged("ProductType");
+            }
+            if (frame.NodeVariation !== this._nodeVariation) {
+                this._nodeVariation = frame.NodeVariation;
+                this.propertyChanged("NodeVariation");
+            }
+            if (frame.PowerSaveMode !== this._PowerSaveMode) {
+                this._PowerSaveMode = frame.PowerSaveMode;
+                this.propertyChanged("PowerSaveMode");
+            }
+            if (frame.SerialNumber !== this._SerialNumber) {
+                this._SerialNumber = frame.SerialNumber;
+                this.propertyChanged("SerialNumber");
+            }
+            if (frame.OperatingState !== this._state) {
+                this._state = frame.OperatingState;
+                this.propertyChanged("State");
+            }
+            if (frame.CurrentPosition !== this._currentPositionRaw) {
+                this._currentPositionRaw = frame.CurrentPosition;
+                this.propertyChanged("CurrentPositionRaw");
+                this.propertyChanged("CurrentPosition");
+            }
+            if (frame.TargetPosition !== this._targetPositionRaw) {
+                this._targetPositionRaw = frame.TargetPosition;
+                this.propertyChanged("TargetPositionRaw");
+                this.propertyChanged("TargetPosition");
+            }
+            if (frame.FunctionalPosition1CurrentPosition !== this._fp1CurrentPositionRaw) {
+                this._fp1CurrentPositionRaw = frame.FunctionalPosition1CurrentPosition;
+                this.propertyChanged("FP1CurrentPositionRaw");
+            }
+            if (frame.FunctionalPosition2CurrentPosition !== this._fp2CurrentPositionRaw) {
+                this._fp2CurrentPositionRaw = frame.FunctionalPosition2CurrentPosition;
+                this.propertyChanged("FP2CurrentPositionRaw");
+            }
+            if (frame.FunctionalPosition3CurrentPosition !== this._fp3CurrentPositionRaw) {
+                this._fp3CurrentPositionRaw = frame.FunctionalPosition3CurrentPosition;
+                this.propertyChanged("FP3CurrentPositionRaw");
+            }
+            if (frame.FunctionalPosition4CurrentPosition !== this._fp4CurrentPositionRaw) {
+                this._fp4CurrentPositionRaw = frame.FunctionalPosition4CurrentPosition;
+                this.propertyChanged("FP4CurrentPositionRaw");
+            }
+            if (frame.RemainingTime !== this._remainingTime) {
+                this._remainingTime = frame.RemainingTime;
+                this.propertyChanged("RemainingTime");
+            }
+            if (frame.TimeStamp.valueOf() !== this._timeStamp.valueOf()) {
+                this._timeStamp = frame.TimeStamp;
+                this.propertyChanged("TimeStamp");
+            }
+            this._ProductAlias = frame.ActuatorAliases;
+            this.propertyChanged("ProductAlias");
         }
     }
 }
