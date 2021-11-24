@@ -208,6 +208,7 @@ export class Scene extends Component {
 export class Scenes {
     private readonly _onChangedScenes = new TypedEvent<number>();
     private readonly _onRemovedScenes = new TypedEvent<number>();
+    private readonly _onAddedScenes = new TypedEvent<number>();
 
     /**
      * The list of scenes objects that correspond to the scenes defined at the KLF 200 interface.
@@ -232,27 +233,37 @@ export class Scenes {
     static async createScenesAsync(Connection: IConnection): Promise<Scenes> {
         try {
             const result = new Scenes(Connection);
-            await result.initializeScenesAsync();
+            await result.refreshScenesAsync();
             return result;
         } catch (error) {
             return Promise.reject(error);
         }
     }
 
-    private async initializeScenesAsync(): Promise<void> {
+    private _notificationHandler: Disposable | undefined;
+
+    public async refreshScenesAsync(): Promise<void> {
         // Setup notification to receive notification with actuator type
         let dispose: Disposable | undefined;
+        const newScenes: Scene[] = [];
 
         try {
             const notificationHandlerSceneList = new Promise<void>((resolve, reject) => {
                 try {
                     dispose = this.Connection.on(frame => {
                         if (frame instanceof GW_GET_SCENE_LIST_NTF) {
-                            frame.Scenes.forEach(scene => this.Scenes[scene.SceneID] = new Scene(this.Connection, scene.SceneID, scene.Name));
+                            frame.Scenes.forEach(scene => {
+                                if (typeof this.Scenes[scene.SceneID] === "undefined") {
+                                    const newScene = new Scene(this.Connection, scene.SceneID, scene.Name);
+                                    this.Scenes[scene.SceneID] = newScene
+                                    newScenes.push(newScene);
+                                }
+                            });
                             if (frame.NumberOfRemainingScenes === 0) {
                                 if (dispose) {
                                     dispose.dispose();
                                 }
+
                                 resolve();
                             }
                         }
@@ -271,7 +282,7 @@ export class Scenes {
             {
                 await notificationHandlerSceneList;
             } else {
-                // Otherwise dispose the event handler, because the won't be any events
+                // Otherwise dispose the event handler, because there won't be any events
                 if (dispose) {
                     dispose.dispose();
                 }
@@ -284,8 +295,15 @@ export class Scenes {
                 }
             }
 
+            // Notify about added scenes
+            for (const scene of newScenes) {
+                this.notifyAddedScene(scene.SceneID);
+            }
+
             // Setup notification handler
-            this.Connection.on(frame => this.onNotificationHandler(frame), [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
+            if (typeof this._notificationHandler === "undefined"){
+                this._notificationHandler = this.Connection.on(frame => this.onNotificationHandler(frame), [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
+            }
 
             return Promise.resolve();
         } catch (error) {
@@ -335,8 +353,19 @@ export class Scenes {
      * @returns {Disposable} Call the dispose method of the returned object to remove the handler.
      * @memberof Scenes
      */
-    public onRemovedScene(handler: Listener<number>): Disposable {
+     public onRemovedScene(handler: Listener<number>): Disposable {
         return this._onRemovedScenes.on(handler);
+    }
+
+    /**
+     * Add an event handler that is called if a scene has been added.
+     *
+     * @param {Listener<number>} handler The handler that is called if the event is emitted.
+     * @returns {Disposable} Call the dispose method of the returned object to remove the handler.
+     * @memberof Scenes
+     */
+     public onAddedScene(handler: Listener<number>): Disposable {
+        return this._onAddedScenes.on(handler);
     }
 
     private notifyChangedScene(sceneId: number): void {
@@ -345,6 +374,10 @@ export class Scenes {
 
     private notifyRemovedScene(sceneId: number): void {
         this._onRemovedScenes.emit(sceneId);
+    }
+
+    private notifyAddedScene(sceneId: number): void {
+        this._onAddedScenes.emit(sceneId);
     }
 
     /**

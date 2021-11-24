@@ -4,12 +4,25 @@ import { GW_ERROR_NTF, Scene, Scenes, GW_GET_SCENE_LIST_NTF, GW_GET_SCENE_LIST_C
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { MockConnection } from "./mocks/mockConnection";
-import sinon from "sinon";
+import sinon, { SinonSandbox, SinonSpy } from "sinon";
+import sinonChai from "sinon-chai";
 
 use(chaiAsPromised);
+use(sinonChai);
 
 
 describe("scenes", function() {
+    // Setup sinon sandbox
+    let sandbox: SinonSandbox;
+
+    this.beforeEach(function() {
+        sandbox = sinon.createSandbox();
+    });
+
+    this.afterEach(function() {
+        sandbox.restore();
+    });
+
     describe("Scenes class", function () {
         // Error frame
         const dataError = Buffer.from([0x04, 0x00, 0x00, 0x07]);
@@ -287,6 +300,26 @@ describe("scenes", function() {
             });
         });
         
+        describe("onAddedScene", function() {
+            it("should call the notification in onAddedScene 4 times.", async function() {
+                const conn = new MockConnection(receivedFramesForEmptyScenes);
+                const sc = await Scenes.createScenesAsync(conn);
+
+                conn.valueToReturn.push(...receivedFrames);
+
+                let addedSceneSpy: SinonSpy<Number[]>;
+
+                addedSceneSpy = sandbox.spy();
+                sc.onAddedScene((event) => {
+                    addedSceneSpy(event);
+                });
+
+                await sc.refreshScenesAsync();
+
+                expect(addedSceneSpy, "AddedScene").to.be.callCount(4);
+            });
+        });
+        
         describe("Scene class", function() {
             describe("runAsync", function() {
                 const dataRunScene = Buffer.from([0x06, 0x04, 0x13, 0x00, 0x47, 0x11]);
@@ -452,3 +485,4 @@ describe("scenes", function() {
         });
     });
 });
+
