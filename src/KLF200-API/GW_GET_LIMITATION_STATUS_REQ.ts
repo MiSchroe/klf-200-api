@@ -1,8 +1,7 @@
 "use strict";
 
 import { GW_FRAME_COMMAND_REQ } from "./common";
-import { CommandOriginator, PriorityLevel, ParameterActive, LimitationType } from "./GW_COMMAND";
-import { isArray } from "util";
+import { ParameterActive, LimitationType } from "./GW_COMMAND";
 
 export class GW_GET_LIMITATION_STATUS_REQ extends GW_FRAME_COMMAND_REQ {
     constructor(readonly Nodes: number[] | number, readonly LimitationType: LimitationType, readonly ParameterActive: ParameterActive = 0) {
@@ -15,7 +14,7 @@ export class GW_GET_LIMITATION_STATUS_REQ extends GW_FRAME_COMMAND_REQ {
         buff.writeUInt8(this.LimitationType, 24);
 
         // Multiple nodes are provided
-        if (isArray(this.Nodes))
+        if (Array.isArray(this.Nodes))
         {
             if (this.Nodes.length > 20)
                 throw new Error("Too many nodes.");
