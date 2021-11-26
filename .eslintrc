@@ -1,9 +1,16 @@
 {
     "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaVersion": 2020,
+      "sourceType": "module",
+      "project": "./tsconfig.json" // <-- Point to your project's tsconfig.json or create new one
+    },
     "plugins": [
-      "@typescript-eslint"
+      "@typescript-eslint",
+      "@delagen/deprecation"
     ],
     "rules": {
-      "quotes": [2, "double"]
+      "quotes": [2, "double"],
+      "@delagen/deprecation/deprecation": "warn"
     }
 }
