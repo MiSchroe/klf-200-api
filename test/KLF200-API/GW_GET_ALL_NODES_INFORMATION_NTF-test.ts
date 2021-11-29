@@ -35,10 +35,10 @@ describe("KLF200-API", function() {
                 2,  // KIP
                 // Power Mode
                 0,
+                // Build number
+                0,
                 // Serial number
                 1, 2, 3, 4, 5, 6, 7, 8,
-                // ???
-                0,
                 // State
                 4,  // Executing
                 // Current Position
