@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-import { GW_ERROR_NTF, GW_GET_ALL_NODES_INFORMATION_CFM, GW_GET_ALL_NODES_INFORMATION_NTF, GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF, Products, Product, GW_GET_NODE_INFORMATION_CFM, GW_GET_NODE_INFORMATION_NTF, GW_CS_SYSTEM_TABLE_UPDATE_NTF, NodeVariation, NodeOperatingState, StatusReply, RunStatus, GW_SET_NODE_NAME_CFM, GW_SET_NODE_VARIATION_CFM, GW_SET_NODE_ORDER_AND_PLACEMENT_CFM, GW_COMMAND_SEND_CFM, GW_WINK_SEND_CFM, GW_NODE_INFORMATION_CHANGED_NTF, GW_NODE_STATE_POSITION_CHANGED_NTF, GW_COMMAND_RUN_STATUS_NTF, GW_COMMAND_REMAINING_TIME_NTF } from "../src";
+import { GW_ERROR_NTF, GW_GET_ALL_NODES_INFORMATION_CFM, GW_GET_ALL_NODES_INFORMATION_NTF, GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF, Products, Product, GW_GET_NODE_INFORMATION_CFM, GW_GET_NODE_INFORMATION_NTF, GW_CS_SYSTEM_TABLE_UPDATE_NTF, NodeVariation, NodeOperatingState, StatusReply, RunStatus, GW_SET_NODE_NAME_CFM, GW_SET_NODE_VARIATION_CFM, GW_SET_NODE_ORDER_AND_PLACEMENT_CFM, GW_COMMAND_SEND_CFM, GW_WINK_SEND_CFM, GW_NODE_INFORMATION_CHANGED_NTF, GW_NODE_STATE_POSITION_CHANGED_NTF, GW_COMMAND_RUN_STATUS_NTF, GW_COMMAND_REMAINING_TIME_NTF, Velocity, PowerSaveMode, ParameterActive, ActuatorType } from "../src";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { MockConnection } from "./mocks/mockConnection";
@@ -406,6 +406,71 @@ describe("products", function() {
                     expect(result).to.be.equal(expectedResult);
                 });
             });
+
+            describe("Velocity", function() {
+                it("should return the node's velocity", function() {
+                    const expectedResult = Velocity.Silent;
+                    const result = product.Velocity;
+
+                    expect(result).to.be.equal(expectedResult);
+                });
+            });
+
+            describe("PowerSaveMode", function() {
+                it("should return the node's power save mode", function() {
+                    const expectedResult = PowerSaveMode.LowPowerMode;
+                    const result = product.PowerSaveMode;
+
+                    expect(result).to.be.equal(expectedResult);
+                });
+            });
+
+            describe("ProductType", function() {
+                it("should return the node's product type", function() {
+                    const expectedResult = 7;
+                    const result = product.ProductType;
+
+                    expect(result).to.be.equal(expectedResult);
+                });
+            });
+
+            for(const parameterActive of [
+                ParameterActive.MP,
+                ParameterActive.FP1,
+                ParameterActive.FP2,
+                ParameterActive.FP3,
+                ParameterActive.FP4,
+                ParameterActive.FP5,
+                ParameterActive.FP6,
+                ParameterActive.FP7,
+                ParameterActive.FP8,
+                ParameterActive.FP9,
+                ParameterActive.FP10,
+                ParameterActive.FP11,
+                ParameterActive.FP12,
+                ParameterActive.FP13,
+                ParameterActive.FP14,
+                ParameterActive.FP15,
+                ParameterActive.FP16,
+            ]) {
+                describe(`LimitationMin for ${ParameterActive[parameterActive]}`, function() {
+                    it("should return the node's limitation min value", function() {
+                        const expectedResult = 0;
+                        const result = product.getLimitationMin(parameterActive);
+    
+                        expect(result).to.be.equal(expectedResult);
+                    });
+                });
+    
+                describe(`LimitationMax for ${ParameterActive[parameterActive]}`, function() {
+                    it("should return the node's limitation max value", function() {
+                        const expectedResult = 0xC800;
+                        const result = product.getLimitationMax(parameterActive);
+    
+                        expect(result).to.be.equal(expectedResult);
+                    });
+                });
+            }
 
             describe("setNameAsync", function() {
                 it("should send a set node name request", async function() {
@@ -930,13 +995,1436 @@ describe("products", function() {
                 });
 
                 describe("GW_GET_NODE_INFORMATION_NTF", function() {
-                    it("should send notifications for Name only", function() {
-                        const data = Buffer.from([0x7f, 0x02, 0x10, 0x00, 0x00, 0x00, 0x01, 0x47, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0xd5, 0x07, 0x00, 0x01, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0xc8, 0x00, 0xc8, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00, 0x4f, 0x00, 0x3f, 0xf3, 0x01, 0xd8, 0x03, 0xb2, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+                    it("shouldn't send any notifications", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
                         const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
     
                         conn.sendNotification(dataNtf, []);
     
-                        expect(propertyChangedSpy, "Name").to.be.calledWith(sinon.match({o: product, propertyName: "Name", propertyValue: "Genster Badezimmer"}));
+                        expect(propertyChangedSpy).not.to.be.called;
+                    });
+
+                    it("should send notifications for Order only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x02, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "Order").to.be.calledOnceWith(sinon.match({o: product, propertyName: "Order", propertyValue: 2}));
+                    });
+
+                    it("should send notifications for Placement only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x02, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "Placement").to.be.calledOnceWith(sinon.match({o: product, propertyName: "Placement", propertyValue: 2}));
+                    });
+
+                    it("should send notifications for Name only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x47, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "Name").to.be.calledOnceWith(sinon.match({o: product, propertyName: "Name", propertyValue: "Genster Badezimmer"}));
+                    });
+
+                    it("should send notifications for Velocity only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x02, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "Velocity").to.be.calledOnceWith(sinon.match({o: product, propertyName: "Velocity", propertyValue: Velocity.Fast}));
+                    });
+
+                    it("should send notifications for TypeID only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x00, 0x81, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "TypeID").to.be.calledOnceWith(sinon.match({o: product, propertyName: "TypeID", propertyValue: ActuatorType.RollerShutter}));
+                    });
+
+                    it("should send notifications for SubType only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x00, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "SubType").to.be.calledOnceWith(sinon.match({o: product, propertyName: "SubType", propertyValue: 0}));
+                    });
+
+                    it("should send notifications for ProductType only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x06, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "ProductType").to.be.calledOnceWith(sinon.match({o: product, propertyName: "ProductType", propertyValue: 6}));
+                    });
+
+                    it("should send notifications for NodeVariation only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x01, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "NodeVariation").to.be.calledOnceWith(sinon.match({o: product, propertyName: "NodeVariation", propertyValue: NodeVariation.TopHung}));
+                    });
+
+                    it("should send notifications for PowerSaveMode only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x00, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "PowerSaveMode").to.be.calledOnceWith(sinon.match({o: product, propertyName: "PowerSaveMode", propertyValue: PowerSaveMode.AlwaysAlive}));
+                    });
+
+                    it("should send notifications for SerialNumber only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "SerialNumber").to.be.calledOnceWith(sinon.match({o: product, propertyName: "SerialNumber", propertyValue: dataNtf.SerialNumber}));
+                    });
+
+                    it("should send notifications for State only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x03, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "State").to.be.calledOnceWith(sinon.match({o: product, propertyName: "State", propertyValue: NodeOperatingState.WaitingForPower}));
+                    });
+
+                    it("should send notifications for CurrentPosition/Raw only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0x00, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWith(sinon.match({o: product, propertyName: "CurrentPositionRaw", propertyValue: 0}));
+                        expect(propertyChangedSpy, "CurrentPosition").to.be.calledWith(sinon.match({o: product, propertyName: "CurrentPosition", propertyValue: 1}));
+                        expect(propertyChangedSpy).to.be.calledTwice;
+                    });
+
+                    it("should send notifications for TargetPosition/Raw only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0x00, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWith(sinon.match({o: product, propertyName: "TargetPositionRaw", propertyValue: 0}));
+                        expect(propertyChangedSpy, "TargetPosition").to.be.calledWith(sinon.match({o: product, propertyName: "TargetPosition", propertyValue: 1}));
+                        expect(propertyChangedSpy).to.be.calledTwice;
+                    });
+
+                    it("should send notifications for FP1CurrentPositionRaw only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0x00, 0x00, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledOnceWith(sinon.match({o: product, propertyName: "FP1CurrentPositionRaw", propertyValue: 0}));
+                    });
+
+                    it("should send notifications for FP2CurrentPositionRaw only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0x00, 0x00, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledOnceWith(sinon.match({o: product, propertyName: "FP2CurrentPositionRaw", propertyValue: 0}));
+                    });
+
+                    it("should send notifications for FP3CurrentPositionRaw only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0x00, 0x00, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledOnceWith(sinon.match({o: product, propertyName: "FP3CurrentPositionRaw", propertyValue: 0}));
+                    });
+
+                    it("should send notifications for FP4CurrentPositionRaw only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0x00, 0x00, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledOnceWith(sinon.match({o: product, propertyName: "FP4CurrentPositionRaw", propertyValue: 0}));
+                    });
+
+                    it("should send notifications for RemainingTime only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x01, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "RemainingTime").to.be.calledOnceWith(sinon.match({o: product, propertyName: "RemainingTime", propertyValue: 1}));
+                    });
+
+                    it("should send notifications for TimeStamp only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf4, 
+                            // Number of Alias
+                            0x01, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "TimeStamp").to.be.calledOnceWith(sinon.match({o: product, propertyName: "TimeStamp", propertyValue: dataNtf.TimeStamp}));
+                    });
+
+                    it("should send notifications for ProductAlias only", function() {
+                        const data = Buffer.from([
+                            0x7f, 0x02, 0x10, 
+                            // Node ID
+                            0x00, 
+                            // Order
+                            0x00, 0x00, 
+                            // Placement
+                            0x01, 
+                            // Name
+                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
+                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
+                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // Velocity
+                            0x01, 
+                            // Node type, sub type
+                            0x01, 0x01, 
+                            // Product group
+                            0xd5, 
+                            // Product type
+                            0x07, 
+                            // Node variation
+                            0x00, 
+                            // Power mode
+                            0x01, 
+                            // Build number
+                            0x16, 
+                            // Serial number
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                            // State
+                            0x05, 
+                            // Current position
+                            0xc8, 0x00, 
+                            // Target position
+                            0xc8, 0x00, 
+                            // Current position (FP1)
+                            0xf7, 0xff, 
+                            // Current position (FP2)
+                            0xf7, 0xff, 
+                            // Current position (FP3)
+                            0xf7, 0xff, 
+                            // Current position (FP4)
+                            0xf7, 0xff, 
+                            // Remaining time
+                            0x00, 0x00, 
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3, 
+                            // Number of Alias
+                            0x02, 
+                            // Alias array
+                            0xd8, 0x03, 0xb2, 0x1c, 
+                            0xd8, 0x02, 0xb2, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00, 
+                            0x00, 0x00, 0x00, 0x00
+                        ]);
+                        const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+    
+                        conn.sendNotification(dataNtf, []);
+    
+                        expect(propertyChangedSpy, "ProductAlias").to.be.calledOnceWith(sinon.match({o: product, propertyName: "ProductAlias", propertyValue: dataNtf.ActuatorAliases}));
                     });
                 });
             });

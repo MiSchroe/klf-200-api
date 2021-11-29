@@ -23,7 +23,7 @@ import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "./KLF200-API/GW_CS_SYSTEM_TABLE_U
 import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
 import { GW_WINK_SEND_CFM } from "./KLF200-API/GW_WINK_SEND_CFM";
 import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ";
-import { CommandStatus, RunStatus, StatusReply, ParameterActive, convertPositionRaw, convertPosition } from "./KLF200-API/GW_COMMAND";
+import { CommandStatus, RunStatus, StatusReply, ParameterActive, convertPositionRaw, convertPosition, FunctionalParameter } from "./KLF200-API/GW_COMMAND";
 import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF";
 import { GW_COMMAND_REMAINING_TIME_NTF } from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF";
 import { GW_GET_ALL_NODES_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_CFM";
@@ -175,6 +175,8 @@ export class Product extends Component {
         this._remainingTime = frame.RemainingTime;
         this._timeStamp = frame.TimeStamp;
         this._ProductAlias = frame.ActuatorAliases;
+        this._limitationMin = new Array<Number>(17).fill(0);
+        this._limitationMax = new Array<Number>(17).fill(0xC800);
 
         this.Connection.on(frame => this.onNotificationHandler(frame), [
             GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF, 
@@ -559,6 +561,30 @@ export class Product extends Component {
         return convertPositionRaw(this._targetPositionRaw, this.TypeID);
     }
 
+    private _limitationMin : Number[];
+    /**
+     * The minimum value of a limitation of the product.
+     * 
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
+    public getLimitationMin(functionalParameter: ParameterActive) : Number {
+        return this._limitationMin[functionalParameter];
+    }
+
+    private _limitationMax : Number[];
+    /**
+     * The maximum value of a limitation of the product.
+     * 
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
+    public getLimitationMax(functionalParameter: ParameterActive) : Number {
+        return this._limitationMax[functionalParameter];
+    }
+
     /**
      * Stops the product at the current position.
      *
@@ -811,7 +837,7 @@ export class Product extends Component {
                 this._PowerSaveMode = frame.PowerSaveMode;
                 this.propertyChanged("PowerSaveMode");
             }
-            if (frame.SerialNumber !== this._SerialNumber) {
+            if (!frame.SerialNumber.equals(this._SerialNumber)) {
                 this._SerialNumber = frame.SerialNumber;
                 this.propertyChanged("SerialNumber");
             }
@@ -853,8 +879,17 @@ export class Product extends Component {
                 this._timeStamp = frame.TimeStamp;
                 this.propertyChanged("TimeStamp");
             }
-            this._ProductAlias = frame.ActuatorAliases;
-            this.propertyChanged("ProductAlias");
+            if (
+                // If length differ, then they can't be equal anymore
+                this._ProductAlias.length !== frame.ActuatorAliases.length ||
+                // Check if some current elements are missing in new frame elements
+                this._ProductAlias.some(v1 => !frame.ActuatorAliases.some(v2 => v1.AliasType === v2.AliasType && v1.AliasValue === v2.AliasValue)) ||
+                // Check if some new frame elements are missing in current elements
+                frame.ActuatorAliases.some(v1 => !this._ProductAlias.some(v2 => v1.AliasType === v2.AliasType && v1.AliasValue === v2.AliasValue))
+            ) {
+                this._ProductAlias = frame.ActuatorAliases;
+                this.propertyChanged("ProductAlias");
+            }
         }
     }
 }
