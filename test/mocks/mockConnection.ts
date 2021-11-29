@@ -3,7 +3,6 @@
 import { IConnection, IGW_FRAME_REQ, IGW_FRAME_RCV, GatewayCommand, KLF200SocketProtocol, GW_ERROR_NTF, GW_FRAME_CFM, IGW_FRAME_NTF } from "../../src";
 
 import { Listener, Disposable, TypedEvent } from "../../src/utils/TypedEvent";
-import { isArray } from "util";
 
 export class MockExceptionConnection implements IConnection {
     loginAsync(password: string, timeout?: number): Promise<void> {
@@ -38,7 +37,7 @@ export class MockConnection extends MockExceptionConnection {
     };
 
     private setValueToReturn(newValue: IGW_FRAME_RCV | IGW_FRAME_RCV[]) {
-        if (isArray(newValue))
+        if (Array.isArray(newValue))
         {
             this._valueToReturn = [...newValue];
         }

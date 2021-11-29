@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-import { GW_ERROR_NTF, GW_GET_ALL_NODES_INFORMATION_CFM, GW_GET_ALL_NODES_INFORMATION_NTF, GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF, Products, Product, GW_GET_NODE_INFORMATION_CFM, GW_GET_NODE_INFORMATION_NTF, GW_CS_SYSTEM_TABLE_UPDATE_NTF, NodeVariation, NodeOperatingState, StatusReply, RunStatus, GW_SET_NODE_NAME_CFM, GW_SET_NODE_VARIATION_CFM, GW_SET_NODE_ORDER_AND_PLACEMENT_CFM, GW_COMMAND_SEND_CFM, GW_WINK_SEND_CFM, GW_NODE_INFORMATION_CHANGED_NTF, GW_NODE_STATE_POSITION_CHANGED_NTF, GW_COMMAND_RUN_STATUS_NTF, GW_COMMAND_REMAINING_TIME_NTF, Velocity, PowerSaveMode, ParameterActive, ActuatorType } from "../src";
+import { GW_ERROR_NTF, GW_GET_ALL_NODES_INFORMATION_CFM, GW_GET_ALL_NODES_INFORMATION_NTF, GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF, Products, Product, GW_GET_NODE_INFORMATION_CFM, GW_GET_NODE_INFORMATION_NTF, GW_CS_SYSTEM_TABLE_UPDATE_NTF, NodeVariation, NodeOperatingState, StatusReply, RunStatus, GW_SET_NODE_NAME_CFM, GW_SET_NODE_VARIATION_CFM, GW_SET_NODE_ORDER_AND_PLACEMENT_CFM, GW_COMMAND_SEND_CFM, GW_WINK_SEND_CFM, GW_NODE_INFORMATION_CHANGED_NTF, GW_NODE_STATE_POSITION_CHANGED_NTF, GW_COMMAND_RUN_STATUS_NTF, GW_COMMAND_REMAINING_TIME_NTF, Velocity, PowerSaveMode, ParameterActive, ActuatorType, GW_GET_LIMITATION_STATUS_CFM, GW_LIMITATION_STATUS_NTF, GW_SESSION_FINISHED_NTF, LimitationType, GW_SET_LIMITATION_CFM, CommandOriginator, PriorityLevel } from "../src";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { MockConnection } from "./mocks/mockConnection";
@@ -453,24 +453,108 @@ describe("products", function() {
                 ParameterActive.FP15,
                 ParameterActive.FP16,
             ]) {
-                describe(`LimitationMin for ${ParameterActive[parameterActive]}`, function() {
-                    it("should return the node's limitation min value", function() {
+                describe(`LimitationMinRaw for ${ParameterActive[parameterActive]}`, function() {
+                    it("should return the node's limitation min raw value", function() {
                         const expectedResult = 0;
-                        const result = product.getLimitationMin(parameterActive);
+                        const result = product.getLimitationMinRaw(parameterActive);
     
                         expect(result).to.be.equal(expectedResult);
                     });
                 });
     
-                describe(`LimitationMax for ${ParameterActive[parameterActive]}`, function() {
-                    it("should return the node's limitation max value", function() {
+                describe(`LimitationMaxRaw for ${ParameterActive[parameterActive]}`, function() {
+                    it("should return the node's limitation max raw value", function() {
                         const expectedResult = 0xC800;
-                        const result = product.getLimitationMax(parameterActive);
+                        const result = product.getLimitationMaxRaw(parameterActive);
     
                         expect(result).to.be.equal(expectedResult);
                     });
                 });
             }
+
+            describe("getLimitations", function() {
+                it("should return [0.25, 0.5] for a window", function() {
+                    const expectedResult = [0.25, 0.5];
+
+                    // Mock the expected raw values:
+                    sinon.stub(product, "getLimitationMinRaw").withArgs(ParameterActive.MP).returns(0x6400);
+                    sinon.stub(product, "getLimitationMaxRaw").withArgs(ParameterActive.MP).returns(0x9600);
+                    sinon.stub(product, "TypeID").get(() => { return ActuatorType.WindowOpener; });
+
+                    const result = product.getLimitations(ParameterActive.MP);
+
+                    expect(result).to.be.deep.equal(expectedResult);
+                });
+
+                it("should return [0.25, 0.5] for a roller shutter", function() {
+                    const expectedResult = [0.25, 0.5];
+
+                    // Mock the expected raw values:
+                    sinon.stub(product, "getLimitationMinRaw").withArgs(ParameterActive.MP).returns(0x3200);
+                    sinon.stub(product, "getLimitationMaxRaw").withArgs(ParameterActive.MP).returns(0x6400);
+                    sinon.stub(product, "TypeID").get(() => { return ActuatorType.RollerShutter; });
+
+                    const result = product.getLimitations(ParameterActive.MP);
+
+                    expect(result).to.be.deep.equal(expectedResult);
+                });
+            });
+
+            describe("getLimitationMin", function() {
+                it("should return 0.25 for a window", function() {
+                    const expectedResult = 0.25;
+
+                    // Mock the expected raw values:
+                    sinon.stub(product, "getLimitationMinRaw").withArgs(ParameterActive.MP).returns(0x6400);
+                    sinon.stub(product, "getLimitationMaxRaw").withArgs(ParameterActive.MP).returns(0x9600);
+                    sinon.stub(product, "TypeID").get(() => { return ActuatorType.WindowOpener; });
+
+                    const result = product.getLimitationMin(ParameterActive.MP);
+
+                    expect(result).to.be.equal(expectedResult);
+                });
+
+                it("should return 0.25 for a roller shutter", function() {
+                    const expectedResult = 0.25;
+
+                    // Mock the expected raw values:
+                    sinon.stub(product, "getLimitationMinRaw").withArgs(ParameterActive.MP).returns(0x3200);
+                    sinon.stub(product, "getLimitationMaxRaw").withArgs(ParameterActive.MP).returns(0x6400);
+                    sinon.stub(product, "TypeID").get(() => { return ActuatorType.RollerShutter; });
+
+                    const result = product.getLimitationMin(ParameterActive.MP);
+
+                    expect(result).to.be.equal(expectedResult);
+                });
+            });
+
+            describe("getLimitationMax", function() {
+                it("should return 0.5 for a window", function() {
+                    const expectedResult = 0.5;
+
+                    // Mock the expected raw values:
+                    sinon.stub(product, "getLimitationMinRaw").withArgs(ParameterActive.MP).returns(0x6400);
+                    sinon.stub(product, "getLimitationMaxRaw").withArgs(ParameterActive.MP).returns(0x9600);
+                    sinon.stub(product, "TypeID").get(() => { return ActuatorType.WindowOpener; });
+
+                    const result = product.getLimitationMax(ParameterActive.MP);
+
+                    expect(result).to.be.equal(expectedResult);
+                });
+
+                it("should return 0.5 for a roller shutter", function() {
+                    const expectedResult = 0.5;
+
+                    // Mock the expected raw values:
+                    sinon.stub(product, "getLimitationMinRaw").withArgs(ParameterActive.MP).returns(0x3200);
+                    sinon.stub(product, "getLimitationMaxRaw").withArgs(ParameterActive.MP).returns(0x6400);
+                    sinon.stub(product, "TypeID").get(() => { return ActuatorType.RollerShutter; });
+
+                    const result = product.getLimitationMax(ParameterActive.MP);
+
+                    expect(result).to.be.equal(expectedResult);
+                });
+            });
 
             describe("setNameAsync", function() {
                 it("should send a set node name request", async function() {
@@ -734,6 +818,180 @@ describe("products", function() {
                     conn.valueToReturn.push(dataErrorNtf);
 
                     const result = product.refreshAsync();
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
+
+            describe("refreshLimitation", function() {
+                it("should send a command request", async function() {
+                    const data = Buffer.from([0x06, 0x03, 0x13, 0x00, 0x00, 0x01]);
+                    const dataCfm = new GW_GET_LIMITATION_STATUS_CFM(data);
+                    const dataNotification = Buffer.from([13, 0x03, 0x14, 0,0,0,0,247,255,100,0,255,255]);
+                    const dataNotificationNtf = new GW_LIMITATION_STATUS_NTF(dataNotification);
+                    const dataCommandRunStatus = Buffer.from([16, 0x03, 0x02, 0,0,1,0,0,100,0,0,1,42,0,0,0]);
+                    const dataCommandRunStatusNtf = new GW_COMMAND_RUN_STATUS_NTF(dataCommandRunStatus);
+                    const dataSessionFinished = Buffer.from([5, 0x03, 0x04, 0, 0]);
+                    const dataSessionFinishedNtf = new GW_SESSION_FINISHED_NTF(dataSessionFinished);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = product.refreshLimitationAsync(LimitationType.MaximumLimitation);
+
+                    // Just let the asynchronous stuff run before our checks
+                    await new Promise(resolve => { setTimeout(resolve, 0); });
+
+                    conn.sendNotification(dataNotificationNtf, []);
+                    conn.sendNotification(dataCommandRunStatusNtf, []);
+                    conn.sendNotification(dataSessionFinishedNtf, []);
+
+                    // Just let the asynchronous stuff run before our checks
+                    await new Promise(resolve => { setTimeout(resolve, 0); });
+
+                    return expect(result).to.be.fulfilled;
+                });
+
+                it("should reject on error status", async function() {
+                    const data = Buffer.from([0x06, 0x03, 0x13, 0x00, 0x00, 0x00]);
+                    const dataCfm = new GW_GET_LIMITATION_STATUS_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = product.refreshLimitationAsync(LimitationType.MaximumLimitation);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
+
+            describe("setLimitationRawAsync", function() {
+                it("should send a command request", async function() {
+                    const data = Buffer.from([0x06, 0x03, 0x11, 0x00, 0x00, 0x01]);
+                    const dataCfm = new GW_SET_LIMITATION_CFM(data);
+                    const dataNotification = Buffer.from([13, 0x03, 0x14, 0,0,0,0,50,0,100,0,8,0]);
+                    const dataNotificationNtf = new GW_LIMITATION_STATUS_NTF(dataNotification);
+                    const dataCommandRunStatus = Buffer.from([16, 0x03, 0x02, 0,0,1,0,0,100,0,0,1,42,0,0,0]);
+                    const dataCommandRunStatusNtf = new GW_COMMAND_RUN_STATUS_NTF(dataCommandRunStatus);
+                    const dataSessionFinished = Buffer.from([5, 0x03, 0x04, 0, 0]);
+                    const dataSessionFinishedNtf = new GW_SESSION_FINISHED_NTF(dataSessionFinished);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = product.setLimitationRawAsync(0, 0x6400);
+
+                    // Just let the asynchronous stuff run before our checks
+                    await new Promise(resolve => { setTimeout(resolve, 0); });
+
+                    conn.sendNotification(dataNotificationNtf, []);
+                    conn.sendNotification(dataCommandRunStatusNtf, []);
+                    conn.sendNotification(dataSessionFinishedNtf, []);
+
+                    // Just let the asynchronous stuff run before our checks
+                    await new Promise(resolve => { setTimeout(resolve, 0); });
+
+                    return expect(result).to.be.fulfilled;
+                });
+
+                it("should reject on error status", async function() {
+                    const data = Buffer.from([0x06, 0x03, 0x11, 0x00, 0x00, 0x00]);
+                    const dataCfm = new GW_SET_LIMITATION_CFM(data);
+
+                    // Mock request
+                    conn.valueToReturn.push(dataCfm);
+
+                    const result = product.setLimitationRawAsync(0, 0x6400);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+
+                it("should reject on error frame", async function() {
+                    // Mock request
+                    conn.valueToReturn.push(dataErrorNtf);
+
+                    const result = product.setLimitationRawAsync(0, 0x6400);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+            });
+
+            describe("clearLimitationAsync", function () {
+                it("should call setLimitationRawAsync", async function() {
+                    const spySetLimitationRawAsync = sinon.spy(() => {
+                        return Promise.resolve();
+                    });
+                    sinon.stub(product, "setLimitationRawAsync").callsFake(spySetLimitationRawAsync);
+
+                    const result = await product.clearLimitationAsync();
+
+                    expect(spySetLimitationRawAsync).to.be.calledOnceWith(0xD400, 0xD400, ParameterActive.MP, 255, CommandOriginator.SAAC, PriorityLevel.ComfortLevel2);
+                });
+            });
+
+            describe("setLimitationAsync", function () {
+                it("should call setLimitationRawAsync", async function() {
+                    const spySetLimitationRawAsync = sinon.spy(() => {
+                        return Promise.resolve();
+                    });
+                    sinon.stub(product, "setLimitationRawAsync").callsFake(spySetLimitationRawAsync);
+
+                    const result = await product.setLimitationAsync(0.25, 0.5);
+
+                    expect(spySetLimitationRawAsync).to.be.calledOnceWith(0x6400, 0x9600, ParameterActive.MP, 253, CommandOriginator.SAAC, PriorityLevel.ComfortLevel2);
+                });
+
+                it("should throw if minValue > maxValue", async function() {
+                    const spySetLimitationRawAsync = sinon.spy(() => {
+                        return Promise.resolve();
+                    });
+                    sinon.stub(product, "setLimitationRawAsync").callsFake(spySetLimitationRawAsync);
+
+                    const result = product.setLimitationAsync(0.5, 0.25);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+
+                it("should throw if minValue < 0", async function() {
+                    const spySetLimitationRawAsync = sinon.spy(() => {
+                        return Promise.resolve();
+                    });
+                    sinon.stub(product, "setLimitationRawAsync").callsFake(spySetLimitationRawAsync);
+
+                    const result = product.setLimitationAsync(-1, 0.25);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+
+                it("should throw if minValue > 1", async function() {
+                    const spySetLimitationRawAsync = sinon.spy(() => {
+                        return Promise.resolve();
+                    });
+                    sinon.stub(product, "setLimitationRawAsync").callsFake(spySetLimitationRawAsync);
+
+                    const result = product.setLimitationAsync(1, 1.25);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+
+                it("should throw if maxValue < 0", async function() {
+                    const spySetLimitationRawAsync = sinon.spy(() => {
+                        return Promise.resolve();
+                    });
+                    sinon.stub(product, "setLimitationRawAsync").callsFake(spySetLimitationRawAsync);
+
+                    const result = product.setLimitationAsync(-1, -0.25);
+
+                    return expect(result).to.be.rejectedWith(Error);
+                });
+
+                it("should throw if maxValue > 0", async function() {
+                    const spySetLimitationRawAsync = sinon.spy(() => {
+                        return Promise.resolve();
+                    });
+                    sinon.stub(product, "setLimitationRawAsync").callsFake(spySetLimitationRawAsync);
+
+                    const result = product.setLimitationAsync(0.25, 1.25);
 
                     return expect(result).to.be.rejectedWith(Error);
                 });
