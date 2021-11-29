@@ -74,7 +74,28 @@ export class LockTime {
         if ((lockTime % 30) !== 0)
             throw new Error("Lock time must be a multiple of 30.");
 
-        if (lockTime < 0 || lockTime > 7560)
+        if (lockTime < 0 || lockTime > 7650)
+            throw new Error("Lock time out of range.");
+
+        return lockTime / 30 - 1;
+    }
+
+    static lockTimeValueToLockTimeForLimitation(lockTimeValue: number): number {
+        // Check parameter range
+        if (lockTimeValue < 0 || lockTimeValue > 253)
+            throw new Error("Lock time value out of range.");
+
+        return lockTimeValue === 253 ? Infinity : lockTimeValue * 30 + 30;
+    }
+
+    static lockTimeTolockTimeValueForLimitation(lockTime: number): number {
+        if (lockTime === Infinity)
+            return 253;
+
+        if ((lockTime % 30) !== 0)
+            throw new Error("Lock time must be a multiple of 30.");
+
+        if (lockTime < 0 || lockTime > 7590)
             throw new Error("Lock time out of range.");
 
         return lockTime / 30 - 1;
