@@ -42,7 +42,7 @@ export class GW_GET_ALL_NODES_INFORMATION_NTF extends GW_FRAME_NTF {
         this.ProductType = this.Data.readUInt8(72);
         this.NodeVariation = this.Data.readUInt8(73);
         this.PowerSaveMode = this.Data.readUInt8(74);
-        this.SerialNumber = this.Data.slice(75, 83);
+        this.SerialNumber = this.Data.slice(76, 84);
         this.OperatingState = this.Data.readUInt8(84);
         this.CurrentPosition = this.Data.readUInt16BE(85);
         this.TargetPosition = this.Data.readUInt16BE(87);

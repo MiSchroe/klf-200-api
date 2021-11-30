@@ -2,7 +2,6 @@
 
 import { GW_FRAME_COMMAND_REQ } from "./common";
 import { CommandOriginator, PriorityLevel } from "./GW_COMMAND";
-import { isArray } from "util";
 
 export class GW_WINK_SEND_REQ extends GW_FRAME_COMMAND_REQ {
     constructor(readonly Nodes: number[] | number, readonly EnableWink: boolean = true, readonly WinkTime: number = 254, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1) {
@@ -17,7 +16,7 @@ export class GW_WINK_SEND_REQ extends GW_FRAME_COMMAND_REQ {
         buff.writeUInt8(this.WinkTime, 5);
 
         // Multiple nodes are provided
-        if (isArray(this.Nodes))
+        if (Array.isArray(this.Nodes))
         {
             if (this.Nodes.length > 20)
                 throw new Error("Too many nodes.");

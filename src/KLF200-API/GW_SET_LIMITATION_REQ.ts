@@ -2,7 +2,6 @@
 
 import { GW_FRAME_COMMAND_REQ } from "./common";
 import { CommandOriginator, PriorityLevel, ParameterActive } from "./GW_COMMAND";
-import { isArray } from "util";
 
 export class GW_SET_LIMITATION_REQ extends GW_FRAME_COMMAND_REQ {
     constructor(readonly Nodes: number[] | number, readonly LimitationValueMin: number, readonly LimitationValueMax: number, readonly LimitationTime: number, readonly PriorityLevel: PriorityLevel = 3, readonly CommandOriginator: CommandOriginator = 1, readonly ParameterActive: ParameterActive = 0) {
@@ -19,7 +18,7 @@ export class GW_SET_LIMITATION_REQ extends GW_FRAME_COMMAND_REQ {
         buff.writeUInt8(this.LimitationTime, 30);
 
         // Multiple nodes are provided
-        if (isArray(this.Nodes))
+        if (Array.isArray(this.Nodes))
         {
             if (this.Nodes.length > 20)
                 throw new Error("Too many nodes.");

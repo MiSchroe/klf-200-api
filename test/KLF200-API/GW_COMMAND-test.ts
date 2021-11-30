@@ -76,7 +76,7 @@ describe("GW_COMMAND", function() {
             });
 
             it("should throw on an input value greater than 7560", function() {
-                const inputValue = 7561;
+                const inputValue = 7680;
 
                 expect(() => LockTime.lockTimeTolockTimeValue(inputValue)).to.throw();
             });
@@ -85,6 +85,88 @@ describe("GW_COMMAND", function() {
                 const inputValue = 31;
 
                 expect(() => LockTime.lockTimeTolockTimeValue(inputValue)).to.throw();
+            });
+        });
+
+        describe("lockTimeValueToLockTimeForLimitation", function() {
+            it("should return 30 for input value 0", function() {
+                const inputValue = 0;
+                const expectedValue = 30;
+                const result = LockTime.lockTimeValueToLockTimeForLimitation(inputValue);
+
+                expect(result).to.equal(expectedValue);
+            });
+
+            it("should return 1290 for input value 42", function() {
+                const inputValue = 42;
+                const expectedValue = 1290;
+                const result = LockTime.lockTimeValueToLockTimeForLimitation(inputValue);
+
+                expect(result).to.equal(expectedValue);
+            });
+
+            it("should return +infinity for input value 253", function() {
+                const inputValue = 253;
+                const expectedValue = Infinity;
+                const result = LockTime.lockTimeValueToLockTimeForLimitation(inputValue);
+
+                expect(result).to.equal(expectedValue);
+            });
+
+            it("should throw on a negative input value", function() {
+                const inputValue = -1;
+
+                expect(() => LockTime.lockTimeValueToLockTimeForLimitation(inputValue)).to.throw();
+            });
+
+            it("should throw on an input value greater than 253", function() {
+                const inputValue = 254;
+
+                expect(() => LockTime.lockTimeValueToLockTimeForLimitation(inputValue)).to.throw();
+            });
+        });
+
+        describe("lockTimeTolockTimeValueForLimitation", function() {
+            it("should return 0 for input value 30", function() {
+                const inputValue = 30;
+                const expectedValue = 0;
+                const result = LockTime.lockTimeTolockTimeValueForLimitation(inputValue);
+
+                expect(result).to.equal(expectedValue);
+            });
+
+            it("should return 42 for input value 1290", function() {
+                const inputValue = 1290;
+                const expectedValue = 42;
+                const result = LockTime.lockTimeTolockTimeValueForLimitation(inputValue);
+
+                expect(result).to.equal(expectedValue);
+            });
+
+            it("should return 253 for input value +infinity", function() {
+                const inputValue = Infinity;
+                const expectedValue = 253;
+                const result = LockTime.lockTimeTolockTimeValueForLimitation(inputValue);
+
+                expect(result).to.equal(expectedValue);
+            });
+
+            it("should throw on a negative input value", function() {
+                const inputValue = -1;
+
+                expect(() => LockTime.lockTimeTolockTimeValueForLimitation(inputValue)).to.throw();
+            });
+
+            it("should throw on an input value greater than 7560", function() {
+                const inputValue = 7620;
+
+                expect(() => LockTime.lockTimeTolockTimeValueForLimitation(inputValue)).to.throw();
+            });
+
+            it("should throw on an input value not dividable by 30", function() {
+                const inputValue = 31;
+
+                expect(() => LockTime.lockTimeTolockTimeValueForLimitation(inputValue)).to.throw();
             });
         });
     });

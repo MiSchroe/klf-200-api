@@ -23,11 +23,17 @@ import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "./KLF200-API/GW_CS_SYSTEM_TABLE_U
 import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
 import { GW_WINK_SEND_CFM } from "./KLF200-API/GW_WINK_SEND_CFM";
 import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ";
-import { CommandStatus, RunStatus, StatusReply, ParameterActive, convertPositionRaw, convertPosition } from "./KLF200-API/GW_COMMAND";
+import { CommandStatus, RunStatus, StatusReply, ParameterActive, convertPositionRaw, convertPosition, FunctionalParameter, LimitationType, CommandOriginator, PriorityLevel, LockTime } from "./KLF200-API/GW_COMMAND";
 import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF";
 import { GW_COMMAND_REMAINING_TIME_NTF } from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF";
 import { GW_GET_ALL_NODES_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_CFM";
 import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM";
+import { GW_GET_LIMITATION_STATUS_CFM } from "./KLF200-API/GW_GET_LIMITATION_STATUS_CFM";
+import { GW_GET_LIMITATION_STATUS_REQ } from "./KLF200-API/GW_GET_LIMITATION_STATUS_REQ";
+import { GW_LIMITATION_STATUS_NTF } from "./KLF200-API/GW_LIMITATION_STATUS_NTF";
+import { GW_SESSION_FINISHED_NTF } from "./KLF200-API/GW_SESSION_FINISHED_NTF";
+import { GW_SET_LIMITATION_CFM } from "./KLF200-API/GW_SET_LIMITATION_CFM";
+import { GW_SET_LIMITATION_REQ } from "./KLF200-API/GW_SET_LIMITATION_REQ";
 
 /**
  * Each product that is registered at the KLF-200 interface will be created
@@ -175,6 +181,12 @@ export class Product extends Component {
         this._remainingTime = frame.RemainingTime;
         this._timeStamp = frame.TimeStamp;
         this._ProductAlias = frame.ActuatorAliases;
+        this._limitationMinRaw = new Array<number>(17).fill(0);
+        this._limitationMaxRaw = new Array<number>(17).fill(0xC800);
+
+        // Read the limitations for at least the main parameter (MP)
+        this.refreshLimitationAsync(LimitationType.MinimumLimitation);
+        this.refreshLimitationAsync(LimitationType.MaximumLimitation);
 
         this.Connection.on(frame => this.onNotificationHandler(frame), [
             GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF, 
@@ -559,6 +571,91 @@ export class Product extends Component {
         return convertPositionRaw(this._targetPositionRaw, this.TypeID);
     }
 
+    private _limitationMinRaw : number[];
+    /**
+     * A read only array of the raw limitations' min values.
+     * 
+     * @readonly
+     * @type {number[]}
+     * @memberof Product
+     */
+    public get LimitationMinRaw(): readonly number[] { return Array.from(this._limitationMinRaw); }
+
+    /**
+     * The minimum value (raw) of a limitation of the product.
+     * 
+     * @readonly
+     * @param functionalParameter Parameter for which the limitation should be returned.
+     * @type {number}
+     * @memberof Product
+     */
+    public getLimitationMinRaw(functionalParameter: ParameterActive) : number {
+        return this._limitationMinRaw[functionalParameter];
+    }
+
+    private _limitationMaxRaw : number[];
+    /**
+     * A read only array of the raw limitations' max values.
+     * 
+     * @readonly
+     * @param functionalParameter Parameter for which the limitation should be returned.
+     * @type {number[]}
+     * @memberof Product
+     */
+     public get LimitationMaxRaw(): readonly number[] { return Array.from(this._limitationMaxRaw); }
+
+     /**
+     * The maximum value (raw) of a limitation of the product.
+     * 
+     * @readonly
+     * @type {number}
+     * @memberof Product
+     */
+    public getLimitationMaxRaw(functionalParameter: ParameterActive) : number {
+        return this._limitationMaxRaw[functionalParameter];
+    }
+
+    /**
+     * Returns a tuple of min and max values for the limitation of the profided parameter.
+     * 
+     * @param functionalParameter Parameter for which the limitations should be returned.
+     * @returns A tuple of the min and max values as percentage in the range [0, 1].
+     */
+    public getLimitations(functionalParameter: ParameterActive): [min: number, max: number] {
+        const limitationMin = convertPositionRaw(this.getLimitationMinRaw(functionalParameter), this.TypeID);
+        const limitationMax = convertPositionRaw(this.getLimitationMaxRaw(functionalParameter), this.TypeID);
+
+        if (limitationMin <= limitationMax) {
+            return [limitationMin, limitationMax];
+        } else {
+            return [limitationMax, limitationMin];
+        }
+    }
+
+     /**
+     * The minimum value of a limitation of the product.
+     * 
+     * @readonly
+     * @param functionalParameter Parameter for which the limitation should be returned.
+     * @type {number}
+     * @memberof Product
+     */
+    public getLimitationMin(functionalParameter: ParameterActive): number {
+        return this.getLimitations(functionalParameter)[0];
+    }
+
+     /**
+     * The maximum value of a limitation of the product.
+     * 
+     * @readonly
+     * @param functionalParameter Parameter for which the limitation should be returned.
+     * @type {number}
+     * @memberof Product
+     */
+      public getLimitationMax(functionalParameter: ParameterActive): number {
+        return this.getLimitations(functionalParameter)[1];
+    }
+
     /**
      * Stops the product at the current position.
      *
@@ -624,6 +721,167 @@ export class Product extends Component {
         } catch (error) {
             return Promise.reject(error);
         }
+    }
+
+    private async waitForLimitationFinished(sessionID: number, limitationType: LimitationType | LimitationType[], parameterActive: ParameterActive): Promise<void> {
+        const limitationTypes: LimitationType[] = [];
+
+        if (Array.isArray(limitationType)) {
+            limitationTypes.push(...limitationType);
+        } else {
+            limitationTypes.push(limitationType);
+        }
+        
+        return new Promise((resolve, reject) => {
+            try
+            {
+                // Listen to notifications:
+                const dispose = this.Connection.on(frame => {
+                    try {
+                        if (frame instanceof GW_LIMITATION_STATUS_NTF && frame.SessionID === sessionID) {
+                            if (frame.NodeID !== this.NodeID) {
+                                throw new Error(`Unexpected node ID: ${frame.NodeID}`);
+                            }
+                            if (frame.ParameterID !== parameterActive) {
+                                throw new Error(`Unexpected parameter ID: ${frame.ParameterID}`);
+                            }
+                            if (limitationTypes.indexOf(LimitationType.MinimumLimitation) !== -1) {
+                                if (frame.LimitationValueMin !== this._limitationMinRaw[frame.ParameterID]) {
+                                    this._limitationMinRaw[frame.ParameterID] = frame.LimitationValueMin;
+                                    this.propertyChanged("LimitationMinRaw")
+                                }
+                            } 
+                            if (limitationTypes.indexOf(LimitationType.MaximumLimitation) !== -1) {
+                                if (frame.LimitationValueMax !== this._limitationMaxRaw[frame.ParameterID]) {
+                                    this._limitationMaxRaw[frame.ParameterID] = frame.LimitationValueMax;
+                                    this.propertyChanged("LimitationMaxRaw")
+                                }
+                            }
+                        } else if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === sessionID) {
+                            dispose?.dispose();
+                            resolve();
+                        }
+                    } catch (error) {
+                        dispose?.dispose();
+                        reject(error);
+                    }
+                }, [
+                    GatewayCommand.GW_LIMITATION_STATUS_NTF,
+                    GatewayCommand.GW_SESSION_FINISHED_NTF
+                ]);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    /**
+     * Refreshes the limitation data for the provided limitation type of a parameter.
+     * 
+     * @param limitationType The limitation type for which the data should be refreshed.
+     * @param parameterActive Parameter for which the limitation should be refreshed.
+     * @returns Promise<void>
+     */
+    public async refreshLimitationAsync(limitationType: LimitationType, parameterActive: ParameterActive = ParameterActive.MP): Promise<void> {
+        try {
+            const confirmationFrame = <GW_GET_LIMITATION_STATUS_CFM> await this.Connection.sendFrameAsync(new GW_GET_LIMITATION_STATUS_REQ(this.NodeID, limitationType, parameterActive));
+            if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
+                return this.waitForLimitationFinished(confirmationFrame.SessionID, limitationType, parameterActive);
+            }
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
+            }
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
+
+    /**
+     * Sets a new limitation with raw values.
+     * 
+     * @param minValue Raw min value of the limitation.
+     * @param maxValue Raw max value of the limitation.
+     * @param parameterActive Parameter for which the limitation should be set.
+     * @param limitationTime Limitation time.
+     * @param commandOriginator Command Originator.
+     * @param priorityLevel Priority Level.
+     * @returns Promise<void>
+     */
+    public async setLimitationRawAsync(minValue: number, maxValue: number,
+        parameterActive: ParameterActive = ParameterActive.MP,
+        limitationTime: number = 253,   // Unlimited time
+        commandOriginator: CommandOriginator = CommandOriginator.SAAC,
+        priorityLevel: PriorityLevel = PriorityLevel.ComfortLevel2
+    ): Promise<void> {
+        try {
+            const confirmationFrame = <GW_SET_LIMITATION_CFM> await this.Connection.sendFrameAsync(new GW_SET_LIMITATION_REQ(this.NodeID, minValue, maxValue, limitationTime, priorityLevel, commandOriginator, parameterActive));
+            if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
+                return this.waitForLimitationFinished(confirmationFrame.SessionID, [LimitationType.MinimumLimitation, LimitationType.MaximumLimitation], parameterActive);
+            }
+            else {
+                return Promise.reject(new Error(confirmationFrame.getError()));
+            }
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
+
+    /**
+     * Sets a new limitation.
+     * 
+     * @param minValue Min value of the limitation in the range [0, 1].
+     * @param maxValue Max value of the limitation in the range [0, 1].
+     * @param parameterActive Parameter for which the limitation should be set.
+     * @param limitationTime Limitation time in seconds. Must be a multiple of 30.
+     * @param commandOriginator Command Originator.
+     * @param priorityLevel Priority Level.
+     * @returns Promise<void>
+     */
+     public async setLimitationAsync(minValue: number, maxValue: number,
+        parameterActive: ParameterActive = ParameterActive.MP,
+        limitationTime: number = Infinity,   // Unlimited time
+        commandOriginator: CommandOriginator = CommandOriginator.SAAC,
+        priorityLevel: PriorityLevel = PriorityLevel.ComfortLevel2
+    ): Promise<void> {
+        try {
+            if (minValue > maxValue) {
+                throw new Error(`Parameter minValue (${minValue}) must be less than or equal to parameter maxValue (${maxValue}).`);
+            }
+            if (minValue < 0 || minValue > 1) {
+                throw new Error("Parameter minValue must be between 0 and 1.");
+            }
+            if (maxValue < 0 || maxValue > 1) {
+                throw new Error("Parameter maxValue must be between 0 and 1.");
+            }
+            let rawMinValue = convertPosition(minValue, this.TypeID);
+            let rawMaxValue = convertPosition(maxValue, this.TypeID);
+            const rawLimitationTime = LockTime.lockTimeTolockTimeValueForLimitation(limitationTime);
+
+            if (rawMinValue > rawMaxValue) {
+                // Based on the actuator type the min/max values have to be swapped
+                [rawMinValue, rawMaxValue] = [rawMaxValue, rawMinValue];
+            }
+
+            return this.setLimitationRawAsync(rawMinValue, rawMaxValue, parameterActive, rawLimitationTime, commandOriginator, priorityLevel);
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
+
+    /**
+     * Clears the limitation for the parameter.
+     * 
+     * @param parameterActive Parameter for which the limitation should be set.
+     * @param commandOriginator Command Originator.
+     * @param priorityLevel Priority Level.
+     * @returns Promise<void>
+     */
+     public async clearLimitationAsync(
+        parameterActive: ParameterActive = ParameterActive.MP,
+        commandOriginator: CommandOriginator = CommandOriginator.SAAC,
+        priorityLevel: PriorityLevel = PriorityLevel.ComfortLevel2
+    ): Promise<void> {
+        return this.setLimitationRawAsync(0xD400, 0xD400, parameterActive, 255, commandOriginator, priorityLevel);
     }
 
     private onNotificationHandler(frame: IGW_FRAME_RCV): void {
@@ -811,7 +1069,7 @@ export class Product extends Component {
                 this._PowerSaveMode = frame.PowerSaveMode;
                 this.propertyChanged("PowerSaveMode");
             }
-            if (frame.SerialNumber !== this._SerialNumber) {
+            if (!frame.SerialNumber.equals(this._SerialNumber)) {
                 this._SerialNumber = frame.SerialNumber;
                 this.propertyChanged("SerialNumber");
             }
@@ -853,10 +1111,20 @@ export class Product extends Component {
                 this._timeStamp = frame.TimeStamp;
                 this.propertyChanged("TimeStamp");
             }
-            this._ProductAlias = frame.ActuatorAliases;
-            this.propertyChanged("ProductAlias");
+            if (
+                // If length differ, then they can't be equal anymore
+                this._ProductAlias.length !== frame.ActuatorAliases.length ||
+                // Check if some current elements are missing in new frame elements
+                this._ProductAlias.some(v1 => !frame.ActuatorAliases.some(v2 => v1.AliasType === v2.AliasType && v1.AliasValue === v2.AliasValue)) ||
+                // Check if some new frame elements are missing in current elements
+                frame.ActuatorAliases.some(v1 => !this._ProductAlias.some(v2 => v1.AliasType === v2.AliasType && v1.AliasValue === v2.AliasValue))
+            ) {
+                this._ProductAlias = frame.ActuatorAliases;
+                this.propertyChanged("ProductAlias");
+            }
         }
     }
+
 }
 
 /**
