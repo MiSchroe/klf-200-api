@@ -184,10 +184,6 @@ export class Product extends Component {
         this._limitationMinRaw = new Array<number>(17).fill(0);
         this._limitationMaxRaw = new Array<number>(17).fill(0xC800);
 
-        // Read the limitations for at least the main parameter (MP)
-        this.refreshLimitationAsync(LimitationType.MinimumLimitation);
-        this.refreshLimitationAsync(LimitationType.MaximumLimitation);
-
         this.Connection.on(frame => this.onNotificationHandler(frame), [
             GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF, 
             GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
@@ -1167,7 +1163,8 @@ export class Products {
                 try {
                     dispose = this.Connection.on(frame => {
                         if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF) {
-                            this.Products[frame.NodeID] = new Product(this.Connection, frame);
+                            const newProduct = new Product(this.Connection, frame);
+                            this.Products[frame.NodeID] = newProduct;
                         }
                         else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
                             if (dispose) {
@@ -1196,6 +1193,15 @@ export class Products {
             // Wait for nodes information notifications, but only, if there are nodes
             if (getAllNodesInformation.NumberOfNode > 0) {
                 await onNotificationHandler;
+
+                // After reading all the products we would read the limitations once:
+                for (const product of this.Products) {
+                    if (product) {
+                        // Read the limitations for at least the main parameter (MP)
+                        await product.refreshLimitationAsync(LimitationType.MinimumLimitation);
+                        await product.refreshLimitationAsync(LimitationType.MaximumLimitation);
+                    }
+                }
             } else {
                 // Otherwise, dispose the notification handler
                 if (dispose) {
