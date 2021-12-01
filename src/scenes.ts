@@ -15,6 +15,8 @@ import { Component } from "./utils/PropertyChangedEvent";
 import { GW_STOP_SCENE_CFM } from "./KLF200-API/GW_STOP_SCENE_CFM";
 import { GW_STOP_SCENE_REQ } from "./KLF200-API/GW_STOP_SCENE_REQ";
 import { GW_GET_SCENE_LIST_CFM } from "./KLF200-API/GW_GET_SCENE_LIST_CFM";
+import { CommandOriginator, PriorityLevel } from "./KLF200-API/GW_COMMAND";
+import { Velocity } from "./KLF200-API/GW_SYSTEMTABLE_DATA";
 
 "use strict";
 
@@ -75,12 +77,15 @@ export class Scene extends Component {
     /**
      * Start the scene.
      *
+     * @param Velocity The velocity with which the scene will be run.
+     * @param PriorityLevel The priority level for the run command.
+     * @param CommandOriginator The command originator for the run command.
      * @returns {Promise<number>} Returns the session ID. You can listen for the GW_SESSION_FINISHED_NTF notification to determine when the scene has finished.
      * @memberof Scene
      */
-    public async runAsync(): Promise<number> {
+    public async runAsync(Velocity: Velocity = 0, PriorityLevel: PriorityLevel = 3, CommandOriginator: CommandOriginator = 1): Promise<number> {
         try {
-            const confirmationFrame = <GW_ACTIVATE_SCENE_CFM> await this.Connection.sendFrameAsync(new GW_ACTIVATE_SCENE_REQ(this.SceneID));
+            const confirmationFrame = <GW_ACTIVATE_SCENE_CFM> await this.Connection.sendFrameAsync(new GW_ACTIVATE_SCENE_REQ(this.SceneID, PriorityLevel, CommandOriginator, Velocity));
             if (confirmationFrame.Status === ActivateSceneStatus.OK) {
                 this._isRunning = true;
                 this._runningSession = confirmationFrame.SessionID;
@@ -98,12 +103,14 @@ export class Scene extends Component {
     /**
      * Stops a running scene.
      *
+     * @param PriorityLevel The priority level for the run command.
+     * @param CommandOriginator The command originator for the run command.
      * @returns {Promise<number>} Returns the session ID.
      * @memberof Scene
      */
-    public async stopAsync(): Promise<number> {
+    public async stopAsync(PriorityLevel: PriorityLevel = 3, CommandOriginator: CommandOriginator = 1): Promise<number> {
         try {
-            const confirmationFrame = <GW_STOP_SCENE_CFM> await this.Connection.sendFrameAsync(new GW_STOP_SCENE_REQ(this.SceneID));
+            const confirmationFrame = <GW_STOP_SCENE_CFM> await this.Connection.sendFrameAsync(new GW_STOP_SCENE_REQ(this.SceneID, PriorityLevel, CommandOriginator));
             if (confirmationFrame.Status === ActivateSceneStatus.OK) {
                 this._isRunning = false;
                 this._runningSession = confirmationFrame.SessionID;
