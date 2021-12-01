@@ -59,6 +59,10 @@ describe("products", function() {
         ];
 
         describe("createProductsAsync", function() {
+            this.beforeEach(function() {
+                sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
+            });
+
             it("should create without error with 5 products.", async function() {
                 const conn = new MockConnection(receivedFrames);
                 const promResult = Products.createProductsAsync(conn);
@@ -88,6 +92,10 @@ describe("products", function() {
         });
         
         describe("findByName", function() {
+            this.beforeEach(function() {
+                sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
+            });
+
             it("should find product 'Fenster Badezimmer'.", async function() {
                 const conn = new MockConnection(receivedFrames);
                 const promProducts = Products.createProductsAsync(conn);
@@ -104,6 +112,10 @@ describe("products", function() {
         });
         
         describe("onNotificationHandler", function() {
+            this.beforeEach(function() {
+                sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
+            });
+
             it("should add 1 product and remove 2 products.", async function() {
                 const data = Buffer.from([55, 0x01, 0x12, 
                     // Added nodes (0)
@@ -148,6 +160,10 @@ describe("products", function() {
         });
         
         describe("addNodeAsync", function() {
+            this.beforeEach(function() {
+                sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
+            });
+
             it("should throw on error frame.", async function() {
                 const data = Buffer.from([55, 0x01, 0x12, 
                     // Added nodes (0)
@@ -202,8 +218,13 @@ describe("products", function() {
                 }
                 // Send finished
                 conn.sendNotification(dataNodeFinishNtf, []);
+
+                const stubRefreshLimitationAsync = sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
+
                 products = await promResult;
                 product = products.Products[0];     // Use the first product for all tests
+
+                stubRefreshLimitationAsync.restore();
             });
 
             describe("Name", function() {
