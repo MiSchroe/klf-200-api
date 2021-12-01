@@ -6,12 +6,16 @@
 -->
 ## __WORK IN PROGRESS__
 
-### Fixes:
+### Enhancements:
 
 * [#24](https://github.com/MiSchroe/klf-200-api/issues/24) Add `refreshScenes()` method to re-read scenes data from the gateway
 * [#27](https://github.com/MiSchroe/klf-200-api/issues/27) Add `refresh()` method to re-read object data from the gateway
 * [#28](https://github.com/MiSchroe/klf-200-api/issues/28) Add methods and properties for product limitations.
 * [#41](https://github.com/MiSchroe/klf-200-api/issues/41) Add additional default parameters to methods.
+* [#50](https://github.com/MiSchroe/klf-200-api/issues/50) Add handler to log frames that are sent to the KLF 200.
+
+### Fixes:
+
 * Fix security audit dependencies ([#32](https://github.com/MiSchroe/klf-200-api/issues/32), [#35](https://github.com/MiSchroe/klf-200-api/issues/35), [#37](https://github.com/MiSchroe/klf-200-api/issues/37))
 
 ## 3.0.4 (2020-07-27)
