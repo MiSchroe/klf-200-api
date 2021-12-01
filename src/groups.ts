@@ -14,7 +14,7 @@ import { GW_GET_ALL_GROUPS_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_GROUP
 import { GW_GROUP_INFORMATION_CHANGED_NTF, ChangeType, GW_GROUP_INFORMATION_CHANGED_NTF_Modified } from "./KLF200-API/GW_GROUP_INFORMATION_CHANGED_NTF";
 import { GW_ACTIVATE_PRODUCTGROUP_CFM } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_CFM";
 import { GW_ACTIVATE_PRODUCTGROUP_REQ } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_REQ";
-import { convertPosition, ActivateProductGroupStatus } from "./KLF200-API/GW_COMMAND";
+import { convertPosition, ActivateProductGroupStatus, CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelLock, PriorityLevelInformation } from "./KLF200-API/GW_COMMAND";
 import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM";
 import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
 import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
@@ -299,12 +299,19 @@ export class Group extends Component {
      * Sets the target position for all products of the group as raw value.
      *
      * @param {number} newPositionRaw New target position value as raw value.
+     * @param Velocity The velocity with which the scene will be run.
+     * @param PriorityLevel The priority level for the run command.
+     * @param CommandOriginator The command originator for the run command.
+     * @param ParameterActive The parameter that should be set by this command. MP or FP1-FP16.
+     * @param PriorityLevelLock Flag if the priority level lock should be used.
+     * @param PriorityLevels Up to 8 priority levels.
+     * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
      * @returns {Promise<number>}
      * @memberof Group
      */
-    public async setTargetPositionRawAsync(newPositionRaw: number): Promise<number> {
+    public async setTargetPositionRawAsync(newPositionRaw: number, Velocity: Velocity = 0, PriorityLevel: PriorityLevel = 3, CommandOriginator: CommandOriginator = 1, ParameterActive: ParameterActive = 0, PriorityLevelLock: PriorityLevelLock = 0, PriorityLevels: PriorityLevelInformation[] = [], LockTime: number = Infinity): Promise<number> {
         try {
-            const confirmationFrame = <GW_ACTIVATE_PRODUCTGROUP_CFM> await this.Connection.sendFrameAsync(new GW_ACTIVATE_PRODUCTGROUP_REQ(this.GroupID, newPositionRaw));
+            const confirmationFrame = <GW_ACTIVATE_PRODUCTGROUP_CFM> await this.Connection.sendFrameAsync(new GW_ACTIVATE_PRODUCTGROUP_REQ(this.GroupID, newPositionRaw, PriorityLevel, CommandOriginator, ParameterActive, Velocity, PriorityLevelLock, PriorityLevels, LockTime));
             if (confirmationFrame.Status === ActivateProductGroupStatus.OK) {
                 return confirmationFrame.SessionID;
             }
@@ -320,10 +327,17 @@ export class Group extends Component {
      * Sets the target position for all products of the group
      *
      * @param {number} newPosition New target position value in percent.
+     * @param Velocity The velocity with which the scene will be run.
+     * @param PriorityLevel The priority level for the run command.
+     * @param CommandOriginator The command originator for the run command.
+     * @param ParameterActive The parameter that should be set by this command. MP or FP1-FP16.
+     * @param PriorityLevelLock Flag if the priority level lock should be used.
+     * @param PriorityLevels Up to 8 priority levels.
+     * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
      * @returns {Promise<number>}
      * @memberof Group
      */
-    public async setTargetPositionAsync(newPosition: number): Promise<number> {
+    public async setTargetPositionAsync(newPosition: number, Velocity: Velocity = 0, PriorityLevel: PriorityLevel = 3, CommandOriginator: CommandOriginator = 1, ParameterActive: ParameterActive = 0, PriorityLevelLock: PriorityLevelLock = 0, PriorityLevels: PriorityLevelInformation[] = [], LockTime: number = Infinity): Promise<number> {
         try {
             // Get product type from first node ID for conversion
             const nodeID = this.Nodes[0];
@@ -375,7 +389,7 @@ export class Group extends Component {
                 return Promise.reject(error);
             }
 
-            return this.setTargetPositionRawAsync(convertPosition(newPosition, await nodeTypeID));
+            return this.setTargetPositionRawAsync(convertPosition(newPosition, await nodeTypeID), Velocity, PriorityLevel, CommandOriginator, ParameterActive, PriorityLevelLock, PriorityLevels, LockTime);
         } catch (error) {
             return Promise.reject(error);
         }

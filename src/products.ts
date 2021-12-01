@@ -23,7 +23,7 @@ import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "./KLF200-API/GW_CS_SYSTEM_TABLE_U
 import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
 import { GW_WINK_SEND_CFM } from "./KLF200-API/GW_WINK_SEND_CFM";
 import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ";
-import { CommandStatus, RunStatus, StatusReply, ParameterActive, convertPositionRaw, convertPosition, FunctionalParameter, LimitationType, CommandOriginator, PriorityLevel, LockTime } from "./KLF200-API/GW_COMMAND";
+import { CommandStatus, RunStatus, StatusReply, ParameterActive, convertPositionRaw, convertPosition, FunctionalParameter, LimitationType, CommandOriginator, PriorityLevel, LockTime, PriorityLevelLock, PriorityLevelInformation } from "./KLF200-API/GW_COMMAND";
 import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF";
 import { GW_COMMAND_REMAINING_TIME_NTF } from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF";
 import { GW_GET_ALL_NODES_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_CFM";
@@ -533,17 +533,19 @@ export class Product extends Component {
      * Sets the product to a new position in percent.
      *
      * @param {number} newPosition New position value in percent.
+     * @param PriorityLevel The priority level for the run command.
+     * @param CommandOriginator The command originator for the run command.
+     * @param ParameterActive The parameter that should be returned in the notifications. MP or FP1-FP16.
+     * @param FunctionalParameters Additional functional paramters can be set during the command.
+     * @param PriorityLevelLock Flag if the priority level lock should be used.
+     * @param PriorityLevels Up to 8 priority levels.
+     * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
      * @returns {Promise<number>}
      * @memberof Product
      */
-    public async setTargetPositionAsync(newPosition: number): Promise<number> {
+    public async setTargetPositionAsync(newPosition: number, PriorityLevel: PriorityLevel = 3, CommandOriginator: CommandOriginator = 1, ParameterActive: ParameterActive = 0, FunctionalParameters: FunctionalParameter[] = [], PriorityLevelLock: PriorityLevelLock = 0, PriorityLevels: PriorityLevelInformation[] = [], LockTime: number = Infinity): Promise<number> {
         try {
-            const req = new GW_COMMAND_SEND_REQ(this.NodeID, convertPosition(newPosition, this.TypeID));
-            // const dispose = this.connection.on(frame => {
-            //     if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === req.SessionID) {
-            //         dispose.dispose();
-            //     }
-            // }, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+            const req = new GW_COMMAND_SEND_REQ(this.NodeID, convertPosition(newPosition, this.TypeID), PriorityLevel, CommandOriginator, ParameterActive, FunctionalParameters, PriorityLevelLock, PriorityLevels, LockTime);
             const confirmationFrame = <GW_COMMAND_SEND_CFM> await this.Connection.sendFrameAsync(req);
             if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted){
                 return confirmationFrame.SessionID;
@@ -655,12 +657,19 @@ export class Product extends Component {
     /**
      * Stops the product at the current position.
      *
+     * @param PriorityLevel The priority level for the run command.
+     * @param CommandOriginator The command originator for the run command.
+     * @param ParameterActive The parameter that should be returned in the notifications. MP or FP1-FP16.
+     * @param FunctionalParameters Additional functional paramters can be set during the command.
+     * @param PriorityLevelLock Flag if the priority level lock should be used.
+     * @param PriorityLevels Up to 8 priority levels.
+     * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
      * @returns {Promise<number>}
      * @memberof Product
      */
-    public async stopAsync(): Promise<number> {
+    public async stopAsync(PriorityLevel: PriorityLevel = 3, CommandOriginator: CommandOriginator = 1, ParameterActive: ParameterActive = 0, FunctionalParameters: FunctionalParameter[] = [], PriorityLevelLock: PriorityLevelLock = 0, PriorityLevels: PriorityLevelInformation[] = [], LockTime: number = Infinity): Promise<number> {
         try {
-            const confirmationFrame = <GW_COMMAND_SEND_CFM> await this.Connection.sendFrameAsync(new GW_COMMAND_SEND_REQ(this.NodeID, 0xD200));
+            const confirmationFrame = <GW_COMMAND_SEND_CFM> await this.Connection.sendFrameAsync(new GW_COMMAND_SEND_REQ(this.NodeID, 0xD200, PriorityLevel, CommandOriginator, ParameterActive, FunctionalParameters, PriorityLevelLock, PriorityLevels, LockTime));
             if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted){
                 return confirmationFrame.SessionID;
             }
@@ -678,12 +687,16 @@ export class Product extends Component {
      * Winking depends on the product, e.g. a window moves the handle
      * a little bit.
      *
+     * @param EnableWink If false wink will be stopped.
+     * @param WinkTime Wink time in seconds (up to 253) or 254 for manufactor defined or 255 for infinite time.
+     * @param PriorityLevel The priority level for the run command.
+     * @param CommandOriginator The command originator for the run command.
      * @returns {Promise<number>}
      * @memberof Product
      */
-    public async winkAsync(): Promise<number> {
+    public async winkAsync(EnableWink: boolean = true, WinkTime: number = 254, PriorityLevel: PriorityLevel = 3, CommandOriginator: CommandOriginator = 1): Promise<number> {
         try {
-            const confirmationFrame = <GW_WINK_SEND_CFM> await this.Connection.sendFrameAsync(new GW_WINK_SEND_REQ(this.NodeID));
+            const confirmationFrame = <GW_WINK_SEND_CFM> await this.Connection.sendFrameAsync(new GW_WINK_SEND_REQ(this.NodeID, EnableWink, WinkTime, PriorityLevel, CommandOriginator));
             if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
                 return confirmationFrame.SessionID;
             }
