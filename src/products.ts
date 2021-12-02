@@ -971,10 +971,10 @@ export class Product extends Component {
                 this._remainingTime = frame.RemainingTime;
                 this.propertyChanged("RemainingTime");
             }
-            if (frame.TimeStamp.valueOf() !== this._timeStamp.valueOf()) {
-                this._timeStamp = frame.TimeStamp;
-                this.propertyChanged("TimeStamp");
-            }
+            // if (frame.TimeStamp.valueOf() !== this._timeStamp.valueOf()) {
+            //     this._timeStamp = frame.TimeStamp;
+            //     this.propertyChanged("TimeStamp");
+            // }
         }
     }
 
