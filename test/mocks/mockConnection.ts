@@ -21,6 +21,10 @@ export class MockExceptionConnection implements IConnection {
         throw new Error("Method not implemented.");
     }
 
+    onFrameSent(handler: Listener<IGW_FRAME_REQ>, filter?: GatewayCommand[]): Disposable {
+        throw new Error("Method not implemented.");
+    }
+
     KLF200SocketProtocol?: KLF200SocketProtocol;
 }
 

@@ -7,7 +7,7 @@ import { IGW_FRAME_RCV, IGW_FRAME_REQ, GatewayCommand, GW_COMMON_STATUS, KLF200_
 import { join } from "path";
 import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF";
 import { GW_PASSWORD_ENTER_CFM, GW_PASSWORD_ENTER_REQ } from ".";
-import { Disposable, Listener } from "./utils/TypedEvent";
+import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent";
 import { timeout as promiseTimeout } from "promise-timeout";
 import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ";
 
@@ -60,9 +60,21 @@ export interface IConnection {
      * @returns {Disposable} Returns a Disposable that you can call to remove the handler.
      * @memberof Connection
      */
-    on(handler: Listener<IGW_FRAME_RCV>, filter?: GatewayCommand[]): Disposable;
+     on(handler: Listener<IGW_FRAME_RCV>, filter?: GatewayCommand[]): Disposable;
 
     /**
+     * Add a handler to listen for confirmations and notification.
+     * You can provide an optional filter to listen only to
+     * specific events.
+     *
+     * @param {Listener<IGW_FRAME_REQ>} handler Callback functions that is called for an event
+     * @param {GatewayCommand[]} [filter] Array of GatewayCommand entries you want to listen to. Optional.
+     * @returns {Disposable} Returns a Disposable that you can call to remove the handler.
+     * @memberof Connection
+     */
+     onFrameSent(handler: Listener<IGW_FRAME_REQ>, filter?: GatewayCommand[]): Disposable;
+
+     /**
      * Gets the underlying socket protocol handler.
      *
      * @type {KLF200SocketProtocol}
@@ -238,6 +250,7 @@ export class Connection implements IConnection {
                         });
                         this.shiftKeepAlive();
                         (this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
+                        this.notifyFrameSent(frame);
                     } catch (error) {
                         reject(error);
                     }
@@ -269,6 +282,34 @@ export class Connection implements IConnection {
                 }
             });
         }
+    }
+
+    private _onFrameSent = new TypedEvent<IGW_FRAME_REQ>();
+    /**
+     * Add a handler to listen for sent frames.
+     * You can provide an optional filter to listen only to
+     * specific events.
+     *
+     * @param {Listener<IGW_FRAME_REQ>} handler Callback functions that is called for an event
+     * @param {GatewayCommand[]} [filter] Array of GatewayCommand entries you want to listen to. Optional.
+     * @returns {Disposable} Returns a Disposable that you can call to remove the handler.
+     * @memberof Connection
+     */
+    public onFrameSent(handler: Listener<IGW_FRAME_REQ>, filter?: GatewayCommand[]): Disposable {
+        if (typeof filter === "undefined") {
+            return this._onFrameSent.on(handler);
+        }
+        else {
+            return this._onFrameSent.on((frame) => {
+                if (filter.indexOf(frame.Command) >= 0) {
+                    handler(frame);
+                }
+            });
+        }
+    }
+
+    private notifyFrameSent(frame: IGW_FRAME_REQ): void {
+        this._onFrameSent.emit(frame);
     }
 
     private keepAliveTimer?: NodeJS.Timeout;

@@ -202,6 +202,25 @@ describe("connection", function () {
                 expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1)).to.be.fulfilled.and.notify(done)
             );
         });
+
+        it("should call the notification handler.", function(done) {
+            this.mitm.on("connection", function(socket: Socket) {
+                socket.on("data", () => {
+                    socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
+                });
+            });
+
+            const conn = new Connection(testHOST);
+            conn.loginAsync("velux123")
+            .then(async () => {
+                const notificationHandlerSpy = sinon.spy();
+                conn.onFrameSent(notificationHandlerSpy);
+                const resultSendFrameAsync = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"));
+                await resultSendFrameAsync;
+                expect(notificationHandlerSpy).to.be.calledOnce;
+                expect(resultSendFrameAsync).to.be.fulfilled.and.notify(done)
+            });
+        });
     });
 
     describe("KLF200SocketProtocol", function() {
