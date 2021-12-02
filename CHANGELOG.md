@@ -4,6 +4,12 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
+## __WORK IN PROGRESS__
+
+### Fixes:
+
+* [#52](https://github.com/MiSchroe/klf-200-api/issues/52) Fix wrong timestamp in product.
+
 ## 3.1.0 (2021-12-02)
 
 ### Enhancements:
