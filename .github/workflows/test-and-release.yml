@@ -34,7 +34,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x, 14.x]
+        node-version: [10.x, 12.x, 14.x, 16.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -77,12 +77,12 @@ jobs:
         run: |
           VERSION="${{ github.ref }}"
           VERSION=${VERSION##*/v}
-          echo "::set-env name=VERSION::$VERSION"
+          echo "::set-output name=VERSION::$VERSION"
           BODY=$(git show -s --format=%b)
           BODY="${BODY//'%'/'%25'}"
           BODY="${BODY//$'\n'/'%0A'}"
           BODY="${BODY//$'\r'/'%0D'}"
-          echo "::set-env name=BODY::$BODY"
+          echo "::set-output name=BODY::$BODY"
 
       # If you are using TypeScript, additional build steps might be necessary
       # Run them here, e.g.:
@@ -103,8 +103,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release v${{ env.VERSION }}
+          release_name: Release v${{ steps.extract_release.outputs.VERSION }}
           draft: false
           # Prerelease versions create prereleases on Github
-          prerelease: ${{ contains(env.VERSION, '-') }}
-          body: ${{ env.BODY }}
+          prerelease: ${{ contains(steps.extract_release.outputs.VERSION, '-') }}
+          body: ${{ steps.extract_release.outputs.BODY }}
