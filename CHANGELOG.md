@@ -4,6 +4,11 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
+## __WORK IN PROGRESS__
+
+### Fixes:
+* [#56](https://github.com/MiSchroe/klf-200-api/issues/56) Fix reading more than one scene.
+
 ## 3.1.1 (2021-12-02)
 
 ### Fixes:
