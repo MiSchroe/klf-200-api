@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 "use strict";
 
 import { KLF200Protocol } from "../../src/KLF200-API/common";

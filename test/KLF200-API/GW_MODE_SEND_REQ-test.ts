@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 "use strict";
 
 import { GW_MODE_SEND_REQ, PriorityLevelInformation } from "../../src";
@@ -61,10 +59,12 @@ describe("KLF200-API", function() {
         });
 
         it("should throw an error with a negative priority level", function() {
+            // @ts-expect-error: error TS2322: Type '-1' is not assignable to type 'PriorityLevelInformation'
             expect(() => new GW_MODE_SEND_REQ(42, undefined, undefined, undefined, undefined, undefined, [-1])).to.throw();
         });
 
         it("should throw an error with a priority level greater than 3", function() {
+            // @ts-expect-error: error TS2322: Type '4' is not assignable to type 'PriorityLevelInformation'
             expect(() => new GW_MODE_SEND_REQ(42, undefined, undefined, undefined, undefined, undefined, [4])).to.throw();
         });
 

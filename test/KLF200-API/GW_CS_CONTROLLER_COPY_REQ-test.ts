@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 "use strict";
 
 import { GW_CS_DISCOVER_NODES_REQ, ActuatorType } from "../../src";

@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 "use strict";
 
 import { GW_STOP_SCENE_REQ } from "../../src";

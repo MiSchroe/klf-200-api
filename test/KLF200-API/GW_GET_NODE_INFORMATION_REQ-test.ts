@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 "use strict";
 
 import { GW_GET_NODE_INFORMATION_REQ } from "../../src";

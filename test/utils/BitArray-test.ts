@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 import { bitArrayToArray, arrayToBitArray } from "../../src/utils/BitArray";
 import chaibytes from "chai-bytes";
 import { expect, use } from "chai";

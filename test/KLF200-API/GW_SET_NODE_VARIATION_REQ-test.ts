@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 "use strict";
 
 import { GW_SET_NODE_VARIATION_REQ } from "../../src";
@@ -11,6 +9,7 @@ use(chaibytes);
 describe("KLF200-API", function() {
     describe("GW_SET_NODE_VARIATION_REQ", function() {
         it("shouldn't throw an error on create", function() {
+            // @ts-expect-error: error TS2345: Argument of type '86' is not assignable to parameter of type 'NodeVariation | undefined'
             expect(() => new GW_SET_NODE_VARIATION_REQ(42, 0x56)).not.to.throw();
         });
 
@@ -23,6 +22,7 @@ describe("KLF200-API", function() {
         });
 
         it("should write the correct values", function() {
+            // @ts-expect-error: error TS2345: Argument of type '86' is not assignable to parameter of type 'NodeVariation | undefined'
             const result = new GW_SET_NODE_VARIATION_REQ(42, 0x56);
             expect(result).to.be.instanceOf(GW_SET_NODE_VARIATION_REQ).that.has.property("Data");
             const buff = result.Data;

@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 import { isArrayEqual } from "../../src/utils/UtilityFunctions";
 import { expect } from "chai";
 

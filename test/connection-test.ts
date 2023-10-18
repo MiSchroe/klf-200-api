@@ -136,6 +136,9 @@ describe("connection", function () {
             conn.loginAsync("velux123")
             .then(() =>
                 expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"))).to.be.fulfilled.and.notify(done)
+            )
+            .catch((reason: any) =>
+                expect.fail(reason)
             );
         });
 
@@ -155,6 +158,9 @@ describe("connection", function () {
             conn.loginAsync("velux123")
             .then(() =>
                 expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1)).to.be.rejectedWith(Error).and.notify(done)
+            )
+            .catch((reason: any) =>
+                expect.fail(reason)
             );
         });
 
@@ -177,6 +183,9 @@ describe("connection", function () {
             conn.loginAsync("velux123")
             .then(() =>
                 expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1)).to.be.rejectedWith(Error).and.notify(done)
+            )
+            .catch((reason: any) =>
+                expect.fail(reason)
             );
         });
 
@@ -200,6 +209,9 @@ describe("connection", function () {
             conn.loginAsync("velux123")
             .then(() =>
                 expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1)).to.be.fulfilled.and.notify(done)
+            )
+            .catch((reason: any) =>
+                expect.fail(reason)
             );
         });
 
@@ -219,7 +231,10 @@ describe("connection", function () {
                 await resultSendFrameAsync;
                 expect(notificationHandlerSpy).to.be.calledOnce;
                 expect(resultSendFrameAsync).to.be.fulfilled.and.notify(done)
-            });
+            })
+            .catch((reason: any) =>
+                expect.fail(reason)
+            );
         });
     });
 

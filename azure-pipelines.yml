@@ -8,43 +8,34 @@ trigger:
 
 strategy:
   matrix:
-    linux_node10:
-      imageName: "ubuntu-latest"
-      versionName: "10.x"
-    linux_node12:
-      imageName: "ubuntu-latest"
-      versionName: "12.x"
-    linux_node14:
-      imageName: "ubuntu-latest"
-      versionName: "14.x"
     linux_node16:
       imageName: "ubuntu-latest"
       versionName: "16.x"
-    mac_node10:
-      imageName: "macos-latest"
-      versionName: "10.x"
-    mac_node12:
-      imageName: "macos-latest"
-      versionName: "12.x"
-    mac_node14:
-      imageName: "macos-latest"
-      versionName: "14.x"
+    linux_node18:
+      imageName: "ubuntu-latest"
+      versionName: "18.x"
+    linux_node20:
+      imageName: "ubuntu-latest"
+      versionName: "20.x"
     mac_node16:
       imageName: "macos-latest"
       versionName: "16.x"
-    windows_node10:
-      imageName: "windows-latest"
-      versionName: "10.x"
-    windows_node12:
-      imageName: "windows-latest"
-      versionName: "12.x"
-    windows_node14:
-      imageName: "windows-latest"
-      versionName: "14.x"
+    mac_node18:
+      imageName: "macos-latest"
+      versionName: "18.x"
+    mac_node20:
+      imageName: "macos-latest"
+      versionName: "20.x"
     windows_node16:
       imageName: "windows-latest"
       versionName: "16.x"
-  maxParallel: 10
+    windows_node18:
+      imageName: "windows-latest"
+      versionName: "18.x"
+    windows_node20:
+      imageName: "windows-latest"
+      versionName: "20.x"
+  maxParallel: "10"
 
 pool:
   vmImage: $(imageName)

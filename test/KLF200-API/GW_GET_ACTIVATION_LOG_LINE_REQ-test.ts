@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 "use strict";
 
 import { GW_GET_ACTIVATION_LOG_LINE_REQ } from "../../src";

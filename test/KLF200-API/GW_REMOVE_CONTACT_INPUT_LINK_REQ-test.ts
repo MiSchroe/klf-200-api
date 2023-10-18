@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 "use strict";
 
 import { GW_REMOVE_CONTACT_INPUT_LINK_REQ } from "../../src";

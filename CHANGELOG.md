@@ -4,6 +4,9 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
+## __WORK IN PROGRESS__
+* Fix security audit dependencies and upgrade dependencies to latest versions
+
 ## 3.1.2 (2022-03-07)
 
 ### Fixes:
