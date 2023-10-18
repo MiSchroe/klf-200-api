@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 "use strict";
 
 import { GW_SET_CONTACT_INPUT_LINK_REQ, ContactInputAssignment, Velocity, PriorityLevelInformation } from "../../src";

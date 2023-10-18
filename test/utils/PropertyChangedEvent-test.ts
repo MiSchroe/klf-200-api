@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 import { Component } from "../../src/utils/PropertyChangedEvent";
 import { expect } from "chai";
 

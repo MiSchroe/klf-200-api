@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 "use strict";
 
 import { GW_MODE_SEND_REQ, PriorityLevelInformation } from "../../src";

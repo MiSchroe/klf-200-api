@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 "use strict";
 
 import { GW_GET_ALL_GROUPS_INFORMATION_REQ, GroupType } from "../../src";

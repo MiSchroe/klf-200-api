@@ -1,5 +1,3 @@
-/// <reference path="../../types/chai-bytes/index.d.ts" />
-
 "use strict";
 
 import { GW_CS_CONTROLLER_COPY_REQ, ControllerCopyMode } from "../../src";
