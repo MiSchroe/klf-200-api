@@ -35,10 +35,12 @@ describe("KLF200-API", function() {
         });
 
         it("should throw an error at priority level value greater than 3", function() {
+            // @ts-expect-error: error TS2322: Type '4' is not assignable to type 'PriorityLevelInformation'
             expect(() => new GW_COMMAND_SEND_REQ(1, 0x4711, undefined, undefined, undefined, undefined, undefined, [4])).to.throw();
         });
 
         it("should throw an error at priority level less than 0", function() {
+            // @ts-expect-error: error TS2322: Type '-1' is not assignable to type 'PriorityLevelInformation'
             expect(() => new GW_COMMAND_SEND_REQ(1, 0x4711, undefined, undefined, undefined, undefined, undefined, [-1])).to.throw();
         });
 
