@@ -17,7 +17,7 @@
     "@types/chai-as-promised": "^7.1.6",
     "@types/chai-datetime": "0.0.38",
     "@types/lolex": "^5.1.4",
-    "@types/mitm": "^1.3.5",
+    "@types/mitm": "^1.3.6",
     "@types/mocha": "^10.0.2",
     "@types/node": "^20.8.6",
     "@types/sinon": "^10.0.19",
