@@ -4,50 +4,50 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
 
 trigger:
-- master
+    - master
 
 strategy:
-  matrix:
-    linux_node16:
-      imageName: "ubuntu-latest"
-      versionName: "16.x"
-    linux_node18:
-      imageName: "ubuntu-latest"
-      versionName: "18.x"
-    linux_node20:
-      imageName: "ubuntu-latest"
-      versionName: "20.x"
-    mac_node16:
-      imageName: "macos-latest"
-      versionName: "16.x"
-    mac_node18:
-      imageName: "macos-latest"
-      versionName: "18.x"
-    mac_node20:
-      imageName: "macos-latest"
-      versionName: "20.x"
-    windows_node16:
-      imageName: "windows-latest"
-      versionName: "16.x"
-    windows_node18:
-      imageName: "windows-latest"
-      versionName: "18.x"
-    windows_node20:
-      imageName: "windows-latest"
-      versionName: "20.x"
-  maxParallel: "10"
+    matrix:
+        linux_node16:
+            imageName: "ubuntu-latest"
+            versionName: "16.x"
+        linux_node18:
+            imageName: "ubuntu-latest"
+            versionName: "18.x"
+        linux_node20:
+            imageName: "ubuntu-latest"
+            versionName: "20.x"
+        mac_node16:
+            imageName: "macos-latest"
+            versionName: "16.x"
+        mac_node18:
+            imageName: "macos-latest"
+            versionName: "18.x"
+        mac_node20:
+            imageName: "macos-latest"
+            versionName: "20.x"
+        windows_node16:
+            imageName: "windows-latest"
+            versionName: "16.x"
+        windows_node18:
+            imageName: "windows-latest"
+            versionName: "18.x"
+        windows_node20:
+            imageName: "windows-latest"
+            versionName: "20.x"
+    maxParallel: "10"
 
 pool:
-  vmImage: $(imageName)
+    vmImage: $(imageName)
 
 steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: $(versionName)
-  displayName: 'Install Node.js'
+    - task: NodeTool@0
+      inputs:
+          versionSpec: $(versionName)
+      displayName: "Install Node.js"
 
-- script: |
-    npm install
-    npm run build
-    npm test
-  displayName: 'npm install, build and test'
+    - script: |
+          npm install
+          npm run build
+          npm test
+      displayName: "npm install, build and test"
