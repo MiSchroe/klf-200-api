@@ -30,7 +30,8 @@
     "chai-datetime": "^1.8.0",
     "cross-env": "^7.0.3",
     "eslint": "^8.51.0",
-    "eslint-config-defaults": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.1",
     "lolex": "^5.1.2",
     "mitm": "^1.7.2",
     "mocha": "^10.2.0",
@@ -38,6 +39,7 @@
     "mocha-multi-reporters": "^1.5.1",
     "nock": "^13.3.4",
     "nyc": "^15.1.0",
+    "prettier": "^3.0.3",
     "sinon": "^16.1.0",
     "sinon-chai": "^3.7.0",
     "source-map-support": "^0.5.21",
@@ -47,7 +49,9 @@
   },
   "scripts": {
     "build": "tsc",
+    "watch": "tsc --watch",
     "test": "nyc mocha",
+    "lint": "eslint --ext .ts src test",
     "release": "release-script",
     "document": "typedoc"
   },

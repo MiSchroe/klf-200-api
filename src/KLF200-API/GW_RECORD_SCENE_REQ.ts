@@ -3,13 +3,12 @@
 import { GW_FRAME_REQ } from "./common";
 
 export class GW_RECORD_SCENE_REQ extends GW_FRAME_REQ {
-    constructor(readonly Name: string) {
-        super(64);
+	constructor(readonly Name: string) {
+		super(64);
 
-        if (Buffer.from(Name).byteLength > 64)
-            throw new Error("Name too long.");
+		if (Buffer.from(Name).byteLength > 64) throw new Error("Name too long.");
 
-        const buff = this.Data.slice(this.offset);
-        buff.write(this.Name, 0);
-    }
+		const buff = this.Data.slice(this.offset);
+		buff.write(this.Name, 0);
+	}
 }
