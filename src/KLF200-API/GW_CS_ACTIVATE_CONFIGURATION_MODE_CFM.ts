@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common";
 import { bitArrayToArray } from "../utils/BitArray";
+import { GW_FRAME_CFM } from "./common";
 
 export class GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM extends GW_FRAME_CFM {
 	public readonly ActivatedNodes: number[];
@@ -12,9 +12,9 @@ export class GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM extends GW_FRAME_CFM {
 	constructor(Data: Buffer) {
 		super(Data);
 
-		this.ActivatedNodes = bitArrayToArray(this.Data.slice(0, 26));
-		this.NoContactNodes = bitArrayToArray(this.Data.slice(26, 52));
-		this.OtherErrorNodes = bitArrayToArray(this.Data.slice(52, 78));
+		this.ActivatedNodes = bitArrayToArray(this.Data.subarray(0, 26));
+		this.NoContactNodes = bitArrayToArray(this.Data.subarray(26, 52));
+		this.OtherErrorNodes = bitArrayToArray(this.Data.subarray(52, 78));
 		this.Status = this.Data.readUInt8(78);
 	}
 

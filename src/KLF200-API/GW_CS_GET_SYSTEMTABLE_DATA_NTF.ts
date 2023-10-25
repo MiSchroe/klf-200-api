@@ -20,7 +20,7 @@ export class GW_CS_GET_SYSTEMTABLE_DATA_NTF extends GW_FRAME_NTF {
 
 		// Read system table data entries
 		for (let entryIndex = 0; entryIndex < this.NumberOfEntries; entryIndex++) {
-			const entry = new SystemTableDataEntry(this.Data.slice(entryIndex * 11 + 1, (entryIndex + 1) * 11 + 1));
+			const entry = new SystemTableDataEntry(this.Data.subarray(entryIndex * 11 + 1, (entryIndex + 1) * 11 + 1));
 			this.SystemTableEntries.push(entry);
 		}
 	}

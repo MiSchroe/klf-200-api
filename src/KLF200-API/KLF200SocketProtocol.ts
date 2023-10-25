@@ -36,10 +36,10 @@ export class KLF200SocketProtocol {
 					return;
 
 				this.state = KLF200SocketProtocolState.StartFound;
-				this.queue.push(data.slice(positionStart, positionStart + 1));
+				this.queue.push(data.subarray(positionStart, positionStart + 1));
 
 				// Process remaining data
-				if (positionStart + 1 < data.byteLength) this.processData(data.slice(positionStart + 1));
+				if (positionStart + 1 < data.byteLength) this.processData(data.subarray(positionStart + 1));
 
 				break;
 
@@ -53,14 +53,14 @@ export class KLF200SocketProtocol {
 				}
 
 				this.state = KLF200SocketProtocolState.Invalid;
-				this.queue.push(data.slice(0, positionEnd + 1));
+				this.queue.push(data.subarray(0, positionEnd + 1));
 				const frameBuffer = Buffer.concat(this.queue);
 
 				// Clear queue and process remaining data, if any
 				this.queue = [];
 				this.send(frameBuffer);
 
-				if (positionEnd + 1 < data.byteLength) this.processData(data.slice(positionEnd + 1));
+				if (positionEnd + 1 < data.byteLength) this.processData(data.subarray(positionEnd + 1));
 
 				break;
 

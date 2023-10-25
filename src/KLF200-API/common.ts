@@ -431,7 +431,7 @@ export abstract class GW_FRAME_RCV extends GW_FRAME implements IGW_FRAME_RCV {
 		this.CheckCommand(command);
 
 		// Remove command and length from Buffer
-		this.Data = Data.slice(C_BUFFERLEN_SIZE + C_COMMAND_SIZE);
+		this.Data = Data.subarray(C_BUFFERLEN_SIZE + C_COMMAND_SIZE);
 	}
 
 	private CheckCommand(command: GatewayCommand_Receive): void {
@@ -537,7 +537,7 @@ export class SLIPProtocol {
 		// Write END mark
 		resultBuffer[resultLength++] = SLIP_END;
 
-		return resultBuffer.slice(0, resultLength);
+		return resultBuffer.subarray(0, resultLength);
 	}
 
 	static Decode(data: Buffer): Buffer {
@@ -573,6 +573,6 @@ export class SLIPProtocol {
 			}
 		}
 
-		return resultBuffer.slice(0, resultLength);
+		return resultBuffer.subarray(0, resultLength);
 	}
 }

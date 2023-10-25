@@ -179,7 +179,7 @@ describe("common", function () {
 
 		it("should return the sliced string if the buffer is filled longer, but sliced", function () {
 			const inputBuffer = Buffer.from("4242");
-			const result = readZString(inputBuffer.slice(0, 2));
+			const result = readZString(inputBuffer.subarray(0, 2));
 
 			expect(result).to.equal("42");
 		});

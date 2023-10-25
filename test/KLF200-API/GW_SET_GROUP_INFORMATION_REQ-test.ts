@@ -1,9 +1,9 @@
 "use strict";
 
-import { GW_SET_GROUP_INFORMATION_REQ, readZString, GroupType } from "../../src";
 import { expect, use } from "chai";
-import "mocha";
 import chaibytes from "chai-bytes";
+import "mocha";
+import { GW_SET_GROUP_INFORMATION_REQ, GroupType, readZString } from "../../src";
 use(chaibytes);
 
 describe("KLF200-API", function () {
@@ -21,7 +21,7 @@ describe("KLF200-API", function () {
 			expect(buff.readUInt8(3)).to.be.equal(42, "GroupID wrong.");
 			expect(buff.readUInt16BE(4)).to.be.equal(0, "Order wrong.");
 			expect(buff.readUInt8(6)).to.be.equal(0, "Placement wrong.");
-			expect(readZString(buff.slice(7, 67))).to.be.equal("Dummy", "Name wrong.");
+			expect(readZString(buff.subarray(7, 67))).to.be.equal("Dummy", "Name wrong.");
 			expect(buff.readUInt8(71)).to.be.equal(0, "Velocity wrong.");
 			expect(buff.readUInt8(72)).to.be.equal(0, "NodeVariation wrong.");
 			expect(buff.readUInt8(73)).to.be.equal(GroupType.UserGroup, "GroupType wrong.");

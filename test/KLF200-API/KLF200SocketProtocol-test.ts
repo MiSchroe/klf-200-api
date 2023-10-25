@@ -107,9 +107,9 @@ describe("KLF200-API", function () {
 			const dataRaw = Buffer.from([0x04, 0x30, 0x01, 0x00]);
 			const data = SLIPProtocol.Encode(KLF200Protocol.Encode(dataRaw));
 			// Split the frame into 3 parts
-			const data1 = data.slice(0, 1);
-			const data2 = data.slice(1, 2);
-			const data3 = data.slice(2);
+			const data1 = data.subarray(0, 1);
+			const data2 = data.subarray(1, 2);
+			const data3 = data.subarray(2);
 
 			const result = new KLF200SocketProtocol(client);
 			result.on((dataReceived) => {

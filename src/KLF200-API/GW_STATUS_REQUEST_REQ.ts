@@ -11,7 +11,7 @@ export class GW_STATUS_REQUEST_REQ extends GW_FRAME_COMMAND_REQ {
 	) {
 		super(26);
 
-		const buff = this.Data.slice(this.offset);
+		const buff = this.Data.subarray(this.offset);
 
 		buff.writeUInt16BE(this.SessionID, 0);
 

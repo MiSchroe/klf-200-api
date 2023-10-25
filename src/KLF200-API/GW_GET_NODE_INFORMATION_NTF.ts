@@ -2,13 +2,13 @@
 
 import { GW_FRAME_NTF, readZString } from "./common";
 import {
-	Velocity,
+	ActuatorAlias,
 	ActuatorType,
+	NodeOperatingState,
 	NodeVariation,
 	PowerSaveMode,
-	NodeOperatingState,
-	ActuatorAlias,
 	splitActuatorType,
+	Velocity,
 } from "./GW_SYSTEMTABLE_DATA";
 
 export class GW_GET_NODE_INFORMATION_NTF extends GW_FRAME_NTF {
@@ -41,7 +41,7 @@ export class GW_GET_NODE_INFORMATION_NTF extends GW_FRAME_NTF {
 		this.NodeID = this.Data.readUInt8(0);
 		this.Order = this.Data.readUInt16BE(1);
 		this.Placement = this.Data.readUInt8(3);
-		this.Name = readZString(this.Data.slice(4, 68));
+		this.Name = readZString(this.Data.subarray(4, 68));
 		this.Velocity = this.Data.readUInt8(68);
 		const actuatorTypes = splitActuatorType(this.Data.readUInt16BE(69));
 		this.ActuatorType = actuatorTypes.ActuatorType;
@@ -50,7 +50,7 @@ export class GW_GET_NODE_INFORMATION_NTF extends GW_FRAME_NTF {
 		this.ProductType = this.Data.readUInt8(72);
 		this.NodeVariation = this.Data.readUInt8(73);
 		this.PowerSaveMode = this.Data.readUInt8(74);
-		this.SerialNumber = this.Data.slice(76, 84);
+		this.SerialNumber = this.Data.subarray(76, 84);
 		this.OperatingState = this.Data.readUInt8(84);
 		this.CurrentPosition = this.Data.readUInt16BE(85);
 		this.TargetPosition = this.Data.readUInt16BE(87);

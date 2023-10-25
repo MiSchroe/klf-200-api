@@ -1,7 +1,7 @@
 "use strict";
 
 import { GW_FRAME_REQ } from "./common";
-import { CommandOriginator, PriorityLevel, ParameterActive, PriorityLevelInformation } from "./GW_COMMAND";
+import { CommandOriginator, ParameterActive, PriorityLevel, PriorityLevelInformation } from "./GW_COMMAND";
 import { ContactInputAssignment, LockPriorityLevel } from "./GW_CONTACTINPUT";
 import { Velocity } from "./GW_SYSTEMTABLE_DATA";
 
@@ -26,7 +26,7 @@ export class GW_SET_CONTACT_INPUT_LINK_REQ extends GW_FRAME_REQ {
 	) {
 		super(17);
 
-		const buff = this.Data.slice(this.offset);
+		const buff = this.Data.subarray(this.offset);
 
 		buff.writeUInt8(this.ContactInputID, 0);
 		buff.writeUInt8(this.ContactInputAssignment, 1);

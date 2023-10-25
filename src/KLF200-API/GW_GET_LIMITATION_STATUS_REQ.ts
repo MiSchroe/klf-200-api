@@ -1,7 +1,7 @@
 "use strict";
 
 import { GW_FRAME_COMMAND_REQ } from "./common";
-import { ParameterActive, LimitationType } from "./GW_COMMAND";
+import { LimitationType, ParameterActive } from "./GW_COMMAND";
 
 export class GW_GET_LIMITATION_STATUS_REQ extends GW_FRAME_COMMAND_REQ {
 	constructor(
@@ -11,7 +11,7 @@ export class GW_GET_LIMITATION_STATUS_REQ extends GW_FRAME_COMMAND_REQ {
 	) {
 		super(25);
 
-		const buff = this.Data.slice(this.offset);
+		const buff = this.Data.subarray(this.offset);
 
 		buff.writeUInt16BE(this.SessionID, 0);
 		buff.writeUInt8(this.ParameterActive, 23);

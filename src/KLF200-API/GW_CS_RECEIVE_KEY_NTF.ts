@@ -1,8 +1,8 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common";
-import { ChangeKeyStatus } from "./GW_SYSTEMTABLE_DATA";
 import { bitArrayToArray } from "../utils/BitArray";
+import { ChangeKeyStatus } from "./GW_SYSTEMTABLE_DATA";
+import { GW_FRAME_NTF } from "./common";
 
 export class GW_CS_RECEIVE_KEY_NTF extends GW_FRAME_NTF {
 	public readonly ChangeKeyStatus: ChangeKeyStatus;
@@ -13,7 +13,7 @@ export class GW_CS_RECEIVE_KEY_NTF extends GW_FRAME_NTF {
 		super(Data);
 
 		this.ChangeKeyStatus = this.Data.readUInt8(0);
-		this.KeyChangedNodes = bitArrayToArray(this.Data.slice(1, 27));
-		this.KeyNotChangedNodes = bitArrayToArray(this.Data.slice(27, 53));
+		this.KeyChangedNodes = bitArrayToArray(this.Data.subarray(1, 27));
+		this.KeyNotChangedNodes = bitArrayToArray(this.Data.subarray(27, 53));
 	}
 }

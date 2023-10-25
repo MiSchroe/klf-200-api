@@ -31,6 +31,6 @@ export class GW_GET_STATE_CFM extends GW_FRAME_CFM {
 
 		this.GatewayState = this.Data.readUInt8(0);
 		this.GatewaySubState = this.Data.readUInt8(1);
-		this.StateData = this.Data.slice(2, 6);
+		this.StateData = this.Data.subarray(2, 6);
 	}
 }

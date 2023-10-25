@@ -3,11 +3,11 @@
 import { GW_FRAME_COMMAND_REQ } from "./common";
 import {
 	CommandOriginator,
-	PriorityLevel,
-	ParameterActive,
-	PriorityLevelLock,
 	LockTime as lt,
+	ParameterActive,
+	PriorityLevel,
 	PriorityLevelInformation,
+	PriorityLevelLock,
 } from "./GW_COMMAND";
 
 export class GW_MODE_SEND_REQ extends GW_FRAME_COMMAND_REQ {
@@ -23,7 +23,7 @@ export class GW_MODE_SEND_REQ extends GW_FRAME_COMMAND_REQ {
 	) {
 		super(31);
 
-		const buff = this.Data.slice(this.offset);
+		const buff = this.Data.subarray(this.offset);
 
 		buff.writeUInt16BE(this.SessionID, 0);
 		buff.writeUInt8(this.CommandOriginator, 2);

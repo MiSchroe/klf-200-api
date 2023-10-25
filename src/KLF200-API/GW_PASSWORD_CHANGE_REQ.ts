@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_REQ, C_MAX_PWD_LENGTH } from "./common";
+import { C_MAX_PWD_LENGTH, GW_FRAME_REQ } from "./common";
 
 export class GW_PASSWORD_CHANGE_REQ extends GW_FRAME_REQ {
 	constructor(
@@ -15,7 +15,7 @@ export class GW_PASSWORD_CHANGE_REQ extends GW_FRAME_REQ {
 		if (Buffer.from(this.NewPassword, "utf8").byteLength > C_MAX_PWD_LENGTH)
 			throw new Error(`New password must not exceed ${C_MAX_PWD_LENGTH} characters length.`);
 
-		const buff = this.Data.slice(this.offset);
+		const buff = this.Data.subarray(this.offset);
 		buff.write(this.OldPassword, 0);
 		buff.write(this.NewPassword, C_MAX_PWD_LENGTH);
 	}

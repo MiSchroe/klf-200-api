@@ -21,7 +21,7 @@ export class GW_GET_SCENE_LIST_NTF extends GW_FRAME_NTF {
 		for (let sceneIndex = 0; sceneIndex < this.NumberOfScenes; sceneIndex++) {
 			this.Scenes.push({
 				SceneID: this.Data.readUInt8(sceneIndex * 65 + 1),
-				Name: readZString(this.Data.slice(sceneIndex * 65 + 2, sceneIndex * 65 + 66)),
+				Name: readZString(this.Data.subarray(sceneIndex * 65 + 2, sceneIndex * 65 + 66)),
 			});
 		}
 	}

@@ -1,9 +1,9 @@
 "use strict";
 
-import { GW_PASSWORD_CHANGE_REQ, readZString } from "../../src";
 import { expect, use } from "chai";
-import "mocha";
 import chaibytes from "chai-bytes";
+import "mocha";
+import { GW_PASSWORD_CHANGE_REQ, readZString } from "../../src";
 use(chaibytes);
 
 describe("KLF200-API", function () {
@@ -16,8 +16,8 @@ describe("KLF200-API", function () {
 			const result = new GW_PASSWORD_CHANGE_REQ("OldPass", "NewPass");
 			expect(result).to.be.instanceOf(GW_PASSWORD_CHANGE_REQ).that.has.property("Data");
 			const buff = result.Data;
-			expect(readZString(buff.slice(3, 35))).to.be.equal("OldPass", "Old password wrong.");
-			expect(readZString(buff.slice(35, 67))).to.be.equal("NewPass", "New password wrong.");
+			expect(readZString(buff.subarray(3, 35))).to.be.equal("OldPass", "Old password wrong.");
+			expect(readZString(buff.subarray(35, 67))).to.be.equal("NewPass", "New password wrong.");
 		});
 
 		it("shouldn't throw an error with passwords at size of 32 chars", function () {
