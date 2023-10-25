@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common";
 import { bitArrayToArray } from "../utils/BitArray";
+import { GW_FRAME_NTF } from "./common";
 
 export class GW_CS_SYSTEM_TABLE_UPDATE_NTF extends GW_FRAME_NTF {
 	public readonly AddedNodes: number[];
@@ -11,9 +11,9 @@ export class GW_CS_SYSTEM_TABLE_UPDATE_NTF extends GW_FRAME_NTF {
 		super(Data);
 
 		// Added nodes
-		this.AddedNodes = bitArrayToArray(this.Data.slice(0, 26));
+		this.AddedNodes = bitArrayToArray(this.Data.subarray(0, 26));
 
 		// Removed nodes
-		this.RemovedNodes = bitArrayToArray(this.Data.slice(26, 52));
+		this.RemovedNodes = bitArrayToArray(this.Data.subarray(26, 52));
 	}
 }

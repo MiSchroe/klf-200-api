@@ -1,7 +1,7 @@
 "use strict";
 
 import { GW_FRAME_COMMAND_REQ } from "./common";
-import { CommandOriginator, PriorityLevel, ParameterActive } from "./GW_COMMAND";
+import { CommandOriginator, ParameterActive, PriorityLevel } from "./GW_COMMAND";
 
 export class GW_SET_LIMITATION_REQ extends GW_FRAME_COMMAND_REQ {
 	constructor(
@@ -15,7 +15,7 @@ export class GW_SET_LIMITATION_REQ extends GW_FRAME_COMMAND_REQ {
 	) {
 		super(31);
 
-		const buff = this.Data.slice(this.offset);
+		const buff = this.Data.subarray(this.offset);
 
 		buff.writeUInt16BE(this.SessionID, 0);
 		buff.writeUInt8(this.CommandOriginator, 2);

@@ -20,7 +20,7 @@ export class GW_GET_SCENE_INFORMATION_NTF extends GW_FRAME_NTF {
 		super(Data);
 
 		this.SceneID = this.Data.readUInt8(0);
-		this.Name = readZString(this.Data.slice(1, 65));
+		this.Name = readZString(this.Data.subarray(1, 65));
 		this.NumberOfNodes = this.Data.readUInt8(65);
 		this.NumberOfRemainingNodes = this.Data.readUInt8(this.NumberOfNodes * 4 + 66);
 

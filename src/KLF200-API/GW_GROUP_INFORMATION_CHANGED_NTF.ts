@@ -1,9 +1,9 @@
 "use strict";
 
-import { GW_FRAME_NTF, readZString } from "./common";
-import { GroupType } from "./GW_GROUPS";
-import { Velocity, NodeVariation } from "./GW_SYSTEMTABLE_DATA";
 import { bitArrayToArray } from "../utils/BitArray";
+import { GroupType } from "./GW_GROUPS";
+import { NodeVariation, Velocity } from "./GW_SYSTEMTABLE_DATA";
+import { GW_FRAME_NTF, readZString } from "./common";
 
 export enum ChangeType {
 	Deleted = 0,
@@ -49,14 +49,14 @@ export class GW_GROUP_INFORMATION_CHANGED_NTF extends GW_FRAME_NTF {
 		if (this.ChangeType === ChangeType.Modified) {
 			this.Order = this.Data.readUInt16BE(2);
 			this.Placement = this.Data.readUInt8(4);
-			this.Name = readZString(this.Data.slice(5, 69));
+			this.Name = readZString(this.Data.subarray(5, 69));
 			this.Velocity = this.Data.readUInt8(69);
 			this.NodeVariation = this.Data.readUInt8(70);
 			this.GroupType = this.Data.readUInt8(71);
 			this.Revision = this.Data.readUInt16BE(98);
 
 			if (this.GroupType === GroupType.UserGroup) {
-				this.Nodes = bitArrayToArray(this.Data.slice(73, 98));
+				this.Nodes = bitArrayToArray(this.Data.subarray(73, 98));
 			} else {
 				this.Nodes = [];
 			}

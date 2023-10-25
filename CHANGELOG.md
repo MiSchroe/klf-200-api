@@ -5,6 +5,10 @@
 	## __WORK IN PROGRESS__
 -->
 
+## **WORK IN PROGRESS**
+
+-   Fix use of deprecated functions and dependencies
+
 ## 3.1.3 (2023-10-18)
 
 -   Fix security audit dependencies and upgrade dependencies to latest versions

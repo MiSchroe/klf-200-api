@@ -1,9 +1,9 @@
 "use strict";
 
-import { GW_RECORD_SCENE_REQ, readZString } from "../../src";
 import { expect, use } from "chai";
-import "mocha";
 import chaibytes from "chai-bytes";
+import "mocha";
+import { GW_RECORD_SCENE_REQ, readZString } from "../../src";
 use(chaibytes);
 
 describe("KLF200-API", function () {
@@ -16,7 +16,7 @@ describe("KLF200-API", function () {
 			const result = new GW_RECORD_SCENE_REQ("Dummy");
 			expect(result).to.be.instanceOf(GW_RECORD_SCENE_REQ).that.has.property("Data");
 			const buff = result.Data;
-			expect(readZString(buff.slice(3, 67))).to.be.equal("Dummy");
+			expect(readZString(buff.subarray(3, 67))).to.be.equal("Dummy");
 		});
 
 		it("shouldn't throw an error with scene name at size of 64 chars", function () {

@@ -13,7 +13,7 @@ export class GW_WINK_SEND_REQ extends GW_FRAME_COMMAND_REQ {
 	) {
 		super(27);
 
-		const buff = this.Data.slice(this.offset);
+		const buff = this.Data.subarray(this.offset);
 
 		buff.writeUInt16BE(this.SessionID, 0);
 		buff.writeUInt8(this.CommandOriginator, 2);

@@ -17,7 +17,7 @@ export class GW_SET_NETWORK_SETUP_REQ extends GW_FRAME_REQ {
 		if (!checkIPv4.test(this.Mask)) throw new Error("Invalid IP address for parameter Mask.");
 		if (!checkIPv4.test(this.DefaultGateway)) throw new Error("Invalid IP address for parameter DefaultGateway.");
 
-		const buff = this.Data.slice(this.offset);
+		const buff = this.Data.subarray(this.offset);
 		buff.writeUInt8(DHCP ? 1 : 0, 12);
 		if (!DHCP) {
 			let buffIndex = 0;

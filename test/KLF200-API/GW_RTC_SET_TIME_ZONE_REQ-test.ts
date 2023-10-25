@@ -1,9 +1,9 @@
 "use strict";
 
-import { GW_RTC_SET_TIME_ZONE_REQ, readZString } from "../../src";
 import { expect, use } from "chai";
-import "mocha";
 import chaibytes from "chai-bytes";
+import "mocha";
+import { GW_RTC_SET_TIME_ZONE_REQ, readZString } from "../../src";
 use(chaibytes);
 
 describe("KLF200-API", function () {
@@ -17,7 +17,7 @@ describe("KLF200-API", function () {
 			const result = new GW_RTC_SET_TIME_ZONE_REQ(testTimeZone);
 			expect(result).to.be.instanceOf(GW_RTC_SET_TIME_ZONE_REQ).that.has.property("Data");
 			const buff = result.Data;
-			expect(readZString(buff.slice(3, 67))).to.be.equal(testTimeZone);
+			expect(readZString(buff.subarray(3, 67))).to.be.equal(testTimeZone);
 		});
 	});
 });

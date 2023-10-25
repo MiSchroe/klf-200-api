@@ -1,9 +1,9 @@
 "use strict";
 
-import { GW_FRAME_NTF, readZString } from "./common";
-import { Velocity, NodeVariation } from "./GW_SYSTEMTABLE_DATA";
-import { GroupType } from "./GW_GROUPS";
 import { bitArrayToArray } from "../utils/BitArray";
+import { GroupType } from "./GW_GROUPS";
+import { NodeVariation, Velocity } from "./GW_SYSTEMTABLE_DATA";
+import { GW_FRAME_NTF, readZString } from "./common";
 
 export class GW_GET_ALL_GROUPS_INFORMATION_NTF extends GW_FRAME_NTF {
 	public readonly GroupID: number;
@@ -22,14 +22,14 @@ export class GW_GET_ALL_GROUPS_INFORMATION_NTF extends GW_FRAME_NTF {
 		this.GroupID = this.Data.readUInt8(0);
 		this.Order = this.Data.readUInt16BE(1);
 		this.Placement = this.Data.readUInt8(3);
-		this.Name = readZString(this.Data.slice(4, 68));
+		this.Name = readZString(this.Data.subarray(4, 68));
 		this.Velocity = this.Data.readUInt8(68);
 		this.NodeVariation = this.Data.readUInt8(69);
 		this.GroupType = this.Data.readUInt8(70);
 		this.Revision = this.Data.readUInt16BE(97);
 
 		if ([GroupType.UserGroup, GroupType.All].indexOf(this.GroupType) !== -1) {
-			this.Nodes = bitArrayToArray(this.Data.slice(72, 97));
+			this.Nodes = bitArrayToArray(this.Data.subarray(72, 97));
 		} else {
 			this.Nodes = [];
 		}

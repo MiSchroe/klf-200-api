@@ -1,9 +1,9 @@
 "use strict";
 
-import { GW_FRAME_REQ } from "./common";
-import { Velocity, NodeVariation } from "./GW_SYSTEMTABLE_DATA";
-import { GroupType } from "./GW_GROUPS";
 import { arrayToBitArray } from "../utils/BitArray";
+import { GroupType } from "./GW_GROUPS";
+import { NodeVariation, Velocity } from "./GW_SYSTEMTABLE_DATA";
+import { GW_FRAME_REQ } from "./common";
 
 export class GW_NEW_GROUP_REQ extends GW_FRAME_REQ {
 	constructor(
@@ -17,7 +17,7 @@ export class GW_NEW_GROUP_REQ extends GW_FRAME_REQ {
 	) {
 		super(96);
 
-		const buff = this.Data.slice(this.offset); // View on the internal buffer makes setting the data easier
+		const buff = this.Data.subarray(this.offset); // View on the internal buffer makes setting the data easier
 		buff.writeUInt16BE(this.Order, 0);
 		buff.writeUInt8(this.Placement, 2);
 		buff.write(this.Name, 3, 64, "utf8");
@@ -25,6 +25,6 @@ export class GW_NEW_GROUP_REQ extends GW_FRAME_REQ {
 		buff.writeUInt8(this.NodeVariation, 68);
 		buff.writeUInt8(this.GroupType, 69);
 		buff.writeUInt8(this.Nodes.length, 70);
-		arrayToBitArray(this.Nodes, 25, buff.slice(71, 96));
+		arrayToBitArray(this.Nodes, 25, buff.subarray(71, 96));
 	}
 }

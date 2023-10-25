@@ -1,9 +1,9 @@
 "use strict";
 
-import { GW_SET_NODE_NAME_REQ, readZString } from "../../src";
 import { expect, use } from "chai";
-import "mocha";
 import chaibytes from "chai-bytes";
+import "mocha";
+import { GW_SET_NODE_NAME_REQ, readZString } from "../../src";
 use(chaibytes);
 
 describe("KLF200-API", function () {
@@ -17,7 +17,7 @@ describe("KLF200-API", function () {
 			expect(result).to.be.instanceOf(GW_SET_NODE_NAME_REQ).that.has.property("Data");
 			const buff = result.Data;
 			expect(buff.readUInt8(3)).to.be.equal(42, "SceneID wrong.");
-			expect(readZString(buff.slice(4, 68))).to.be.equal("Dummy", "Name wrong.");
+			expect(readZString(buff.subarray(4, 68))).to.be.equal("Dummy", "Name wrong.");
 		});
 
 		it("shouldn't throw an error with scene name at size of 64 chars", function () {

@@ -12,7 +12,7 @@ export class GW_RTC_SET_TIME_ZONE_REQ extends GW_FRAME_REQ {
 	// constructor(readonly TimeZoneName: string = "localtime") {
 	//     super();
 
-	//     const buff = this.Data.slice(this.offset);  // View on the internal buffer makes setting the data easier
+	//     const buff = this.Data.subarray(this.offset);  // View on the internal buffer makes setting the data easier
 	//     // let timeZoneString = "";
 
 	//     // // Get the time zone data
@@ -81,7 +81,7 @@ export class GW_RTC_SET_TIME_ZONE_REQ extends GW_FRAME_REQ {
 	constructor(readonly TimeZoneString: string) {
 		super(64);
 
-		const buff = this.Data.slice(this.offset); // View on the internal buffer makes setting the data easier
+		const buff = this.Data.subarray(this.offset); // View on the internal buffer makes setting the data easier
 		buff.write(TimeZoneString, 0, 64, "utf8");
 	}
 }
