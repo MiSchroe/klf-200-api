@@ -718,7 +718,6 @@ export class Product extends Component {
 	 * A read only array of the raw limitations' max values.
 	 *
 	 * @readonly
-	 * @param functionalParameter Parameter for which the limitation should be returned.
 	 * @type {number[]}
 	 * @memberof Product
 	 */
@@ -730,6 +729,7 @@ export class Product extends Component {
 	 * The maximum value (raw) of a limitation of the product.
 	 *
 	 * @readonly
+	 * @param functionalParameter Parameter for which the limitation should be returned.
 	 * @type {number}
 	 * @memberof Product
 	 */
@@ -1340,7 +1340,7 @@ export class Product extends Component {
  * Products are e.g. windows, roller shutters, awnings.
  *
  * To create an instance of the Products class use the
- * static method [Products.createProductsAsync]{@link Products#createProductsAsync}.
+ * static method {@link Products.createProductsAsync}.
  *
  * @export
  * @class Products

@@ -60,7 +60,7 @@
 	},
 	"include": ["./src/**/*"],
 	"typedocOptions": {
-		"mode": "modules",
+		"entryPoints": ["./src"],
 		"out": "docs"
 	}
 }
