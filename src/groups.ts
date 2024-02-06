@@ -1,38 +1,38 @@
-import { Component } from "./utils/PropertyChangedEvent";
-import { IConnection } from "./connection";
-import { GW_GET_GROUP_INFORMATION_NTF } from "./KLF200-API/GW_GET_GROUP_INFORMATION_NTF";
-import { GW_GET_ALL_GROUPS_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_NTF";
-import { Velocity, NodeVariation, ActuatorType } from "./KLF200-API/GW_SYSTEMTABLE_DATA";
-import { GroupType } from "./KLF200-API/GW_GROUPS";
-import { isArrayEqual } from "./utils/UtilityFunctions";
-import { GW_SET_GROUP_INFORMATION_CFM } from "./KLF200-API/GW_SET_GROUP_INFORMATION_CFM";
-import { GW_SET_GROUP_INFORMATION_REQ } from "./KLF200-API/GW_SET_GROUP_INFORMATION_REQ";
-import { GW_COMMON_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common";
-import { TypedEvent, Listener, Disposable } from "./utils/TypedEvent";
-import { GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF";
-import { GW_GET_ALL_GROUPS_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_REQ";
-import {
-	GW_GROUP_INFORMATION_CHANGED_NTF,
-	ChangeType,
-	GW_GROUP_INFORMATION_CHANGED_NTF_Modified,
-} from "./KLF200-API/GW_GROUP_INFORMATION_CHANGED_NTF";
 import { GW_ACTIVATE_PRODUCTGROUP_CFM } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_CFM";
 import { GW_ACTIVATE_PRODUCTGROUP_REQ } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_REQ";
 import {
-	convertPosition,
 	ActivateProductGroupStatus,
 	CommandOriginator,
-	PriorityLevel,
 	ParameterActive,
-	PriorityLevelLock,
+	PriorityLevel,
 	PriorityLevelInformation,
+	PriorityLevelLock,
+	convertPosition,
 } from "./KLF200-API/GW_COMMAND";
-import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM";
-import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
-import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
 import { GW_GET_ALL_GROUPS_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_CFM";
+import { GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF";
+import { GW_GET_ALL_GROUPS_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_NTF";
+import { GW_GET_ALL_GROUPS_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_REQ";
 import { GW_GET_GROUP_INFORMATION_CFM } from "./KLF200-API/GW_GET_GROUP_INFORMATION_CFM";
+import { GW_GET_GROUP_INFORMATION_NTF } from "./KLF200-API/GW_GET_GROUP_INFORMATION_NTF";
 import { GW_GET_GROUP_INFORMATION_REQ } from "./KLF200-API/GW_GET_GROUP_INFORMATION_REQ";
+import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM";
+import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
+import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
+import { GroupType } from "./KLF200-API/GW_GROUPS";
+import {
+	ChangeType,
+	GW_GROUP_INFORMATION_CHANGED_NTF,
+	GW_GROUP_INFORMATION_CHANGED_NTF_Modified,
+} from "./KLF200-API/GW_GROUP_INFORMATION_CHANGED_NTF";
+import { GW_SET_GROUP_INFORMATION_CFM } from "./KLF200-API/GW_SET_GROUP_INFORMATION_CFM";
+import { GW_SET_GROUP_INFORMATION_REQ } from "./KLF200-API/GW_SET_GROUP_INFORMATION_REQ";
+import { ActuatorType, NodeVariation, Velocity } from "./KLF200-API/GW_SYSTEMTABLE_DATA";
+import { GW_COMMON_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common";
+import { IConnection } from "./connection";
+import { Component } from "./utils/PropertyChangedEvent";
+import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent";
+import { isArrayEqual } from "./utils/UtilityFunctions";
 
 ("use strict");
 
@@ -620,7 +620,10 @@ export class Groups {
 	 */
 	public readonly Groups: Group[] = [];
 
-	private constructor(readonly Connection: IConnection) {}
+	private constructor(
+		readonly Connection: IConnection,
+		readonly groupType: GroupType = GroupType.UserGroup,
+	) {}
 
 	private async initializeGroupsAsync(): Promise<void> {
 		// Setup notification to receive notification with actuator type
@@ -662,7 +665,7 @@ export class Groups {
 			});
 
 			const getAllGroupsInformation = <GW_GET_ALL_GROUPS_INFORMATION_CFM>(
-				await this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ())
+				await this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ(this.groupType))
 			);
 			if (getAllGroupsInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
 				if (dispose) {
@@ -761,12 +764,16 @@ export class Groups {
 	 *
 	 * @static
 	 * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
+	 * @param [groupType=GroupType.UserGroup] The group type for which the groups should be read. Default is {@link GroupType.UserGroup}.
 	 * @returns {Promise<Groups>} Resolves to a new instance of the Groups class.
 	 * @memberof Groups
 	 */
-	static async createGroupsAsync(Connection: IConnection): Promise<Groups> {
+	static async createGroupsAsync(
+		Connection: IConnection,
+		groupType: GroupType = GroupType.UserGroup,
+	): Promise<Groups> {
 		try {
-			const result = new Groups(Connection);
+			const result = new Groups(Connection, groupType);
 			await result.initializeGroupsAsync();
 			return result;
 		} catch (error) {

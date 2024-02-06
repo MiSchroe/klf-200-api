@@ -47,6 +47,10 @@ describe("groups", function () {
 		// Frames for groups list
 		const dataAllNodes = Buffer.from([0x05, 0x02, 0x2a, 0x00, 0x0e]);
 		const dataAllNodesCfm = new GW_GET_ALL_GROUPS_INFORMATION_CFM(dataAllNodes);
+		const dataAllNodesRoom = Buffer.from([0x05, 0x02, 0x2a, 0x00, 0x0e]);
+		const dataAllNodesRoomCfm = new GW_GET_ALL_GROUPS_INFORMATION_CFM(dataAllNodesRoom);
+		const dataAllNodesHouse = Buffer.from([0x05, 0x02, 0x2a, 0x00, 0x01]);
+		const dataAllNodesHouseCfm = new GW_GET_ALL_GROUPS_INFORMATION_CFM(dataAllNodesHouse);
 		const dataAllNodesEmptyGroups = Buffer.from([0x05, 0x02, 0x2a, 0x00, 0x00]);
 		const dataAllNodesCfmEmptyGroups = new GW_GET_ALL_GROUPS_INFORMATION_CFM(dataAllNodesEmptyGroups);
 
@@ -68,14 +72,52 @@ describe("groups", function () {
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			]),
 		];
+		const dataNodesRoom = [
+			Buffer.from([
+				0x66, 0x02, 0x2b, 0x01, 0x00, 0x00, 0x00, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x53, 0xc3,
+				0xbc, 0x64, 0x65, 0x6e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			]),
+			Buffer.from([
+				0x66, 0x02, 0x2b, 0x02, 0x00, 0x01, 0x00, 0x41, 0x6c, 0x6c, 0x65, 0x20, 0x46, 0x65, 0x6e, 0x73, 0x74,
+				0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x04, 0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			]),
+		];
+		const dataNodesHouse = [
+			Buffer.from([
+				0x66, 0x02, 0x2b, 0x00, 0x00, 0x00, 0x00, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x53, 0xc3,
+				0xbc, 0x64, 0x65, 0x6e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			]),
+		];
 		const dataNodesNtf: GW_GET_ALL_GROUPS_INFORMATION_NTF[] = [];
 		dataNodes.forEach((dataNode) => {
 			dataNodesNtf.push(new GW_GET_ALL_GROUPS_INFORMATION_NTF(dataNode));
+		});
+		const dataNodesRoomNtf: GW_GET_ALL_GROUPS_INFORMATION_NTF[] = [];
+		dataNodesRoom.forEach((dataNode) => {
+			dataNodesRoomNtf.push(new GW_GET_ALL_GROUPS_INFORMATION_NTF(dataNode));
+		});
+		const dataNodesHouseNtf: GW_GET_ALL_GROUPS_INFORMATION_NTF[] = [];
+		dataNodesHouse.forEach((dataNode) => {
+			dataNodesHouseNtf.push(new GW_GET_ALL_GROUPS_INFORMATION_NTF(dataNode));
 		});
 		const dataNodeFinish = Buffer.from([0x03, 0x02, 0x2c]);
 		const dataNodeFinishNtf = new GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF(dataNodeFinish);
 
 		const receivedFrames = [dataAllNodesCfm];
+		const receivedFramesRoom = [dataAllNodesRoomCfm];
+		const receivedFramesHouse = [dataAllNodesHouseCfm];
 
 		const receivedFramesEmptyGroups = [dataAllNodesCfmEmptyGroups];
 
@@ -92,6 +134,30 @@ describe("groups", function () {
 			return await promResult;
 		};
 
+		const createRoomGroups = async function (): Promise<Groups> {
+			const conn = new MockConnection(receivedFramesRoom);
+			const promResult = Groups.createGroupsAsync(conn, GroupType.Room);
+			// Send nodes
+			for (const dataNodeNtf of dataNodesRoomNtf) {
+				conn.sendNotification(dataNodeNtf, []);
+			}
+			// Send finished
+			conn.sendNotification(dataNodeFinishNtf, []);
+			return await promResult;
+		};
+
+		const createHouseGroups = async function (): Promise<Groups> {
+			const conn = new MockConnection(receivedFramesHouse);
+			const promResult = Groups.createGroupsAsync(conn, GroupType.House);
+			// Send nodes
+			for (const dataNodeNtf of dataNodesHouseNtf) {
+				conn.sendNotification(dataNodeNtf, []);
+			}
+			// Send finished
+			conn.sendNotification(dataNodeFinishNtf, []);
+			return await promResult;
+		};
+
 		// A function simplifes the test setup for empty group tests
 		const createEmptyGroups = async function (): Promise<Groups> {
 			const conn = new MockConnection(receivedFramesEmptyGroups);
@@ -99,7 +165,7 @@ describe("groups", function () {
 			return await promResult;
 		};
 
-		describe("creategroupsAsync", function () {
+		describe("createGroupsAsync (default)", function () {
 			it("should create without error with 2 groups.", async function () {
 				const result = await createRegularGroups();
 				expect(result).to.be.instanceOf(Groups);
@@ -123,6 +189,69 @@ describe("groups", function () {
 						return accumulator + (typeof current === "undefined" ? 0 : 1);
 					}, 0),
 				).to.be.equal(0);
+			});
+
+			it("should create groups of type 'User'.", async function () {
+				const result = await createRegularGroups();
+				expect(result).to.be.instanceOf(Groups);
+				expect(
+					result.Groups.reduce((accumulator, current) => {
+						return (
+							accumulator +
+							(typeof current !== "undefined" && current.GroupType === GroupType.UserGroup ? 1 : 0)
+						);
+					}, 0),
+				).to.be.equal(2);
+			});
+		});
+
+		describe("createGroupsAsync (rooms)", function () {
+			it("should create without error with 2 groups.", async function () {
+				const result = await createRoomGroups();
+				expect(result).to.be.instanceOf(Groups);
+				expect(
+					result.Groups.reduce((accumulator, current) => {
+						return accumulator + (typeof current === "undefined" ? 0 : 1);
+					}, 0),
+				).to.be.equal(2);
+			});
+
+			it("should create groups of type 'Room'.", async function () {
+				const result = await createRoomGroups();
+				expect(result).to.be.instanceOf(Groups);
+				expect(
+					result.Groups.reduce((accumulator, current) => {
+						return (
+							accumulator +
+							(typeof current !== "undefined" && current.GroupType === GroupType.Room ? 1 : 0)
+						);
+					}, 0),
+				).to.be.equal(2);
+			});
+		});
+
+		describe("createGroupsAsync (house)", function () {
+			it("should create without error with 1 group.", async function () {
+				const result = await createHouseGroups();
+				expect(result).to.be.instanceOf(Groups);
+				expect(
+					result.Groups.reduce((accumulator, current) => {
+						return accumulator + (typeof current === "undefined" ? 0 : 1);
+					}, 0),
+				).to.be.equal(1);
+			});
+
+			it("should create groups of type 'House'.", async function () {
+				const result = await createHouseGroups();
+				expect(result).to.be.instanceOf(Groups);
+				expect(
+					result.Groups.reduce((accumulator, current) => {
+						return (
+							accumulator +
+							(typeof current !== "undefined" && current.GroupType === GroupType.House ? 1 : 0)
+						);
+					}, 0),
+				).to.be.equal(1);
 			});
 		});
 
