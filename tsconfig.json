@@ -61,6 +61,13 @@
 	"include": ["./src/**/*"],
 	"typedocOptions": {
 		"entryPoints": ["./src"],
+		"excludePrivate": true,
+		"excludeInternal": true,
+		"navigation": {
+			"includeCategories": true,
+			"includeGroups": true,
+			"includeFolders": true
+		},
 		"out": "docs"
 	}
 }
