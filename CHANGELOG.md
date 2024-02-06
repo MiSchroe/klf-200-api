@@ -4,8 +4,7 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
-
-## **WORK IN PROGRESS**
+## 3.2.0 (2024-02-06)
 
 -   Fix use of deprecated functions and dependencies
 -   [#63](https://github.com/MiSchroe/klf-200-api/issues/63) Add `setTargetPositionRawAsync()` method to set a product to a raw value
