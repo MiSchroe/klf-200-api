@@ -8,6 +8,8 @@
 ## **WORK IN PROGRESS**
 
 -   Fix use of deprecated functions and dependencies
+-   [#63](https://github.com/MiSchroe/klf-200-api/issues/63) Add `setTargetPositionRawAsync()` method to set a product to a raw value
+-   Update dependencies
 
 ## 3.1.3 (2023-10-18)
 

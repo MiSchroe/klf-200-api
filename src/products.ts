@@ -1,60 +1,60 @@
 ﻿"use strict";
 
 import {
-	Velocity,
-	ActuatorType,
-	NodeVariation,
-	PowerSaveMode,
-	NodeOperatingState,
-	ActuatorAlias,
-} from "./KLF200-API/GW_SYSTEMTABLE_DATA";
-import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
-import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF";
-import { IConnection } from "./connection";
-import { GW_SET_NODE_NAME_CFM } from "./KLF200-API/GW_SET_NODE_NAME_CFM";
-import { GW_SET_NODE_NAME_REQ } from "./KLF200-API/GW_SET_NODE_NAME_REQ";
-import { GW_COMMON_STATUS, GatewayCommand, IGW_FRAME_RCV, GW_INVERSE_STATUS } from "./KLF200-API/common";
-import { GW_SET_NODE_VARIATION_CFM } from "./KLF200-API/GW_SET_NODE_VARIATION_CFM";
-import { GW_SET_NODE_VARIATION_REQ } from "./KLF200-API/GW_SET_NODE_VARIATION_REQ";
-import { GW_SET_NODE_ORDER_AND_PLACEMENT_CFM } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_CFM";
-import { GW_SET_NODE_ORDER_AND_PLACEMENT_REQ } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_REQ";
-import { TypedEvent, Listener, Disposable } from "./utils/TypedEvent";
-import { Component } from "./utils/PropertyChangedEvent";
-import { GW_NODE_INFORMATION_CHANGED_NTF } from "./KLF200-API/GW_NODE_INFORMATION_CHANGED_NTF";
-import { GW_NODE_STATE_POSITION_CHANGED_NTF } from "./KLF200-API/GW_NODE_STATE_POSITION_CHANGED_NTF";
-import { GW_COMMAND_SEND_REQ } from "./KLF200-API/GW_COMMAND_SEND_REQ";
-import { GW_COMMAND_SEND_CFM } from "./KLF200-API/GW_COMMAND_SEND_CFM";
-import { GW_GET_ALL_NODES_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_REQ";
-import { GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF";
-import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "./KLF200-API/GW_CS_SYSTEM_TABLE_UPDATE_NTF";
-import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
-import { GW_WINK_SEND_CFM } from "./KLF200-API/GW_WINK_SEND_CFM";
-import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ";
-import {
+	CommandOriginator,
 	CommandStatus,
-	RunStatus,
-	StatusReply,
-	ParameterActive,
-	convertPositionRaw,
-	convertPosition,
 	FunctionalParameter,
 	LimitationType,
-	CommandOriginator,
-	PriorityLevel,
 	LockTime,
-	PriorityLevelLock,
+	ParameterActive,
+	PriorityLevel,
 	PriorityLevelInformation,
+	PriorityLevelLock,
+	RunStatus,
+	StatusReply,
+	convertPosition,
+	convertPositionRaw,
 } from "./KLF200-API/GW_COMMAND";
-import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF";
 import { GW_COMMAND_REMAINING_TIME_NTF } from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF";
+import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF";
+import { GW_COMMAND_SEND_CFM } from "./KLF200-API/GW_COMMAND_SEND_CFM";
+import { GW_COMMAND_SEND_REQ } from "./KLF200-API/GW_COMMAND_SEND_REQ";
+import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "./KLF200-API/GW_CS_SYSTEM_TABLE_UPDATE_NTF";
 import { GW_GET_ALL_NODES_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_CFM";
-import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM";
+import { GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF";
+import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF";
+import { GW_GET_ALL_NODES_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_REQ";
 import { GW_GET_LIMITATION_STATUS_CFM } from "./KLF200-API/GW_GET_LIMITATION_STATUS_CFM";
 import { GW_GET_LIMITATION_STATUS_REQ } from "./KLF200-API/GW_GET_LIMITATION_STATUS_REQ";
+import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM";
+import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
+import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
 import { GW_LIMITATION_STATUS_NTF } from "./KLF200-API/GW_LIMITATION_STATUS_NTF";
+import { GW_NODE_INFORMATION_CHANGED_NTF } from "./KLF200-API/GW_NODE_INFORMATION_CHANGED_NTF";
+import { GW_NODE_STATE_POSITION_CHANGED_NTF } from "./KLF200-API/GW_NODE_STATE_POSITION_CHANGED_NTF";
 import { GW_SESSION_FINISHED_NTF } from "./KLF200-API/GW_SESSION_FINISHED_NTF";
 import { GW_SET_LIMITATION_CFM } from "./KLF200-API/GW_SET_LIMITATION_CFM";
 import { GW_SET_LIMITATION_REQ } from "./KLF200-API/GW_SET_LIMITATION_REQ";
+import { GW_SET_NODE_NAME_CFM } from "./KLF200-API/GW_SET_NODE_NAME_CFM";
+import { GW_SET_NODE_NAME_REQ } from "./KLF200-API/GW_SET_NODE_NAME_REQ";
+import { GW_SET_NODE_ORDER_AND_PLACEMENT_CFM } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_CFM";
+import { GW_SET_NODE_ORDER_AND_PLACEMENT_REQ } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_REQ";
+import { GW_SET_NODE_VARIATION_CFM } from "./KLF200-API/GW_SET_NODE_VARIATION_CFM";
+import { GW_SET_NODE_VARIATION_REQ } from "./KLF200-API/GW_SET_NODE_VARIATION_REQ";
+import {
+	ActuatorAlias,
+	ActuatorType,
+	NodeOperatingState,
+	NodeVariation,
+	PowerSaveMode,
+	Velocity,
+} from "./KLF200-API/GW_SYSTEMTABLE_DATA";
+import { GW_WINK_SEND_CFM } from "./KLF200-API/GW_WINK_SEND_CFM";
+import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ";
+import { GW_COMMON_STATUS, GW_INVERSE_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common";
+import { IConnection } from "./connection";
+import { Component } from "./utils/PropertyChangedEvent";
+import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent";
 
 /**
  * Each product that is registered at the KLF-200 interface will be created
@@ -592,6 +592,53 @@ export class Product extends Component {
 	}
 
 	/**
+	 * Sets the product to a new position as raw value.
+	 *
+	 * @param {number} newPosition New position value as raw value.
+	 * @param PriorityLevel The priority level for the run command.
+	 * @param CommandOriginator The command originator for the run command.
+	 * @param ParameterActive The parameter that should be returned in the notifications. MP or FP1-FP16.
+	 * @param FunctionalParameters Additional functional paramters can be set during the command.
+	 * @param PriorityLevelLock Flag if the priority level lock should be used.
+	 * @param PriorityLevels Up to 8 priority levels.
+	 * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
+	 * @returns {Promise<number>}
+	 * @memberof Product
+	 */
+	public async setTargetPositionRawAsync(
+		newPosition: number,
+		PriorityLevel: PriorityLevel = 3,
+		CommandOriginator: CommandOriginator = 1,
+		ParameterActive: ParameterActive = 0,
+		FunctionalParameters: FunctionalParameter[] = [],
+		PriorityLevelLock: PriorityLevelLock = 0,
+		PriorityLevels: PriorityLevelInformation[] = [],
+		LockTime: number = Infinity,
+	): Promise<number> {
+		try {
+			const req = new GW_COMMAND_SEND_REQ(
+				this.NodeID,
+				newPosition,
+				PriorityLevel,
+				CommandOriginator,
+				ParameterActive,
+				FunctionalParameters,
+				PriorityLevelLock,
+				PriorityLevels,
+				LockTime,
+			);
+			const confirmationFrame = <GW_COMMAND_SEND_CFM>await this.Connection.sendFrameAsync(req);
+			if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted) {
+				return confirmationFrame.SessionID;
+			} else {
+				return Promise.reject(new Error(confirmationFrame.getError()));
+			}
+		} catch (error) {
+			return Promise.reject(error);
+		}
+	}
+
+	/**
 	 * Sets the product to a new position in percent.
 	 *
 	 * @param {number} newPosition New position value in percent.
@@ -616,8 +663,7 @@ export class Product extends Component {
 		LockTime: number = Infinity,
 	): Promise<number> {
 		try {
-			const req = new GW_COMMAND_SEND_REQ(
-				this.NodeID,
+			return await this.setTargetPositionRawAsync(
 				convertPosition(newPosition, this.TypeID),
 				PriorityLevel,
 				CommandOriginator,
@@ -627,12 +673,6 @@ export class Product extends Component {
 				PriorityLevels,
 				LockTime,
 			);
-			const confirmationFrame = <GW_COMMAND_SEND_CFM>await this.Connection.sendFrameAsync(req);
-			if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted) {
-				return confirmationFrame.SessionID;
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
 		} catch (error) {
 			return Promise.reject(error);
 		}
