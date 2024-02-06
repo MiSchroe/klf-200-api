@@ -853,6 +853,41 @@ describe("products", function () {
 				});
 			});
 
+			describe("setTargetPositionRawAsync", function () {
+				it("should send a command request", async function () {
+					const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x01]);
+					const dataCfm = new GW_COMMAND_SEND_CFM(data);
+
+					// Mock request
+					conn.valueToReturn.push(dataCfm);
+
+					const result = product.setTargetPositionRawAsync(0x4711);
+
+					return expect(result).to.be.eventually.equal(0x4711);
+				});
+
+				it("should reject on error status", async function () {
+					const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x00]);
+					const dataCfm = new GW_COMMAND_SEND_CFM(data);
+
+					// Mock request
+					conn.valueToReturn.push(dataCfm);
+
+					const result = product.setTargetPositionRawAsync(0x4711);
+
+					return expect(result).to.be.rejectedWith(Error);
+				});
+
+				it("should reject on error frame", async function () {
+					// Mock request
+					conn.valueToReturn.push(dataErrorNtf);
+
+					const result = product.setTargetPositionRawAsync(0x4711);
+
+					return expect(result).to.be.rejectedWith(Error);
+				});
+			});
+
 			describe("stopAsync", function () {
 				it("should send a command request", async function () {
 					const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x01]);
