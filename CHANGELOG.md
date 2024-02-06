@@ -4,8 +4,7 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
-
-## **WORK IN PROGRESS**
+## 3.3.0 (2024-02-06)
 
 -   [#72](https://github.com/MiSchroe/klf-200-api/issues/72) Enhance Group classes to support rooms
 
