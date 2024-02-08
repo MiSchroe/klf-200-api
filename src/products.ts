@@ -12,6 +12,7 @@ import {
 	PriorityLevelLock,
 	RunStatus,
 	StatusReply,
+	StatusType,
 	convertPosition,
 	convertPositionRaw,
 } from "./KLF200-API/GW_COMMAND";
@@ -41,6 +42,9 @@ import { GW_SET_NODE_ORDER_AND_PLACEMENT_CFM } from "./KLF200-API/GW_SET_NODE_OR
 import { GW_SET_NODE_ORDER_AND_PLACEMENT_REQ } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_REQ";
 import { GW_SET_NODE_VARIATION_CFM } from "./KLF200-API/GW_SET_NODE_VARIATION_CFM";
 import { GW_SET_NODE_VARIATION_REQ } from "./KLF200-API/GW_SET_NODE_VARIATION_REQ";
+import { GW_STATUS_REQUEST_CFM } from "./KLF200-API/GW_STATUS_REQUEST_CFM";
+import { GW_STATUS_REQUEST_NTF } from "./KLF200-API/GW_STATUS_REQUEST_NTF";
+import { GW_STATUS_REQUEST_REQ } from "./KLF200-API/GW_STATUS_REQUEST_REQ";
 import {
 	ActuatorAlias,
 	ActuatorType,
@@ -218,6 +222,7 @@ export class Product extends Component {
 				GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
 				GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF,
 				GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+				GatewayCommand.GW_STATUS_REQUEST_NTF,
 			],
 		);
 	}
@@ -864,9 +869,8 @@ export class Product extends Component {
 	/**
 	 * Refresh the data of this product and read the attributes from the gateway.
 	 *
-	 * You can use this method to refresh the state of the product in case
-	 * that you have missed changes, e.g. a simple remote control may change
-	 * the state of the product and you won't receive an event for it.
+	 * This method re-reads the data from the KLF-200. If the product hasn't sent
+	 * its recent data to the KLF-200, call [requestStatusAsync](Products.requestStatusAsync) first.
 	 *
 	 * @returns {Promise<void>}
 	 * @memberof Product
@@ -1097,6 +1101,8 @@ export class Product extends Component {
 			this.onRemainingTime(frame);
 		} else if (frame instanceof GW_GET_NODE_INFORMATION_NTF) {
 			this.onGetNodeInformation(frame);
+		} else if (frame instanceof GW_STATUS_REQUEST_NTF) {
+			this.onStatusRequest(frame);
 		}
 	}
 
@@ -1333,6 +1339,108 @@ export class Product extends Component {
 			}
 		}
 	}
+
+	private onStatusRequest(frame: GW_STATUS_REQUEST_NTF): void {
+		if (frame.NodeID === this.NodeID) {
+			if (this._runStatus !== frame.RunStatus) {
+				this._runStatus = frame.RunStatus;
+				this.propertyChanged("RunStatus");
+			}
+			if (this._statusReply !== frame.StatusReply) {
+				this._statusReply = frame.StatusReply;
+				this.propertyChanged("StatusReply");
+			}
+			switch (frame.StatusType) {
+				case StatusType.RequestMainInfo:
+					if (this._targetPositionRaw !== frame.TargetPosition) {
+						this._targetPositionRaw = frame.TargetPosition!;
+						this.propertyChanged("TargetPositionRaw");
+						this.propertyChanged("TargetPosition");
+					}
+					if (this._currentPositionRaw !== frame.CurrentPosition) {
+						this._currentPositionRaw = frame.CurrentPosition!;
+						this.propertyChanged("CurrentPositionRaw");
+						this.propertyChanged("CurrentPosition");
+					}
+					if (this._remainingTime !== frame.RemainingTime) {
+						this._remainingTime = frame.RemainingTime!;
+						this.propertyChanged("RemainingTime");
+					}
+					break;
+
+				case StatusType.RequestTargetPosition:
+					frame.ParameterData?.forEach((paramData) => {
+						if (paramData.ID === 0) {
+							if (this._targetPositionRaw !== paramData.Value) {
+								this._targetPositionRaw = paramData.Value!;
+								this.propertyChanged("TargetPositionRaw");
+								this.propertyChanged("TargetPosition");
+							}
+						}
+					});
+					break;
+
+				case StatusType.RequestCurrentPosition:
+					frame.ParameterData?.forEach((paramData) => {
+						switch (paramData.ID) {
+							case 0:
+								if (this._currentPositionRaw !== paramData.Value) {
+									this._currentPositionRaw = paramData.Value!;
+									this.propertyChanged("CurrentPositionRaw");
+									this.propertyChanged("CurrentPosition");
+								}
+								break;
+
+							case 1:
+								if (this._fp1CurrentPositionRaw !== paramData.Value) {
+									this._fp1CurrentPositionRaw = paramData.Value!;
+									this.propertyChanged("FP1CurrentPositionRaw");
+								}
+								break;
+
+							case 2:
+								if (this._fp2CurrentPositionRaw !== paramData.Value) {
+									this._fp2CurrentPositionRaw = paramData.Value!;
+									this.propertyChanged("FP2CurrentPositionRaw");
+								}
+								break;
+
+							case 3:
+								if (this._fp3CurrentPositionRaw !== paramData.Value) {
+									this._fp3CurrentPositionRaw = paramData.Value!;
+									this.propertyChanged("FP3CurrentPositionRaw");
+								}
+								break;
+
+							case 4:
+								if (this._fp4CurrentPositionRaw !== paramData.Value) {
+									this._fp4CurrentPositionRaw = paramData.Value!;
+									this.propertyChanged("FP4CurrentPositionRaw");
+								}
+								break;
+
+							default:
+								break;
+						}
+					});
+					break;
+
+				case StatusType.RequestRemainingTime:
+					frame.ParameterData?.forEach((paramData) => {
+						if (paramData.ID === 0) {
+							if (this._remainingTime !== paramData.Value) {
+								this._remainingTime = paramData.Value!;
+								this.propertyChanged("RemainingTime");
+							}
+						}
+					});
+					break;
+
+				default:
+					break;
+			}
+		}
+	}
 }
 
 /**
@@ -1564,5 +1672,37 @@ export class Products {
 	 */
 	public findByName(productName: string): Product | undefined {
 		return this.Products.find((pr) => typeof pr !== "undefined" && pr.Name === productName);
+	}
+
+	/**
+	 * Requests status data directly from one or more products.
+	 *
+	 * You can use this method to refresh the state of products in case
+	 * that you have missed changes, e.g. a simple remote control may change
+	 * the state of the product and you won't receive an event for it.
+	 *
+	 * @param Nodes The ID of a single product node or an array of IDs of multiple product nodes for which you want to get the status.
+	 * @param StatusType The type of request, e.g. current position, target position
+	 * @param [FunctionalParameters=[]] Additional functional parameters (FP1-FP16) that should be requested. A maximum of 7 functional parameters can be requested with each call.
+	 * @returns {Promise<numer>} The fulfilled promise will return the SessionID.
+	 * @memberof Products
+	 */
+	public async requestStatusAsync(
+		Nodes: number[] | number,
+		StatusType: StatusType,
+		FunctionalParameters: number[] = [],
+	): Promise<number> {
+		try {
+			const confirmationFrame = <GW_STATUS_REQUEST_CFM>(
+				await this.Connection.sendFrameAsync(new GW_STATUS_REQUEST_REQ(Nodes, StatusType, FunctionalParameters))
+			);
+			if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted) {
+				return Promise.resolve(confirmationFrame.SessionID);
+			} else {
+				return Promise.reject(new Error(confirmationFrame.getError()));
+			}
+		} catch (error) {
+			return Promise.reject(error);
+		}
 	}
 }
