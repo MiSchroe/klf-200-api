@@ -26,6 +26,8 @@ import {
 	GW_SET_NODE_NAME_CFM,
 	GW_SET_NODE_ORDER_AND_PLACEMENT_CFM,
 	GW_SET_NODE_VARIATION_CFM,
+	GW_STATUS_REQUEST_CFM,
+	GW_STATUS_REQUEST_NTF,
 	GW_WINK_SEND_CFM,
 	LimitationType,
 	NodeOperatingState,
@@ -37,6 +39,7 @@ import {
 	Products,
 	RunStatus,
 	StatusReply,
+	StatusType,
 	Velocity,
 } from "../src";
 import { PropertyChangedEvent } from "../src/utils/PropertyChangedEvent";
@@ -182,6 +185,75 @@ describe("products", function () {
 				const products = await promProducts;
 				const result = products.findByName("Fenster Badezimmer");
 				expect(result).to.be.instanceOf(Product).with.property("Name", "Fenster Badezimmer");
+			});
+		});
+
+		describe("requestStatusAsync", function () {
+			this.beforeEach(function () {
+				sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
+			});
+
+			it("should send a command request", async function () {
+				const conn = new MockConnection(receivedFrames);
+				const promProducts = Products.createProductsAsync(conn);
+				// Send nodes
+				for (const dataNodeNtf of dataNodesNtf) {
+					conn.sendNotification(dataNodeNtf, []);
+				}
+				// Send finished
+				conn.sendNotification(dataNodeFinishNtf, []);
+				const products = await promProducts;
+
+				const data = Buffer.from([0x06, 0x03, 0x06, 0x47, 0x11, 0x01]);
+				const dataCfm = new GW_STATUS_REQUEST_CFM(data);
+
+				// Mock request
+				conn.valueToReturn.push(dataCfm);
+
+				const result = products.requestStatusAsync(0, StatusType.RequestMainInfo);
+
+				return expect(result).to.be.fulfilled;
+			});
+
+			it("should reject on error status", async function () {
+				const conn = new MockConnection(receivedFrames);
+				const promProducts = Products.createProductsAsync(conn);
+				// Send nodes
+				for (const dataNodeNtf of dataNodesNtf) {
+					conn.sendNotification(dataNodeNtf, []);
+				}
+				// Send finished
+				conn.sendNotification(dataNodeFinishNtf, []);
+				const products = await promProducts;
+
+				const data = Buffer.from([0x06, 0x03, 0x06, 0x47, 0x11, 0x00]);
+				const dataCfm = new GW_STATUS_REQUEST_CFM(data);
+
+				// Mock request
+				conn.valueToReturn.push(dataCfm);
+
+				const result = products.requestStatusAsync(0, StatusType.RequestMainInfo);
+
+				return expect(result).to.be.rejectedWith(Error);
+			});
+
+			it("should reject on error frame", async function () {
+				const conn = new MockConnection(receivedFrames);
+				const promProducts = Products.createProductsAsync(conn);
+				// Send nodes
+				for (const dataNodeNtf of dataNodesNtf) {
+					conn.sendNotification(dataNodeNtf, []);
+				}
+				// Send finished
+				conn.sendNotification(dataNodeFinishNtf, []);
+				const products = await promProducts;
+
+				// Mock request
+				conn.valueToReturn.push(dataErrorNtf);
+
+				const result = products.requestStatusAsync(0, StatusType.RequestMainInfo);
+
+				return expect(result).to.be.rejectedWith(Error);
 			});
 		});
 
@@ -1204,30 +1276,30 @@ describe("products", function () {
 				});
 
 				describe("GW_NODE_INFORMATION_CHANGED_NTF", function () {
-					it("should send notifications for Name, NodeVariation, Order and Placement", function () {
-						// prettier-ignore
-						const data = Buffer.from([
-							72, 0x02, 0x0c, 
-                            // Node ID
-                            0,
-                            // Name
-                            0x44, 0x75, 0x6d, 0x6d, 0x79, 0x00, 0x00, 0x00,
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            // Order
-                            0x00, 0x02,
-                            // Placement
-                            3,
-                            // Node Variation
-                            2  // KIP
-                        ]);
-						const dataNtf = new GW_NODE_INFORMATION_CHANGED_NTF(data);
+					// prettier-ignore
+					const data = Buffer.from([
+						72, 0x02, 0x0c, 
+						// Node ID
+						0,
+						// Name
+						0x44, 0x75, 0x6d, 0x6d, 0x79, 0x00, 0x00, 0x00,
+						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+						// Order
+						0x00, 0x02,
+						// Placement
+						3,
+						// Node Variation
+						2  // KIP
+					]);
+					const dataNtf = new GW_NODE_INFORMATION_CHANGED_NTF(data);
 
+					it("should send notifications for Name", function () {
 						conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "Name").to.be.calledWithMatch({
@@ -1235,16 +1307,31 @@ describe("products", function () {
 							propertyName: "Name",
 							propertyValue: "Dummy",
 						});
+					});
+
+					it("should send notifications for NodeVariation", function () {
+						conn.sendNotification(dataNtf, []);
+
 						expect(propertyChangedSpy, "NodeVariation").to.be.calledWithMatch({
 							o: product,
 							propertyName: "NodeVariation",
 							propertyValue: NodeVariation.Kip,
 						});
+					});
+
+					it("should send notifications for Order", function () {
+						conn.sendNotification(dataNtf, []);
+
 						expect(propertyChangedSpy, "Order").to.be.calledWithMatch({
 							o: product,
 							propertyName: "Order",
 							propertyValue: 2,
 						});
+					});
+
+					it("should send notifications for Placement", function () {
+						conn.sendNotification(dataNtf, []);
+
 						expect(propertyChangedSpy, "Placement").to.be.calledWithMatch({
 							o: product,
 							propertyName: "Placement",
@@ -1306,33 +1393,33 @@ describe("products", function () {
 				});
 
 				describe("GW_NODE_STATE_POSITION_CHANGED_NTF", function () {
-					it("should send notifications for State, CurrentPositionRaw, CurrentPosition, TargetPositionRaw, TargetPosition, FP1CurrentPositionRaw, FP2CurrentPositionRaw, FP3CurrentPositionRaw, FP4CurrentPositionRaw, RemainingTime, TimeStamp", function () {
-						// prettier-ignore
-						const data = Buffer.from([
-							23, 0x02, 0x11, 
-                            // Node ID
-                            0,
-                            // State
-                            4,  // Executing
-                            // Current Position
-                            0xc0, 0x00,
-                            // Target
-                            0xc7, 0x00,
-                            // FP1 Current Position
-                            0xf7, 0xfe,
-                            // FP2 Current Position
-                            0xf7, 0xfe,
-                            // FP3 Current Position
-                            0xf7, 0xfe,
-                            // FP4 Current Position
-                            0xf7, 0xfe,
-                            // Remaining Time
-                            0, 5,
-                            // Time stamp
-                            0x00, 0xf9, 0x39, 0x90
-                        ]);
-						const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
+					// prettier-ignore
+					const data = Buffer.from([
+						23, 0x02, 0x11, 
+						// Node ID
+						0,
+						// State
+						4,  // Executing
+						// Current Position
+						0xc0, 0x00,
+						// Target
+						0xc7, 0x00,
+						// FP1 Current Position
+						0xf7, 0xfe,
+						// FP2 Current Position
+						0xf7, 0xfe,
+						// FP3 Current Position
+						0xf7, 0xfe,
+						// FP4 Current Position
+						0xf7, 0xfe,
+						// Remaining Time
+						0, 5,
+						// Time stamp
+						0x00, 0xf9, 0x39, 0x90
+					]);
+					const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
 
+					it("should send notifications for State", function () {
 						conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "State").to.be.calledWithMatch({
@@ -1340,52 +1427,96 @@ describe("products", function () {
 							propertyName: "State",
 							propertyValue: NodeOperatingState.Executing,
 						});
+					});
+
+					it("should send notifications for CurrentPositionRaw", function () {
+						conn.sendNotification(dataNtf, []);
+
 						expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
 							o: product,
 							propertyName: "CurrentPositionRaw",
 							propertyValue: 0xc000,
 						});
+					});
+
+					it("should send notifications for CurrentPosition", function () {
+						conn.sendNotification(dataNtf, []);
+
 						expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
 							o: product,
 							propertyName: "CurrentPosition",
 							propertyValue: 0.040000000000000036,
 						});
+					});
+
+					it("should send notifications for TargetPositionRaw", function () {
+						conn.sendNotification(dataNtf, []);
+
 						expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWithMatch({
 							o: product,
 							propertyName: "TargetPositionRaw",
 							propertyValue: 0xc700,
 						});
+					});
+
+					it("should send notifications for TargetPosition", function () {
+						conn.sendNotification(dataNtf, []);
+
 						expect(propertyChangedSpy, "TargetPosition").to.be.calledWithMatch({
 							o: product,
 							propertyName: "TargetPosition",
 							propertyValue: 0.0050000000000000044,
 						});
+					});
+
+					it("should send notifications for FP1CurrentPositionRaw", function () {
+						conn.sendNotification(dataNtf, []);
+
 						expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledWithMatch({
 							o: product,
 							propertyName: "FP1CurrentPositionRaw",
 							propertyValue: 0xf7fe,
 						});
+					});
+
+					it("should send notifications for FP2CurrentPositionRaw", function () {
+						conn.sendNotification(dataNtf, []);
+
 						expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({
 							o: product,
 							propertyName: "FP2CurrentPositionRaw",
 							propertyValue: 0xf7fe,
 						});
+					});
+
+					it("should send notifications for FP3CurrentPositionRaw", function () {
+						conn.sendNotification(dataNtf, []);
+
 						expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledWithMatch({
 							o: product,
 							propertyName: "FP3CurrentPositionRaw",
 							propertyValue: 0xf7fe,
 						});
+					});
+
+					it("should send notifications for FP4CurrentPositionRaw", function () {
+						conn.sendNotification(dataNtf, []);
+
 						expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledWithMatch({
 							o: product,
 							propertyName: "FP4CurrentPositionRaw",
 							propertyValue: 0xf7fe,
 						});
+					});
+
+					it("should send notifications for RemainingTime", function () {
+						conn.sendNotification(dataNtf, []);
+
 						expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({
 							o: product,
 							propertyName: "RemainingTime",
 							propertyValue: 5,
 						});
-						// expect(propertyChangedSpy, "TimeStamp").to.be.calledWithMatch({o: product, propertyName: "TimeStamp", propertyValue: new Date("1970-07-09 02:00:00 GMT+0100")});
 					});
 
 					it("shouldn't send any notifications", function () {
@@ -1422,138 +1553,203 @@ describe("products", function () {
 				});
 
 				describe("GW_COMMAND_RUN_STATUS_NTF", function () {
-					it("should send notifications for CurrentPositionRaw, CurrentPosition, RunStatus, StatusReply", function () {
+					describe("Main parameter", function () {
 						const data = Buffer.from([
 							0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x00, 0xc0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00,
 							0x00,
 						]);
 						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						it("should send notifications for CurrentPositionRaw", function () {
+							conn.sendNotification(dataNtf, []);
 
-						expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
-							o: product,
-							propertyName: "CurrentPositionRaw",
-							propertyValue: 0xc000,
+							expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
+								o: product,
+								propertyName: "CurrentPositionRaw",
+								propertyValue: 0xc000,
+							});
 						});
-						expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
-							o: product,
-							propertyName: "CurrentPosition",
-							propertyValue: 0.040000000000000036,
+
+						it("should send notifications for CurrentPosition", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
+								o: product,
+								propertyName: "CurrentPosition",
+								propertyValue: 0.040000000000000036,
+							});
 						});
-						expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
-							o: product,
-							propertyName: "RunStatus",
-							propertyValue: RunStatus.ExecutionActive,
+
+						it("should send notifications for RunStatus", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+								o: product,
+								propertyName: "RunStatus",
+								propertyValue: RunStatus.ExecutionActive,
+							});
 						});
-						expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
-							o: product,
-							propertyName: "StatusReply",
-							propertyValue: StatusReply.Ok,
+
+						it("should send notifications for StatusReply", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+								o: product,
+								propertyName: "StatusReply",
+								propertyValue: StatusReply.Ok,
+							});
 						});
 					});
 
-					it("should send notifications for FP1CurrentPositionRaw, RunStatus, StatusReply", function () {
+					describe("FP1", function () {
 						const data = Buffer.from([
 							0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x01, 0xc0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00,
 							0x00,
 						]);
 						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						it("should send notifications for FP1CurrentPositionRaw", function () {
+							conn.sendNotification(dataNtf, []);
 
-						expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledWithMatch({
-							o: product,
-							propertyName: "FP1CurrentPositionRaw",
-							propertyValue: 0xc000,
+							expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledWithMatch({
+								o: product,
+								propertyName: "FP1CurrentPositionRaw",
+								propertyValue: 0xc000,
+							});
 						});
-						expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
-							o: product,
-							propertyName: "RunStatus",
-							propertyValue: RunStatus.ExecutionActive,
+
+						it("should send notifications for RunStatus", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+								o: product,
+								propertyName: "RunStatus",
+								propertyValue: RunStatus.ExecutionActive,
+							});
 						});
-						expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
-							o: product,
-							propertyName: "StatusReply",
-							propertyValue: StatusReply.Ok,
+
+						it("should send notifications for StatusReply", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+								o: product,
+								propertyName: "StatusReply",
+								propertyValue: StatusReply.Ok,
+							});
 						});
 					});
 
-					it("should send notifications for FP2CurrentPositionRaw, RunStatus, StatusReply", function () {
+					describe("FP2", function () {
 						const data = Buffer.from([
 							0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x02, 0xc0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00,
 							0x00,
 						]);
 						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						it("should send notifications for FP2CurrentPositionRaw", function () {
+							conn.sendNotification(dataNtf, []);
 
-						expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({
-							o: product,
-							propertyName: "FP2CurrentPositionRaw",
-							propertyValue: 0xc000,
+							expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({
+								o: product,
+								propertyName: "FP2CurrentPositionRaw",
+								propertyValue: 0xc000,
+							});
 						});
-						expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
-							o: product,
-							propertyName: "RunStatus",
-							propertyValue: RunStatus.ExecutionActive,
+
+						it("should send notifications for RunStatus", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+								o: product,
+								propertyName: "RunStatus",
+								propertyValue: RunStatus.ExecutionActive,
+							});
 						});
-						expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
-							o: product,
-							propertyName: "StatusReply",
-							propertyValue: StatusReply.Ok,
+
+						it("should send notifications for StatusReply", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+								o: product,
+								propertyName: "StatusReply",
+								propertyValue: StatusReply.Ok,
+							});
 						});
 					});
 
-					it("should send notifications for FP3CurrentPositionRaw, RunStatus, StatusReply", function () {
+					describe("FP3", function () {
 						const data = Buffer.from([
 							0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x03, 0xc0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00,
 							0x00,
 						]);
 						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						it("should send notifications for FP3CurrentPositionRaw", function () {
+							conn.sendNotification(dataNtf, []);
 
-						expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledWithMatch({
-							o: product,
-							propertyName: "FP3CurrentPositionRaw",
-							propertyValue: 0xc000,
+							expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledWithMatch({
+								o: product,
+								propertyName: "FP3CurrentPositionRaw",
+								propertyValue: 0xc000,
+							});
 						});
-						expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
-							o: product,
-							propertyName: "RunStatus",
-							propertyValue: RunStatus.ExecutionActive,
+
+						it("should send notifications for RunStatus", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+								o: product,
+								propertyName: "RunStatus",
+								propertyValue: RunStatus.ExecutionActive,
+							});
 						});
-						expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
-							o: product,
-							propertyName: "StatusReply",
-							propertyValue: StatusReply.Ok,
+
+						it("should send notifications for StatusReply", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+								o: product,
+								propertyName: "StatusReply",
+								propertyValue: StatusReply.Ok,
+							});
 						});
 					});
 
-					it("should send notifications for FP4CurrentPositionRaw, RunStatus, StatusReply", function () {
+					describe("FP4", function () {
 						const data = Buffer.from([
 							0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x04, 0xc0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00,
 							0x00,
 						]);
 						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						it("should send notifications for FP4CurrentPositionRaw", function () {
+							conn.sendNotification(dataNtf, []);
 
-						expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledWithMatch({
-							o: product,
-							propertyName: "FP4CurrentPositionRaw",
-							propertyValue: 0xc000,
+							expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledWithMatch({
+								o: product,
+								propertyName: "FP4CurrentPositionRaw",
+								propertyValue: 0xc000,
+							});
 						});
-						expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
-							o: product,
-							propertyName: "RunStatus",
-							propertyValue: RunStatus.ExecutionActive,
+
+						it("should send notifications for RunStatus", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+								o: product,
+								propertyName: "RunStatus",
+								propertyValue: RunStatus.ExecutionActive,
+							});
 						});
-						expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
-							o: product,
-							propertyName: "StatusReply",
-							propertyValue: StatusReply.Ok,
+
+						it("should send notifications for StatusReply", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+								o: product,
+								propertyName: "StatusReply",
+								propertyValue: StatusReply.Ok,
+							});
 						});
 					});
 
@@ -3114,6 +3310,485 @@ describe("products", function () {
 								propertyValue: dataNtf.ActuatorAliases,
 							}),
 						);
+					});
+				});
+
+				describe("GW_STATUS_REQUEST_NTF", function () {
+					describe("Main Info", function () {
+						// prettier-ignore
+						const data = Buffer.from([
+							21, 0x03, 0x07, 
+							// Session
+							0x47, 0x11,
+							// StatusOwner (StatusID)
+							0x01, // User
+							// Node ID
+							0,
+							// RunStatus
+							2,  // ExecutionActive
+							// StatusReply
+							0x01, // Ok
+							// StatusType
+							3, // Main Info
+							// Target
+							0xc7, 0x00,
+							// Current Position
+							0xc0, 0x00,
+							// Remaining Time
+							0, 5,
+							// LastMasterExecutionAddress
+							0, 0, 0, 0,
+							// LastCommandOriginator
+							1 // User
+						]);
+						const dataNtf = new GW_STATUS_REQUEST_NTF(data);
+
+						it("should send notifications for RunStatus", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+								o: product,
+								propertyName: "RunStatus",
+								propertyValue: RunStatus.ExecutionActive,
+							});
+						});
+
+						it("should send notifications for StatusReply", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+								o: product,
+								propertyName: "StatusReply",
+								propertyValue: StatusReply.Ok,
+							});
+						});
+
+						it("should send notifications for CurrentPositionRaw", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
+								o: product,
+								propertyName: "CurrentPositionRaw",
+								propertyValue: 0xc000,
+							});
+						});
+
+						it("should send notifications for CurrentPosition", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
+								o: product,
+								propertyName: "CurrentPosition",
+								propertyValue: 0.040000000000000036,
+							});
+						});
+
+						it("should send notifications for TargetPositionRaw", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWithMatch({
+								o: product,
+								propertyName: "TargetPositionRaw",
+								propertyValue: 0xc700,
+							});
+						});
+
+						it("should send notifications for TargetPosition", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "TargetPosition").to.be.calledWithMatch({
+								o: product,
+								propertyName: "TargetPosition",
+								propertyValue: 0.0050000000000000044,
+							});
+						});
+
+						it("should send notifications for RemainingTime", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({
+								o: product,
+								propertyName: "RemainingTime",
+								propertyValue: 5,
+							});
+						});
+
+						it("shouldn't send any notifications", function () {
+							// prettier-ignore
+							const data = Buffer.from([
+							23, 0x02, 0x11, 
+                            // Node ID
+                            0,
+                            // State
+                            5,  // Done
+                            // Current Position
+                            0xc8, 0x00,
+                            // Target
+                            0xc8, 0x00,
+                            // FP1 Current Position
+                            0xf7, 0xff,
+                            // FP2 Current Position
+                            0xf7, 0xff,
+                            // FP3 Current Position
+                            0xf7, 0xff,
+                            // FP4 Current Position
+                            0xf7, 0xff,
+                            // Remaining Time
+                            0, 0,
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3
+                        ]);
+							const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
+
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy).not.to.be.called;
+						});
+					});
+
+					describe("Target Position", function () {
+						// prettier-ignore
+						const data = Buffer.from([
+							62, 0x03, 0x07, 
+							// Session
+							0x47, 0x11,
+							// StatusOwner (StatusID)
+							0x01, // User
+							// Node ID
+							0,
+							// RunStatus
+							2,  // ExecutionActive
+							// StatusReply
+							0x01, // Ok
+							// StatusType
+							0, // Target Position
+							// Status Count
+							2, // 2 parameters
+							// MP data
+							0, 0xC7, 0x00,
+							// FP2 data
+							2, 0xf7, 0xff,
+							// Remaining empty parameters
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0
+						]);
+						const dataNtf = new GW_STATUS_REQUEST_NTF(data);
+
+						it("should send notifications for RunStatus", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+								o: product,
+								propertyName: "RunStatus",
+								propertyValue: RunStatus.ExecutionActive,
+							});
+						});
+
+						it("should send notifications for StatusReply", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+								o: product,
+								propertyName: "StatusReply",
+								propertyValue: StatusReply.Ok,
+							});
+						});
+
+						it("should send notifications for TargetPositionRaw", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWithMatch({
+								o: product,
+								propertyName: "TargetPositionRaw",
+								propertyValue: 0xc700,
+							});
+						});
+
+						it("should send notifications for TargetPosition", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "TargetPosition").to.be.calledWithMatch({
+								o: product,
+								propertyName: "TargetPosition",
+								propertyValue: 0.0050000000000000044,
+							});
+						});
+
+						it("shouldn't send any notifications", function () {
+							// prettier-ignore
+							const data = Buffer.from([
+							23, 0x02, 0x11, 
+                            // Node ID
+                            0,
+                            // State
+                            5,  // Done
+                            // Current Position
+                            0xc8, 0x00,
+                            // Target
+                            0xc8, 0x00,
+                            // FP1 Current Position
+                            0xf7, 0xff,
+                            // FP2 Current Position
+                            0xf7, 0xff,
+                            // FP3 Current Position
+                            0xf7, 0xff,
+                            // FP4 Current Position
+                            0xf7, 0xff,
+                            // Remaining Time
+                            0, 0,
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3
+                        ]);
+							const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
+
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy).not.to.be.called;
+						});
+					});
+
+					describe("Current Position", function () {
+						// prettier-ignore
+						const data = Buffer.from([
+							62, 0x03, 0x07, 
+							// Session
+							0x47, 0x11,
+							// StatusOwner (StatusID)
+							0x01, // User
+							// Node ID
+							0,
+							// RunStatus
+							2,  // ExecutionActive
+							// StatusReply
+							0x01, // Ok
+							// StatusType
+							1, // Current Position
+							// Status Count
+							2, // 2 parameters
+							// MP data
+							0, 0xC7, 0x00,
+							// FP2 data
+							2, 0xC7, 0x00,
+							// Remaining empty parameters
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0
+						]);
+						const dataNtf = new GW_STATUS_REQUEST_NTF(data);
+
+						it("should send notifications for RunStatus", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+								o: product,
+								propertyName: "RunStatus",
+								propertyValue: RunStatus.ExecutionActive,
+							});
+						});
+
+						it("should send notifications for StatusReply", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+								o: product,
+								propertyName: "StatusReply",
+								propertyValue: StatusReply.Ok,
+							});
+						});
+
+						it("should send notifications for CurrentPositionRaw", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
+								o: product,
+								propertyName: "CurrentPositionRaw",
+								propertyValue: 0xc700,
+							});
+						});
+
+						it("should send notifications for CurrentPosition", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
+								o: product,
+								propertyName: "CurrentPosition",
+								propertyValue: 0.0050000000000000044,
+							});
+						});
+
+						it("should send notifications for FP2CurrentPositionRaw", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({
+								o: product,
+								propertyName: "FP2CurrentPositionRaw",
+								propertyValue: 0xc700,
+							});
+						});
+
+						it("shouldn't send any notifications", function () {
+							// prettier-ignore
+							const data = Buffer.from([
+							23, 0x02, 0x11, 
+                            // Node ID
+                            0,
+                            // State
+                            5,  // Done
+                            // Current Position
+                            0xc8, 0x00,
+                            // Target
+                            0xc8, 0x00,
+                            // FP1 Current Position
+                            0xf7, 0xff,
+                            // FP2 Current Position
+                            0xf7, 0xff,
+                            // FP3 Current Position
+                            0xf7, 0xff,
+                            // FP4 Current Position
+                            0xf7, 0xff,
+                            // Remaining Time
+                            0, 0,
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3
+                        ]);
+							const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
+
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy).not.to.be.called;
+						});
+					});
+
+					describe("Remaining Time", function () {
+						// prettier-ignore
+						const data = Buffer.from([
+							62, 0x03, 0x07, 
+							// Session
+							0x47, 0x11,
+							// StatusOwner (StatusID)
+							0x01, // User
+							// Node ID
+							0,
+							// RunStatus
+							2,  // ExecutionActive
+							// StatusReply
+							0x01, // Ok
+							// StatusType
+							2, // Remaining time
+							// Status Count
+							2, // 2 parameters
+							// MP data
+							0, 0, 5,
+							// FP2 data
+							2, 0, 7,
+							// Remaining empty parameters
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0,
+							0, 0, 0
+						]);
+						const dataNtf = new GW_STATUS_REQUEST_NTF(data);
+
+						it("should send notifications for RunStatus", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+								o: product,
+								propertyName: "RunStatus",
+								propertyValue: RunStatus.ExecutionActive,
+							});
+						});
+
+						it("should send notifications for StatusReply", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+								o: product,
+								propertyName: "StatusReply",
+								propertyValue: StatusReply.Ok,
+							});
+						});
+
+						it("should send notifications for RemainingTime", function () {
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({
+								o: product,
+								propertyName: "RemainingTime",
+								propertyValue: 5,
+							});
+						});
+
+						it("shouldn't send any notifications", function () {
+							// prettier-ignore
+							const data = Buffer.from([
+							23, 0x02, 0x11, 
+                            // Node ID
+                            0,
+                            // State
+                            5,  // Done
+                            // Current Position
+                            0xc8, 0x00,
+                            // Target
+                            0xc8, 0x00,
+                            // FP1 Current Position
+                            0xf7, 0xff,
+                            // FP2 Current Position
+                            0xf7, 0xff,
+                            // FP3 Current Position
+                            0xf7, 0xff,
+                            // FP4 Current Position
+                            0xf7, 0xff,
+                            // Remaining Time
+                            0, 0,
+                            // Time stamp
+                            0x4f, 0x00, 0x3f, 0xf3
+                        ]);
+							const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
+
+							conn.sendNotification(dataNtf, []);
+
+							expect(propertyChangedSpy).not.to.be.called;
+						});
 					});
 				});
 			});
