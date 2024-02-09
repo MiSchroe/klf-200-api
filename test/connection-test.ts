@@ -62,21 +62,26 @@ describe("connection", function () {
 		});
 
 		it("should throw an error after timeout.", function (done) {
-			this.slow(2000);
-			this.mitm.on("connection", function (socket: Socket) {
-				socket.on("data", () => {
-					setTimeout(function () {
-						socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
-					}, 2000);
+			const clock = sinon.useFakeTimers();
+			try {
+				this.mitm.on("connection", function (socket: Socket) {
+					socket.on("data", () => {
+						setTimeout(function () {
+							socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
+						}, 2000);
+					});
 				});
-			});
 
-			const conn = new Connection(testHOST);
-			expect(conn.loginAsync("velux123", 1)).to.be.rejectedWith(Error).and.notify(done);
+				const conn = new Connection(testHOST);
+				const loginPromise = conn.loginAsync("velux123", 1);
+				clock.runAll();
+				expect(loginPromise).to.be.rejectedWith(Error).and.notify(done);
+			} finally {
+				clock.restore();
+			}
 		});
 
 		it(`should reconnect without error after the connection is lost.`, async function () {
-			this.slow(2000);
 			let serverSocket: Socket;
 			this.mitm.on("connection", function (socket: Socket) {
 				serverSocket = socket;
@@ -102,7 +107,7 @@ describe("connection", function () {
 			// Check, that KLF200Protocol is undefined
 			expect(conn.KLF200SocketProtocol).to.be.undefined;
 
-			await expect(conn.loginAsync("velux123")).to.be.fulfilled;
+			return expect(conn.loginAsync("velux123")).to.be.fulfilled;
 		});
 	});
 
@@ -127,7 +132,7 @@ describe("connection", function () {
 	});
 
 	describe("sendFrameAsync", function () {
-		it("should return the corresponding confirmation.", function (done) {
+		it("should return the corresponding confirmation.", async function () {
 			this.mitm.on("connection", function (socket: Socket) {
 				socket.on("data", () => {
 					socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
@@ -135,37 +140,44 @@ describe("connection", function () {
 			});
 
 			const conn = new Connection(testHOST);
-			conn.loginAsync("velux123")
-				.then(() =>
-					expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"))).to.be.fulfilled.and.notify(done),
-				)
-				.catch((reason: any) => expect.fail(reason));
+			try {
+				await conn.loginAsync("velux123");
+				const p = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"));
+				return expect(p).to.be.fulfilled;
+			} catch (reason: any) {
+				return Promise.reject(reason);
+			}
 		});
 
-		it("should timeout on missing confirmation.", function (done) {
-			this.timeout(2000);
-			let isFirstData = true;
+		it("should timeout on missing confirmation.", async function () {
+			let sendData = true;
 			this.mitm.on("connection", function (socket: Socket) {
 				socket.on("data", () => {
-					if (isFirstData) {
+					if (sendData) {
 						socket.write(rawBufferFrom([0x30, 0x01, 0x00]));
-						isFirstData = false;
 					}
 				});
 			});
 
 			const conn = new Connection(testHOST);
-			conn.loginAsync("velux123")
-				.then(() =>
-					expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1))
-						.to.be.rejectedWith(Error)
-						.and.notify(done),
-				)
-				.catch((reason: any) => expect.fail(reason));
+
+			try {
+				await conn.loginAsync("velux123");
+				sendData = false;
+				const clock = sinon.useFakeTimers();
+				try {
+					const sendFramePromise = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1000);
+					clock.runAll();
+					return expect(sendFramePromise).to.be.rejectedWith(Error);
+				} finally {
+					clock.restore();
+				}
+			} catch (reason: any) {
+				return Promise.reject(reason);
+			}
 		});
 
-		it("should reject on error frame.", function (done) {
-			this.timeout(2000);
+		it("should reject on error frame.", async function () {
 			let isFirstData = true;
 			this.mitm.on("connection", function (socket: Socket) {
 				socket.on("data", () => {
@@ -179,17 +191,16 @@ describe("connection", function () {
 			});
 
 			const conn = new Connection(testHOST);
-			conn.loginAsync("velux123")
-				.then(() =>
-					expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1))
-						.to.be.rejectedWith(Error)
-						.and.notify(done),
-				)
-				.catch((reason: any) => expect.fail(reason));
+			try {
+				await conn.loginAsync("velux123");
+				const sendFramePromise = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1000);
+				return expect(sendFramePromise).to.be.rejectedWith(Error);
+			} catch (reason: any) {
+				return Promise.reject(reason);
+			}
 		});
 
-		it("should ignore wrong confirmation.", function (done) {
-			this.timeout(2000);
+		it("should ignore wrong confirmation.", async function () {
 			let isFirstData = true;
 			this.mitm.on("connection", function (socket: Socket) {
 				socket.on("data", () => {
@@ -204,13 +215,13 @@ describe("connection", function () {
 			});
 
 			const conn = new Connection(testHOST);
-			conn.loginAsync("velux123")
-				.then(() =>
-					expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1)).to.be.fulfilled.and.notify(
-						done,
-					),
-				)
-				.catch((reason: any) => expect.fail(reason));
+			try {
+				await conn.loginAsync("velux123");
+				const sendFramePromise = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1000);
+				return expect(sendFramePromise).to.be.fulfilled;
+			} catch (reason: any) {
+				return Promise.reject(reason);
+			}
 		});
 
 		it("should call the notification handler.", function (done) {
@@ -451,14 +462,6 @@ describe("connection", function () {
 	});
 
 	describe("stopKeepAlive", function () {
-		this.beforeEach(function () {
-			// this.clock = sinon.useFakeTimers();
-		});
-
-		this.afterEach(function () {
-			// (this.clock as SinonFakeTimers).restore();
-		});
-
 		it("shouldn't send a GW_GET_STATE_REQ after 10 minutes after stopping the keep-alive", async function () {
 			const expectedRequest = [192, 0, 3, 0, 12, 15, 192];
 
