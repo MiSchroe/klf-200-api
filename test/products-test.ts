@@ -1066,10 +1066,10 @@ describe("products", function () {
 			});
 
 			describe("refreshLimitation", function () {
-				it("should send a command request", async function () {
+				async function prepare(limitationType: LimitationType): Promise<void> {
 					const data = Buffer.from([0x06, 0x03, 0x13, 0x00, 0x00, 0x01]);
 					const dataCfm = new GW_GET_LIMITATION_STATUS_CFM(data);
-					const dataNotification = Buffer.from([13, 0x03, 0x14, 0, 0, 0, 0, 247, 255, 100, 0, 255, 255]);
+					const dataNotification = Buffer.from([13, 0x03, 0x14, 0, 0, 0, 0, 0x64, 0x00, 0xc7, 0x00, 2, 1]);
 					const dataNotificationNtf = new GW_LIMITATION_STATUS_NTF(dataNotification);
 					const dataCommandRunStatus = Buffer.from([
 						16, 0x03, 0x02, 0, 0, 1, 0, 0, 100, 0, 0, 1, 42, 0, 0, 0,
@@ -1081,11 +1081,11 @@ describe("products", function () {
 					// Mock request
 					conn.valueToReturn.push(dataCfm);
 
-					const result = product.refreshLimitationAsync(LimitationType.MaximumLimitation);
+					const result = product.refreshLimitationAsync(limitationType);
 
 					// Just let the asynchronous stuff run before our checks
 					await new Promise((resolve) => {
-						setTimeout(resolve, 0);
+						setImmediate(resolve);
 					});
 
 					conn.sendNotification(dataNotificationNtf, []);
@@ -1094,10 +1094,86 @@ describe("products", function () {
 
 					// Just let the asynchronous stuff run before our checks
 					await new Promise((resolve) => {
-						setTimeout(resolve, 0);
+						setImmediate(resolve);
 					});
 
+					return result;
+				}
+
+				it("should send a command request", async function () {
+					const result = prepare(LimitationType.MaximumLimitation);
+
 					return expect(result).to.be.fulfilled;
+				});
+
+				it("should notify LimitationMinRaw change", async function () {
+					const notifyChange = sinon.stub();
+					const dispose = product.propertyChangedEvent.on((event) => {
+						notifyChange(event.propertyName);
+					});
+					try {
+						await prepare(LimitationType.MinimumLimitation);
+
+						return expect(notifyChange).to.be.calledWith("LimitationMinRaw");
+					} finally {
+						dispose?.dispose();
+					}
+				});
+
+				it("should notify LimitationMaxRaw change", async function () {
+					const notifyChange = sinon.stub();
+					const dispose = product.propertyChangedEvent.on((event) => {
+						notifyChange(event.propertyName);
+					});
+					try {
+						await prepare(LimitationType.MaximumLimitation);
+
+						return expect(notifyChange).to.be.calledWith("LimitationMaxRaw");
+					} finally {
+						dispose?.dispose();
+					}
+				});
+
+				it("should notify LimitationOriginator change", async function () {
+					const notifyChange = sinon.stub();
+					const dispose = product.propertyChangedEvent.on((event) => {
+						notifyChange(event.propertyName);
+					});
+					try {
+						await prepare(LimitationType.MaximumLimitation);
+
+						return expect(notifyChange).to.be.calledWith("LimitationOriginator");
+					} finally {
+						dispose?.dispose();
+					}
+				});
+
+				it("should notify LimitationTimeRaw change", async function () {
+					const notifyChange = sinon.stub();
+					const dispose = product.propertyChangedEvent.on((event) => {
+						notifyChange(event.propertyName);
+					});
+					try {
+						await prepare(LimitationType.MaximumLimitation);
+
+						return expect(notifyChange).to.be.calledWith("LimitationTimeRaw");
+					} finally {
+						dispose?.dispose();
+					}
+				});
+
+				it("should set the limitation originator to rain sensor for MP", async function () {
+					await prepare(LimitationType.MaximumLimitation);
+
+					return expect(product.getLimitationOriginator(ParameterActive.MP)).to.be.equal(
+						CommandOriginator.Rain,
+					);
+				});
+
+				it("should set the limitation time to 60 seconds", async function () {
+					await prepare(LimitationType.MaximumLimitation);
+
+					return expect(product.getLimitationTime(ParameterActive.MP)).to.be.equal(60);
 				});
 
 				it("should reject on error status", async function () {

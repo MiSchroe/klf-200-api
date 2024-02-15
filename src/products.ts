@@ -213,6 +213,8 @@ export class Product extends Component {
 		this._ProductAlias = frame.ActuatorAliases;
 		this._limitationMinRaw = new Array<number>(17).fill(0);
 		this._limitationMaxRaw = new Array<number>(17).fill(0xc800);
+		this._limitationOriginator = new Array<CommandOriginator>(17).fill(CommandOriginator.User);
+		this._limitationTimeRaw = new Array<number>(17).fill(LockTime.lockTimeTolockTimeValueForLimitation(Infinity));
 
 		this.Connection.on(
 			(frame) => this.onNotificationHandler(frame),
@@ -694,6 +696,61 @@ export class Product extends Component {
 		return convertPositionRaw(this._targetPositionRaw, this.TypeID);
 	}
 
+	private _limitationOriginator: CommandOriginator[];
+	/**
+	 * A read only array of the limitation originators.
+	 * @readonly
+	 * @type {CommandOriginator[]}
+	 * @memberof Product
+	 */
+	public get LimitationOriginator(): readonly CommandOriginator[] {
+		return Array.from(this._limitationOriginator);
+	}
+
+	/**
+	 * Returns the limitation originator for a functional parameter.
+	 * You have to call {@link refreshLimitationAsync} to get the latest values first.
+	 *
+	 * @param functionalParameter Paramter for which the limitation originator should be returned.
+	 * @returns The limitation originator.
+	 */
+	public getLimitationOriginator(functionalParameter: ParameterActive): CommandOriginator {
+		return this._limitationOriginator[functionalParameter];
+	}
+
+	private _limitationTimeRaw: number[];
+	/**
+	 * A read only array of the limitation time raw values.
+	 * @readonly
+	 * @type {number[]}
+	 * @memberof Product
+	 */
+	public get LimitationTimeRaw(): readonly number[] {
+		return Array.from(this._limitationTimeRaw);
+	}
+
+	/**
+	 * Returns the raw value of the limitation time for a functional parameter.
+	 * You have to call {@link refreshLimitationAsync} to get the latest values first.
+	 *
+	 * @param functionalParameter Parameter for which the limitation time raw value should be returned.
+	 * @returns The raw limitation time value.
+	 */
+	public getLimitationTimeRaw(functionalParameter: ParameterActive): number {
+		return this._limitationTimeRaw[functionalParameter];
+	}
+
+	/**
+	 * Returns the limitation time in seconds for a functional parameter.
+	 * You have to call {@link refreshLimitationAsync} to get the latest values first.
+	 *
+	 * @param functionalParameter Parameter for which the limitation time should be returned.
+	 * @returns The limitation time in seconds or Infinity.
+	 */
+	public getLimitationTime(functionalParameter: ParameterActive): number {
+		return LockTime.lockTimeValueToLockTimeForLimitation(this.getLimitationTimeRaw(functionalParameter));
+	}
+
 	private _limitationMinRaw: number[];
 	/**
 	 * A read only array of the raw limitations' min values.
@@ -927,6 +984,14 @@ export class Product extends Component {
 										this._limitationMaxRaw[frame.ParameterID] = frame.LimitationValueMax;
 										this.propertyChanged("LimitationMaxRaw");
 									}
+								}
+								if (frame.LimitationOriginator !== this._limitationOriginator[frame.ParameterID]) {
+									this._limitationOriginator[frame.ParameterID] = frame.LimitationOriginator;
+									this.propertyChanged("LimitationOriginator");
+								}
+								if (frame.LimitationTime !== this._limitationTimeRaw[frame.ParameterID]) {
+									this._limitationTimeRaw[frame.ParameterID] = frame.LimitationTime;
+									this.propertyChanged("LimitationTimeRaw");
 								}
 							} else if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === sessionID) {
 								dispose?.dispose();
