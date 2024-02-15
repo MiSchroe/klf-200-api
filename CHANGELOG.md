@@ -4,8 +4,7 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
-
-## **WORK IN PROGRESS**
+## 3.5.0 (2024-02-15)
 
 -   [#104](https://github.com/MiSchroe/klf-200-api/issues/104) Add LimitationOriginator and LimitationTime properites.
 
