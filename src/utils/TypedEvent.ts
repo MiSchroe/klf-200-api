@@ -86,15 +86,19 @@ export class TypedEvent<T> {
 	 * The order in which the functions are called is not defined.
 	 *
 	 * @param {T} event The typed event parameter that will be provided to each listener.
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 * @memberof TypedEvent<T>
 	 */
-	emit = (event: T): void => {
+	emit = async (event: T): Promise<void> => {
 		/** Update any general listeners */
-		this.listeners.forEach((listener) => listener(event));
+		for (const listener of this.listeners) {
+			await Promise.resolve(listener(event));
+		}
 
 		/** Clear the `once` queue */
-		this.listenersOncer.forEach((listener) => listener(event));
+		for (const listener of this.listenersOncer) {
+			await Promise.resolve(listener(event));
+		}
 		this.listenersOncer = [];
 	};
 
@@ -106,6 +110,6 @@ export class TypedEvent<T> {
 	 * @memberof TypedEvent<T>
 	 */
 	pipe = (te: TypedEvent<T>): Disposable => {
-		return this.on((e) => te.emit(e));
+		return this.on(async (e) => await te.emit(e));
 	};
 }

@@ -103,7 +103,10 @@ export class Group extends Component {
 		this.Nodes.push(...frame.Nodes);
 		this._revision = frame.Revision;
 
-		this.Connection.on((frame) => this.onNotificationHandler(frame), [GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
+		this.Connection.on(
+			async (frame) => await this.onNotificationHandler(frame),
+			[GatewayCommand.GW_GET_GROUP_INFORMATION_NTF],
+		);
 	}
 
 	/**
@@ -115,35 +118,35 @@ export class Group extends Component {
 	 * @param {GW_GROUP_INFORMATION_CHANGED_NTF_Modified} frame Change notification frame to calculate the changes.
 	 * @memberof Group
 	 */
-	public changeFromNotification(frame: GW_GROUP_INFORMATION_CHANGED_NTF_Modified): void {
+	public async changeFromNotification(frame: GW_GROUP_INFORMATION_CHANGED_NTF_Modified): Promise<void> {
 		if (this._order !== frame.Order) {
 			this._order = frame.Order;
-			this.propertyChanged("Order");
+			await this.propertyChanged("Order");
 		}
 		if (this._placement !== frame.Placement) {
 			this._placement = frame.Placement;
-			this.propertyChanged("Placement");
+			await this.propertyChanged("Placement");
 		}
 		if (this._name !== frame.Name) {
 			this._name = frame.Name;
-			this.propertyChanged("Name");
+			await this.propertyChanged("Name");
 		}
 		if (this._velocity !== frame.Velocity) {
 			this._velocity = frame.Velocity;
-			this.propertyChanged("Velocity");
+			await this.propertyChanged("Velocity");
 		}
 		if (this._nodeVariation !== frame.NodeVariation) {
 			this._nodeVariation = frame.NodeVariation;
-			this.propertyChanged("NodeVariation");
+			await this.propertyChanged("NodeVariation");
 		}
 		if (this._groupType !== frame.GroupType) {
 			this._groupType = frame.GroupType;
-			this.propertyChanged("GroupType");
+			await this.propertyChanged("GroupType");
 		}
 		if (!isArrayEqual(this.Nodes, frame.Nodes)) {
 			this.Nodes.length = 0; // Clear nodes array
 			this.Nodes.push(...frame.Nodes);
-			this.propertyChanged("Nodes");
+			await this.propertyChanged("Nodes");
 		}
 		this._revision = frame.Revision;
 	}
@@ -554,46 +557,46 @@ export class Group extends Component {
 		}
 	}
 
-	private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (typeof this === "undefined") return;
 
 		if (frame instanceof GW_GET_GROUP_INFORMATION_NTF) {
-			this.onGetGroupInformation(frame);
+			await this.onGetGroupInformation(frame);
 		}
 	}
 
-	private onGetGroupInformation(frame: GW_GET_GROUP_INFORMATION_NTF): void {
+	private async onGetGroupInformation(frame: GW_GET_GROUP_INFORMATION_NTF): Promise<void> {
 		if (frame.GroupID === this.GroupID) {
 			if (frame.Order !== this._order) {
 				this._order = frame.Order;
-				this.propertyChanged("Order");
+				await this.propertyChanged("Order");
 			}
 			if (frame.Placement !== this._placement) {
 				this._placement = frame.Placement;
-				this.propertyChanged("Placement");
+				await this.propertyChanged("Placement");
 			}
 			if (frame.Name !== this._name) {
 				this._name = frame.Name;
-				this.propertyChanged("Name");
+				await this.propertyChanged("Name");
 			}
 			if (frame.Velocity !== this._velocity) {
 				this._velocity = frame.Velocity;
-				this.propertyChanged("Velocity");
+				await this.propertyChanged("Velocity");
 			}
 			if (frame.NodeVariation !== this._nodeVariation) {
 				this._nodeVariation = frame.NodeVariation;
-				this.propertyChanged("NodeVariation");
+				await this.propertyChanged("NodeVariation");
 			}
 			if (frame.GroupType !== this._groupType) {
 				this._groupType = frame.GroupType;
-				this.propertyChanged("GroupType");
+				await this.propertyChanged("GroupType");
 			}
 			const hasRemovedNodes = this.Nodes.every((item) => frame.Nodes.includes(item));
 			const hasNewNodes = frame.Nodes.every((item) => this.Nodes.includes(item));
 			if (hasRemovedNodes || hasNewNodes) {
 				this.Nodes.length = 0;
 				this.Nodes.push(...frame.Nodes);
-				this.propertyChanged("Nodes");
+				await this.propertyChanged("Nodes");
 			}
 			this._revision = frame.Revision;
 		}
@@ -644,7 +647,7 @@ export class Groups {
 									dispose.dispose();
 								}
 								this.Connection.on(
-									(frame) => this.onNotificationHandler(frame),
+									async (frame) => await this.onNotificationHandler(frame),
 									[GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF],
 								);
 								resolve();
@@ -712,21 +715,21 @@ export class Groups {
 		return this._onRemovedGroup.on(handler);
 	}
 
-	private notifyChangedGroup(groupId: number): void {
-		this._onChangedGroup.emit(groupId);
+	private async notifyChangedGroup(groupId: number): Promise<void> {
+		await this._onChangedGroup.emit(groupId);
 	}
 
-	private notifyRemovedGroup(groupId: number): void {
-		this._onRemovedGroup.emit(groupId);
+	private async notifyRemovedGroup(groupId: number): Promise<void> {
+		await this._onRemovedGroup.emit(groupId);
 	}
 
-	private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (frame instanceof GW_GROUP_INFORMATION_CHANGED_NTF) {
 			switch (frame.ChangeType) {
 				case ChangeType.Deleted:
 					// Remove group
 					delete this.Groups[frame.GroupID];
-					this.notifyRemovedGroup(frame.GroupID);
+					await this.notifyRemovedGroup(frame.GroupID);
 					break;
 
 				case ChangeType.Modified:
@@ -739,11 +742,11 @@ export class Groups {
 						);
 					} else {
 						// Change group
-						this.Groups[frame.GroupID].changeFromNotification(
+						await this.Groups[frame.GroupID].changeFromNotification(
 							frame as GW_GROUP_INFORMATION_CHANGED_NTF_Modified,
 						);
 					}
-					this.notifyChangedGroup(frame.GroupID);
+					await this.notifyChangedGroup(frame.GroupID);
 
 				default:
 					break;

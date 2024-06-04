@@ -145,10 +145,10 @@ describe("products", function () {
 				const promResult = Products.createProductsAsync(conn);
 				// Send nodes
 				for (const dataNodeNtf of dataNodesNtf) {
-					conn.sendNotification(dataNodeNtf, []);
+					await conn.sendNotification(dataNodeNtf, []);
 				}
 				// Send finished
-				conn.sendNotification(dataNodeFinishNtf, []);
+				await conn.sendNotification(dataNodeFinishNtf, []);
 				const result = await promResult;
 				expect(result).to.be.instanceOf(Products);
 				expect(result.Products.length).to.be.equal(5);
@@ -178,10 +178,10 @@ describe("products", function () {
 				const promProducts = Products.createProductsAsync(conn);
 				// Send nodes
 				for (const dataNodeNtf of dataNodesNtf) {
-					conn.sendNotification(dataNodeNtf, []);
+					await conn.sendNotification(dataNodeNtf, []);
 				}
 				// Send finished
-				conn.sendNotification(dataNodeFinishNtf, []);
+				await conn.sendNotification(dataNodeFinishNtf, []);
 				const products = await promProducts;
 				const result = products.findByName("Fenster Badezimmer");
 				expect(result).to.be.instanceOf(Product).with.property("Name", "Fenster Badezimmer");
@@ -198,10 +198,10 @@ describe("products", function () {
 				const promProducts = Products.createProductsAsync(conn);
 				// Send nodes
 				for (const dataNodeNtf of dataNodesNtf) {
-					conn.sendNotification(dataNodeNtf, []);
+					await conn.sendNotification(dataNodeNtf, []);
 				}
 				// Send finished
-				conn.sendNotification(dataNodeFinishNtf, []);
+				await conn.sendNotification(dataNodeFinishNtf, []);
 				const products = await promProducts;
 
 				const data = Buffer.from([0x06, 0x03, 0x06, 0x47, 0x11, 0x01]);
@@ -220,10 +220,10 @@ describe("products", function () {
 				const promProducts = Products.createProductsAsync(conn);
 				// Send nodes
 				for (const dataNodeNtf of dataNodesNtf) {
-					conn.sendNotification(dataNodeNtf, []);
+					await conn.sendNotification(dataNodeNtf, []);
 				}
 				// Send finished
-				conn.sendNotification(dataNodeFinishNtf, []);
+				await conn.sendNotification(dataNodeFinishNtf, []);
 				const products = await promProducts;
 
 				const data = Buffer.from([0x06, 0x03, 0x06, 0x47, 0x11, 0x00]);
@@ -242,10 +242,10 @@ describe("products", function () {
 				const promProducts = Products.createProductsAsync(conn);
 				// Send nodes
 				for (const dataNodeNtf of dataNodesNtf) {
-					conn.sendNotification(dataNodeNtf, []);
+					await conn.sendNotification(dataNodeNtf, []);
 				}
 				// Send finished
-				conn.sendNotification(dataNodeFinishNtf, []);
+				await conn.sendNotification(dataNodeFinishNtf, []);
 				const products = await promProducts;
 
 				// Mock request
@@ -288,10 +288,10 @@ describe("products", function () {
 				const conn = new MockConnection(receivedFrames);
 				const promProducts = Products.createProductsAsync(conn);
 				for (const dataNodeNtf of dataNodesNtf) {
-					conn.sendNotification(dataNodeNtf, []);
+					await conn.sendNotification(dataNodeNtf, []);
 				}
 				// Send finished
-				conn.sendNotification(dataNodeFinishNtf, []);
+				await conn.sendNotification(dataNodeFinishNtf, []);
 				const products = await promProducts;
 
 				// Setups spies for counting notifications
@@ -304,8 +304,8 @@ describe("products", function () {
 					productRemovedSpy(productID);
 				});
 
-				conn.sendNotification(dataNtf, [dataNodeInformationCfm]);
-				conn.sendNotification(dataNodeInfoNotificationNtf, []);
+				await conn.sendNotification(dataNtf, [dataNodeInformationCfm]);
+				await conn.sendNotification(dataNodeInfoNotificationNtf, []);
 
 				// Just let the asynchronous stuff run before our checks
 				await new Promise((resolve) => {
@@ -341,10 +341,10 @@ describe("products", function () {
 				const conn = new MockConnection(receivedFrames);
 				const promProducts = Products.createProductsAsync(conn);
 				for (const dataNodeNtf of dataNodesNtf) {
-					conn.sendNotification(dataNodeNtf, []);
+					await conn.sendNotification(dataNodeNtf, []);
 				}
 				// Send finished
-				conn.sendNotification(dataNodeFinishNtf, []);
+				await conn.sendNotification(dataNodeFinishNtf, []);
 				const products = await promProducts;
 
 				// Setups spies for counting notifications
@@ -357,7 +357,7 @@ describe("products", function () {
 					productRemovedSpy(productID);
 				});
 
-				conn.sendNotification(dataNtf, [dataErrorNtf]);
+				await conn.sendNotification(dataNtf, [dataErrorNtf]);
 
 				// Just let the asynchronous stuff run before our checks
 				await new Promise((resolve) => {
@@ -385,10 +385,10 @@ describe("products", function () {
 				const promResult = Products.createProductsAsync(conn);
 				// Send nodes
 				for (const dataNodeNtf of dataNodesNtf) {
-					conn.sendNotification(dataNodeNtf, []);
+					await conn.sendNotification(dataNodeNtf, []);
 				}
 				// Send finished
-				conn.sendNotification(dataNodeFinishNtf, []);
+				await conn.sendNotification(dataNodeFinishNtf, []);
 
 				const stubRefreshLimitationAsync = sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
 
@@ -1088,9 +1088,9 @@ describe("products", function () {
 						setImmediate(resolve);
 					});
 
-					conn.sendNotification(dataNotificationNtf, []);
-					conn.sendNotification(dataCommandRunStatusNtf, []);
-					conn.sendNotification(dataSessionFinishedNtf, []);
+					await conn.sendNotification(dataNotificationNtf, []);
+					await conn.sendNotification(dataCommandRunStatusNtf, []);
+					await conn.sendNotification(dataSessionFinishedNtf, []);
 
 					// Just let the asynchronous stuff run before our checks
 					await new Promise((resolve) => {
@@ -1212,9 +1212,9 @@ describe("products", function () {
 						setTimeout(resolve, 0);
 					});
 
-					conn.sendNotification(dataNotificationNtf, []);
-					conn.sendNotification(dataCommandRunStatusNtf, []);
-					conn.sendNotification(dataSessionFinishedNtf, []);
+					await conn.sendNotification(dataNotificationNtf, []);
+					await conn.sendNotification(dataCommandRunStatusNtf, []);
+					await conn.sendNotification(dataSessionFinishedNtf, []);
 
 					// Just let the asynchronous stuff run before our checks
 					await new Promise((resolve) => {
@@ -1375,8 +1375,8 @@ describe("products", function () {
 					]);
 					const dataNtf = new GW_NODE_INFORMATION_CHANGED_NTF(data);
 
-					it("should send notifications for Name", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for Name", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "Name").to.be.calledWithMatch({
 							o: product,
@@ -1385,8 +1385,8 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for NodeVariation", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for NodeVariation", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "NodeVariation").to.be.calledWithMatch({
 							o: product,
@@ -1395,8 +1395,8 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for Order", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for Order", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "Order").to.be.calledWithMatch({
 							o: product,
@@ -1405,8 +1405,8 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for Placement", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for Placement", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "Placement").to.be.calledWithMatch({
 							o: product,
@@ -1415,7 +1415,7 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for Name only", function () {
+					it("should send notifications for Name only", async function () {
 						const data = Buffer.from([
 							72, 0x02, 0x0c,
 							// Node ID
@@ -1435,14 +1435,14 @@ describe("products", function () {
 						]);
 						const dataNtf = new GW_NODE_INFORMATION_CHANGED_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "Name").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "Name", propertyValue: "Dummy" }),
 						);
 					});
 
-					it("shouldn't send any notifications", function () {
+					it("shouldn't send any notifications", async function () {
 						const data = Buffer.from([
 							72, 0x02, 0x0c,
 							// Node ID
@@ -1462,7 +1462,7 @@ describe("products", function () {
 						]);
 						const dataNtf = new GW_NODE_INFORMATION_CHANGED_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy).not.to.be.called;
 					});
@@ -1495,8 +1495,8 @@ describe("products", function () {
 					]);
 					const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
 
-					it("should send notifications for State", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for State", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "State").to.be.calledWithMatch({
 							o: product,
@@ -1505,8 +1505,8 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for CurrentPositionRaw", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for CurrentPositionRaw", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
 							o: product,
@@ -1515,8 +1515,8 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for CurrentPosition", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for CurrentPosition", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
 							o: product,
@@ -1525,8 +1525,8 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for TargetPositionRaw", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for TargetPositionRaw", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWithMatch({
 							o: product,
@@ -1535,8 +1535,8 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for TargetPosition", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for TargetPosition", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "TargetPosition").to.be.calledWithMatch({
 							o: product,
@@ -1545,8 +1545,8 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for FP1CurrentPositionRaw", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for FP1CurrentPositionRaw", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledWithMatch({
 							o: product,
@@ -1555,8 +1555,8 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for FP2CurrentPositionRaw", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for FP2CurrentPositionRaw", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({
 							o: product,
@@ -1565,8 +1565,8 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for FP3CurrentPositionRaw", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for FP3CurrentPositionRaw", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledWithMatch({
 							o: product,
@@ -1575,8 +1575,8 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for FP4CurrentPositionRaw", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for FP4CurrentPositionRaw", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledWithMatch({
 							o: product,
@@ -1585,8 +1585,8 @@ describe("products", function () {
 						});
 					});
 
-					it("should send notifications for RemainingTime", function () {
-						conn.sendNotification(dataNtf, []);
+					it("should send notifications for RemainingTime", async function () {
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({
 							o: product,
@@ -1595,7 +1595,7 @@ describe("products", function () {
 						});
 					});
 
-					it("shouldn't send any notifications", function () {
+					it("shouldn't send any notifications", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
 							23, 0x02, 0x11, 
@@ -1622,7 +1622,7 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy).not.to.be.called;
 					});
@@ -1636,8 +1636,8 @@ describe("products", function () {
 						]);
 						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
 
-						it("should send notifications for CurrentPositionRaw", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for CurrentPositionRaw", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
 								o: product,
@@ -1646,8 +1646,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for CurrentPosition", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for CurrentPosition", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
 								o: product,
@@ -1656,8 +1656,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for RunStatus", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for RunStatus", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
 								o: product,
@@ -1666,8 +1666,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for StatusReply", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for StatusReply", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
 								o: product,
@@ -1684,8 +1684,8 @@ describe("products", function () {
 						]);
 						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
 
-						it("should send notifications for FP1CurrentPositionRaw", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for FP1CurrentPositionRaw", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledWithMatch({
 								o: product,
@@ -1694,8 +1694,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for RunStatus", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for RunStatus", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
 								o: product,
@@ -1704,8 +1704,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for StatusReply", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for StatusReply", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
 								o: product,
@@ -1722,8 +1722,8 @@ describe("products", function () {
 						]);
 						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
 
-						it("should send notifications for FP2CurrentPositionRaw", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for FP2CurrentPositionRaw", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({
 								o: product,
@@ -1732,8 +1732,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for RunStatus", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for RunStatus", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
 								o: product,
@@ -1742,8 +1742,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for StatusReply", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for StatusReply", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
 								o: product,
@@ -1760,8 +1760,8 @@ describe("products", function () {
 						]);
 						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
 
-						it("should send notifications for FP3CurrentPositionRaw", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for FP3CurrentPositionRaw", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledWithMatch({
 								o: product,
@@ -1770,8 +1770,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for RunStatus", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for RunStatus", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
 								o: product,
@@ -1780,8 +1780,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for StatusReply", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for StatusReply", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
 								o: product,
@@ -1798,8 +1798,8 @@ describe("products", function () {
 						]);
 						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
 
-						it("should send notifications for FP4CurrentPositionRaw", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for FP4CurrentPositionRaw", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledWithMatch({
 								o: product,
@@ -1808,8 +1808,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for RunStatus", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for RunStatus", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
 								o: product,
@@ -1818,8 +1818,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for StatusReply", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for StatusReply", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
 								o: product,
@@ -1829,25 +1829,25 @@ describe("products", function () {
 						});
 					});
 
-					it("shouldn't send any notifications", function () {
+					it("shouldn't send any notifications", async function () {
 						const data = Buffer.from([
 							0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x00, 0xc8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 							0x00,
 						]);
 						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy).not.to.be.called;
 					});
 				});
 
 				describe("GW_COMMAND_REMAINING_TIME_NTF", function () {
-					it("should send notifications for RemainingTime", function () {
+					it("should send notifications for RemainingTime", async function () {
 						const data = Buffer.from([0x06, 0x03, 0x03, 0x47, 0x11, 0x00, 0x00, 0x00, 0x2a]);
 						const dataNtf = new GW_COMMAND_REMAINING_TIME_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({
 							o: product,
@@ -1856,18 +1856,18 @@ describe("products", function () {
 						});
 					});
 
-					it("shouldn't send any notifications", function () {
+					it("shouldn't send any notifications", async function () {
 						const data = Buffer.from([0x06, 0x03, 0x03, 0x47, 0x11, 0x00, 0x00, 0x00, 0x00]);
 						const dataNtf = new GW_COMMAND_REMAINING_TIME_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy).not.to.be.called;
 					});
 				});
 
 				describe("GW_GET_NODE_INFORMATION_NTF", function () {
-					it("shouldn't send any notifications", function () {
+					it("shouldn't send any notifications", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -1931,12 +1931,12 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy).not.to.be.called;
 					});
 
-					it("should send notifications for Order only", function () {
+					it("should send notifications for Order only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2000,14 +2000,14 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "Order").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "Order", propertyValue: 2 }),
 						);
 					});
 
-					it("should send notifications for Placement only", function () {
+					it("should send notifications for Placement only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2071,14 +2071,14 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "Placement").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "Placement", propertyValue: 2 }),
 						);
 					});
 
-					it("should send notifications for Name only", function () {
+					it("should send notifications for Name only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2142,14 +2142,14 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "Name").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "Name", propertyValue: "Genster Badezimmer" }),
 						);
 					});
 
-					it("should send notifications for Velocity only", function () {
+					it("should send notifications for Velocity only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2213,14 +2213,14 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "Velocity").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "Velocity", propertyValue: Velocity.Fast }),
 						);
 					});
 
-					it("should send notifications for TypeID only", function () {
+					it("should send notifications for TypeID only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2284,7 +2284,7 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "TypeID").to.be.calledOnceWith(
 							sinon.match({
@@ -2295,7 +2295,7 @@ describe("products", function () {
 						);
 					});
 
-					it("should send notifications for SubType only", function () {
+					it("should send notifications for SubType only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2359,14 +2359,14 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "SubType").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "SubType", propertyValue: 0 }),
 						);
 					});
 
-					it("should send notifications for ProductType only", function () {
+					it("should send notifications for ProductType only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2430,14 +2430,14 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "ProductType").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "ProductType", propertyValue: 6 }),
 						);
 					});
 
-					it("should send notifications for NodeVariation only", function () {
+					it("should send notifications for NodeVariation only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2501,7 +2501,7 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "NodeVariation").to.be.calledOnceWith(
 							sinon.match({
@@ -2512,7 +2512,7 @@ describe("products", function () {
 						);
 					});
 
-					it("should send notifications for PowerSaveMode only", function () {
+					it("should send notifications for PowerSaveMode only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2576,7 +2576,7 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "PowerSaveMode").to.be.calledOnceWith(
 							sinon.match({
@@ -2587,7 +2587,7 @@ describe("products", function () {
 						);
 					});
 
-					it("should send notifications for SerialNumber only", function () {
+					it("should send notifications for SerialNumber only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2651,7 +2651,7 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "SerialNumber").to.be.calledOnceWith(
 							sinon.match({
@@ -2662,7 +2662,7 @@ describe("products", function () {
 						);
 					});
 
-					it("should send notifications for State only", function () {
+					it("should send notifications for State only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2726,7 +2726,7 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "State").to.be.calledOnceWith(
 							sinon.match({
@@ -2737,7 +2737,7 @@ describe("products", function () {
 						);
 					});
 
-					it("should send notifications for CurrentPosition/Raw only", function () {
+					it("should send notifications for CurrentPosition/Raw only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2801,7 +2801,7 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWith(
 							sinon.match({ o: product, propertyName: "CurrentPositionRaw", propertyValue: 0 }),
@@ -2812,7 +2812,7 @@ describe("products", function () {
 						expect(propertyChangedSpy).to.be.calledTwice;
 					});
 
-					it("should send notifications for TargetPosition/Raw only", function () {
+					it("should send notifications for TargetPosition/Raw only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2876,7 +2876,7 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWith(
 							sinon.match({ o: product, propertyName: "TargetPositionRaw", propertyValue: 0 }),
@@ -2887,7 +2887,7 @@ describe("products", function () {
 						expect(propertyChangedSpy).to.be.calledTwice;
 					});
 
-					it("should send notifications for FP1CurrentPositionRaw only", function () {
+					it("should send notifications for FP1CurrentPositionRaw only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -2951,14 +2951,14 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "FP1CurrentPositionRaw", propertyValue: 0 }),
 						);
 					});
 
-					it("should send notifications for FP2CurrentPositionRaw only", function () {
+					it("should send notifications for FP2CurrentPositionRaw only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -3022,14 +3022,14 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "FP2CurrentPositionRaw", propertyValue: 0 }),
 						);
 					});
 
-					it("should send notifications for FP3CurrentPositionRaw only", function () {
+					it("should send notifications for FP3CurrentPositionRaw only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -3093,14 +3093,14 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "FP3CurrentPositionRaw", propertyValue: 0 }),
 						);
 					});
 
-					it("should send notifications for FP4CurrentPositionRaw only", function () {
+					it("should send notifications for FP4CurrentPositionRaw only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -3164,14 +3164,14 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "FP4CurrentPositionRaw", propertyValue: 0 }),
 						);
 					});
 
-					it("should send notifications for RemainingTime only", function () {
+					it("should send notifications for RemainingTime only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -3235,14 +3235,14 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "RemainingTime").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "RemainingTime", propertyValue: 1 }),
 						);
 					});
 
-					it("should send notifications for TimeStamp only", function () {
+					it("should send notifications for TimeStamp only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -3306,14 +3306,14 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "TimeStamp").to.be.calledOnceWith(
 							sinon.match({ o: product, propertyName: "TimeStamp", propertyValue: dataNtf.TimeStamp }),
 						);
 					});
 
-					it("should send notifications for ProductAlias only", function () {
+					it("should send notifications for ProductAlias only", async function () {
 						// prettier-ignore
 						const data = Buffer.from([
                             0x7f, 0x02, 0x10, 
@@ -3377,7 +3377,7 @@ describe("products", function () {
                         ]);
 						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
 
-						conn.sendNotification(dataNtf, []);
+						await conn.sendNotification(dataNtf, []);
 
 						expect(propertyChangedSpy, "ProductAlias").to.be.calledOnceWith(
 							sinon.match({
@@ -3419,8 +3419,8 @@ describe("products", function () {
 						]);
 						const dataNtf = new GW_STATUS_REQUEST_NTF(data);
 
-						it("should send notifications for RunStatus", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for RunStatus", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
 								o: product,
@@ -3429,8 +3429,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for StatusReply", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for StatusReply", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
 								o: product,
@@ -3439,8 +3439,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for CurrentPositionRaw", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for CurrentPositionRaw", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
 								o: product,
@@ -3449,8 +3449,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for CurrentPosition", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for CurrentPosition", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
 								o: product,
@@ -3459,8 +3459,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for TargetPositionRaw", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for TargetPositionRaw", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWithMatch({
 								o: product,
@@ -3469,8 +3469,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for TargetPosition", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for TargetPosition", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "TargetPosition").to.be.calledWithMatch({
 								o: product,
@@ -3479,8 +3479,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for RemainingTime", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for RemainingTime", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({
 								o: product,
@@ -3489,7 +3489,7 @@ describe("products", function () {
 							});
 						});
 
-						it("shouldn't send any notifications", function () {
+						it("shouldn't send any notifications", async function () {
 							// prettier-ignore
 							const data = Buffer.from([
 							23, 0x02, 0x11, 
@@ -3516,7 +3516,7 @@ describe("products", function () {
                         ]);
 							const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
 
-							conn.sendNotification(dataNtf, []);
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy).not.to.be.called;
 						});
@@ -3564,8 +3564,8 @@ describe("products", function () {
 						]);
 						const dataNtf = new GW_STATUS_REQUEST_NTF(data);
 
-						it("should send notifications for RunStatus", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for RunStatus", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
 								o: product,
@@ -3574,8 +3574,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for StatusReply", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for StatusReply", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
 								o: product,
@@ -3584,8 +3584,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for TargetPositionRaw", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for TargetPositionRaw", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWithMatch({
 								o: product,
@@ -3594,8 +3594,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for TargetPosition", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for TargetPosition", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "TargetPosition").to.be.calledWithMatch({
 								o: product,
@@ -3604,7 +3604,7 @@ describe("products", function () {
 							});
 						});
 
-						it("shouldn't send any notifications", function () {
+						it("shouldn't send any notifications", async function () {
 							// prettier-ignore
 							const data = Buffer.from([
 							23, 0x02, 0x11, 
@@ -3631,7 +3631,7 @@ describe("products", function () {
                         ]);
 							const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
 
-							conn.sendNotification(dataNtf, []);
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy).not.to.be.called;
 						});
@@ -3679,8 +3679,8 @@ describe("products", function () {
 						]);
 						const dataNtf = new GW_STATUS_REQUEST_NTF(data);
 
-						it("should send notifications for RunStatus", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for RunStatus", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
 								o: product,
@@ -3689,8 +3689,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for StatusReply", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for StatusReply", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
 								o: product,
@@ -3699,8 +3699,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for CurrentPositionRaw", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for CurrentPositionRaw", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
 								o: product,
@@ -3709,8 +3709,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for CurrentPosition", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for CurrentPosition", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
 								o: product,
@@ -3719,8 +3719,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for FP2CurrentPositionRaw", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for FP2CurrentPositionRaw", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({
 								o: product,
@@ -3729,7 +3729,7 @@ describe("products", function () {
 							});
 						});
 
-						it("shouldn't send any notifications", function () {
+						it("shouldn't send any notifications", async function () {
 							// prettier-ignore
 							const data = Buffer.from([
 							23, 0x02, 0x11, 
@@ -3756,7 +3756,7 @@ describe("products", function () {
                         ]);
 							const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
 
-							conn.sendNotification(dataNtf, []);
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy).not.to.be.called;
 						});
@@ -3804,8 +3804,8 @@ describe("products", function () {
 						]);
 						const dataNtf = new GW_STATUS_REQUEST_NTF(data);
 
-						it("should send notifications for RunStatus", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for RunStatus", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
 								o: product,
@@ -3814,8 +3814,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for StatusReply", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for StatusReply", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
 								o: product,
@@ -3824,8 +3824,8 @@ describe("products", function () {
 							});
 						});
 
-						it("should send notifications for RemainingTime", function () {
-							conn.sendNotification(dataNtf, []);
+						it("should send notifications for RemainingTime", async function () {
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({
 								o: product,
@@ -3834,7 +3834,7 @@ describe("products", function () {
 							});
 						});
 
-						it("shouldn't send any notifications", function () {
+						it("shouldn't send any notifications", async function () {
 							// prettier-ignore
 							const data = Buffer.from([
 							23, 0x02, 0x11, 
@@ -3861,7 +3861,7 @@ describe("products", function () {
                         ]);
 							const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
 
-							conn.sendNotification(dataNtf, []);
+							await conn.sendNotification(dataNtf, []);
 
 							expect(propertyChangedSpy).not.to.be.called;
 						});

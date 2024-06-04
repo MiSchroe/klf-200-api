@@ -241,7 +241,7 @@ export class Connection implements IConnection {
 			const sessionID = frame instanceof GW_FRAME_COMMAND_REQ ? frame.SessionID : undefined;
 
 			return promiseTimeout(
-				new Promise<IGW_FRAME_RCV>((resolve, reject) => {
+				new Promise<IGW_FRAME_RCV>(async (resolve, reject) => {
 					try {
 						const cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((frame) => {
 							try {
@@ -261,8 +261,8 @@ export class Connection implements IConnection {
 							}
 						});
 						this.shiftKeepAlive();
-						(this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
-						this.notifyFrameSent(frame);
+						await (this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
+						await this.notifyFrameSent(frame);
 					} catch (error) {
 						reject(error);
 					}
@@ -288,9 +288,9 @@ export class Connection implements IConnection {
 		if (typeof filter === "undefined") {
 			return (this.klfProtocol as KLF200SocketProtocol).on(handler);
 		} else {
-			return (this.klfProtocol as KLF200SocketProtocol).on((frame) => {
+			return (this.klfProtocol as KLF200SocketProtocol).on(async (frame) => {
 				if (filter.indexOf(frame.Command) >= 0) {
-					handler(frame);
+					await Promise.resolve(handler(frame));
 				}
 			});
 		}
@@ -319,8 +319,8 @@ export class Connection implements IConnection {
 		}
 	}
 
-	private notifyFrameSent(frame: IGW_FRAME_REQ): void {
-		this._onFrameSent.emit(frame);
+	private async notifyFrameSent(frame: IGW_FRAME_REQ): Promise<void> {
+		await this._onFrameSent.emit(frame);
 	}
 
 	private keepAliveTimer?: NodeJS.Timeout;

@@ -105,7 +105,7 @@ export class Scene extends Component {
 			if (confirmationFrame.Status === ActivateSceneStatus.OK) {
 				this._isRunning = true;
 				this._runningSession = confirmationFrame.SessionID;
-				this.propertyChanged("IsRunning");
+				await this.propertyChanged("IsRunning");
 				return confirmationFrame.SessionID;
 			} else {
 				return Promise.reject(new Error(confirmationFrame.getError()));
@@ -136,7 +136,7 @@ export class Scene extends Component {
 			if (confirmationFrame.Status === ActivateSceneStatus.OK) {
 				this._isRunning = false;
 				this._runningSession = confirmationFrame.SessionID;
-				this.propertyChanged("IsRunning");
+				await this.propertyChanged("IsRunning");
 				return confirmationFrame.SessionID;
 			} else {
 				return Promise.reject(new Error(confirmationFrame.getError()));
@@ -163,7 +163,7 @@ export class Scene extends Component {
 			const notificationHandler = new Promise<void>((resolve, reject) => {
 				try {
 					dispose = this.Connection.on(
-						(frame) => {
+						async (frame) => {
 							if (frame instanceof GW_GET_SCENE_INFORMATION_NTF) {
 								tempResult.push(...frame.Nodes);
 								// Check, if last notification message
@@ -175,13 +175,13 @@ export class Scene extends Component {
 									// Finished without error -> update Products array
 									this.Products.length = 0; // Clear array of products
 									this.Products.push(...tempResult);
-									this.propertyChanged("Products");
+									await this.propertyChanged("Products");
 
 									// It seems that currently the notification frame doesn't return the scene name.
 									// Though we only change it if it's not empty and different.
 									if (frame.Name !== this._sceneName && frame.Name !== "") {
 										this._sceneName = frame.Name;
-										this.propertyChanged("SceneName");
+										await this.propertyChanged("SceneName");
 									}
 									resolve();
 								}
@@ -225,11 +225,11 @@ export class Scene extends Component {
 		}
 	}
 
-	private onSessionFinished(frame: GW_SESSION_FINISHED_NTF): void {
+	private async onSessionFinished(frame: GW_SESSION_FINISHED_NTF): Promise<void> {
 		if (frame.SessionID === this._runningSession) {
 			this._isRunning = false;
 			this._runningSession = -1;
-			this.propertyChanged("IsRunning");
+			await this.propertyChanged("IsRunning");
 		}
 	}
 }
@@ -336,13 +336,13 @@ export class Scenes {
 
 			// Notify about added scenes
 			for (const scene of newScenes) {
-				this.notifyAddedScene(scene.SceneID);
+				await this.notifyAddedScene(scene.SceneID);
 			}
 
 			// Setup notification handler
 			if (typeof this._notificationHandler === "undefined") {
 				this._notificationHandler = this.Connection.on(
-					(frame) => this.onNotificationHandler(frame),
+					async (frame) => await this.onNotificationHandler(frame),
 					[GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF],
 				);
 			}
@@ -356,21 +356,17 @@ export class Scenes {
 		}
 	}
 
-	private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (frame instanceof GW_SCENE_INFORMATION_CHANGED_NTF) {
 			switch (frame.SceneChangeType) {
 				case SceneChangeType.Deleted:
 					delete this.Scenes[frame.SceneID];
-					this.notifyRemovedScene(frame.SceneID);
+					await this.notifyRemovedScene(frame.SceneID);
 					break;
 
 				case SceneChangeType.Modified:
-					this.Scenes[frame.SceneID]
-						.refreshAsync()
-						.then(() => this.notifyChangedScene(frame.SceneID))
-						.catch((reason) => {
-							throw reason;
-						});
+					await this.Scenes[frame.SceneID].refreshAsync();
+					await this.notifyChangedScene(frame.SceneID);
 
 				default:
 					break;
@@ -411,16 +407,16 @@ export class Scenes {
 		return this._onAddedScenes.on(handler);
 	}
 
-	private notifyChangedScene(sceneId: number): void {
-		this._onChangedScenes.emit(sceneId);
+	private async notifyChangedScene(sceneId: number): Promise<void> {
+		await this._onChangedScenes.emit(sceneId);
 	}
 
-	private notifyRemovedScene(sceneId: number): void {
-		this._onRemovedScenes.emit(sceneId);
+	private async notifyRemovedScene(sceneId: number): Promise<void> {
+		await this._onRemovedScenes.emit(sceneId);
 	}
 
-	private notifyAddedScene(sceneId: number): void {
-		this._onAddedScenes.emit(sceneId);
+	private async notifyAddedScene(sceneId: number): Promise<void> {
+		await this._onAddedScenes.emit(sceneId);
 	}
 
 	/**

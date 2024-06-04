@@ -22,11 +22,11 @@ export class KLF200SocketProtocol {
 	private queue: Buffer[] = [];
 
 	constructor(readonly socket: Socket) {
-		socket.on("data", (data) => this.processData(data));
+		socket.on("data", async (data) => await this.processData(data));
 		socket.on("close", (had_error) => this.onSocketClose(had_error));
 	}
 
-	private processData(data: Buffer): void {
+	private async processData(data: Buffer): Promise<void> {
 		switch (this.state) {
 			case KLF200SocketProtocolState.Invalid:
 				// Find first END mark
@@ -58,7 +58,7 @@ export class KLF200SocketProtocol {
 
 				// Clear queue and process remaining data, if any
 				this.queue = [];
-				this.send(frameBuffer);
+				await this.send(frameBuffer);
 
 				if (positionEnd + 1 < data.byteLength) this.processData(data.subarray(positionEnd + 1));
 
@@ -109,19 +109,19 @@ export class KLF200SocketProtocol {
 
 	async send(data: Buffer): Promise<void> {
 		try {
-			this._onDataReceived.emit(data);
+			await this._onDataReceived.emit(data);
 			const frameBuffer = KLF200Protocol.Decode(SLIPProtocol.Decode(data));
 			const frame = await FrameRcvFactory.CreateRcvFrame(frameBuffer);
-			this._onFrameReceived.emit(frame);
+			await this._onFrameReceived.emit(frame);
 			return Promise.resolve();
 		} catch (e) {
-			this._onError.emit(e as Error);
+			await this._onError.emit(e as Error);
 			return Promise.resolve();
 		}
 	}
 
-	write(data: Buffer): boolean {
-		this._onDataSent.emit(data);
+	async write(data: Buffer): Promise<boolean> {
+		await this._onDataSent.emit(data);
 		const slipBuffer = SLIPProtocol.Encode(KLF200Protocol.Encode(data));
 		return this.socket.write(slipBuffer);
 	}

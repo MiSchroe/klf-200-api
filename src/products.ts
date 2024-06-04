@@ -1,5 +1,6 @@
 ﻿"use strict";
 
+import { setTimeout } from "timers/promises";
 import {
 	CommandOriginator,
 	CommandStatus,
@@ -217,7 +218,7 @@ export class Product extends Component {
 		this._limitationTimeRaw = new Array<number>(17).fill(LockTime.lockTimeTolockTimeValueForLimitation(Infinity));
 
 		this.Connection.on(
-			(frame) => this.onNotificationHandler(frame),
+			async (frame) => await this.onNotificationHandler(frame),
 			[
 				GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
 				GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
@@ -964,7 +965,7 @@ export class Product extends Component {
 			try {
 				// Listen to notifications:
 				const dispose = this.Connection.on(
-					(frame) => {
+					async (frame) => {
 						try {
 							if (frame instanceof GW_LIMITATION_STATUS_NTF && frame.SessionID === sessionID) {
 								if (frame.NodeID !== this.NodeID) {
@@ -976,22 +977,22 @@ export class Product extends Component {
 								if (limitationTypes.indexOf(LimitationType.MinimumLimitation) !== -1) {
 									if (frame.LimitationValueMin !== this._limitationMinRaw[frame.ParameterID]) {
 										this._limitationMinRaw[frame.ParameterID] = frame.LimitationValueMin;
-										this.propertyChanged("LimitationMinRaw");
+										await this.propertyChanged("LimitationMinRaw");
 									}
 								}
 								if (limitationTypes.indexOf(LimitationType.MaximumLimitation) !== -1) {
 									if (frame.LimitationValueMax !== this._limitationMaxRaw[frame.ParameterID]) {
 										this._limitationMaxRaw[frame.ParameterID] = frame.LimitationValueMax;
-										this.propertyChanged("LimitationMaxRaw");
+										await this.propertyChanged("LimitationMaxRaw");
 									}
 								}
 								if (frame.LimitationOriginator !== this._limitationOriginator[frame.ParameterID]) {
 									this._limitationOriginator[frame.ParameterID] = frame.LimitationOriginator;
-									this.propertyChanged("LimitationOriginator");
+									await this.propertyChanged("LimitationOriginator");
 								}
 								if (frame.LimitationTime !== this._limitationTimeRaw[frame.ParameterID]) {
 									this._limitationTimeRaw[frame.ParameterID] = frame.LimitationTime;
-									this.propertyChanged("LimitationTimeRaw");
+									await this.propertyChanged("LimitationTimeRaw");
 								}
 							} else if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === sessionID) {
 								dispose?.dispose();
@@ -1028,7 +1029,9 @@ export class Product extends Component {
 				)
 			);
 			if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
-				return this.waitForLimitationFinished(confirmationFrame.SessionID, limitationType, parameterActive);
+				return Promise.resolve(
+					this.waitForLimitationFinished(confirmationFrame.SessionID, limitationType, parameterActive),
+				);
 			} else {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
@@ -1071,10 +1074,12 @@ export class Product extends Component {
 				)
 			);
 			if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
-				return this.waitForLimitationFinished(
-					confirmationFrame.SessionID,
-					[LimitationType.MinimumLimitation, LimitationType.MaximumLimitation],
-					parameterActive,
+				return Promise.resolve(
+					this.waitForLimitationFinished(
+						confirmationFrame.SessionID,
+						[LimitationType.MinimumLimitation, LimitationType.MaximumLimitation],
+						parameterActive,
+					),
 				);
 			} else {
 				return Promise.reject(new Error(confirmationFrame.getError()));
@@ -1153,124 +1158,124 @@ export class Product extends Component {
 		return this.setLimitationRawAsync(0xd400, 0xd400, parameterActive, 255, commandOriginator, priorityLevel);
 	}
 
-	private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (typeof this === "undefined") return;
 
 		if (frame instanceof GW_NODE_INFORMATION_CHANGED_NTF) {
-			this.onNodeInformationChanged(frame);
+			await this.onNodeInformationChanged(frame);
 		} else if (frame instanceof GW_NODE_STATE_POSITION_CHANGED_NTF) {
-			this.onNodeStatePositionChanged(frame);
+			await this.onNodeStatePositionChanged(frame);
 		} else if (frame instanceof GW_COMMAND_RUN_STATUS_NTF) {
-			this.onRunStatus(frame);
+			await this.onRunStatus(frame);
 		} else if (frame instanceof GW_COMMAND_REMAINING_TIME_NTF) {
-			this.onRemainingTime(frame);
+			await this.onRemainingTime(frame);
 		} else if (frame instanceof GW_GET_NODE_INFORMATION_NTF) {
-			this.onGetNodeInformation(frame);
+			await this.onGetNodeInformation(frame);
 		} else if (frame instanceof GW_STATUS_REQUEST_NTF) {
-			this.onStatusRequest(frame);
+			await this.onStatusRequest(frame);
 		}
 	}
 
-	private onNodeInformationChanged(frame: GW_NODE_INFORMATION_CHANGED_NTF): void {
+	private async onNodeInformationChanged(frame: GW_NODE_INFORMATION_CHANGED_NTF): Promise<void> {
 		if (frame.NodeID === this.NodeID) {
 			if (frame.Name !== this._name) {
 				this._name = frame.Name;
-				this.propertyChanged("Name");
+				await this.propertyChanged("Name");
 			}
 			if (frame.NodeVariation !== this._nodeVariation) {
 				this._nodeVariation = frame.NodeVariation;
-				this.propertyChanged("NodeVariation");
+				await this.propertyChanged("NodeVariation");
 			}
 			if (frame.Order !== this._order) {
 				this._order = frame.Order;
-				this.propertyChanged("Order");
+				await this.propertyChanged("Order");
 			}
 			if (frame.Placement !== this._placement) {
 				this._placement = frame.Placement;
-				this.propertyChanged("Placement");
+				await this.propertyChanged("Placement");
 			}
 		}
 	}
 
-	private onNodeStatePositionChanged(frame: GW_NODE_STATE_POSITION_CHANGED_NTF): void {
+	private async onNodeStatePositionChanged(frame: GW_NODE_STATE_POSITION_CHANGED_NTF): Promise<void> {
 		if (frame.NodeID === this.NodeID) {
 			if (frame.OperatingState !== this._state) {
 				this._state = frame.OperatingState;
-				this.propertyChanged("State");
+				await this.propertyChanged("State");
 			}
 			if (frame.CurrentPosition !== this._currentPositionRaw) {
 				this._currentPositionRaw = frame.CurrentPosition;
-				this.propertyChanged("CurrentPositionRaw");
-				this.propertyChanged("CurrentPosition");
+				await this.propertyChanged("CurrentPositionRaw");
+				await this.propertyChanged("CurrentPosition");
 			}
 			if (frame.TargetPosition !== this._targetPositionRaw) {
 				this._targetPositionRaw = frame.TargetPosition;
-				this.propertyChanged("TargetPositionRaw");
-				this.propertyChanged("TargetPosition");
+				await this.propertyChanged("TargetPositionRaw");
+				await this.propertyChanged("TargetPosition");
 			}
 			if (frame.FunctionalPosition1CurrentPosition !== this._fp1CurrentPositionRaw) {
 				this._fp1CurrentPositionRaw = frame.FunctionalPosition1CurrentPosition;
-				this.propertyChanged("FP1CurrentPositionRaw");
+				await this.propertyChanged("FP1CurrentPositionRaw");
 			}
 			if (frame.FunctionalPosition2CurrentPosition !== this._fp2CurrentPositionRaw) {
 				this._fp2CurrentPositionRaw = frame.FunctionalPosition2CurrentPosition;
-				this.propertyChanged("FP2CurrentPositionRaw");
+				await this.propertyChanged("FP2CurrentPositionRaw");
 			}
 			if (frame.FunctionalPosition3CurrentPosition !== this._fp3CurrentPositionRaw) {
 				this._fp3CurrentPositionRaw = frame.FunctionalPosition3CurrentPosition;
-				this.propertyChanged("FP3CurrentPositionRaw");
+				await this.propertyChanged("FP3CurrentPositionRaw");
 			}
 			if (frame.FunctionalPosition4CurrentPosition !== this._fp4CurrentPositionRaw) {
 				this._fp4CurrentPositionRaw = frame.FunctionalPosition4CurrentPosition;
-				this.propertyChanged("FP4CurrentPositionRaw");
+				await this.propertyChanged("FP4CurrentPositionRaw");
 			}
 			if (frame.RemainingTime !== this._remainingTime) {
 				this._remainingTime = frame.RemainingTime;
-				this.propertyChanged("RemainingTime");
+				await this.propertyChanged("RemainingTime");
 			}
 			// if (frame.TimeStamp.valueOf() !== this._timeStamp.valueOf()) {
 			//     this._timeStamp = frame.TimeStamp;
-			//     this.propertyChanged("TimeStamp");
+			//     await this.propertyChanged("TimeStamp");
 			// }
 		}
 	}
 
-	private onRunStatus(frame: GW_COMMAND_RUN_STATUS_NTF): void {
+	private async onRunStatus(frame: GW_COMMAND_RUN_STATUS_NTF): Promise<void> {
 		if (frame.NodeID === this.NodeID) {
 			switch (frame.NodeParameter) {
 				case ParameterActive.MP:
 					if (frame.ParameterValue !== this._currentPositionRaw) {
 						this._currentPositionRaw = frame.ParameterValue;
-						this.propertyChanged("CurrentPositionRaw");
-						this.propertyChanged("CurrentPosition");
+						await this.propertyChanged("CurrentPositionRaw");
+						await this.propertyChanged("CurrentPosition");
 					}
 					break;
 
 				case ParameterActive.FP1:
 					if (frame.ParameterValue !== this._fp1CurrentPositionRaw) {
 						this._fp1CurrentPositionRaw = frame.ParameterValue;
-						this.propertyChanged("FP1CurrentPositionRaw");
+						await this.propertyChanged("FP1CurrentPositionRaw");
 					}
 					break;
 
 				case ParameterActive.FP2:
 					if (frame.ParameterValue !== this._fp2CurrentPositionRaw) {
 						this._fp2CurrentPositionRaw = frame.ParameterValue;
-						this.propertyChanged("FP2CurrentPositionRaw");
+						await this.propertyChanged("FP2CurrentPositionRaw");
 					}
 					break;
 
 				case ParameterActive.FP3:
 					if (frame.ParameterValue !== this._fp3CurrentPositionRaw) {
 						this._fp3CurrentPositionRaw = frame.ParameterValue;
-						this.propertyChanged("FP3CurrentPositionRaw");
+						await this.propertyChanged("FP3CurrentPositionRaw");
 					}
 					break;
 
 				case ParameterActive.FP4:
 					if (frame.ParameterValue !== this._fp4CurrentPositionRaw) {
 						this._fp4CurrentPositionRaw = frame.ParameterValue;
-						this.propertyChanged("FP4CurrentPositionRaw");
+						await this.propertyChanged("FP4CurrentPositionRaw");
 					}
 					break;
 
@@ -1280,106 +1285,106 @@ export class Product extends Component {
 
 			if (frame.RunStatus !== this._runStatus) {
 				this._runStatus = frame.RunStatus;
-				this.propertyChanged("RunStatus");
+				await this.propertyChanged("RunStatus");
 			}
 
 			if (frame.StatusReply !== this._statusReply) {
 				this._statusReply = frame.StatusReply;
-				this.propertyChanged("StatusReply");
+				await this.propertyChanged("StatusReply");
 			}
 		}
 	}
 
-	private onRemainingTime(frame: GW_COMMAND_REMAINING_TIME_NTF): void {
+	private async onRemainingTime(frame: GW_COMMAND_REMAINING_TIME_NTF): Promise<void> {
 		if (
 			frame.NodeID === this.NodeID &&
 			frame.NodeParameter === ParameterActive.MP &&
 			frame.RemainingTime !== this._remainingTime
 		) {
 			this._remainingTime = frame.RemainingTime;
-			this.propertyChanged("RemainingTime");
+			await this.propertyChanged("RemainingTime");
 		}
 	}
 
-	private onGetNodeInformation(frame: GW_GET_NODE_INFORMATION_NTF): void {
+	private async onGetNodeInformation(frame: GW_GET_NODE_INFORMATION_NTF): Promise<void> {
 		if (frame.NodeID === this.NodeID) {
 			if (frame.Order !== this._order) {
 				this._order = frame.Order;
-				this.propertyChanged("Order");
+				await this.propertyChanged("Order");
 			}
 			if (frame.Placement !== this._placement) {
 				this._placement = frame.Placement;
-				this.propertyChanged("Placement");
+				await this.propertyChanged("Placement");
 			}
 			if (frame.Name !== this._name) {
 				this._name = frame.Name;
-				this.propertyChanged("Name");
+				await this.propertyChanged("Name");
 			}
 			if (frame.Velocity !== this._velocity) {
 				this._velocity = frame.Velocity;
-				this.propertyChanged("Velocity");
+				await this.propertyChanged("Velocity");
 			}
 			if (frame.ActuatorType !== this._TypeID) {
 				this._TypeID = frame.ActuatorType;
-				this.propertyChanged("TypeID");
+				await this.propertyChanged("TypeID");
 			}
 			if (frame.ActuatorSubType !== this._SubType) {
 				this._SubType = frame.ActuatorSubType;
-				this.propertyChanged("SubType");
+				await this.propertyChanged("SubType");
 			}
 			if (frame.ProductType !== this._ProductType) {
 				this._ProductType = frame.ProductType;
-				this.propertyChanged("ProductType");
+				await this.propertyChanged("ProductType");
 			}
 			if (frame.NodeVariation !== this._nodeVariation) {
 				this._nodeVariation = frame.NodeVariation;
-				this.propertyChanged("NodeVariation");
+				await this.propertyChanged("NodeVariation");
 			}
 			if (frame.PowerSaveMode !== this._PowerSaveMode) {
 				this._PowerSaveMode = frame.PowerSaveMode;
-				this.propertyChanged("PowerSaveMode");
+				await this.propertyChanged("PowerSaveMode");
 			}
 			if (!frame.SerialNumber.equals(this._SerialNumber)) {
 				this._SerialNumber = frame.SerialNumber;
-				this.propertyChanged("SerialNumber");
+				await this.propertyChanged("SerialNumber");
 			}
 			if (frame.OperatingState !== this._state) {
 				this._state = frame.OperatingState;
-				this.propertyChanged("State");
+				await this.propertyChanged("State");
 			}
 			if (frame.CurrentPosition !== this._currentPositionRaw) {
 				this._currentPositionRaw = frame.CurrentPosition;
-				this.propertyChanged("CurrentPositionRaw");
-				this.propertyChanged("CurrentPosition");
+				await this.propertyChanged("CurrentPositionRaw");
+				await this.propertyChanged("CurrentPosition");
 			}
 			if (frame.TargetPosition !== this._targetPositionRaw) {
 				this._targetPositionRaw = frame.TargetPosition;
-				this.propertyChanged("TargetPositionRaw");
-				this.propertyChanged("TargetPosition");
+				await this.propertyChanged("TargetPositionRaw");
+				await this.propertyChanged("TargetPosition");
 			}
 			if (frame.FunctionalPosition1CurrentPosition !== this._fp1CurrentPositionRaw) {
 				this._fp1CurrentPositionRaw = frame.FunctionalPosition1CurrentPosition;
-				this.propertyChanged("FP1CurrentPositionRaw");
+				await this.propertyChanged("FP1CurrentPositionRaw");
 			}
 			if (frame.FunctionalPosition2CurrentPosition !== this._fp2CurrentPositionRaw) {
 				this._fp2CurrentPositionRaw = frame.FunctionalPosition2CurrentPosition;
-				this.propertyChanged("FP2CurrentPositionRaw");
+				await this.propertyChanged("FP2CurrentPositionRaw");
 			}
 			if (frame.FunctionalPosition3CurrentPosition !== this._fp3CurrentPositionRaw) {
 				this._fp3CurrentPositionRaw = frame.FunctionalPosition3CurrentPosition;
-				this.propertyChanged("FP3CurrentPositionRaw");
+				await this.propertyChanged("FP3CurrentPositionRaw");
 			}
 			if (frame.FunctionalPosition4CurrentPosition !== this._fp4CurrentPositionRaw) {
 				this._fp4CurrentPositionRaw = frame.FunctionalPosition4CurrentPosition;
-				this.propertyChanged("FP4CurrentPositionRaw");
+				await this.propertyChanged("FP4CurrentPositionRaw");
 			}
 			if (frame.RemainingTime !== this._remainingTime) {
 				this._remainingTime = frame.RemainingTime;
-				this.propertyChanged("RemainingTime");
+				await this.propertyChanged("RemainingTime");
 			}
 			if (frame.TimeStamp.valueOf() !== this._timeStamp.valueOf()) {
 				this._timeStamp = frame.TimeStamp;
-				this.propertyChanged("TimeStamp");
+				await this.propertyChanged("TimeStamp");
 			}
 			if (
 				// If length differ, then they can't be equal anymore
@@ -1400,105 +1405,105 @@ export class Product extends Component {
 				)
 			) {
 				this._ProductAlias = frame.ActuatorAliases;
-				this.propertyChanged("ProductAlias");
+				await this.propertyChanged("ProductAlias");
 			}
 		}
 	}
 
-	private onStatusRequest(frame: GW_STATUS_REQUEST_NTF): void {
+	private async onStatusRequest(frame: GW_STATUS_REQUEST_NTF): Promise<void> {
 		if (frame.NodeID === this.NodeID) {
 			if (this._runStatus !== frame.RunStatus) {
 				this._runStatus = frame.RunStatus;
-				this.propertyChanged("RunStatus");
+				await this.propertyChanged("RunStatus");
 			}
 			if (this._statusReply !== frame.StatusReply) {
 				this._statusReply = frame.StatusReply;
-				this.propertyChanged("StatusReply");
+				await this.propertyChanged("StatusReply");
 			}
 			switch (frame.StatusType) {
 				case StatusType.RequestMainInfo:
 					if (this._targetPositionRaw !== frame.TargetPosition) {
 						this._targetPositionRaw = frame.TargetPosition!;
-						this.propertyChanged("TargetPositionRaw");
-						this.propertyChanged("TargetPosition");
+						await this.propertyChanged("TargetPositionRaw");
+						await this.propertyChanged("TargetPosition");
 					}
 					if (this._currentPositionRaw !== frame.CurrentPosition) {
 						this._currentPositionRaw = frame.CurrentPosition!;
-						this.propertyChanged("CurrentPositionRaw");
-						this.propertyChanged("CurrentPosition");
+						await this.propertyChanged("CurrentPositionRaw");
+						await this.propertyChanged("CurrentPosition");
 					}
 					if (this._remainingTime !== frame.RemainingTime) {
 						this._remainingTime = frame.RemainingTime!;
-						this.propertyChanged("RemainingTime");
+						await this.propertyChanged("RemainingTime");
 					}
 					break;
 
 				case StatusType.RequestTargetPosition:
-					frame.ParameterData?.forEach((paramData) => {
+					for (const paramData of frame.ParameterData || []) {
 						if (paramData.ID === 0) {
 							if (this._targetPositionRaw !== paramData.Value) {
 								this._targetPositionRaw = paramData.Value!;
-								this.propertyChanged("TargetPositionRaw");
-								this.propertyChanged("TargetPosition");
+								await this.propertyChanged("TargetPositionRaw");
+								await this.propertyChanged("TargetPosition");
 							}
 						}
-					});
+					}
 					break;
 
 				case StatusType.RequestCurrentPosition:
-					frame.ParameterData?.forEach((paramData) => {
+					for (const paramData of frame.ParameterData || []) {
 						switch (paramData.ID) {
 							case 0:
 								if (this._currentPositionRaw !== paramData.Value) {
 									this._currentPositionRaw = paramData.Value!;
-									this.propertyChanged("CurrentPositionRaw");
-									this.propertyChanged("CurrentPosition");
+									await this.propertyChanged("CurrentPositionRaw");
+									await this.propertyChanged("CurrentPosition");
 								}
 								break;
 
 							case 1:
 								if (this._fp1CurrentPositionRaw !== paramData.Value) {
 									this._fp1CurrentPositionRaw = paramData.Value!;
-									this.propertyChanged("FP1CurrentPositionRaw");
+									await this.propertyChanged("FP1CurrentPositionRaw");
 								}
 								break;
 
 							case 2:
 								if (this._fp2CurrentPositionRaw !== paramData.Value) {
 									this._fp2CurrentPositionRaw = paramData.Value!;
-									this.propertyChanged("FP2CurrentPositionRaw");
+									await this.propertyChanged("FP2CurrentPositionRaw");
 								}
 								break;
 
 							case 3:
 								if (this._fp3CurrentPositionRaw !== paramData.Value) {
 									this._fp3CurrentPositionRaw = paramData.Value!;
-									this.propertyChanged("FP3CurrentPositionRaw");
+									await this.propertyChanged("FP3CurrentPositionRaw");
 								}
 								break;
 
 							case 4:
 								if (this._fp4CurrentPositionRaw !== paramData.Value) {
 									this._fp4CurrentPositionRaw = paramData.Value!;
-									this.propertyChanged("FP4CurrentPositionRaw");
+									await this.propertyChanged("FP4CurrentPositionRaw");
 								}
 								break;
 
 							default:
 								break;
 						}
-					});
+					}
 					break;
 
 				case StatusType.RequestRemainingTime:
-					frame.ParameterData?.forEach((paramData) => {
+					for (const paramData of frame.ParameterData || []) {
 						if (paramData.ID === 0) {
 							if (this._remainingTime !== paramData.Value) {
 								this._remainingTime = paramData.Value!;
-								this.propertyChanged("RemainingTime");
+								await this.propertyChanged("RemainingTime");
 							}
 						}
-					});
+					}
 					break;
 
 				default:
@@ -1556,7 +1561,7 @@ export class Products {
 									dispose.dispose();
 								}
 								this.Connection.on(
-									(frame) => this.onNotificationHandler(frame),
+									async (frame) => await this.onNotificationHandler(frame),
 									[GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF],
 								);
 								resolve();
@@ -1633,29 +1638,33 @@ export class Products {
 		return this._onRemovedProduct.on(handler);
 	}
 
-	private notifyNewProduct(nodeId: number): void {
-		this._onNewProduct.emit(nodeId);
+	private async notifyNewProduct(nodeId: number): Promise<void> {
+		await this._onNewProduct.emit(nodeId);
 	}
 
-	private notifiyRemovedProduct(nodeId: number): void {
-		this._onRemovedProduct.emit(nodeId);
+	private async notifiyRemovedProduct(nodeId: number): Promise<void> {
+		await this._onRemovedProduct.emit(nodeId);
 	}
 
-	private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (frame instanceof GW_CS_SYSTEM_TABLE_UPDATE_NTF) {
 			// Remove nodes
 			for (const nodeID of frame.RemovedNodes) {
 				delete this.Products[nodeID];
-				this.notifiyRemovedProduct(nodeID);
+				await this.notifiyRemovedProduct(nodeID);
 			}
 
 			// Add nodes
-			(async () => {
+			if (frame.AddedNodes.length > 0) {
+				// Wait a little bit, otherwise we will receive a busy error.
+				// console.log(`Wait before adding ${frame.AddedNodes}`);
+				await setTimeout(100);
+				// console.log("Finished waiting...");
 				for (const nodeID of frame.AddedNodes) {
 					this.Products[nodeID] = await this.addNodeAsync(nodeID);
-					this.notifyNewProduct(nodeID);
+					await this.notifyNewProduct(nodeID);
 				}
-			})().catch(() => {});
+			}
 		}
 	}
 
