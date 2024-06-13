@@ -1,7 +1,11 @@
 "use strict";
 
-import { IGW_FRAME_RCV_CTOR, IGW_FRAME_RCV, GatewayCommand } from "./common";
-import * as path from "path";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
+import { GatewayCommand, IGW_FRAME_RCV, IGW_FRAME_RCV_CTOR } from "./common";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export class FrameRcvFactory {
 	public static async CreateRcvFrame(Buff: Buffer): Promise<IGW_FRAME_RCV> {
@@ -19,7 +23,10 @@ export class FrameRcvFactory {
 	} = {};
 	private static async LoadModule(moduleName: string): Promise<void> {
 		if (!this.modules[moduleName]) {
-			const modulePath = path.resolve(__dirname, moduleName);
+			let modulePath = resolve(__dirname, moduleName);
+			if (!modulePath.startsWith("file://")) {
+				modulePath = `file://${modulePath}`;
+			}
 			this.modules[moduleName] = await import(modulePath);
 		}
 	}

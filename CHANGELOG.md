@@ -9,7 +9,10 @@
 
 -   [#112](https://github.com/MiSchroe/klf-200-api/issues/112) Fixes Busy error when new products are added.
 -   New major version: Some (usually only internally used) public methods have been made asynchronous.
--   Update dependencies
+-   Fixed some internal errors during asynchronous event handling.
+-   Converted to ECMAScript modules ES2022.
+-   Update dependencies.
+-   Unit tests run with a real (mocked) KLF-200 server.
 
 ## 3.5.0 (2024-02-15)
 

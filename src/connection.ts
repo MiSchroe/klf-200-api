@@ -1,9 +1,17 @@
 ﻿"use strict";
 
+import debugModule from "debug";
 import { readFileSync } from "fs";
-import { join } from "path";
+import { dirname, join, parse } from "path";
 import { timeout as promiseTimeout } from "promise-timeout";
-import { PeerCertificate, TLSSocket, checkServerIdentity as checkServerIdentityOriginal, connect } from "tls";
+import {
+	ConnectionOptions,
+	PeerCertificate,
+	TLSSocket,
+	checkServerIdentity as checkServerIdentityOriginal,
+	connect,
+} from "tls";
+import { fileURLToPath } from "url";
 import { GW_PASSWORD_ENTER_CFM, GW_PASSWORD_ENTER_REQ } from ".";
 import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF";
 import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ";
@@ -18,6 +26,11 @@ import {
 	KLF200_PORT,
 } from "./KLF200-API/common";
 import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent";
+
+const debug = debugModule(`klf-200-api:${parse(import.meta.filename).name}`);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Interface for the connection.
@@ -120,6 +133,11 @@ export class Connection implements IConnection {
 	private sckt?: TLSSocket;
 	private klfProtocol?: KLF200SocketProtocol;
 
+	readonly host: string;
+	readonly CA: Buffer = ca;
+	readonly fingerprint: string = FINGERPRINT;
+	readonly connectionOptions?: ConnectionOptions;
+
 	/**
 	 * Creates a new connection object that connect to the given host.
 	 * @param {string} host Host name or IP address of the KLF-200 interface.
@@ -132,11 +150,26 @@ export class Connection implements IConnection {
 	 * @param {string} [fingerprint=FINGERPRINT] The fingerprint of the certificate. This parameter is optional.
 	 * @memberof Connection
 	 */
-	constructor(
-		readonly host: string,
-		readonly CA: Buffer = ca,
-		readonly fingerprint: string = FINGERPRINT,
-	) {}
+	constructor(host: string, CA?: Buffer, fingerprint?: string);
+	/**
+	 * Creates a new connection object that connect to the given host.
+	 * @param host Host name or IP address of the KLF-200 interface.
+	 * @param connectionOptions Options that will be provided to the connect method of the TLS socket.
+	 */
+	constructor(host: string, connectionOptions: ConnectionOptions);
+	constructor(host: string, CAorConnectionOptions?: Buffer | ConnectionOptions, fingerprint?: string) {
+		this.host = host;
+		if (CAorConnectionOptions !== undefined) {
+			if (Buffer.isBuffer(CAorConnectionOptions)) {
+				this.CA = CAorConnectionOptions;
+			} else {
+				this.connectionOptions = CAorConnectionOptions;
+			}
+		}
+		if (fingerprint !== undefined) {
+			this.fingerprint = fingerprint;
+		}
+	}
 
 	/**
 	 * Gets the [[KLF200SocketProtocol]] object used by this connection.
@@ -158,11 +191,13 @@ export class Connection implements IConnection {
 	 * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
 	 * @memberof Connection
 	 */
-	private async _loginAsync(password: string): Promise<void> {
+	private async _loginAsync(password: string, timeout: number): Promise<void> {
 		try {
 			await this.initSocketAsync();
 			this.klfProtocol = new KLF200SocketProtocol(<TLSSocket>this.sckt);
-			const passwordCFM = <GW_PASSWORD_ENTER_CFM>await this.sendFrameAsync(new GW_PASSWORD_ENTER_REQ(password));
+			const passwordCFM = <GW_PASSWORD_ENTER_CFM>(
+				await this.sendFrameAsync(new GW_PASSWORD_ENTER_REQ(password), timeout)
+			);
 			if (passwordCFM.Status !== GW_COMMON_STATUS.SUCCESS) {
 				return Promise.reject(new Error("Login failed."));
 			} else {
@@ -183,7 +218,7 @@ export class Connection implements IConnection {
 	 */
 	public async loginAsync(password: string, timeout: number = 60): Promise<void> {
 		try {
-			return promiseTimeout(this._loginAsync(password), timeout * 1000);
+			await this._loginAsync(password, timeout);
 		} catch (error) {
 			return Promise.reject(error);
 		}
@@ -234,26 +269,38 @@ export class Connection implements IConnection {
 	 */
 	public async sendFrameAsync(frame: IGW_FRAME_REQ, timeout: number = 10): Promise<IGW_FRAME_RCV> {
 		try {
+			debug(`sendFrameAsync called with frame: ${JSON.stringify(frame)}, timeout: ${timeout}.`);
 			const frameName = GatewayCommand[frame.Command];
 			const expectedConfirmationFrameName: keyof typeof GatewayCommand = (frameName.slice(0, -3) +
 				"CFM") as keyof typeof GatewayCommand;
 			const expectedConfirmationFrameCommand = GatewayCommand[expectedConfirmationFrameName];
 			const sessionID = frame instanceof GW_FRAME_COMMAND_REQ ? frame.SessionID : undefined;
 
-			return promiseTimeout(
+			return await promiseTimeout(
 				new Promise<IGW_FRAME_RCV>(async (resolve, reject) => {
 					try {
-						const cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((frame) => {
+						let cfmHandler: Disposable | undefined = undefined;
+						const errHandler = (this.klfProtocol as KLF200SocketProtocol).onError((error) => {
+							debug(`sendFrameAsync protocol error handler: ${error}.`);
+							errHandler.dispose();
+							cfmHandler?.dispose();
+							reject(error);
+						});
+						cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((frame) => {
 							try {
 								if (frame instanceof GW_ERROR_NTF) {
-									cfmHandler.dispose();
+									debug(`sendFrameAsync GW_ERROR_NTF recieved: ${JSON.stringify(frame)}.`);
+									errHandler.dispose();
+									cfmHandler?.dispose();
 									reject(new Error(frame.getError()));
 								} else if (
 									frame.Command === expectedConfirmationFrameCommand &&
 									(typeof sessionID === "undefined" ||
 										sessionID === (frame as IGW_FRAME_COMMAND).SessionID)
 								) {
-									cfmHandler.dispose();
+									debug(`sendFrameAsync frame recieved: ${JSON.stringify(frame)}.`);
+									errHandler.dispose();
+									cfmHandler?.dispose();
 									resolve(frame);
 								}
 							} catch (error) {
@@ -270,6 +317,7 @@ export class Connection implements IConnection {
 				timeout * 1000,
 			);
 		} catch (error) {
+			debug(`sendFrameAsync error occurred: ${error}.`);
 			return Promise.reject(error);
 		}
 	}
@@ -388,6 +436,7 @@ export class Connection implements IConnection {
 				return new Promise<void>((resolve, reject) => {
 					try {
 						const loginErrorHandler = (error: unknown): void => {
+							console.error(`loginErrorHandler: ${JSON.stringify(error)}`);
 							this.sckt = undefined;
 							reject(error);
 						};
@@ -395,11 +444,13 @@ export class Connection implements IConnection {
 						this.sckt = connect(
 							KLF200_PORT,
 							this.host,
-							{
-								rejectUnauthorized: true,
-								ca: [this.CA],
-								checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert),
-							},
+							this.connectionOptions
+								? this.connectionOptions
+								: {
+										rejectUnauthorized: true,
+										ca: [this.CA],
+										checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert),
+									},
 							() => {
 								// Callback on event "secureConnect":
 								// Resolve promise if connection is authorized, otherwise reject it.
@@ -410,6 +461,7 @@ export class Connection implements IConnection {
 								} else {
 									const err = this.sckt?.authorizationError;
 									this.sckt = undefined;
+									console.error(`AuthorizationError: ${err}`);
 									reject(err);
 								}
 							},
@@ -418,13 +470,34 @@ export class Connection implements IConnection {
 						// Add error handler to reject the promise on login problems
 						this.sckt?.on("error", loginErrorHandler);
 
-						this.sckt?.once("close", () => {
+						this.sckt?.on("close", () => {
 							// Socket has been closed -> clean up everything
-							this.stopKeepAlive();
-							this.klfProtocol = undefined;
-							this.sckt = undefined;
+							this.socketClosedEventHandler();
+						});
+
+						// Add additional error handler for the lifetime of the socket
+						this.sckt?.on("error", () => {
+							// Socket has an error -> clean up everything
+							this.socketClosedEventHandler();
+						});
+
+						// React to end events:
+						this.sckt?.on("end", () => {
+							if (this.sckt?.allowHalfOpen) {
+								this.sckt?.end(() => {
+									this.socketClosedEventHandler();
+								});
+							}
+						});
+
+						// Timeout of socket:
+						this.sckt?.on("timeout", () => {
+							this.sckt?.end(() => {
+								this.socketClosedEventHandler();
+							});
 						});
 					} catch (error) {
+						console.error(`initSocketAsync inner catch: ${JSON.stringify(error)}`);
 						reject(error);
 					}
 				});
@@ -432,8 +505,16 @@ export class Connection implements IConnection {
 				return Promise.resolve();
 			}
 		} catch (error) {
+			console.error(`initSocketAsync outer catch: ${JSON.stringify(error)}`);
 			return Promise.reject(error);
 		}
+	}
+
+	private socketClosedEventHandler(): void {
+		// Socket has been closed -> clean up everything
+		this.stopKeepAlive();
+		this.klfProtocol = undefined;
+		this.sckt = undefined;
 	}
 
 	private checkServerIdentity(host: string, cert: PeerCertificate): Error | undefined {

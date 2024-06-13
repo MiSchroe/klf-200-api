@@ -99,8 +99,8 @@ export class KLF200SocketProtocol {
 		this._onDataReceived.off(handler);
 	}
 
-	onError(handler: Listener<Error>): void {
-		this._onError.on(handler);
+	onError(handler: Listener<Error>): Disposable {
+		return this._onError.on(handler);
 	}
 
 	offError(handler: Listener<Error>): void {
