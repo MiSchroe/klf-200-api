@@ -674,7 +674,14 @@ export class Groups {
 				if (dispose) {
 					dispose.dispose();
 				}
-				return Promise.reject(new Error(getAllGroupsInformation.getError()));
+				if (
+					getAllGroupsInformation.Status ===
+					GW_COMMON_STATUS.INVALID_NODE_ID /* No groups available -> not a real error */
+				) {
+					return Promise.resolve();
+				} else {
+					return Promise.reject(new Error(getAllGroupsInformation.getError()));
+				}
 			}
 
 			// Only wait for notifications if there are groups defined
