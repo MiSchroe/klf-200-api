@@ -649,6 +649,119 @@ const __dirname = dirname(__filename);
 					return returnBuffers_GW_GET_SCENE_INFORMATION_REQ;
 				}
 
+			case GatewayCommand.GW_ACTIVATE_SCENE_REQ: {
+				const sessionId = frameBuffer.readUInt16BE(3);
+				const commandOriginator = frameBuffer.readUInt8(5);
+				// const priorityLevel = frameBuffer.readUInt8(6);
+				const sceneId = frameBuffer.readUInt8(7);
+				// const velocity = frameBuffer.readUInt8(8);
+				if (!scenes.has(sceneId)) {
+					return [
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_ACTIVATE_SCENE_CFM,
+							new ArrayBuilder().addBytes(1).addInts(sessionId).toBuffer(),
+						),
+					];
+				}
+				const scene = scenes.get(sceneId);
+				const finalResults: Buffer[] = [];
+
+				finalResults.push(
+					addCommandAndLengthToBuffer(
+						GatewayCommand.GW_ACTIVATE_SCENE_CFM,
+						new ArrayBuilder().addBytes(0).addInts(sessionId).toBuffer(),
+					),
+				);
+
+				// One GW_COMMAND_RUN_STATUS_NTF for each product in group
+				for (const sceneInformationEntry of scene!.Nodes) {
+					const product = products.get(sceneInformationEntry.NodeID);
+					finalResults.push(
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+							new ArrayBuilder()
+								.addInts(sessionId)
+								.addBytes(
+									commandOriginator,
+									sceneInformationEntry.NodeID,
+									sceneInformationEntry.ParameterID,
+								)
+								.addInts(getProductCurrentParameter(product!, sceneInformationEntry.ParameterID))
+								.addBytes(2, 1, 0, 0, 0, 0)
+								.toBuffer(),
+						),
+					);
+				}
+
+				// One set of GW_COMMAND_REMAINING_TIME_NTF and GW_COMMAND_RUN_STATUS_NTF
+				for (const sceneInformationEntry of scene!.Nodes) {
+					const product = products.get(sceneInformationEntry.NodeID);
+					setProductCurrentParameter(
+						product!,
+						sceneInformationEntry.ParameterID,
+						sceneInformationEntry.ParameterValue,
+					);
+					finalResults.push(
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF,
+							new ArrayBuilder()
+								.addInts(sessionId)
+								.addBytes(sceneInformationEntry.NodeID, sceneInformationEntry.ParameterID)
+								.addInts(42)
+								.toBuffer(),
+						),
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+							new ArrayBuilder()
+								.addInts(sessionId)
+								.addBytes(
+									commandOriginator,
+									sceneInformationEntry.NodeID,
+									sceneInformationEntry.ParameterID,
+								)
+								.addInts(getProductCurrentParameter(product!, sceneInformationEntry.ParameterID))
+								.addBytes(0, 1, 0, 0, 0, 0)
+								.toBuffer(),
+						),
+					);
+				}
+
+				// Add GW_SESSION_FINISHED_NTF
+				finalResults.push(
+					addCommandAndLengthToBuffer(
+						GatewayCommand.GW_SESSION_FINISHED_NTF,
+						new ArrayBuilder().addInts(sessionId).toBuffer(),
+					),
+				);
+
+				return finalResults;
+			}
+
+			case GatewayCommand.GW_STOP_SCENE_REQ: {
+				const sessionId = frameBuffer.readUInt16BE(3);
+				// const commandOriginator = frameBuffer.readUInt8(5);
+				// const priorityLevel = frameBuffer.readUInt8(6);
+				const sceneId = frameBuffer.readUInt8(7);
+				if (!scenes.has(sceneId)) {
+					return [
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_STOP_SCENE_CFM,
+							new ArrayBuilder().addBytes(1).addInts(sessionId).toBuffer(),
+						),
+					];
+				}
+				return [
+					addCommandAndLengthToBuffer(
+						GatewayCommand.GW_STOP_SCENE_CFM,
+						new ArrayBuilder().addBytes(0).addInts(sessionId).toBuffer(),
+					),
+					addCommandAndLengthToBuffer(
+						GatewayCommand.GW_SESSION_FINISHED_NTF,
+						new ArrayBuilder().addInts(sessionId).toBuffer(),
+					),
+				];
+			}
+
 			// Groups
 			case GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_REQ:
 				const returnBuffers_GW_GET_ALL_GROUPS_INFORMATION_REQ: Buffer[] = [
@@ -925,7 +1038,7 @@ const __dirname = dirname(__filename);
 		const resultBuffer = Buffer.alloc(3 + buffer.length);
 		resultBuffer.set(buffer, 3);
 		resultBuffer.writeUInt16BE(command, 1);
-		resultBuffer.writeInt8(resultBuffer.byteLength, 0);
+		resultBuffer.writeUInt8(resultBuffer.byteLength, 0);
 		return resultBuffer;
 	}
 

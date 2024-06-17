@@ -237,7 +237,7 @@ export async function setupHouseMockup(mockServerController: MockServerControlle
 			],
 		},
 		{
-			SceneID: 0,
+			SceneID: 1,
 			Name: "Scene 2",
 			Nodes: [
 				{
