@@ -25,7 +25,6 @@ const testHOST = "localhost";
 
 describe("connection", function () {
 	this.timeout(10000);
-	// this.timeout(1000000000);
 
 	this.beforeAll(async function () {
 		this.mockServerController = await MockServerController.createMockServer();
@@ -101,11 +100,6 @@ describe("connection", function () {
 		it("should throw an error after timeout.", async function () {
 			const clock = sinon.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
 			try {
-				// const sut = returnTimeoutError();
-				// debug(`Waiting timers: ${clock.countTimers()}.`);
-				// // clock.runAll();
-				// await expect(Promise.race([sut, clock.runAllAsync()])).to.be.rejectedWith(TimeoutError);
-
 				const conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,

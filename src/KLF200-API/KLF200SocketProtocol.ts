@@ -1,9 +1,13 @@
 "use strict";
 
+import debugModule from "debug";
 import { Socket } from "net";
+import { parse } from "path";
 import { Disposable, Listener, TypedEvent } from "../utils/TypedEvent";
 import { FrameRcvFactory } from "./FrameRcvFactory";
 import { IGW_FRAME_RCV, KLF200Protocol, SLIPProtocol, SLIP_END } from "./common";
+
+const debug = debugModule(`klf-200-api:${parse(import.meta.filename).name}`);
 
 export type FrameReceivedHandler = (frame: IGW_FRAME_RCV) => void;
 
@@ -109,9 +113,12 @@ export class KLF200SocketProtocol {
 
 	async send(data: Buffer): Promise<void> {
 		try {
+			debug(`Method send: data: ${JSON.stringify(data)}`);
 			await this._onDataReceived.emit(data);
 			const frameBuffer = KLF200Protocol.Decode(SLIPProtocol.Decode(data));
+			debug(`Method send: decoded frame buffer: ${JSON.stringify(frameBuffer)}`);
 			const frame = await FrameRcvFactory.CreateRcvFrame(frameBuffer);
+			debug(`Method send: converted into frame ${frame.constructor.name}: ${JSON.stringify(frame)}`);
 			await this._onFrameReceived.emit(frame);
 			return Promise.resolve();
 		} catch (e) {

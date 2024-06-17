@@ -1,10 +1,11 @@
 import { ChildProcess, fork } from "child_process";
+import { randomUUID } from "crypto";
 import debugModule from "debug";
 import deepEqual from "deep-eql";
 import { dirname, join, parse } from "path";
 import { timeout } from "promise-timeout";
 import { fileURLToPath } from "url";
-import { AcknowledgeMessage, Command, KillCommand } from "./mockServer/commands";
+import { AcknowledgeMessage, Command, CommandWithGuid, KillCommand } from "./mockServer/commands";
 
 const debug = debugModule(`${parse(import.meta.filename).name}:client`);
 
@@ -39,11 +40,12 @@ export class MockServerController {
 	 * sendCommand
 	 */
 	public async sendCommand(command: Command): Promise<void> {
+		const commandWithGuid: CommandWithGuid = { ...command, CommandGuid: randomUUID() };
 		await timeout(
 			new Promise<void>((resolve, reject) => {
 				const onMessage = function (this: ChildProcess, message: AcknowledgeMessage): void {
 					debug(`In sendCommand onMessage handler. message: ${JSON.stringify(message)}`);
-					if (deepEqual(command, message.originalCommand)) {
+					if (deepEqual(commandWithGuid.CommandGuid, message.originalCommandGuid)) {
 						this.off("message", onMessage);
 						switch (message.messageType) {
 							case "ERR":
@@ -60,7 +62,7 @@ export class MockServerController {
 					}
 				};
 				this.serverProcess.on("message", onMessage);
-				this.serverProcess.send(command);
+				this.serverProcess.send(commandWithGuid);
 			}),
 			10000,
 		);

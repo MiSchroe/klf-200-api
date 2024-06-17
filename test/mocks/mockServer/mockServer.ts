@@ -1,5 +1,6 @@
 import { readFileSync } from "fs";
 
+import { assert } from "console";
 import debugModule from "debug";
 import path, { dirname } from "path";
 import { exit } from "process";
@@ -8,17 +9,23 @@ import { Server, TLSSocket, TlsOptions } from "tls";
 import { fileURLToPath } from "url";
 import {
 	GW_COMMON_STATUS,
+	GW_ERROR,
 	GW_INVERSE_STATUS,
 	GatewayCommand,
 	GatewayState,
 	GatewaySubState,
+	GroupType,
 	KLF200Protocol,
 	KLF200_PORT,
+	NodeVariation,
 	SLIPProtocol,
 	SceneInformationEntry,
+	Velocity,
+	readZString,
 } from "../../../src";
+import { bitArrayToArray } from "../../../src/utils/BitArray";
 import { ArrayBuilder } from "./ArrayBuilder";
-import { AcknowledgeMessage, Command } from "./commands";
+import { AcknowledgeMessage, CommandWithGuid } from "./commands";
 import { Gateway } from "./gateway";
 import { Group } from "./groups";
 import { Product } from "./products";
@@ -146,28 +153,28 @@ const __dirname = dirname(__filename);
 
 	server.maxConnections = 1;
 
-	function acknowledgeMessageACK(message: Command): void {
+	function acknowledgeMessageACK(message: CommandWithGuid): void {
 		if (process.send) {
 			const ackMsg: AcknowledgeMessage = {
 				messageType: "ACK",
-				originalCommand: message,
+				originalCommandGuid: message.CommandGuid,
 			};
 			process.send(ackMsg);
 		}
 	}
 
-	function acknowledgeMessageERR(message: Command, errorMessage: string): void {
+	function acknowledgeMessageERR(message: CommandWithGuid, errorMessage: string): void {
 		if (process.send) {
 			const errMsg: AcknowledgeMessage = {
 				messageType: "ERR",
-				originalCommand: message,
+				originalCommandGuid: message.CommandGuid,
 				errorMessage: errorMessage,
 			};
 			process.send(errMsg);
 		}
 	}
 
-	process.on("message", async (message: Command) => {
+	process.on("message", async (message: CommandWithGuid) => {
 		debug(`Server has received a message: ${JSON.stringify(message)}`);
 		switch (message.command) {
 			case "SetProduct":
@@ -463,7 +470,7 @@ const __dirname = dirname(__filename);
 							product.FP4CurrentPositionRaw,
 							product.RemainingTime,
 						)
-						.addLongs(product.TimeStamp.getTime() / 1000)
+						.addLongs(Date.parse(product.TimeStamp) / 1000)
 						.addBytes(0)
 						.fill(5 * 4);
 					returnBuffers_GW_GET_ALL_NODES_INFORMATION_REQ.push(
@@ -518,7 +525,7 @@ const __dirname = dirname(__filename);
 									product.FP4CurrentPositionRaw,
 									product.RemainingTime,
 								)
-								.addLongs(product.TimeStamp.getTime() / 1000)
+								.addLongs(Date.parse(product.TimeStamp) / 1000)
 								.addBytes(0)
 								.fill(5 * 4)
 								.toBuffer(),
@@ -646,15 +653,238 @@ const __dirname = dirname(__filename);
 			case GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_REQ:
 				const returnBuffers_GW_GET_ALL_GROUPS_INFORMATION_REQ: Buffer[] = [
 					addCommandAndLengthToBuffer(GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_CFM, [
-						GW_COMMON_STATUS.SUCCESS,
-						0,
+						groups.size === 0 ? GW_COMMON_STATUS.INVALID_NODE_ID : GW_COMMON_STATUS.SUCCESS,
+						groups.size,
 					]),
 				];
+				const useFilter: boolean = frameBuffer.readInt8(3) !== 0;
+				const groupType: GroupType = frameBuffer.readInt8(4);
+				let groupNtfSent: boolean = false;
+				for (const group of groups.values()) {
+					if (!useFilter || groupType === group.GroupType) {
+						groupNtfSent = true;
+						returnBuffers_GW_GET_ALL_GROUPS_INFORMATION_REQ.push(
+							addCommandAndLengthToBuffer(
+								GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF,
+								new ArrayBuilder()
+									.addBytes(group.GroupID)
+									.addInts(group.Order)
+									.addBytes(group.Placement)
+									.addString(group.Name, 64)
+									.addBytes(group.Velocity, group.NodeVariation, group.GroupType, group.Nodes.length)
+									.addBitArray(25, group.Nodes)
+									.addInts(group.Revision)
+									.toBuffer(),
+							),
+						);
+					}
+				}
+				if (!useFilter || groupType === GroupType.House) {
+					groupNtfSent = true;
+					returnBuffers_GW_GET_ALL_GROUPS_INFORMATION_REQ.push(
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF,
+							new ArrayBuilder()
+								.addBytes(0) // GroupID
+								.addInts(0) // Order
+								.addBytes(0) // Placement
+								.addString("", 64) // Name
+								.addBytes(Velocity.Default, NodeVariation.NotSet, GroupType.House, products.size) // Velocity, NodeVariation, GroupType, Nodes.length
+								.addBitArray(25, Array.from(products.keys())) // Nodes list
+								.addInts(0) // Revision
+								.toBuffer(),
+						),
+					);
+				}
+				if (!useFilter || groupType === GroupType.All) {
+					groupNtfSent = true;
+					returnBuffers_GW_GET_ALL_GROUPS_INFORMATION_REQ.push(
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF,
+							new ArrayBuilder()
+								.addBytes(1) // GroupID
+								.addInts(0) // Order
+								.addBytes(0) // Placement
+								.addString("", 64) // Name
+								.addBytes(Velocity.Default, NodeVariation.NotSet, GroupType.All, products.size) // Velocity, NodeVariation, GroupType, Nodes.length
+								.addBitArray(25, Array.from(products.keys())) // Nodes list
+								.addInts(0) // Revision
+								.toBuffer(),
+						),
+					);
+				}
+				if (groupNtfSent) {
+					returnBuffers_GW_GET_ALL_GROUPS_INFORMATION_REQ.push(
+						addCommandAndLengthToBuffer(GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, []),
+					);
+				}
 				return returnBuffers_GW_GET_ALL_GROUPS_INFORMATION_REQ;
+
+			case GatewayCommand.GW_SET_GROUP_INFORMATION_REQ: {
+				const groupId = frameBuffer.readInt8(3);
+				if (!groups.has(groupId)) {
+					return [
+						addCommandAndLengthToBuffer(GatewayCommand.GW_ERROR_NTF, [GW_ERROR.InvalidSystemTableIndex]),
+					];
+				}
+				const group = groups.get(groupId);
+				assertGroupIdShouldExist(group, groupId);
+
+				// Check Group Type and revision
+				const revision = frameBuffer.readUInt16BE(100);
+				const groupType = frameBuffer.readInt8(73);
+				if (
+					groupId === 0 ||
+					groupId === 1 ||
+					groupType === GroupType.All ||
+					groupType === GroupType.House ||
+					groupType !== group?.GroupType ||
+					revision !== group.Revision
+				) {
+					return [addCommandAndLengthToBuffer(GatewayCommand.GW_SET_GROUP_INFORMATION_CFM, [1, groupId])];
+				} else {
+					group.Order = frameBuffer.readUInt16BE(4);
+					group.Placement = frameBuffer.readInt8(6);
+					group.Name = readZString(frameBuffer.subarray(7, 71));
+					group.Velocity = frameBuffer.readInt8(71);
+					group.NodeVariation = frameBuffer.readInt8(72);
+					group.Nodes = bitArrayToArray(frameBuffer.subarray(75, 100));
+					return [
+						addCommandAndLengthToBuffer(GatewayCommand.GW_SET_GROUP_INFORMATION_CFM, [0, groupId]),
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF,
+							new ArrayBuilder()
+								.addBytes(1, groupId)
+								.addInts(group.Order)
+								.addBytes(group.Placement)
+								.addString(group.Name, 64)
+								.addBytes(group.Velocity, group.NodeVariation, group.GroupType, group.Nodes.length)
+								.addBitArray(25, group.Nodes)
+								.addInts(group.Revision)
+								.toBuffer(),
+						),
+					];
+				}
+			}
+
+			case GatewayCommand.GW_GET_GROUP_INFORMATION_REQ: {
+				const groupId = frameBuffer.readInt8(3);
+				if (!groups.has(groupId)) {
+					return [
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_GET_GROUP_INFORMATION_CFM,
+							new ArrayBuilder().addBytes(2, groupId).toBuffer(),
+						),
+					];
+				}
+				const group = groups.get(groupId);
+				assertGroupIdShouldExist(group, groupId);
+				return [
+					addCommandAndLengthToBuffer(
+						GatewayCommand.GW_GET_GROUP_INFORMATION_CFM,
+						new ArrayBuilder().addBytes(0, groupId).toBuffer(),
+					),
+					addCommandAndLengthToBuffer(
+						GatewayCommand.GW_GET_GROUP_INFORMATION_NTF,
+						new ArrayBuilder()
+							.addBytes(group!.GroupID)
+							.addInts(group!.Order)
+							.addBytes(group!.Placement)
+							.addString(group!.Name, 64)
+							.addBytes(group!.Velocity, group!.NodeVariation, group!.GroupType, group!.Nodes.length)
+							.addBitArray(25, group!.Nodes)
+							.addInts(group!.Revision)
+							.toBuffer(),
+					),
+				];
+			}
+
+			case GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_REQ: {
+				const sessionId = frameBuffer.readUInt16BE(3);
+				const commandOriginator = frameBuffer.readInt8(5);
+				// const priorityLevel = frameBuffer.readInt8(6);
+				const groupId = frameBuffer.readInt8(7);
+				const parameterId = frameBuffer.readInt8(8);
+				const position = frameBuffer.readUInt16BE(9);
+				// const velocity = frameBuffer.readInt8(11);
+				// const priorityLevelLock = frameBuffer.readInt8(12);
+				// const PL = frameBuffer.readUInt16BE(13);
+				// const lockTime = frameBuffer.readInt8(15);
+
+				if (!groups.has(groupId)) {
+					return [
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_CFM,
+							new ArrayBuilder().addInts(sessionId).addBytes(1).toBuffer(),
+						),
+					];
+				}
+				const group = groups.get(groupId);
+				assertGroupIdShouldExist(group, groupId);
+				const finalResults: Buffer[] = [];
+
+				finalResults.push(
+					addCommandAndLengthToBuffer(
+						GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_CFM,
+						new ArrayBuilder().addInts(sessionId).addBytes(0).toBuffer(),
+					),
+				);
+
+				// One GW_COMMAND_RUN_STATUS_NTF for each product in group
+				for (const productId of group!.Nodes) {
+					const product = products.get(productId);
+					finalResults.push(
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+							new ArrayBuilder()
+								.addInts(sessionId)
+								.addBytes(commandOriginator, productId, parameterId)
+								.addInts(getProductCurrentParameter(product!, parameterId))
+								.addBytes(2, 1, 0, 0, 0, 0)
+								.toBuffer(),
+						),
+					);
+				}
+
+				// One set of GW_COMMAND_REMAINING_TIME_NTF and GW_COMMAND_RUN_STATUS_NTF
+				for (const productId of group!.Nodes) {
+					const product = products.get(productId);
+					setProductCurrentParameter(product!, parameterId, position);
+					finalResults.push(
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF,
+							new ArrayBuilder()
+								.addInts(sessionId)
+								.addBytes(productId, parameterId)
+								.addInts(42)
+								.toBuffer(),
+						),
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+							new ArrayBuilder()
+								.addInts(sessionId)
+								.addBytes(commandOriginator, productId, parameterId)
+								.addInts(getProductCurrentParameter(product!, parameterId))
+								.addBytes(0, 1, 0, 0, 0, 0)
+								.toBuffer(),
+						),
+					);
+				}
+
+				// Add GW_SESSION_FINISHED_NTF
+				finalResults.push(
+					addCommandAndLengthToBuffer(
+						GatewayCommand.GW_SESSION_FINISHED_NTF,
+						new ArrayBuilder().addInts(sessionId).toBuffer(),
+					),
+				);
+
+				return finalResults;
+			}
 
 			// case GatewayCommand.GW_COMMAND_SEND_REQ:
 			//     const sessionID = getSession(frameBuffer);
-			//     products[frameBuffer[45]].CurrentPositionRaw = frameBuffer.readInt16BE(10);
+			//     products[frameBuffer[45]].CurrentPositionRaw = frameBuffer.readUInt16BE(10);
 
 			//     let ab = new ArrayBuilder()
 			//         .addInts(sessionID)
@@ -674,7 +904,7 @@ const __dirname = dirname(__filename);
 			//     ab = new ArrayBuilder()
 			//         .addInts(sessionID)
 			//         .addBytes(StatusOwner.User, frameBuffer[45], 0)
-			//         .addInts(frameBuffer.readInt16BE(10))
+			//         .addInts(frameBuffer.readUInt16BE(10))
 			//         .addBytes(RunStatus.ExecutionCompleted, StatusReply.Ok)
 			//         .addLongs(0);
 			//     returnBuffers_GW_COMMAND_SEND_REQ.push(addCommandAndLengthToBuffer(GatewayCommand.GW_COMMAND_RUN_STATUS_NTF, ab.toBuffer()));
@@ -697,5 +927,58 @@ const __dirname = dirname(__filename);
 		resultBuffer.writeUInt16BE(command, 1);
 		resultBuffer.writeInt8(resultBuffer.byteLength, 0);
 		return resultBuffer;
+	}
+
+	function assertGroupIdShouldExist(group: Group | undefined, groupId: number): void {
+		assert(group !== undefined, `Group ID ${groupId} should exist.`);
+	}
+
+	function getProductCurrentParameter(product: Product, parameterId: number): number {
+		switch (parameterId) {
+			case 0:
+				return product.CurrentPositionRaw;
+
+			case 1:
+				return product.FP1CurrentPositionRaw;
+
+			case 2:
+				return product.FP2CurrentPositionRaw;
+
+			case 3:
+				return product.FP3CurrentPositionRaw;
+
+			case 4:
+				return product.FP4CurrentPositionRaw;
+
+			default:
+				throw new Error(`Only MP and FP1-4 are supported. You tried ${parameterId}.`);
+		}
+	}
+
+	function setProductCurrentParameter(product: Product, parameterId: number, newValue: number): void {
+		switch (parameterId) {
+			case 0:
+				product.CurrentPositionRaw = newValue;
+				break;
+
+			case 1:
+				product.FP1CurrentPositionRaw = newValue;
+				break;
+
+			case 2:
+				product.FP2CurrentPositionRaw = newValue;
+				break;
+
+			case 3:
+				product.FP3CurrentPositionRaw = newValue;
+				break;
+
+			case 4:
+				product.FP4CurrentPositionRaw = newValue;
+				break;
+
+			default:
+				throw new Error(`Only MP and FP1-4 are supported. You tried ${parameterId}.`);
+		}
 	}
 })();

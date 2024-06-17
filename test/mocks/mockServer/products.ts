@@ -29,10 +29,15 @@ export interface Product {
 	FP3CurrentPositionRaw: number;
 	FP4CurrentPositionRaw: number;
 	RemainingTime: number;
-	TimeStamp: Date;
+	TimeStamp: string;
 	ProductAlias: ActuatorAlias[];
 	RunStatus: RunStatus;
 	StatusReply: StatusReply;
 	LimitationMinRaw: number[];
 	LimitationMaxRaw: number[];
+	TargetPositionRaw: number;
+	FP1TargetPositionRaw: number;
+	FP2TargetPositionRaw: number;
+	FP3TargetPositionRaw: number;
+	FP4TargetPositionRaw: number;
 }

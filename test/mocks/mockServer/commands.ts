@@ -91,14 +91,18 @@ export type Command =
 	| CommandSetFunction
 	| CommandCloseConnection;
 
+export type CommandWithGuid = Command & {
+	CommandGuid: string;
+};
+
 export type AcknowledgeMessageACK = {
 	messageType: "ACK";
-	originalCommand: Command;
+	originalCommandGuid: string;
 };
 
 export type AcknowledgeMessageERR = {
 	messageType: "ERR";
-	originalCommand: Command;
+	originalCommandGuid: string;
 	errorMessage: string;
 };
 

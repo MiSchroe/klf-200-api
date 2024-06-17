@@ -1,3 +1,5 @@
+import { arrayToBitArray } from "../../../src/utils/BitArray";
+
 export class ArrayBuilder {
 	private readonly _internalArray: number[] = [];
 
@@ -37,6 +39,12 @@ export class ArrayBuilder {
 
 	public fill(len: number, b?: number): this {
 		const buf = Buffer.alloc(len, b);
+		this._internalArray.push(...buf);
+		return this;
+	}
+
+	public addBitArray(len: number, values: number[]): this {
+		const buf = arrayToBitArray(values, len);
 		this._internalArray.push(...buf);
 		return this;
 	}

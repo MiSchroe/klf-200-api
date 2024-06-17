@@ -646,10 +646,6 @@ export class Groups {
 								if (dispose) {
 									dispose.dispose();
 								}
-								this.Connection.on(
-									async (frame) => await this.onNotificationHandler(frame),
-									[GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF],
-								);
 								resolve();
 							}
 						},
@@ -675,11 +671,9 @@ export class Groups {
 					dispose.dispose();
 				}
 				if (
-					getAllGroupsInformation.Status ===
+					getAllGroupsInformation.Status !==
 					GW_COMMON_STATUS.INVALID_NODE_ID /* No groups available -> not a real error */
 				) {
-					return Promise.resolve();
-				} else {
 					return Promise.reject(new Error(getAllGroupsInformation.getError()));
 				}
 			}
@@ -692,6 +686,12 @@ export class Groups {
 					dispose.dispose();
 				}
 			}
+
+			// Finally, setup the event handler for notifications
+			this.Connection.on(
+				async (frame) => await this.onNotificationHandler(frame),
+				[GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF],
+			);
 		} catch (error) {
 			if (dispose) {
 				dispose.dispose();
