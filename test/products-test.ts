@@ -2,33 +2,18 @@
 
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
+import { readFileSync } from "fs";
+import { join } from "path";
 import sinon, { SinonSandbox, SinonSpy } from "sinon";
 import sinonChai from "sinon-chai";
 import {
+	ActuatorAlias,
 	ActuatorType,
 	CommandOriginator,
-	GW_COMMAND_REMAINING_TIME_NTF,
-	GW_COMMAND_RUN_STATUS_NTF,
-	GW_COMMAND_SEND_CFM,
-	GW_CS_SYSTEM_TABLE_UPDATE_NTF,
-	GW_ERROR_NTF,
-	GW_GET_ALL_NODES_INFORMATION_CFM,
-	GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF,
+	Connection,
+	GW_ERROR,
 	GW_GET_ALL_NODES_INFORMATION_NTF,
-	GW_GET_LIMITATION_STATUS_CFM,
-	GW_GET_NODE_INFORMATION_CFM,
-	GW_GET_NODE_INFORMATION_NTF,
-	GW_LIMITATION_STATUS_NTF,
-	GW_NODE_INFORMATION_CHANGED_NTF,
-	GW_NODE_STATE_POSITION_CHANGED_NTF,
-	GW_SESSION_FINISHED_NTF,
-	GW_SET_LIMITATION_CFM,
-	GW_SET_NODE_NAME_CFM,
-	GW_SET_NODE_ORDER_AND_PLACEMENT_CFM,
-	GW_SET_NODE_VARIATION_CFM,
-	GW_STATUS_REQUEST_CFM,
-	GW_STATUS_REQUEST_NTF,
-	GW_WINK_SEND_CFM,
+	GatewayCommand,
 	LimitationType,
 	NodeOperatingState,
 	NodeVariation,
@@ -41,14 +26,34 @@ import {
 	StatusReply,
 	StatusType,
 	Velocity,
+	getNextSessionID,
 } from "../src";
 import { PropertyChangedEvent } from "../src/utils/PropertyChangedEvent";
-import { MockConnection } from "./mocks/mockConnection";
+import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder";
+import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands";
+import { MockServerController } from "./mocks/mockServerController";
+import { setupHouseMockup } from "./setupHouse";
+
+const testHOST = "localhost";
+const __dirname = import.meta.dirname;
 
 use(chaiAsPromised);
 use(sinonChai);
 
 describe("products", function () {
+	// this.timeout(10000000);
+	this.timeout(10000);
+
+	let mockServerController: MockServerController;
+
+	this.beforeAll(async function () {
+		mockServerController = await MockServerController.createMockServer();
+	});
+
+	this.afterAll(async function () {
+		await mockServerController[Symbol.asyncDispose]();
+	});
+
 	// Setup sinon sandbox
 	let sandbox: SinonSandbox;
 
@@ -56,351 +61,398 @@ describe("products", function () {
 		sandbox = sinon.createSandbox();
 	});
 
-	this.afterEach(function () {
+	this.afterEach(async function () {
 		sandbox.restore();
+		await mockServerController.sendCommand(ResetCommand);
+		await mockServerController.sendCommand(CloseConnectionCommand);
 	});
 
 	describe("Products class", function () {
-		// Error frame
-		const dataError = Buffer.from([0x04, 0x00, 0x00, 0x07]);
-		const dataErrorNtf = new GW_ERROR_NTF(dataError);
-
-		// Frames for products list
-		const dataAllNodes = Buffer.from([0x05, 0x02, 0x03, 0x00, 0x05]);
-		const dataAllNodesCfm = new GW_GET_ALL_NODES_INFORMATION_CFM(dataAllNodes);
-		// Frames for empty products list
-		const dataAllNodesEmptyProductsList = Buffer.from([0x05, 0x02, 0x03, 0x00, 0x00]);
-		const dataAllNodesCfmEmptyProductsList = new GW_GET_ALL_NODES_INFORMATION_CFM(dataAllNodesEmptyProductsList);
-
-		const dataNodes = [
-			Buffer.from([
-				0x7f, 0x02, 0x04, 0x00, 0x00, 0x00, 0x01, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x42, 0x61,
-				0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0xd5, 0x07, 0x00, 0x01, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x05, 0xc8, 0x00, 0xc8, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00,
-				0x4f, 0x00, 0x3f, 0xf3, 0x01, 0xd8, 0x03, 0xb2, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			]),
-			Buffer.from([
-				0x7f, 0x02, 0x04, 0x01, 0x00, 0x01, 0x02, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x53, 0x63,
-				0x68, 0x6c, 0x61, 0x66, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0xd5, 0x07, 0x00, 0x01, 0x1e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x05, 0xc8, 0x00, 0xc8, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00,
-				0x4f, 0x00, 0x3f, 0xf3, 0x02, 0xd8, 0x02, 0x64, 0x00, 0xd8, 0x03, 0xba, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			]),
-			Buffer.from([
-				0x7f, 0x02, 0x04, 0x02, 0x00, 0x02, 0x03, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x41, 0x6e,
-				0x6b, 0x6c, 0x65, 0x69, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0xd5, 0x07, 0x00, 0x01, 0x1e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x05, 0xc8, 0x00, 0xc8, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00,
-				0x4f, 0x00, 0x3f, 0xf3, 0x02, 0xd8, 0x02, 0x64, 0x00, 0xd8, 0x03, 0xba, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			]),
-			Buffer.from([
-				0x7f, 0x02, 0x04, 0x03, 0x00, 0x03, 0x02, 0x52, 0x6f, 0x6c, 0x6c, 0x6c, 0x61, 0x64, 0x65, 0x6e, 0x20,
-				0x53, 0x63, 0x68, 0x6c, 0x61, 0x66, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x01, 0x00, 0x80, 0xd5, 0x05, 0x00, 0x01, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x05, 0xc8, 0x00, 0xc8, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00,
-				0x4f, 0x00, 0x3f, 0xf3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			]),
-			Buffer.from([
-				0x7f, 0x02, 0x04, 0x04, 0x00, 0x04, 0x04, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x42, 0xc3,
-				0xbc, 0x72, 0x6f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0xd5, 0x07, 0x00, 0x01, 0x1e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x05, 0xc8, 0x00, 0xc8, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00,
-				0x4f, 0x00, 0x3f, 0xf3, 0x02, 0xd8, 0x02, 0x64, 0x00, 0xd8, 0x03, 0xba, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			]),
-		];
-		const dataNodesNtf: GW_GET_ALL_NODES_INFORMATION_NTF[] = [];
-		dataNodes.forEach((dataNode) => {
-			dataNodesNtf.push(new GW_GET_ALL_NODES_INFORMATION_NTF(dataNode));
-		});
-		const dataNodeFinish = Buffer.from([0x03, 0x02, 0x05]);
-		const dataNodeFinishNtf = new GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF(dataNodeFinish);
-
-		const receivedFrames = [dataAllNodesCfm];
-
-		const receivedFramesEmptyProductsList = [dataAllNodesCfmEmptyProductsList];
-
 		describe("createProductsAsync", function () {
-			this.beforeEach(function () {
-				sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
-			});
-
-			it("should create without error with 5 products.", async function () {
-				const conn = new MockConnection(receivedFrames);
-				const promResult = Products.createProductsAsync(conn);
-				// Send nodes
-				for (const dataNodeNtf of dataNodesNtf) {
-					await conn.sendNotification(dataNodeNtf, []);
+			it("should create without error with 4 products.", async function () {
+				const conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				try {
+					await conn.loginAsync("velux123");
+					await setupHouseMockup(mockServerController);
+					const result = await Products.createProductsAsync(conn);
+					expect(result).to.be.instanceOf(Products);
+					expect(result.Products.length).to.be.equal(4, "Number of products wrong.");
+				} finally {
+					await conn.logoutAsync();
 				}
-				// Send finished
-				await conn.sendNotification(dataNodeFinishNtf, []);
-				const result = await promResult;
-				expect(result).to.be.instanceOf(Products);
-				expect(result.Products.length).to.be.equal(5);
 			});
 
 			it("should throw an error on invalid frames.", async function () {
-				const conn = new MockConnection([]);
-				return expect(Products.createProductsAsync(conn)).to.rejectedWith(Error);
+				const conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				try {
+					await conn.loginAsync("velux123");
+					await setupHouseMockup(mockServerController);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_GET_ALL_NODES_INFORMATION_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
+					await expect(Products.createProductsAsync(conn)).to.be.rejectedWith(Error);
+				} finally {
+					await conn.logoutAsync();
+				}
 			});
 
 			it("should create without error without products.", async function () {
-				const conn = new MockConnection(receivedFramesEmptyProductsList);
-				const promResult = Products.createProductsAsync(conn);
-				const result = await promResult;
-				expect(result).to.be.instanceOf(Products);
-				expect(result.Products.length).to.be.equal(0);
+				const conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				try {
+					await conn.loginAsync("velux123");
+					const result = await Products.createProductsAsync(conn);
+					expect(result).to.be.instanceOf(Products);
+					expect(result.Products.length).to.be.equal(0);
+				} finally {
+					await conn.logoutAsync();
+				}
 			});
 		});
 
 		describe("findByName", function () {
-			this.beforeEach(function () {
-				sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
-			});
-
-			it("should find product 'Fenster Badezimmer'.", async function () {
-				const conn = new MockConnection(receivedFrames);
-				const promProducts = Products.createProductsAsync(conn);
-				// Send nodes
-				for (const dataNodeNtf of dataNodesNtf) {
-					await conn.sendNotification(dataNodeNtf, []);
+			it("should find product 'Window 2'.", async function () {
+				const conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				try {
+					await conn.loginAsync("velux123");
+					await setupHouseMockup(mockServerController);
+					const products = await Products.createProductsAsync(conn);
+					const result = products.findByName("Window 2");
+					expect(result).to.be.instanceOf(Product).with.property("Name", "Window 2");
+				} finally {
+					await conn.logoutAsync();
 				}
-				// Send finished
-				await conn.sendNotification(dataNodeFinishNtf, []);
-				const products = await promProducts;
-				const result = products.findByName("Fenster Badezimmer");
-				expect(result).to.be.instanceOf(Product).with.property("Name", "Fenster Badezimmer");
 			});
 		});
 
 		describe("requestStatusAsync", function () {
-			this.beforeEach(function () {
-				sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
-			});
-
 			it("should send a command request", async function () {
-				const conn = new MockConnection(receivedFrames);
-				const promProducts = Products.createProductsAsync(conn);
-				// Send nodes
-				for (const dataNodeNtf of dataNodesNtf) {
-					await conn.sendNotification(dataNodeNtf, []);
+				const conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				try {
+					await conn.loginAsync("velux123");
+					await setupHouseMockup(mockServerController);
+					const products = await Products.createProductsAsync(conn);
+					const result = products.requestStatusAsync(0, StatusType.RequestMainInfo);
+
+					await expect(result).to.be.fulfilled;
+				} finally {
+					await conn.logoutAsync();
 				}
-				// Send finished
-				await conn.sendNotification(dataNodeFinishNtf, []);
-				const products = await promProducts;
-
-				const data = Buffer.from([0x06, 0x03, 0x06, 0x47, 0x11, 0x01]);
-				const dataCfm = new GW_STATUS_REQUEST_CFM(data);
-
-				// Mock request
-				conn.valueToReturn.push(dataCfm);
-
-				const result = products.requestStatusAsync(0, StatusType.RequestMainInfo);
-
-				return expect(result).to.be.fulfilled;
 			});
 
 			it("should reject on error status", async function () {
-				const conn = new MockConnection(receivedFrames);
-				const promProducts = Products.createProductsAsync(conn);
-				// Send nodes
-				for (const dataNodeNtf of dataNodesNtf) {
-					await conn.sendNotification(dataNodeNtf, []);
+				const conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				try {
+					await conn.loginAsync("velux123");
+					await setupHouseMockup(mockServerController);
+					const products = await Products.createProductsAsync(conn);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_REQ,
+						gatewayConfirmation: GatewayCommand.GW_STATUS_REQUEST_CFM,
+						data: new ArrayBuilder()
+							.addInts(getNextSessionID() + 1)
+							.addBytes(0)
+							.toBuffer()
+							.toString("base64"),
+					});
+					const result = products.requestStatusAsync(0, StatusType.RequestMainInfo);
+
+					await expect(result).to.be.rejectedWith(Error);
+				} finally {
+					await conn.logoutAsync();
 				}
-				// Send finished
-				await conn.sendNotification(dataNodeFinishNtf, []);
-				const products = await promProducts;
-
-				const data = Buffer.from([0x06, 0x03, 0x06, 0x47, 0x11, 0x00]);
-				const dataCfm = new GW_STATUS_REQUEST_CFM(data);
-
-				// Mock request
-				conn.valueToReturn.push(dataCfm);
-
-				const result = products.requestStatusAsync(0, StatusType.RequestMainInfo);
-
-				return expect(result).to.be.rejectedWith(Error);
 			});
 
 			it("should reject on error frame", async function () {
-				const conn = new MockConnection(receivedFrames);
-				const promProducts = Products.createProductsAsync(conn);
-				// Send nodes
-				for (const dataNodeNtf of dataNodesNtf) {
-					await conn.sendNotification(dataNodeNtf, []);
+				const conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				try {
+					await conn.loginAsync("velux123");
+					await setupHouseMockup(mockServerController);
+					const products = await Products.createProductsAsync(conn);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
+					const result = products.requestStatusAsync(0, StatusType.RequestMainInfo);
+
+					await expect(result).to.be.rejectedWith(Error);
+				} finally {
+					await conn.logoutAsync();
 				}
-				// Send finished
-				await conn.sendNotification(dataNodeFinishNtf, []);
-				const products = await promProducts;
-
-				// Mock request
-				conn.valueToReturn.push(dataErrorNtf);
-
-				const result = products.requestStatusAsync(0, StatusType.RequestMainInfo);
-
-				return expect(result).to.be.rejectedWith(Error);
 			});
 		});
 
 		describe("onNotificationHandler", function () {
-			this.beforeEach(function () {
-				sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
-			});
-
 			it("should add 1 product and remove 2 products.", async function () {
-				const data = Buffer.from([
-					55, 0x01, 0x12,
-					// Added nodes (0)
-					1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-					// Removed nodes (0, 1)
-					3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				]);
-				const dataNtf = new GW_CS_SYSTEM_TABLE_UPDATE_NTF(data);
-				const dataNodeInformation = Buffer.from([0x05, 0x02, 0x01, 0x00, 0x00]);
-				const dataNodeInformationCfm = new GW_GET_NODE_INFORMATION_CFM(dataNodeInformation);
-				const dataNodeInfoNotification = Buffer.from([
-					0x7f, 0x02, 0x10, 0x00, 0x00, 0x00, 0x01, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x42,
-					0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0xd5, 0x07, 0x00, 0x01, 0x16, 0x00,
-					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x66, 0x00, 0x66, 0x00, 0xf7, 0xff, 0xf7, 0xff,
-					0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00, 0x4f, 0x00, 0x4c, 0x93, 0x01, 0xd8, 0x03, 0xb2, 0x1c, 0x00,
-					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				]);
-				const dataNodeInfoNotificationNtf = new GW_GET_NODE_INFORMATION_NTF(dataNodeInfoNotification);
+				const conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				try {
+					await conn.loginAsync("velux123");
+					await setupHouseMockup(mockServerController);
+					const products = await Products.createProductsAsync(conn);
 
-				const conn = new MockConnection(receivedFrames);
-				const promProducts = Products.createProductsAsync(conn);
-				for (const dataNodeNtf of dataNodesNtf) {
-					await conn.sendNotification(dataNodeNtf, []);
+					// Setups spies for counting notifications
+					const productAddedSpy = sinon.spy();
+					const productRemovedSpy = sinon.spy();
+					products.onNewProduct((productID) => {
+						productAddedSpy(productID);
+					});
+					products.onRemovedProduct((productID) => {
+						productRemovedSpy(productID);
+					});
+
+					await mockServerController.sendCommand({
+						command: "DeleteProduct",
+						productId: 2,
+					});
+					await mockServerController.sendCommand({
+						command: "DeleteProduct",
+						productId: 3,
+					});
+					await mockServerController.sendCommand({
+						command: "SetProduct",
+						productId: 4,
+						product: {
+							NodeID: 4,
+							Name: "Window 5",
+							TypeID: ActuatorType.WindowOpener,
+							SubType: 1,
+							Order: 0,
+							Placement: 0,
+							Velocity: Velocity.Default,
+							NodeVariation: NodeVariation.Kip,
+							PowerSaveMode: PowerSaveMode.LowPowerMode,
+							SerialNumber: Buffer.from([0, 0, 0, 0, 0, 0, 0, 0]).toString("base64"), // base64 encoded Buffer
+							ProductGroup: 0,
+							ProductType: 0,
+							State: NodeOperatingState.Done,
+							CurrentPositionRaw: 0xc800,
+							FP1CurrentPositionRaw: 0xf7ff,
+							FP2CurrentPositionRaw: 0xf7ff,
+							FP3CurrentPositionRaw: 0xf7ff,
+							FP4CurrentPositionRaw: 0xf7ff,
+							RemainingTime: 0,
+							TimeStamp: new Date().toISOString(),
+							ProductAlias: [new ActuatorAlias(0xd803, 0xba00)],
+							RunStatus: RunStatus.ExecutionCompleted,
+							StatusReply: StatusReply.Ok,
+							TargetPositionRaw: 0xc800,
+							FP1TargetPositionRaw: 0xd400,
+							FP2TargetPositionRaw: 0xd400,
+							FP3TargetPositionRaw: 0xd400,
+							FP4TargetPositionRaw: 0xd400,
+						},
+					});
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
+					});
+					await mockServerController.sendCommand({
+						command: "SendData",
+						gatewayCommand: GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF,
+						data: new ArrayBuilder()
+							.addBitArray(26, [4])
+							.addBitArray(26, [2, 3])
+							.toBuffer()
+							.toString("base64"),
+					});
+
+					// Just let the asynchronous stuff run before our checks
+					await waitPromise;
+
+					expect(
+						productAddedSpy,
+						`onNewProduct should be called once. Instead it was called ${productAddedSpy.callCount} times.`,
+					).to.be.calledOnce;
+					expect(
+						productRemovedSpy,
+						`onRemovedProduct should be called twice. Instead it was called ${productRemovedSpy.callCount} times.`,
+					).to.be.calledTwice;
+				} finally {
+					await conn.logoutAsync();
 				}
-				// Send finished
-				await conn.sendNotification(dataNodeFinishNtf, []);
-				const products = await promProducts;
-
-				// Setups spies for counting notifications
-				const productAddedSpy = sinon.spy();
-				const productRemovedSpy = sinon.spy();
-				products.onNewProduct((productID) => {
-					productAddedSpy(productID);
-				});
-				products.onRemovedProduct((productID) => {
-					productRemovedSpy(productID);
-				});
-
-				await conn.sendNotification(dataNtf, [dataNodeInformationCfm]);
-				await conn.sendNotification(dataNodeInfoNotificationNtf, []);
-
-				// Just let the asynchronous stuff run before our checks
-				await new Promise((resolve) => {
-					setTimeout(resolve, 0);
-				});
-
-				expect(
-					productAddedSpy.calledOnce,
-					`onNewProduct should be called once. Instead it was called ${productAddedSpy.callCount} times.`,
-				).to.be.true;
-				expect(
-					productRemovedSpy.calledTwice,
-					`onRemovedProduct should be called twice. Instead it was called ${productRemovedSpy.callCount} times.`,
-				).to.be.true;
 			});
 		});
 
 		describe("addNodeAsync", function () {
-			this.beforeEach(function () {
-				sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
-			});
-
 			it("should throw on error frame.", async function () {
-				const data = Buffer.from([
-					55, 0x01, 0x12,
-					// Added nodes (0)
-					1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-					// Removed nodes (0, 1)
-					3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				]);
-				const dataNtf = new GW_CS_SYSTEM_TABLE_UPDATE_NTF(data);
+				const conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				try {
+					await conn.loginAsync("velux123");
+					await setupHouseMockup(mockServerController);
+					const products = await Products.createProductsAsync(conn);
 
-				const conn = new MockConnection(receivedFrames);
-				const promProducts = Products.createProductsAsync(conn);
-				for (const dataNodeNtf of dataNodesNtf) {
-					await conn.sendNotification(dataNodeNtf, []);
+					// Setups spies for counting notifications
+					const productAddedSpy = sinon.spy();
+					const productRemovedSpy = sinon.spy();
+					products.onNewProduct((productID) => {
+						productAddedSpy(productID);
+					});
+					products.onRemovedProduct((productID) => {
+						productRemovedSpy(productID);
+					});
+
+					await mockServerController.sendCommand({
+						command: "DeleteProduct",
+						productId: 2,
+					});
+					await mockServerController.sendCommand({
+						command: "DeleteProduct",
+						productId: 3,
+					});
+					await mockServerController.sendCommand({
+						command: "SetProduct",
+						productId: 4,
+						product: {
+							NodeID: 4,
+							Name: "Window 5",
+							TypeID: ActuatorType.WindowOpener,
+							SubType: 1,
+							Order: 0,
+							Placement: 0,
+							Velocity: Velocity.Default,
+							NodeVariation: NodeVariation.Kip,
+							PowerSaveMode: PowerSaveMode.LowPowerMode,
+							SerialNumber: Buffer.from([0, 0, 0, 0, 0, 0, 0, 0]).toString("base64"), // base64 encoded Buffer
+							ProductGroup: 0,
+							ProductType: 0,
+							State: NodeOperatingState.Done,
+							CurrentPositionRaw: 0xc800,
+							FP1CurrentPositionRaw: 0xf7ff,
+							FP2CurrentPositionRaw: 0xf7ff,
+							FP3CurrentPositionRaw: 0xf7ff,
+							FP4CurrentPositionRaw: 0xf7ff,
+							RemainingTime: 0,
+							TimeStamp: new Date().toISOString(),
+							ProductAlias: [new ActuatorAlias(0xd803, 0xba00)],
+							RunStatus: RunStatus.ExecutionCompleted,
+							StatusReply: StatusReply.Ok,
+							TargetPositionRaw: 0xc800,
+							FP1TargetPositionRaw: 0xd400,
+							FP2TargetPositionRaw: 0xd400,
+							FP3TargetPositionRaw: 0xd400,
+							FP4TargetPositionRaw: 0xd400,
+						},
+					});
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_ERROR_NTF]);
+					});
+					await mockServerController.sendCommand({
+						command: "SendData",
+						gatewayCommand: GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF,
+						data: new ArrayBuilder()
+							.addBitArray(26, [4])
+							.addBitArray(26, [2, 3])
+							.toBuffer()
+							.toString("base64"),
+					});
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
+
+					// Just let the asynchronous stuff run before our checks
+					await waitPromise;
+
+					expect(
+						productAddedSpy.notCalled,
+						`onNewProduct shouldn't be called at all. Instead it was called ${productAddedSpy.callCount} times.`,
+					).to.be.true;
+					expect(
+						productRemovedSpy.calledTwice,
+						`onRemovedProduct should be called twice. Instead it was called ${productRemovedSpy.callCount} times.`,
+					).to.be.true;
+				} finally {
+					await conn.logoutAsync();
 				}
-				// Send finished
-				await conn.sendNotification(dataNodeFinishNtf, []);
-				const products = await promProducts;
-
-				// Setups spies for counting notifications
-				const productAddedSpy = sinon.spy();
-				const productRemovedSpy = sinon.spy();
-				products.onNewProduct((productID) => {
-					productAddedSpy(productID);
-				});
-				products.onRemovedProduct((productID) => {
-					productRemovedSpy(productID);
-				});
-
-				await conn.sendNotification(dataNtf, [dataErrorNtf]);
-
-				// Just let the asynchronous stuff run before our checks
-				await new Promise((resolve) => {
-					setTimeout(resolve, 0);
-				});
-
-				expect(
-					productAddedSpy.notCalled,
-					`onNewProduct shouldn't be called at all. Instead it was called ${productAddedSpy.callCount} times.`,
-				).to.be.true;
-				expect(
-					productRemovedSpy.calledTwice,
-					`onRemovedProduct should be called twice. Instead it was called ${productRemovedSpy.callCount} times.`,
-				).to.be.true;
 			});
 		});
 
 		describe("Product class", function () {
 			/* Setup is the same for all test cases */
-			let conn: MockConnection;
+			let conn: Connection;
 			let products: Products;
 			let product: Product;
 			this.beforeEach(async () => {
-				conn = new MockConnection(receivedFrames);
-				const promResult = Products.createProductsAsync(conn);
-				// Send nodes
-				for (const dataNodeNtf of dataNodesNtf) {
-					await conn.sendNotification(dataNodeNtf, []);
-				}
-				// Send finished
-				await conn.sendNotification(dataNodeFinishNtf, []);
-
-				const stubRefreshLimitationAsync = sandbox.stub(Product.prototype, "refreshLimitationAsync").resolves();
-
-				products = await promResult;
+				conn = conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				await conn.loginAsync("velux123");
+				await setupHouseMockup(mockServerController);
+				products = await Products.createProductsAsync(conn);
 				product = products.Products[0]; // Use the first product for all tests
+			});
 
-				stubRefreshLimitationAsync.restore();
+			this.afterEach(async () => {
+				conn.logoutAsync();
 			});
 
 			describe("Name", function () {
 				it("should return the product name", function () {
-					const expectedResult = "Fenster Badezimmer";
+					const expectedResult = "Window 1";
 					const result = product.Name;
 
 					expect(result).to.be.equal(expectedResult);
@@ -442,7 +494,17 @@ describe("products", function () {
 					{ nodeType: 0x0000, category: "0.0" },
 				].forEach((category) => {
 					it(`should return the product category ${category.category}`, function () {
-						const dataTest = Buffer.from(dataNodes[0]);
+						const dataTest = Buffer.from([
+							0x7f, 0x02, 0x04, 0x00, 0x00, 0x00, 0x01, 0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20,
+							0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0xd5,
+							0x07, 0x00, 0x01, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0xc8, 0x00,
+							0xc8, 0x00, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0xf7, 0xff, 0x00, 0x00, 0x4f, 0x00, 0x3f,
+							0xf3, 0x01, 0xd8, 0x03, 0xb2, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+						]);
 						// Setup node type
 						dataTest.writeUInt16BE(category.nodeType, 72);
 						const dataTestNtf = new GW_GET_ALL_NODES_INFORMATION_NTF(dataTest);
@@ -457,7 +519,7 @@ describe("products", function () {
 
 			describe("NodeVariation", function () {
 				it("should return the node variation", function () {
-					const expectedResult = NodeVariation.NotSet;
+					const expectedResult = NodeVariation.Kip;
 					const result = product.NodeVariation;
 
 					expect(result).to.be.equal(expectedResult);
@@ -475,7 +537,7 @@ describe("products", function () {
 
 			describe("Placement", function () {
 				it("should return the node's placement", function () {
-					const expectedResult = 1;
+					const expectedResult = 0;
 					const result = product.Placement;
 
 					expect(result).to.be.equal(expectedResult);
@@ -601,7 +663,7 @@ describe("products", function () {
 
 			describe("Velocity", function () {
 				it("should return the node's velocity", function () {
-					const expectedResult = Velocity.Silent;
+					const expectedResult = Velocity.Default;
 					const result = product.Velocity;
 
 					expect(result).to.be.equal(expectedResult);
@@ -619,7 +681,7 @@ describe("products", function () {
 
 			describe("ProductType", function () {
 				it("should return the node's product type", function () {
-					const expectedResult = 7;
+					const expectedResult = 0;
 					const result = product.ProductType;
 
 					expect(result).to.be.equal(expectedResult);
@@ -762,106 +824,109 @@ describe("products", function () {
 
 			describe("setNameAsync", function () {
 				it("should send a set node name request", async function () {
-					const data = Buffer.from([0x05, 0x02, 0x09, 0x00, 0]);
-					const dataCfm = new GW_SET_NODE_NAME_CFM(data);
-
-					// Mock request
-					conn.valueToReturn.push(dataCfm);
-
 					const result = product.setNameAsync("New name");
 
-					return expect(result).to.be.fulfilled;
+					await expect(result).to.be.fulfilled;
 				});
 
 				it("should reject on error status", async function () {
-					const data = Buffer.from([0x05, 0x02, 0x09, 0x01, 0]);
-					const dataCfm = new GW_SET_NODE_NAME_CFM(data);
-
 					// Mock request
-					conn.valueToReturn.push(dataCfm);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_SET_NODE_NAME_REQ,
+						gatewayConfirmation: GatewayCommand.GW_SET_NODE_NAME_CFM,
+						data: Buffer.from([2, product.NodeID]).toString("base64"),
+					});
 
 					const result = product.setNameAsync("New name");
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should reject on error frame", async function () {
 					// Mock request
-					conn.valueToReturn.push(dataErrorNtf);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_SET_NODE_NAME_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
 
 					const result = product.setNameAsync("New name");
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 
 			describe("setNodeVariationAsync", function () {
 				it("should send a set node variation request", async function () {
-					const data = Buffer.from([0x05, 0x02, 0x07, 0x00, 0]);
-					const dataCfm = new GW_SET_NODE_VARIATION_CFM(data);
-
-					// Mock request
-					conn.valueToReturn.push(dataCfm);
-
 					const result = product.setNodeVariationAsync(NodeVariation.Kip);
 
-					return expect(result).to.be.fulfilled;
+					await expect(result).to.be.fulfilled;
 				});
 
 				it("should reject on error status", async function () {
-					const data = Buffer.from([0x05, 0x02, 0x07, 0x01, 0]);
-					const dataCfm = new GW_SET_NODE_VARIATION_CFM(data);
-
 					// Mock request
-					conn.valueToReturn.push(dataCfm);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_SET_NODE_VARIATION_REQ,
+						gatewayConfirmation: GatewayCommand.GW_SET_NODE_VARIATION_CFM,
+						data: Buffer.from([2, product.NodeID]).toString("base64"),
+					});
 
 					const result = product.setNodeVariationAsync(NodeVariation.Kip);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should reject on error frame", async function () {
 					// Mock request
-					conn.valueToReturn.push(dataErrorNtf);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_SET_NODE_VARIATION_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
 
 					const result = product.setNodeVariationAsync(NodeVariation.Kip);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 
 			describe("setOrderAndPlacementAsync", function () {
 				it("should send a set order and placement request", async function () {
-					const data = Buffer.from([0x05, 0x02, 0x0e, 0x00, 0]);
-					const dataCfm = new GW_SET_NODE_ORDER_AND_PLACEMENT_CFM(data);
-
-					// Mock request
-					conn.valueToReturn.push(dataCfm);
-
 					const result = product.setOrderAndPlacementAsync(1, 2);
 
-					return expect(result).to.be.fulfilled;
+					await expect(result).to.be.fulfilled;
 				});
 
 				it("should reject on error status", async function () {
-					const data = Buffer.from([0x05, 0x02, 0x0e, 0x01, 0]);
-					const dataCfm = new GW_SET_NODE_ORDER_AND_PLACEMENT_CFM(data);
-
 					// Mock request
-					conn.valueToReturn.push(dataCfm);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_SET_NODE_ORDER_AND_PLACEMENT_REQ,
+						gatewayConfirmation: GatewayCommand.GW_SET_NODE_ORDER_AND_PLACEMENT_CFM,
+						data: Buffer.from([2, product.NodeID]).toString("base64"),
+					});
 
 					const result = product.setOrderAndPlacementAsync(1, 2);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should reject on error frame", async function () {
 					// Mock request
-					conn.valueToReturn.push(dataErrorNtf);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_SET_NODE_ORDER_AND_PLACEMENT_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
 
 					const result = product.setOrderAndPlacementAsync(1, 2);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 
@@ -875,7 +940,7 @@ describe("products", function () {
 						expectedResult,
 						product.Placement,
 					);
-					return expect(result).to.be.fulfilled;
+					await expect(result).to.be.fulfilled;
 				});
 			});
 
@@ -886,235 +951,234 @@ describe("products", function () {
 
 					const result = product.setPlacementAsync(expectedResult);
 					expect(setOrderAndPlacementAsyncStub).to.be.calledOnceWithExactly(product.Order, expectedResult);
-					return expect(result).to.be.fulfilled;
+					await expect(result).to.be.fulfilled;
 				});
 			});
 
 			describe("setTargetPositionAsync", function () {
 				it("should send a command request", async function () {
-					const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x01]);
-					const dataCfm = new GW_COMMAND_SEND_CFM(data);
-
-					// Mock request
-					conn.valueToReturn.push(dataCfm);
-
 					const result = product.setTargetPositionAsync(0.42);
 
-					return expect(result).to.be.eventually.equal(0x4711);
+					await expect(result).to.be.eventually.equal(getNextSessionID() - 1);
 				});
 
 				it("should reject on error status", async function () {
-					const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x00]);
-					const dataCfm = new GW_COMMAND_SEND_CFM(data);
-
 					// Mock request
-					conn.valueToReturn.push(dataCfm);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_COMMAND_SEND_REQ,
+						gatewayConfirmation: GatewayCommand.GW_COMMAND_SEND_CFM,
+						data: new ArrayBuilder()
+							.addInts(getNextSessionID() + 1)
+							.addBytes(0)
+							.toBuffer()
+							.toString("base64"),
+					});
 
 					const result = product.setTargetPositionAsync(0.42);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should reject on error frame", async function () {
 					// Mock request
-					conn.valueToReturn.push(dataErrorNtf);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_COMMAND_SEND_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
 
 					const result = product.setTargetPositionAsync(0.42);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 
 			describe("setTargetPositionRawAsync", function () {
 				it("should send a command request", async function () {
-					const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x01]);
-					const dataCfm = new GW_COMMAND_SEND_CFM(data);
-
-					// Mock request
-					conn.valueToReturn.push(dataCfm);
-
 					const result = product.setTargetPositionRawAsync(0x4711);
 
-					return expect(result).to.be.eventually.equal(0x4711);
+					await expect(result).to.be.eventually.equal(getNextSessionID() - 1);
 				});
 
 				it("should reject on error status", async function () {
-					const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x00]);
-					const dataCfm = new GW_COMMAND_SEND_CFM(data);
-
 					// Mock request
-					conn.valueToReturn.push(dataCfm);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_COMMAND_SEND_REQ,
+						gatewayConfirmation: GatewayCommand.GW_COMMAND_SEND_CFM,
+						data: new ArrayBuilder()
+							.addInts(getNextSessionID() + 1)
+							.addBytes(0)
+							.toBuffer()
+							.toString("base64"),
+					});
 
 					const result = product.setTargetPositionRawAsync(0x4711);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should reject on error frame", async function () {
 					// Mock request
-					conn.valueToReturn.push(dataErrorNtf);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_COMMAND_SEND_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
 
 					const result = product.setTargetPositionRawAsync(0x4711);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 
 			describe("stopAsync", function () {
 				it("should send a command request", async function () {
-					const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x01]);
-					const dataCfm = new GW_COMMAND_SEND_CFM(data);
-
-					// Mock request
-					conn.valueToReturn.push(dataCfm);
-
 					const result = product.stopAsync();
 
-					return expect(result).to.be.eventually.equal(0x4711);
+					await expect(result).to.be.eventually.equal(getNextSessionID() - 1);
 				});
 
 				it("should reject on error status", async function () {
-					const data = Buffer.from([0x06, 0x03, 0x01, 0x47, 0x11, 0x00]);
-					const dataCfm = new GW_COMMAND_SEND_CFM(data);
-
 					// Mock request
-					conn.valueToReturn.push(dataCfm);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_COMMAND_SEND_REQ,
+						gatewayConfirmation: GatewayCommand.GW_COMMAND_SEND_CFM,
+						data: new ArrayBuilder()
+							.addInts(getNextSessionID() + 1)
+							.addBytes(0)
+							.toBuffer()
+							.toString("base64"),
+					});
 
 					const result = product.stopAsync();
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should reject on error frame", async function () {
 					// Mock request
-					conn.valueToReturn.push(dataErrorNtf);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_COMMAND_SEND_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
 
 					const result = product.stopAsync();
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 
 			describe("winkAsync", function () {
 				it("should send a command request", async function () {
-					const data = Buffer.from([0x06, 0x03, 0x09, 0x47, 0x11, 0x01]);
-					const dataCfm = new GW_WINK_SEND_CFM(data);
-
-					// Mock request
-					conn.valueToReturn.push(dataCfm);
-
 					const result = product.winkAsync();
 
-					return expect(result).to.be.eventually.equal(0x4711);
+					await expect(result).to.be.eventually.equal(getNextSessionID() - 1);
 				});
 
 				it("should reject on error status", async function () {
-					const data = Buffer.from([0x06, 0x03, 0x09, 0x47, 0x11, 0x00]);
-					const dataCfm = new GW_WINK_SEND_CFM(data);
-
 					// Mock request
-					conn.valueToReturn.push(dataCfm);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_WINK_SEND_REQ,
+						gatewayConfirmation: GatewayCommand.GW_WINK_SEND_CFM,
+						data: new ArrayBuilder()
+							.addInts(getNextSessionID() + 1)
+							.addBytes(0)
+							.toBuffer()
+							.toString("base64"),
+					});
 
 					const result = product.winkAsync();
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should reject on error frame", async function () {
 					// Mock request
-					conn.valueToReturn.push(dataErrorNtf);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_WINK_SEND_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
 
 					const result = product.winkAsync();
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 
 			describe("refreshAsync", function () {
 				it("should send a command request", async function () {
-					const data = Buffer.from([0x05, 0x02, 0x01, 0x00, 0x00]);
-					const dataCfm = new GW_GET_NODE_INFORMATION_CFM(data);
-
-					// Mock request
-					conn.valueToReturn.push(dataCfm);
-
 					const result = product.refreshAsync();
 
-					return expect(result).to.be.fulfilled;
+					await expect(result).to.be.fulfilled;
 				});
 
 				it("should reject on error status", async function () {
-					const data = Buffer.from([0x05, 0x02, 0x01, 0x01, 0x00]);
-					const dataCfm = new GW_GET_NODE_INFORMATION_CFM(data);
-
 					// Mock request
-					conn.valueToReturn.push(dataCfm);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_REQ,
+						gatewayConfirmation: GatewayCommand.GW_GET_NODE_INFORMATION_CFM,
+						data: Buffer.from([1, product.NodeID]).toString("base64"),
+					});
 
 					const result = product.refreshAsync();
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should reject on error frame", async function () {
 					// Mock request
-					conn.valueToReturn.push(dataErrorNtf);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
 
 					const result = product.refreshAsync();
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 
 			describe("refreshLimitation", function () {
-				async function prepare(limitationType: LimitationType): Promise<void> {
-					const data = Buffer.from([0x06, 0x03, 0x13, 0x00, 0x00, 0x01]);
-					const dataCfm = new GW_GET_LIMITATION_STATUS_CFM(data);
-					const dataNotification = Buffer.from([13, 0x03, 0x14, 0, 0, 0, 0, 0x64, 0x00, 0xc7, 0x00, 2, 1]);
-					const dataNotificationNtf = new GW_LIMITATION_STATUS_NTF(dataNotification);
-					const dataCommandRunStatus = Buffer.from([
-						16, 0x03, 0x02, 0, 0, 1, 0, 0, 100, 0, 0, 1, 42, 0, 0, 0,
-					]);
-					const dataCommandRunStatusNtf = new GW_COMMAND_RUN_STATUS_NTF(dataCommandRunStatus);
-					const dataSessionFinished = Buffer.from([5, 0x03, 0x04, 0, 0]);
-					const dataSessionFinishedNtf = new GW_SESSION_FINISHED_NTF(dataSessionFinished);
-
-					// Mock request
-					conn.valueToReturn.push(dataCfm);
-
-					const result = product.refreshLimitationAsync(limitationType);
-
-					// Just let the asynchronous stuff run before our checks
-					await new Promise((resolve) => {
-						setImmediate(resolve);
-					});
-
-					await conn.sendNotification(dataNotificationNtf, []);
-					await conn.sendNotification(dataCommandRunStatusNtf, []);
-					await conn.sendNotification(dataSessionFinishedNtf, []);
-
-					// Just let the asynchronous stuff run before our checks
-					await new Promise((resolve) => {
-						setImmediate(resolve);
-					});
-
-					return result;
-				}
-
-				it("should send a command request", async function () {
-					const result = prepare(LimitationType.MaximumLimitation);
-
-					return expect(result).to.be.fulfilled;
-				});
-
 				it("should notify LimitationMinRaw change", async function () {
 					const notifyChange = sinon.stub();
 					const dispose = product.propertyChangedEvent.on((event) => {
 						notifyChange(event.propertyName);
 					});
 					try {
-						await prepare(LimitationType.MinimumLimitation);
+						await mockServerController.sendCommand({
+							command: "SetLimitation",
+							limitation: {
+								NodeID: 0,
+								ParameterID: 0,
+								LimitationOriginator: 2,
+								MinValue: 0x0100,
+								MaxValue: 0xc700,
+								LimitationTime: 1,
+							},
+						});
 
-						return expect(notifyChange).to.be.calledWith("LimitationMinRaw");
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+						});
+
+						await product.refreshLimitationAsync(LimitationType.MinimumLimitation, ParameterActive.MP);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(notifyChange).to.be.calledWith("LimitationMinRaw");
 					} finally {
 						dispose?.dispose();
 					}
@@ -1126,9 +1190,27 @@ describe("products", function () {
 						notifyChange(event.propertyName);
 					});
 					try {
-						await prepare(LimitationType.MaximumLimitation);
+						await mockServerController.sendCommand({
+							command: "SetLimitation",
+							limitation: {
+								NodeID: 0,
+								ParameterID: 0,
+								LimitationOriginator: 2,
+								MinValue: 0x0100,
+								MaxValue: 0xc700,
+								LimitationTime: 1,
+							},
+						});
 
-						return expect(notifyChange).to.be.calledWith("LimitationMaxRaw");
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+						});
+
+						await product.refreshLimitationAsync(LimitationType.MaximumLimitation, ParameterActive.MP);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(notifyChange).to.be.calledWith("LimitationMaxRaw");
 					} finally {
 						dispose?.dispose();
 					}
@@ -1140,9 +1222,27 @@ describe("products", function () {
 						notifyChange(event.propertyName);
 					});
 					try {
-						await prepare(LimitationType.MaximumLimitation);
+						await mockServerController.sendCommand({
+							command: "SetLimitation",
+							limitation: {
+								NodeID: 0,
+								ParameterID: 0,
+								LimitationOriginator: 2,
+								MinValue: 0x0100,
+								MaxValue: 0xc700,
+								LimitationTime: 1,
+							},
+						});
 
-						return expect(notifyChange).to.be.calledWith("LimitationOriginator");
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+						});
+
+						await product.refreshLimitationAsync(LimitationType.MaximumLimitation, ParameterActive.MP);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(notifyChange).to.be.calledWith("LimitationOriginator");
 					} finally {
 						dispose?.dispose();
 					}
@@ -1154,95 +1254,180 @@ describe("products", function () {
 						notifyChange(event.propertyName);
 					});
 					try {
-						await prepare(LimitationType.MaximumLimitation);
+						await mockServerController.sendCommand({
+							command: "SetLimitation",
+							limitation: {
+								NodeID: 0,
+								ParameterID: 0,
+								LimitationOriginator: 2,
+								MinValue: 0x0100,
+								MaxValue: 0xc700,
+								LimitationTime: 1,
+							},
+						});
 
-						return expect(notifyChange).to.be.calledWith("LimitationTimeRaw");
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+						});
+
+						await product.refreshLimitationAsync(LimitationType.MaximumLimitation, ParameterActive.MP);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(notifyChange).to.be.calledWith("LimitationTimeRaw");
 					} finally {
 						dispose?.dispose();
 					}
 				});
 
 				it("should set the limitation originator to rain sensor for MP", async function () {
-					await prepare(LimitationType.MaximumLimitation);
+					await mockServerController.sendCommand({
+						command: "SetLimitation",
+						limitation: {
+							NodeID: 0,
+							ParameterID: 0,
+							LimitationOriginator: 2,
+							MinValue: 0x0100,
+							MaxValue: 0xc700,
+							LimitationTime: 1,
+						},
+					});
 
-					return expect(product.getLimitationOriginator(ParameterActive.MP)).to.be.equal(
-						CommandOriginator.Rain,
-					);
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+					});
+
+					await product.refreshLimitationAsync(LimitationType.MaximumLimitation, ParameterActive.MP);
+					// Just let the asynchronous stuff run before our checks
+					await waitPromise;
+
+					expect(product.getLimitationOriginator(ParameterActive.MP)).to.be.equal(CommandOriginator.Rain);
 				});
 
 				it("should set the limitation time to 60 seconds", async function () {
-					await prepare(LimitationType.MaximumLimitation);
+					await mockServerController.sendCommand({
+						command: "SetLimitation",
+						limitation: {
+							NodeID: 0,
+							ParameterID: 0,
+							LimitationOriginator: 2,
+							MinValue: 0x0100,
+							MaxValue: 0xc700,
+							LimitationTime: 1,
+						},
+					});
 
-					return expect(product.getLimitationTime(ParameterActive.MP)).to.be.equal(60);
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+					});
+
+					await product.refreshLimitationAsync(LimitationType.MaximumLimitation, ParameterActive.MP);
+					// Just let the asynchronous stuff run before our checks
+					await waitPromise;
+
+					expect(product.getLimitationTime(ParameterActive.MP)).to.be.equal(60);
 				});
 
 				it("should reject on error status", async function () {
-					const data = Buffer.from([0x06, 0x03, 0x13, 0x00, 0x00, 0x00]);
-					const dataCfm = new GW_GET_LIMITATION_STATUS_CFM(data);
-
 					// Mock request
-					conn.valueToReturn.push(dataCfm);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_GET_LIMITATION_STATUS_REQ,
+						gatewayConfirmation: GatewayCommand.GW_GET_LIMITATION_STATUS_CFM,
+						data: new ArrayBuilder()
+							.addInts(getNextSessionID() + 1)
+							.addBytes(0)
+							.toBuffer()
+							.toString("base64"),
+					});
 
 					const result = product.refreshLimitationAsync(LimitationType.MaximumLimitation);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 
 			describe("setLimitationRawAsync", function () {
 				it("should send a command request", async function () {
-					const data = Buffer.from([0x06, 0x03, 0x11, 0x00, 0x00, 0x01]);
-					const dataCfm = new GW_SET_LIMITATION_CFM(data);
-					const dataNotification = Buffer.from([13, 0x03, 0x14, 0, 0, 0, 0, 50, 0, 100, 0, 8, 0]);
-					const dataNotificationNtf = new GW_LIMITATION_STATUS_NTF(dataNotification);
-					const dataCommandRunStatus = Buffer.from([
-						16, 0x03, 0x02, 0, 0, 1, 0, 0, 100, 0, 0, 1, 42, 0, 0, 0,
-					]);
-					const dataCommandRunStatusNtf = new GW_COMMAND_RUN_STATUS_NTF(dataCommandRunStatus);
-					const dataSessionFinished = Buffer.from([5, 0x03, 0x04, 0, 0]);
-					const dataSessionFinishedNtf = new GW_SESSION_FINISHED_NTF(dataSessionFinished);
+					await mockServerController.sendCommand({
+						command: "SetLimitation",
+						limitation: {
+							NodeID: 0,
+							ParameterID: 0,
+							LimitationOriginator: 2,
+							MinValue: 0x0100,
+							MaxValue: 0xc700,
+							LimitationTime: 1,
+						},
+					});
 
-					// Mock request
-					conn.valueToReturn.push(dataCfm);
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+					});
 
 					const result = product.setLimitationRawAsync(0, 0x6400);
+					await result;
 
 					// Just let the asynchronous stuff run before our checks
-					await new Promise((resolve) => {
-						setTimeout(resolve, 0);
-					});
+					await waitPromise;
 
-					await conn.sendNotification(dataNotificationNtf, []);
-					await conn.sendNotification(dataCommandRunStatusNtf, []);
-					await conn.sendNotification(dataSessionFinishedNtf, []);
-
-					// Just let the asynchronous stuff run before our checks
-					await new Promise((resolve) => {
-						setTimeout(resolve, 0);
-					});
-
-					return expect(result).to.be.fulfilled;
+					await expect(result).to.be.fulfilled;
 				});
 
 				it("should reject on error status", async function () {
-					const data = Buffer.from([0x06, 0x03, 0x11, 0x00, 0x00, 0x00]);
-					const dataCfm = new GW_SET_LIMITATION_CFM(data);
+					await mockServerController.sendCommand({
+						command: "SetLimitation",
+						limitation: {
+							NodeID: 0,
+							ParameterID: 0,
+							LimitationOriginator: 2,
+							MinValue: 0x0100,
+							MaxValue: 0xc700,
+							LimitationTime: 1,
+						},
+					});
 
 					// Mock request
-					conn.valueToReturn.push(dataCfm);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_SET_LIMITATION_REQ,
+						gatewayConfirmation: GatewayCommand.GW_SET_LIMITATION_CFM,
+						data: new ArrayBuilder()
+							.addInts(getNextSessionID() + 1)
+							.addBytes(0)
+							.toBuffer()
+							.toString("base64"),
+					});
 
 					const result = product.setLimitationRawAsync(0, 0x6400);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should reject on error frame", async function () {
+					await mockServerController.sendCommand({
+						command: "SetLimitation",
+						limitation: {
+							NodeID: 0,
+							ParameterID: 0,
+							LimitationOriginator: 2,
+							MinValue: 0x0100,
+							MaxValue: 0xc700,
+							LimitationTime: 1,
+						},
+					});
+
 					// Mock request
-					conn.valueToReturn.push(dataErrorNtf);
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_SET_LIMITATION_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
 
 					const result = product.setLimitationRawAsync(0, 0x6400);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 
@@ -1293,7 +1478,7 @@ describe("products", function () {
 
 					const result = product.setLimitationAsync(0.5, 0.25);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should throw if minValue < 0", async function () {
@@ -1304,7 +1489,7 @@ describe("products", function () {
 
 					const result = product.setLimitationAsync(-1, 0.25);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should throw if minValue > 1", async function () {
@@ -1315,7 +1500,7 @@ describe("products", function () {
 
 					const result = product.setLimitationAsync(1, 1.25);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should throw if maxValue < 0", async function () {
@@ -1326,7 +1511,7 @@ describe("products", function () {
 
 					const result = product.setLimitationAsync(-1, -0.25);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should throw if maxValue > 0", async function () {
@@ -1337,7 +1522,7 @@ describe("products", function () {
 
 					const result = product.setLimitationAsync(0.25, 1.25);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 
@@ -1352,33 +1537,26 @@ describe("products", function () {
 				});
 
 				describe("GW_NODE_INFORMATION_CHANGED_NTF", function () {
-					// prettier-ignore
-					const data = Buffer.from([
-						72, 0x02, 0x0c, 
-						// Node ID
-						0,
-						// Name
-						0x44, 0x75, 0x6d, 0x6d, 0x79, 0x00, 0x00, 0x00,
-						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-						// Order
-						0x00, 0x02,
-						// Placement
-						3,
-						// Node Variation
-						2  // KIP
-					]);
-					const dataNtf = new GW_NODE_INFORMATION_CHANGED_NTF(data);
-
 					it("should send notifications for Name", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID)
+								.addString("Dummy", 64)
+								.addInts(product.Order)
+								.addBytes(product.Placement, product.NodeVariation)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "Name").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "Name").to.be.calledWith({
 							o: product,
 							propertyName: "Name",
 							propertyValue: "Dummy",
@@ -1386,19 +1564,51 @@ describe("products", function () {
 					});
 
 					it("should send notifications for NodeVariation", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID)
+								.addString(product.Name, 64)
+								.addInts(product.Order)
+								.addBytes(product.Placement, NodeVariation.FlatRoof)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "NodeVariation").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "NodeVariation").to.be.calledWith({
 							o: product,
 							propertyName: "NodeVariation",
-							propertyValue: NodeVariation.Kip,
+							propertyValue: NodeVariation.FlatRoof,
 						});
 					});
 
 					it("should send notifications for Order", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID)
+								.addString(product.Name, 64)
+								.addInts(2)
+								.addBytes(product.Placement, product.NodeVariation)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "Order").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "Order").to.be.calledWith({
 							o: product,
 							propertyName: "Order",
 							propertyValue: 2,
@@ -1406,9 +1616,25 @@ describe("products", function () {
 					});
 
 					it("should send notifications for Placement", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID)
+								.addString(product.Name, 64)
+								.addInts(product.Order)
+								.addBytes(3, product.NodeVariation)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "Placement").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "Placement").to.be.calledWith({
 							o: product,
 							propertyName: "Placement",
 							propertyValue: 3,
@@ -1416,89 +1642,74 @@ describe("products", function () {
 					});
 
 					it("should send notifications for Name only", async function () {
-						const data = Buffer.from([
-							72, 0x02, 0x0c,
-							// Node ID
-							0,
-							// Name
-							0x44, 0x75, 0x6d, 0x6d, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-							0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-							0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-							0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-							0x00, 0x00, 0x00, 0x00,
-							// Order
-							0x00, 0x00,
-							// Placement
-							1,
-							// Node Variation
-							0,
-						]);
-						const dataNtf = new GW_NODE_INFORMATION_CHANGED_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID)
+								.addString("Dummy", 64)
+								.addInts(product.Order)
+								.addBytes(product.Placement, product.NodeVariation)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "Name").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "Name", propertyValue: "Dummy" }),
-						);
+						expect(propertyChangedSpy, "Name").to.be.calledOnceWith({
+							o: product,
+							propertyName: "Name",
+							propertyValue: "Dummy",
+						});
 					});
 
 					it("shouldn't send any notifications", async function () {
-						const data = Buffer.from([
-							72, 0x02, 0x0c,
-							// Node ID
-							0,
-							// Name
-							0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d,
-							0x6d, 0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-							0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-							0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-							0x00, 0x00, 0x00, 0x00,
-							// Order
-							0x00, 0x00,
-							// Placement
-							1,
-							// Node Variation
-							0,
-						]);
-						const dataNtf = new GW_NODE_INFORMATION_CHANGED_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID)
+								.addString(product.Name, 64)
+								.addInts(product.Order)
+								.addBytes(product.Placement, product.NodeVariation)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
 						expect(propertyChangedSpy).not.to.be.called;
 					});
 				});
 
 				describe("GW_NODE_STATE_POSITION_CHANGED_NTF", function () {
-					// prettier-ignore
-					const data = Buffer.from([
-						23, 0x02, 0x11, 
-						// Node ID
-						0,
-						// State
-						4,  // Executing
-						// Current Position
-						0xc0, 0x00,
-						// Target
-						0xc7, 0x00,
-						// FP1 Current Position
-						0xf7, 0xfe,
-						// FP2 Current Position
-						0xf7, 0xfe,
-						// FP3 Current Position
-						0xf7, 0xfe,
-						// FP4 Current Position
-						0xf7, 0xfe,
-						// Remaining Time
-						0, 5,
-						// Time stamp
-						0x00, 0xf9, 0x39, 0x90
-					]);
-					const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
-
 					it("should send notifications for State", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID, 4)
+								.addInts(0xc000, 0xc700, 0xf7fe, 0xf7fe, 0xf7fe, 0xf7fe, 5)
+								.addBytes(0x00, 0xf9, 0x39, 0x90)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "State").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "State").to.be.calledWith({
 							o: product,
 							propertyName: "State",
 							propertyValue: NodeOperatingState.Executing,
@@ -1506,9 +1717,24 @@ describe("products", function () {
 					});
 
 					it("should send notifications for CurrentPositionRaw", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID, 4)
+								.addInts(0xc000, 0xc700, 0xf7fe, 0xf7fe, 0xf7fe, 0xf7fe, 5)
+								.addBytes(0x00, 0xf9, 0x39, 0x90)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWith({
 							o: product,
 							propertyName: "CurrentPositionRaw",
 							propertyValue: 0xc000,
@@ -1516,9 +1742,24 @@ describe("products", function () {
 					});
 
 					it("should send notifications for CurrentPosition", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID, 4)
+								.addInts(0xc000, 0xc700, 0xf7fe, 0xf7fe, 0xf7fe, 0xf7fe, 5)
+								.addBytes(0x00, 0xf9, 0x39, 0x90)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "CurrentPosition").to.be.calledWith({
 							o: product,
 							propertyName: "CurrentPosition",
 							propertyValue: 0.040000000000000036,
@@ -1526,9 +1767,24 @@ describe("products", function () {
 					});
 
 					it("should send notifications for TargetPositionRaw", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID, 4)
+								.addInts(0xc000, 0xc700, 0xf7fe, 0xf7fe, 0xf7fe, 0xf7fe, 5)
+								.addBytes(0x00, 0xf9, 0x39, 0x90)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWith({
 							o: product,
 							propertyName: "TargetPositionRaw",
 							propertyValue: 0xc700,
@@ -1536,9 +1792,24 @@ describe("products", function () {
 					});
 
 					it("should send notifications for TargetPosition", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID, 4)
+								.addInts(0xc000, 0xc700, 0xf7fe, 0xf7fe, 0xf7fe, 0xf7fe, 5)
+								.addBytes(0x00, 0xf9, 0x39, 0x90)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "TargetPosition").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "TargetPosition").to.be.calledWith({
 							o: product,
 							propertyName: "TargetPosition",
 							propertyValue: 0.0050000000000000044,
@@ -1546,9 +1817,24 @@ describe("products", function () {
 					});
 
 					it("should send notifications for FP1CurrentPositionRaw", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID, 4)
+								.addInts(0xc000, 0xc700, 0xf7fe, 0xf7fe, 0xf7fe, 0xf7fe, 5)
+								.addBytes(0x00, 0xf9, 0x39, 0x90)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledWith({
 							o: product,
 							propertyName: "FP1CurrentPositionRaw",
 							propertyValue: 0xf7fe,
@@ -1556,9 +1842,24 @@ describe("products", function () {
 					});
 
 					it("should send notifications for FP2CurrentPositionRaw", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID, 4)
+								.addInts(0xc000, 0xc700, 0xf7fe, 0xf7fe, 0xf7fe, 0xf7fe, 5)
+								.addBytes(0x00, 0xf9, 0x39, 0x90)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWith({
 							o: product,
 							propertyName: "FP2CurrentPositionRaw",
 							propertyValue: 0xf7fe,
@@ -1566,9 +1867,24 @@ describe("products", function () {
 					});
 
 					it("should send notifications for FP3CurrentPositionRaw", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID, 4)
+								.addInts(0xc000, 0xc700, 0xf7fe, 0xf7fe, 0xf7fe, 0xf7fe, 5)
+								.addBytes(0x00, 0xf9, 0x39, 0x90)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledWith({
 							o: product,
 							propertyName: "FP3CurrentPositionRaw",
 							propertyValue: 0xf7fe,
@@ -1576,9 +1892,24 @@ describe("products", function () {
 					});
 
 					it("should send notifications for FP4CurrentPositionRaw", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID, 4)
+								.addInts(0xc000, 0xc700, 0xf7fe, 0xf7fe, 0xf7fe, 0xf7fe, 5)
+								.addBytes(0x00, 0xf9, 0x39, 0x90)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledWith({
 							o: product,
 							propertyName: "FP4CurrentPositionRaw",
 							propertyValue: 0xf7fe,
@@ -1586,9 +1917,24 @@ describe("products", function () {
 					});
 
 					it("should send notifications for RemainingTime", async function () {
-						await conn.sendNotification(dataNtf, []);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID, 4)
+								.addInts(0xc000, 0xc700, 0xf7fe, 0xf7fe, 0xf7fe, 0xf7fe, 5)
+								.addBytes(0x00, 0xf9, 0x39, 0x90)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(propertyChangedSpy, "RemainingTime").to.be.calledWith({
 							o: product,
 							propertyName: "RemainingTime",
 							propertyValue: 5,
@@ -1596,33 +1942,30 @@ describe("products", function () {
 					});
 
 					it("shouldn't send any notifications", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-							23, 0x02, 0x11, 
-                            // Node ID
-                            0,
-                            // State
-                            5,  // Done
-                            // Current Position
-                            0xc8, 0x00,
-                            // Target
-                            0xc8, 0x00,
-                            // FP1 Current Position
-                            0xf7, 0xff,
-                            // FP2 Current Position
-                            0xf7, 0xff,
-                            // FP3 Current Position
-                            0xf7, 0xff,
-                            // FP4 Current Position
-                            0xf7, 0xff,
-                            // Remaining Time
-                            0, 0,
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3
-                        ]);
-						const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
+							data: new ArrayBuilder()
+								.addBytes(product.NodeID, product.State)
+								.addInts(
+									product.CurrentPositionRaw,
+									product.TargetPositionRaw,
+									product.FP1CurrentPositionRaw,
+									product.FP2CurrentPositionRaw,
+									product.FP3CurrentPositionRaw,
+									product.FP4CurrentPositionRaw,
+									product.RemainingTime,
+								)
+								.addLongs(product.TimeStamp.getTime() / 1000)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
 						expect(propertyChangedSpy).not.to.be.called;
 					});
@@ -1630,16 +1973,26 @@ describe("products", function () {
 
 				describe("GW_COMMAND_RUN_STATUS_NTF", function () {
 					describe("Main parameter", function () {
-						const data = Buffer.from([
-							0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x00, 0xc0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00,
-							0x00,
-						]);
-						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
-
 						it("should send notifications for CurrentPositionRaw", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 0)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWith({
 								o: product,
 								propertyName: "CurrentPositionRaw",
 								propertyValue: 0xc000,
@@ -1647,9 +2000,25 @@ describe("products", function () {
 						});
 
 						it("should send notifications for CurrentPosition", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 0)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "CurrentPosition").to.be.calledWith({
 								o: product,
 								propertyName: "CurrentPosition",
 								propertyValue: 0.040000000000000036,
@@ -1657,9 +2026,25 @@ describe("products", function () {
 						});
 
 						it("should send notifications for RunStatus", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 0)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWith({
 								o: product,
 								propertyName: "RunStatus",
 								propertyValue: RunStatus.ExecutionActive,
@@ -1667,9 +2052,25 @@ describe("products", function () {
 						});
 
 						it("should send notifications for StatusReply", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 0)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWith({
 								o: product,
 								propertyName: "StatusReply",
 								propertyValue: StatusReply.Ok,
@@ -1678,16 +2079,26 @@ describe("products", function () {
 					});
 
 					describe("FP1", function () {
-						const data = Buffer.from([
-							0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x01, 0xc0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00,
-							0x00,
-						]);
-						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
-
 						it("should send notifications for FP1CurrentPositionRaw", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 1)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledWith({
 								o: product,
 								propertyName: "FP1CurrentPositionRaw",
 								propertyValue: 0xc000,
@@ -1695,9 +2106,25 @@ describe("products", function () {
 						});
 
 						it("should send notifications for RunStatus", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 1)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWith({
 								o: product,
 								propertyName: "RunStatus",
 								propertyValue: RunStatus.ExecutionActive,
@@ -1705,9 +2132,25 @@ describe("products", function () {
 						});
 
 						it("should send notifications for StatusReply", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 1)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWith({
 								o: product,
 								propertyName: "StatusReply",
 								propertyValue: StatusReply.Ok,
@@ -1716,16 +2159,26 @@ describe("products", function () {
 					});
 
 					describe("FP2", function () {
-						const data = Buffer.from([
-							0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x02, 0xc0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00,
-							0x00,
-						]);
-						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
-
 						it("should send notifications for FP2CurrentPositionRaw", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 2)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWith({
 								o: product,
 								propertyName: "FP2CurrentPositionRaw",
 								propertyValue: 0xc000,
@@ -1733,9 +2186,25 @@ describe("products", function () {
 						});
 
 						it("should send notifications for RunStatus", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 2)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWith({
 								o: product,
 								propertyName: "RunStatus",
 								propertyValue: RunStatus.ExecutionActive,
@@ -1743,9 +2212,25 @@ describe("products", function () {
 						});
 
 						it("should send notifications for StatusReply", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 2)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWith({
 								o: product,
 								propertyName: "StatusReply",
 								propertyValue: StatusReply.Ok,
@@ -1754,16 +2239,26 @@ describe("products", function () {
 					});
 
 					describe("FP3", function () {
-						const data = Buffer.from([
-							0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x03, 0xc0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00,
-							0x00,
-						]);
-						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
-
 						it("should send notifications for FP3CurrentPositionRaw", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 3)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledWith({
 								o: product,
 								propertyName: "FP3CurrentPositionRaw",
 								propertyValue: 0xc000,
@@ -1771,9 +2266,25 @@ describe("products", function () {
 						});
 
 						it("should send notifications for RunStatus", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 3)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWith({
 								o: product,
 								propertyName: "RunStatus",
 								propertyValue: RunStatus.ExecutionActive,
@@ -1781,9 +2292,25 @@ describe("products", function () {
 						});
 
 						it("should send notifications for StatusReply", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 3)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWith({
 								o: product,
 								propertyName: "StatusReply",
 								propertyValue: StatusReply.Ok,
@@ -1792,16 +2319,26 @@ describe("products", function () {
 					});
 
 					describe("FP4", function () {
-						const data = Buffer.from([
-							0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x04, 0xc0, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00,
-							0x00,
-						]);
-						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
-
 						it("should send notifications for FP4CurrentPositionRaw", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 4)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledWith({
 								o: product,
 								propertyName: "FP4CurrentPositionRaw",
 								propertyValue: 0xc000,
@@ -1809,9 +2346,25 @@ describe("products", function () {
 						});
 
 						it("should send notifications for RunStatus", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 4)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWith({
 								o: product,
 								propertyName: "RunStatus",
 								propertyValue: RunStatus.ExecutionActive,
@@ -1819,9 +2372,25 @@ describe("products", function () {
 						});
 
 						it("should send notifications for StatusReply", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(2, 0, 4)
+									.addInts(0xc000)
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWith({
 								o: product,
 								propertyName: "StatusReply",
 								propertyValue: StatusReply.Ok,
@@ -1830,13 +2399,23 @@ describe("products", function () {
 					});
 
 					it("shouldn't send any notifications", async function () {
-						const data = Buffer.from([
-							0x06, 0x03, 0x02, 0x47, 0x11, 0x02, 0x00, 0x00, 0xc8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-							0x00,
-						]);
-						const dataNtf = new GW_COMMAND_RUN_STATUS_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_COMMAND_RUN_STATUS_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+							data: new ArrayBuilder()
+								.addInts(0x4711)
+								.addBytes(2, 0, 0)
+								.addInts(0xc800)
+								.addBytes(0, 0, 0, 0, 0, 0)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
 						expect(propertyChangedSpy).not.to.be.called;
 					});
@@ -1844,12 +2423,24 @@ describe("products", function () {
 
 				describe("GW_COMMAND_REMAINING_TIME_NTF", function () {
 					it("should send notifications for RemainingTime", async function () {
-						const data = Buffer.from([0x06, 0x03, 0x03, 0x47, 0x11, 0x00, 0x00, 0x00, 0x2a]);
-						const dataNtf = new GW_COMMAND_REMAINING_TIME_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF,
+							data: new ArrayBuilder()
+								.addInts(0x4711)
+								.addBytes(0, 0)
+								.addInts(42)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({
+						expect(propertyChangedSpy, "RemainingTime").to.be.calledWith({
 							o: product,
 							propertyName: "RemainingTime",
 							propertyValue: 42,
@@ -1857,10 +2448,22 @@ describe("products", function () {
 					});
 
 					it("shouldn't send any notifications", async function () {
-						const data = Buffer.from([0x06, 0x03, 0x03, 0x47, 0x11, 0x00, 0x00, 0x00, 0x00]);
-						const dataNtf = new GW_COMMAND_REMAINING_TIME_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF]);
+						});
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF,
+							data: new ArrayBuilder()
+								.addInts(0x4711)
+								.addBytes(0, 0)
+								.addInts(0)
+								.toBuffer()
+								.toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
 						expect(propertyChangedSpy).not.to.be.called;
 					});
@@ -1868,1561 +2471,1167 @@ describe("products", function () {
 
 				describe("GW_GET_NODE_INFORMATION_NTF", function () {
 					it("shouldn't send any notifications", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
 						expect(propertyChangedSpy).not.to.be.called;
 					});
 
 					it("should send notifications for Order only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x02, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(2)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "Order").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "Order", propertyValue: 2 }),
-						);
+						expect(propertyChangedSpy, "Order").to.be.calledOnceWith({
+							o: product,
+							propertyName: "Order",
+							propertyValue: 2,
+						});
 					});
 
 					it("should send notifications for Placement only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x02, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(2)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "Placement").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "Placement", propertyValue: 2 }),
-						);
+						expect(propertyChangedSpy, "Placement").to.be.calledOnceWith({
+							o: product,
+							propertyName: "Placement",
+							propertyValue: 2,
+						});
 					});
 
 					it("should send notifications for Name only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x47, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString("Window 1 changed", 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
-
-						expect(propertyChangedSpy, "Name").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "Name", propertyValue: "Genster Badezimmer" }),
-						);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+						expect(propertyChangedSpy, "Name").to.be.calledOnceWith({
+							o: product,
+							propertyName: "Name",
+							propertyValue: "Window 1 changed",
+						});
 					});
 
 					it("should send notifications for Velocity only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x02, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(Velocity.Fast)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "Velocity").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "Velocity", propertyValue: Velocity.Fast }),
-						);
+						expect(propertyChangedSpy, "Velocity").to.be.calledOnceWith({
+							o: product,
+							propertyName: "Velocity",
+							propertyValue: Velocity.Fast,
+						});
 					});
 
 					it("should send notifications for TypeID only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x00, 0x81, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((ActuatorType.RollerShutter << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "TypeID").to.be.calledOnceWith(
-							sinon.match({
-								o: product,
-								propertyName: "TypeID",
-								propertyValue: ActuatorType.RollerShutter,
-							}),
-						);
+						expect(propertyChangedSpy, "TypeID").to.be.calledOnceWith({
+							o: product,
+							propertyName: "TypeID",
+							propertyValue: ActuatorType.RollerShutter,
+						});
 					});
 
 					it("should send notifications for SubType only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x00, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | 0)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "SubType").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "SubType", propertyValue: 0 }),
-						);
+						expect(propertyChangedSpy, "SubType").to.be.calledOnceWith({
+							o: product,
+							propertyName: "SubType",
+							propertyValue: 0,
+						});
 					});
 
 					it("should send notifications for ProductType only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x06, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								6,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "ProductType").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "ProductType", propertyValue: 6 }),
-						);
+						expect(propertyChangedSpy, "ProductType").to.be.calledOnceWith({
+							o: product,
+							propertyName: "ProductType",
+							propertyValue: 6,
+						});
 					});
 
 					it("should send notifications for NodeVariation only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x01, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								NodeVariation.TopHung,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "NodeVariation").to.be.calledOnceWith(
-							sinon.match({
-								o: product,
-								propertyName: "NodeVariation",
-								propertyValue: NodeVariation.TopHung,
-							}),
-						);
+						expect(propertyChangedSpy, "NodeVariation").to.be.calledOnceWith({
+							o: product,
+							propertyName: "NodeVariation",
+							propertyValue: NodeVariation.TopHung,
+						});
 					});
 
 					it("should send notifications for PowerSaveMode only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x00, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								PowerSaveMode.AlwaysAlive,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "PowerSaveMode").to.be.calledOnceWith(
-							sinon.match({
-								o: product,
-								propertyName: "PowerSaveMode",
-								propertyValue: PowerSaveMode.AlwaysAlive,
-							}),
-						);
+						expect(propertyChangedSpy, "PowerSaveMode").to.be.calledOnceWith({
+							o: product,
+							propertyName: "PowerSaveMode",
+							propertyValue: PowerSaveMode.AlwaysAlive,
+						});
 					});
 
 					it("should send notifications for SerialNumber only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...[12, 34, 56, 78, 12, 34, 56, 78],
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "SerialNumber").to.be.calledOnceWith(
-							sinon.match({
-								o: product,
-								propertyName: "SerialNumber",
-								propertyValue: dataNtf.SerialNumber,
-							}),
-						);
+						expect(propertyChangedSpy, "SerialNumber").to.be.calledOnceWith({
+							o: product,
+							propertyName: "SerialNumber",
+							propertyValue: Buffer.from([12, 34, 56, 78, 12, 34, 56, 78]),
+						});
 					});
 
 					it("should send notifications for State only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x03, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								NodeOperatingState.WaitingForPower,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "State").to.be.calledOnceWith(
-							sinon.match({
-								o: product,
-								propertyName: "State",
-								propertyValue: NodeOperatingState.WaitingForPower,
-							}),
-						);
+						expect(propertyChangedSpy, "State").to.be.calledOnceWith({
+							o: product,
+							propertyName: "State",
+							propertyValue: NodeOperatingState.WaitingForPower,
+						});
 					});
 
 					it("should send notifications for CurrentPosition/Raw only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0x00, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								0,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWith(
-							sinon.match({ o: product, propertyName: "CurrentPositionRaw", propertyValue: 0 }),
-						);
-						expect(propertyChangedSpy, "CurrentPosition").to.be.calledWith(
-							sinon.match({ o: product, propertyName: "CurrentPosition", propertyValue: 1 }),
-						);
+						expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWith({
+							o: product,
+							propertyName: "CurrentPositionRaw",
+							propertyValue: 0,
+						});
+						expect(propertyChangedSpy, "CurrentPosition").to.be.calledWith({
+							o: product,
+							propertyName: "CurrentPosition",
+							propertyValue: 1,
+						});
 						expect(propertyChangedSpy).to.be.calledTwice;
 					});
 
 					it("should send notifications for TargetPosition/Raw only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0x00, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								0,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWith(
-							sinon.match({ o: product, propertyName: "TargetPositionRaw", propertyValue: 0 }),
-						);
-						expect(propertyChangedSpy, "TargetPosition").to.be.calledWith(
-							sinon.match({ o: product, propertyName: "TargetPosition", propertyValue: 1 }),
-						);
+						expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWith({
+							o: product,
+							propertyName: "TargetPositionRaw",
+							propertyValue: 0,
+						});
+						expect(propertyChangedSpy, "TargetPosition").to.be.calledWith({
+							o: product,
+							propertyName: "TargetPosition",
+							propertyValue: 1,
+						});
 						expect(propertyChangedSpy).to.be.calledTwice;
 					});
 
 					it("should send notifications for FP1CurrentPositionRaw only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0x00, 0x00, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								0,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "FP1CurrentPositionRaw", propertyValue: 0 }),
-						);
+						expect(propertyChangedSpy, "FP1CurrentPositionRaw").to.be.calledOnceWith({
+							o: product,
+							propertyName: "FP1CurrentPositionRaw",
+							propertyValue: 0,
+						});
 					});
 
 					it("should send notifications for FP2CurrentPositionRaw only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0x00, 0x00, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								0,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "FP2CurrentPositionRaw", propertyValue: 0 }),
-						);
+						expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledOnceWith({
+							o: product,
+							propertyName: "FP2CurrentPositionRaw",
+							propertyValue: 0,
+						});
 					});
 
 					it("should send notifications for FP3CurrentPositionRaw only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0x00, 0x00, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								0,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "FP3CurrentPositionRaw", propertyValue: 0 }),
-						);
+						expect(propertyChangedSpy, "FP3CurrentPositionRaw").to.be.calledOnceWith({
+							o: product,
+							propertyName: "FP3CurrentPositionRaw",
+							propertyValue: 0,
+						});
 					});
 
 					it("should send notifications for FP4CurrentPositionRaw only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0x00, 0x00, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								0,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "FP4CurrentPositionRaw", propertyValue: 0 }),
-						);
+						expect(propertyChangedSpy, "FP4CurrentPositionRaw").to.be.calledOnceWith({
+							o: product,
+							propertyName: "FP4CurrentPositionRaw",
+							propertyValue: 0,
+						});
 					});
 
 					it("should send notifications for RemainingTime only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x01, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								1,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "RemainingTime").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "RemainingTime", propertyValue: 1 }),
-						);
+						expect(propertyChangedSpy, "RemainingTime").to.be.calledOnceWith({
+							o: product,
+							propertyName: "RemainingTime",
+							propertyValue: 1,
+						});
 					});
 
 					it("should send notifications for TimeStamp only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf4, 
-                            // Number of Alias
-                            0x01, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const expectedTimeStamp = Math.trunc(Date.now() / 1000);
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(expectedTimeStamp)
+							.addBytes(numberOfAliases);
+						for (const ProductAlias of product.ProductAlias) {
+							ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+						}
+						if (numberOfAliases < 5) {
+							ab.fill((5 - numberOfAliases) * 4);
+						}
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "TimeStamp").to.be.calledOnceWith(
-							sinon.match({ o: product, propertyName: "TimeStamp", propertyValue: dataNtf.TimeStamp }),
-						);
+						expect(propertyChangedSpy, "TimeStamp").to.be.calledOnceWith({
+							o: product,
+							propertyName: "TimeStamp",
+							propertyValue: new Date(expectedTimeStamp * 1000),
+						});
 					});
 
 					it("should send notifications for ProductAlias only", async function () {
-						// prettier-ignore
-						const data = Buffer.from([
-                            0x7f, 0x02, 0x10, 
-                            // Node ID
-                            0x00, 
-                            // Order
-                            0x00, 0x00, 
-                            // Placement
-                            0x01, 
-                            // Name
-                            0x46, 0x65, 0x6e, 0x73, 0x74, 0x65, 0x72, 0x20, 
-                            0x42, 0x61, 0x64, 0x65, 0x7a, 0x69, 0x6d, 0x6d, 
-                            0x65, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // Velocity
-                            0x01, 
-                            // Node type, sub type
-                            0x01, 0x01, 
-                            // Product group
-                            0xd5, 
-                            // Product type
-                            0x07, 
-                            // Node variation
-                            0x00, 
-                            // Power mode
-                            0x01, 
-                            // Build number
-                            0x16, 
-                            // Serial number
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                            // State
-                            0x05, 
-                            // Current position
-                            0xc8, 0x00, 
-                            // Target position
-                            0xc8, 0x00, 
-                            // Current position (FP1)
-                            0xf7, 0xff, 
-                            // Current position (FP2)
-                            0xf7, 0xff, 
-                            // Current position (FP3)
-                            0xf7, 0xff, 
-                            // Current position (FP4)
-                            0xf7, 0xff, 
-                            // Remaining time
-                            0x00, 0x00, 
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3, 
-                            // Number of Alias
-                            0x02, 
-                            // Alias array
-                            0xd8, 0x03, 0xb2, 0x1c, 
-                            0xd8, 0x02, 0xb2, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00, 
-                            0x00, 0x00, 0x00, 0x00
-                        ]);
-						const dataNtf = new GW_GET_NODE_INFORMATION_NTF(data);
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						});
+						const numberOfAliases = product.ProductAlias.length;
+						const ab = new ArrayBuilder()
+							.addBytes(product.NodeID)
+							.addInts(product.Order)
+							.addBytes(product.Placement)
+							.addString(product.Name, 64)
+							.addBytes(product.Velocity)
+							.addInts((product.TypeID << 6) | product.SubType)
+							.addBytes(
+								0xd5 /*product.ProductGroup*/,
+								product.ProductType,
+								product.NodeVariation,
+								product.PowerSaveMode,
+								0,
+								...product.SerialNumber,
+								product.State,
+							)
+							.addInts(
+								product.CurrentPositionRaw,
+								product.TargetPositionRaw,
+								product.FP1CurrentPositionRaw,
+								product.FP2CurrentPositionRaw,
+								product.FP3CurrentPositionRaw,
+								product.FP4CurrentPositionRaw,
+								product.RemainingTime,
+							)
+							.addLongs(product.TimeStamp.getTime() / 1000)
+							.addBytes(numberOfAliases)
+							.addInts(0xd803, 0xba01)
+							.fill(4 * 4);
+						await mockServerController.sendCommand({
+							command: "SendData",
+							gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							data: ab.toBuffer().toString("base64"),
+						});
 
-						await conn.sendNotification(dataNtf, []);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
 
-						expect(propertyChangedSpy, "ProductAlias").to.be.calledOnceWith(
-							sinon.match({
-								o: product,
-								propertyName: "ProductAlias",
-								propertyValue: dataNtf.ActuatorAliases,
-							}),
-						);
+						expect(propertyChangedSpy, "ProductAlias").to.be.calledOnceWith({
+							o: product,
+							propertyName: "ProductAlias",
+							propertyValue: [new ActuatorAlias(0xd803, 0xba01)],
+						});
 					});
 				});
 
 				describe("GW_STATUS_REQUEST_NTF", function () {
 					describe("Main Info", function () {
-						// prettier-ignore
-						const data = Buffer.from([
-							21, 0x03, 0x07, 
-							// Session
-							0x47, 0x11,
-							// StatusOwner (StatusID)
-							0x01, // User
-							// Node ID
-							0,
-							// RunStatus
-							2,  // ExecutionActive
-							// StatusReply
-							0x01, // Ok
-							// StatusType
-							3, // Main Info
-							// Target
-							0xc7, 0x00,
-							// Current Position
-							0xc0, 0x00,
-							// Remaining Time
-							0, 5,
-							// LastMasterExecutionAddress
-							0, 0, 0, 0,
-							// LastCommandOriginator
-							1 // User
-						]);
-						const dataNtf = new GW_STATUS_REQUEST_NTF(data);
-
 						it("should send notifications for RunStatus", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, product.NodeID, 2, 1, 3)
+									.addInts(0xc700, 0xc000, 5)
+									.addLongs(0)
+									.addBytes(0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWith({
 								o: product,
 								propertyName: "RunStatus",
 								propertyValue: RunStatus.ExecutionActive,
@@ -3430,9 +3639,26 @@ describe("products", function () {
 						});
 
 						it("should send notifications for StatusReply", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, product.NodeID, 2, 1, 3)
+									.addInts(0xc700, 0xc000, 5)
+									.addLongs(0)
+									.addBytes(0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWith({
 								o: product,
 								propertyName: "StatusReply",
 								propertyValue: StatusReply.Ok,
@@ -3440,9 +3666,26 @@ describe("products", function () {
 						});
 
 						it("should send notifications for CurrentPositionRaw", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, product.NodeID, 2, 1, 3)
+									.addInts(0xc700, 0xc000, 5)
+									.addLongs(0)
+									.addBytes(0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWith({
 								o: product,
 								propertyName: "CurrentPositionRaw",
 								propertyValue: 0xc000,
@@ -3450,9 +3693,26 @@ describe("products", function () {
 						});
 
 						it("should send notifications for CurrentPosition", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, product.NodeID, 2, 1, 3)
+									.addInts(0xc700, 0xc000, 5)
+									.addLongs(0)
+									.addBytes(0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "CurrentPosition").to.be.calledWith({
 								o: product,
 								propertyName: "CurrentPosition",
 								propertyValue: 0.040000000000000036,
@@ -3460,9 +3720,26 @@ describe("products", function () {
 						});
 
 						it("should send notifications for TargetPositionRaw", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, product.NodeID, 2, 1, 3)
+									.addInts(0xc700, 0xc000, 5)
+									.addLongs(0)
+									.addBytes(0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWith({
 								o: product,
 								propertyName: "TargetPositionRaw",
 								propertyValue: 0xc700,
@@ -3470,9 +3747,26 @@ describe("products", function () {
 						});
 
 						it("should send notifications for TargetPosition", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, product.NodeID, 2, 1, 3)
+									.addInts(0xc700, 0xc000, 5)
+									.addLongs(0)
+									.addBytes(0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "TargetPosition").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "TargetPosition").to.be.calledWith({
 								o: product,
 								propertyName: "TargetPosition",
 								propertyValue: 0.0050000000000000044,
@@ -3480,9 +3774,26 @@ describe("products", function () {
 						});
 
 						it("should send notifications for RemainingTime", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, product.NodeID, 2, 1, 3)
+									.addInts(0xc700, 0xc000, 5)
+									.addLongs(0)
+									.addBytes(0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "RemainingTime").to.be.calledWith({
 								o: product,
 								propertyName: "RemainingTime",
 								propertyValue: 5,
@@ -3490,84 +3801,56 @@ describe("products", function () {
 						});
 
 						it("shouldn't send any notifications", async function () {
-							// prettier-ignore
-							const data = Buffer.from([
-							23, 0x02, 0x11, 
-                            // Node ID
-                            0,
-                            // State
-                            5,  // Done
-                            // Current Position
-                            0xc8, 0x00,
-                            // Target
-                            0xc8, 0x00,
-                            // FP1 Current Position
-                            0xf7, 0xff,
-                            // FP2 Current Position
-                            0xf7, 0xff,
-                            // FP3 Current Position
-                            0xf7, 0xff,
-                            // FP4 Current Position
-                            0xf7, 0xff,
-                            // Remaining Time
-                            0, 0,
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3
-                        ]);
-							const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(product.State, product.NodeID, product.RunStatus, product.StatusReply, 3)
+									.addInts(
+										product.TargetPositionRaw,
+										product.CurrentPositionRaw,
+										product.RemainingTime,
+									)
+									.addLongs(0)
+									.addBytes(0)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							await conn.sendNotification(dataNtf, []);
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
 
 							expect(propertyChangedSpy).not.to.be.called;
 						});
 					});
 
 					describe("Target Position", function () {
-						// prettier-ignore
-						const data = Buffer.from([
-							62, 0x03, 0x07, 
-							// Session
-							0x47, 0x11,
-							// StatusOwner (StatusID)
-							0x01, // User
-							// Node ID
-							0,
-							// RunStatus
-							2,  // ExecutionActive
-							// StatusReply
-							0x01, // Ok
-							// StatusType
-							0, // Target Position
-							// Status Count
-							2, // 2 parameters
-							// MP data
-							0, 0xC7, 0x00,
-							// FP2 data
-							2, 0xf7, 0xff,
-							// Remaining empty parameters
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0
-						]);
-						const dataNtf = new GW_STATUS_REQUEST_NTF(data);
-
 						it("should send notifications for RunStatus", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, 0, 2, 1, 0, 2, 0)
+									.addInts(0xc700)
+									.addBytes(2)
+									.addInts(0xf7ff)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWith({
 								o: product,
 								propertyName: "RunStatus",
 								propertyValue: RunStatus.ExecutionActive,
@@ -3575,9 +3858,27 @@ describe("products", function () {
 						});
 
 						it("should send notifications for StatusReply", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, 0, 2, 1, 0, 2, 0)
+									.addInts(0xc700)
+									.addBytes(2)
+									.addInts(0xf7ff)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWith({
 								o: product,
 								propertyName: "StatusReply",
 								propertyValue: StatusReply.Ok,
@@ -3585,9 +3886,27 @@ describe("products", function () {
 						});
 
 						it("should send notifications for TargetPositionRaw", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, 0, 2, 1, 0, 2, 0)
+									.addInts(0xc700)
+									.addBytes(2)
+									.addInts(0xf7ff)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "TargetPositionRaw").to.be.calledWith({
 								o: product,
 								propertyName: "TargetPositionRaw",
 								propertyValue: 0xc700,
@@ -3595,9 +3914,27 @@ describe("products", function () {
 						});
 
 						it("should send notifications for TargetPosition", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, 0, 2, 1, 0, 2, 0)
+									.addInts(0xc700)
+									.addBytes(2)
+									.addInts(0xf7ff)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "TargetPosition").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "TargetPosition").to.be.calledWith({
 								o: product,
 								propertyName: "TargetPosition",
 								propertyValue: 0.0050000000000000044,
@@ -3605,84 +3942,61 @@ describe("products", function () {
 						});
 
 						it("shouldn't send any notifications", async function () {
-							// prettier-ignore
-							const data = Buffer.from([
-							23, 0x02, 0x11, 
-                            // Node ID
-                            0,
-                            // State
-                            5,  // Done
-                            // Current Position
-                            0xc8, 0x00,
-                            // Target
-                            0xc8, 0x00,
-                            // FP1 Current Position
-                            0xf7, 0xff,
-                            // FP2 Current Position
-                            0xf7, 0xff,
-                            // FP3 Current Position
-                            0xf7, 0xff,
-                            // FP4 Current Position
-                            0xf7, 0xff,
-                            // Remaining Time
-                            0, 0,
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3
-                        ]);
-							const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(
+										product.State,
+										product.NodeID,
+										product.RunStatus,
+										product.StatusReply,
+										0,
+										2,
+										0,
+									)
+									.addInts(product.TargetPositionRaw)
+									.addBytes(2)
+									.addInts(0xd400)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							await conn.sendNotification(dataNtf, []);
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
 
 							expect(propertyChangedSpy).not.to.be.called;
 						});
 					});
 
 					describe("Current Position", function () {
-						// prettier-ignore
-						const data = Buffer.from([
-							62, 0x03, 0x07, 
-							// Session
-							0x47, 0x11,
-							// StatusOwner (StatusID)
-							0x01, // User
-							// Node ID
-							0,
-							// RunStatus
-							2,  // ExecutionActive
-							// StatusReply
-							0x01, // Ok
-							// StatusType
-							1, // Current Position
-							// Status Count
-							2, // 2 parameters
-							// MP data
-							0, 0xC7, 0x00,
-							// FP2 data
-							2, 0xC7, 0x00,
-							// Remaining empty parameters
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0
-						]);
-						const dataNtf = new GW_STATUS_REQUEST_NTF(data);
-
 						it("should send notifications for RunStatus", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, 0, 2, 1, 1, 2, 0)
+									.addInts(0xc700)
+									.addBytes(2)
+									.addInts(0xc700)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWith({
 								o: product,
 								propertyName: "RunStatus",
 								propertyValue: RunStatus.ExecutionActive,
@@ -3690,9 +4004,27 @@ describe("products", function () {
 						});
 
 						it("should send notifications for StatusReply", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, 0, 2, 1, 1, 2, 0)
+									.addInts(0xc700)
+									.addBytes(2)
+									.addInts(0xc700)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWith({
 								o: product,
 								propertyName: "StatusReply",
 								propertyValue: StatusReply.Ok,
@@ -3700,9 +4032,27 @@ describe("products", function () {
 						});
 
 						it("should send notifications for CurrentPositionRaw", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, 0, 2, 1, 1, 2, 0)
+									.addInts(0xc700)
+									.addBytes(2)
+									.addInts(0xc700)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "CurrentPositionRaw").to.be.calledWith({
 								o: product,
 								propertyName: "CurrentPositionRaw",
 								propertyValue: 0xc700,
@@ -3710,9 +4060,27 @@ describe("products", function () {
 						});
 
 						it("should send notifications for CurrentPosition", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, 0, 2, 1, 1, 2, 0)
+									.addInts(0xc700)
+									.addBytes(2)
+									.addInts(0xc700)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "CurrentPosition").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "CurrentPosition").to.be.calledWith({
 								o: product,
 								propertyName: "CurrentPosition",
 								propertyValue: 0.0050000000000000044,
@@ -3720,9 +4088,27 @@ describe("products", function () {
 						});
 
 						it("should send notifications for FP2CurrentPositionRaw", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, 0, 2, 1, 1, 2, 0)
+									.addInts(0xc700)
+									.addBytes(2)
+									.addInts(0xc700)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "FP2CurrentPositionRaw").to.be.calledWith({
 								o: product,
 								propertyName: "FP2CurrentPositionRaw",
 								propertyValue: 0xc700,
@@ -3730,84 +4116,61 @@ describe("products", function () {
 						});
 
 						it("shouldn't send any notifications", async function () {
-							// prettier-ignore
-							const data = Buffer.from([
-							23, 0x02, 0x11, 
-                            // Node ID
-                            0,
-                            // State
-                            5,  // Done
-                            // Current Position
-                            0xc8, 0x00,
-                            // Target
-                            0xc8, 0x00,
-                            // FP1 Current Position
-                            0xf7, 0xff,
-                            // FP2 Current Position
-                            0xf7, 0xff,
-                            // FP3 Current Position
-                            0xf7, 0xff,
-                            // FP4 Current Position
-                            0xf7, 0xff,
-                            // Remaining Time
-                            0, 0,
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3
-                        ]);
-							const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(
+										product.State,
+										product.NodeID,
+										product.RunStatus,
+										product.StatusReply,
+										0,
+										2,
+										0,
+									)
+									.addInts(product.CurrentPositionRaw)
+									.addBytes(2)
+									.addInts(product.FP2CurrentPositionRaw)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							await conn.sendNotification(dataNtf, []);
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
 
 							expect(propertyChangedSpy).not.to.be.called;
 						});
 					});
 
 					describe("Remaining Time", function () {
-						// prettier-ignore
-						const data = Buffer.from([
-							62, 0x03, 0x07, 
-							// Session
-							0x47, 0x11,
-							// StatusOwner (StatusID)
-							0x01, // User
-							// Node ID
-							0,
-							// RunStatus
-							2,  // ExecutionActive
-							// StatusReply
-							0x01, // Ok
-							// StatusType
-							2, // Remaining time
-							// Status Count
-							2, // 2 parameters
-							// MP data
-							0, 0, 5,
-							// FP2 data
-							2, 0, 7,
-							// Remaining empty parameters
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0,
-							0, 0, 0
-						]);
-						const dataNtf = new GW_STATUS_REQUEST_NTF(data);
-
 						it("should send notifications for RunStatus", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, 0, 2, 1, 2, 2, 0)
+									.addInts(5)
+									.addBytes(2)
+									.addInts(7)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "RunStatus").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "RunStatus").to.be.calledWith({
 								o: product,
 								propertyName: "RunStatus",
 								propertyValue: RunStatus.ExecutionActive,
@@ -3815,9 +4178,27 @@ describe("products", function () {
 						});
 
 						it("should send notifications for StatusReply", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, 0, 2, 1, 2, 2, 0)
+									.addInts(5)
+									.addBytes(2)
+									.addInts(7)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "StatusReply").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "StatusReply").to.be.calledWith({
 								o: product,
 								propertyName: "StatusReply",
 								propertyValue: StatusReply.Ok,
@@ -3825,9 +4206,27 @@ describe("products", function () {
 						});
 
 						it("should send notifications for RemainingTime", async function () {
-							await conn.sendNotification(dataNtf, []);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(1, 0, 2, 1, 2, 2, 0)
+									.addInts(5)
+									.addBytes(2)
+									.addInts(7)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							expect(propertyChangedSpy, "RemainingTime").to.be.calledWithMatch({
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
+
+							expect(propertyChangedSpy, "RemainingTime").to.be.calledWith({
 								o: product,
 								propertyName: "RemainingTime",
 								propertyValue: 5,
@@ -3835,33 +4234,33 @@ describe("products", function () {
 						});
 
 						it("shouldn't send any notifications", async function () {
-							// prettier-ignore
-							const data = Buffer.from([
-							23, 0x02, 0x11, 
-                            // Node ID
-                            0,
-                            // State
-                            5,  // Done
-                            // Current Position
-                            0xc8, 0x00,
-                            // Target
-                            0xc8, 0x00,
-                            // FP1 Current Position
-                            0xf7, 0xff,
-                            // FP2 Current Position
-                            0xf7, 0xff,
-                            // FP3 Current Position
-                            0xf7, 0xff,
-                            // FP4 Current Position
-                            0xf7, 0xff,
-                            // Remaining Time
-                            0, 0,
-                            // Time stamp
-                            0x4f, 0x00, 0x3f, 0xf3
-                        ]);
-							const dataNtf = new GW_NODE_STATE_POSITION_CHANGED_NTF(data);
+							const waitPromise = new Promise((resolve) => {
+								conn.on(resolve, [GatewayCommand.GW_STATUS_REQUEST_NTF]);
+							});
+							await mockServerController.sendCommand({
+								command: "SendData",
+								gatewayCommand: GatewayCommand.GW_STATUS_REQUEST_NTF,
+								data: new ArrayBuilder()
+									.addInts(0x4711)
+									.addBytes(
+										product.State,
+										product.NodeID,
+										product.RunStatus,
+										product.StatusReply,
+										2,
+										2,
+										0,
+									)
+									.addInts(product.RemainingTime)
+									.addBytes(2)
+									.addInts(0)
+									.fill(15 * 3)
+									.toBuffer()
+									.toString("base64"),
+							});
 
-							await conn.sendNotification(dataNtf, []);
+							// Just let the asynchronous stuff run before our checks
+							await waitPromise;
 
 							expect(propertyChangedSpy).not.to.be.called;
 						});

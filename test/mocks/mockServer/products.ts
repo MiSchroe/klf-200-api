@@ -33,8 +33,6 @@ export interface Product {
 	ProductAlias: ActuatorAlias[];
 	RunStatus: RunStatus;
 	StatusReply: StatusReply;
-	LimitationMinRaw: number[];
-	LimitationMaxRaw: number[];
 	TargetPositionRaw: number;
 	FP1TargetPositionRaw: number;
 	FP2TargetPositionRaw: number;

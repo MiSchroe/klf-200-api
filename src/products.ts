@@ -948,11 +948,13 @@ export class Product extends Component {
 		}
 	}
 
-	private async waitForLimitationFinished(
+	private setupWaitForLimitationFinished(
 		sessionID: number,
 		limitationType: LimitationType | LimitationType[],
 		parameterActive: ParameterActive,
-	): Promise<void> {
+		resolve: (value: void | PromiseLike<void>) => void,
+		reject: (reason?: any) => void,
+	): Disposable {
 		const limitationTypes: LimitationType[] = [];
 
 		if (Array.isArray(limitationType)) {
@@ -961,54 +963,50 @@ export class Product extends Component {
 			limitationTypes.push(limitationType);
 		}
 
-		return new Promise((resolve, reject) => {
-			try {
-				// Listen to notifications:
-				const dispose = this.Connection.on(
-					async (frame) => {
-						try {
-							if (frame instanceof GW_LIMITATION_STATUS_NTF && frame.SessionID === sessionID) {
-								if (frame.NodeID !== this.NodeID) {
-									throw new Error(`Unexpected node ID: ${frame.NodeID}`);
-								}
-								if (frame.ParameterID !== parameterActive) {
-									throw new Error(`Unexpected parameter ID: ${frame.ParameterID}`);
-								}
-								if (limitationTypes.indexOf(LimitationType.MinimumLimitation) !== -1) {
-									if (frame.LimitationValueMin !== this._limitationMinRaw[frame.ParameterID]) {
-										this._limitationMinRaw[frame.ParameterID] = frame.LimitationValueMin;
-										await this.propertyChanged("LimitationMinRaw");
-									}
-								}
-								if (limitationTypes.indexOf(LimitationType.MaximumLimitation) !== -1) {
-									if (frame.LimitationValueMax !== this._limitationMaxRaw[frame.ParameterID]) {
-										this._limitationMaxRaw[frame.ParameterID] = frame.LimitationValueMax;
-										await this.propertyChanged("LimitationMaxRaw");
-									}
-								}
-								if (frame.LimitationOriginator !== this._limitationOriginator[frame.ParameterID]) {
-									this._limitationOriginator[frame.ParameterID] = frame.LimitationOriginator;
-									await this.propertyChanged("LimitationOriginator");
-								}
-								if (frame.LimitationTime !== this._limitationTimeRaw[frame.ParameterID]) {
-									this._limitationTimeRaw[frame.ParameterID] = frame.LimitationTime;
-									await this.propertyChanged("LimitationTimeRaw");
-								}
-							} else if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === sessionID) {
-								dispose?.dispose();
-								resolve();
-							}
-						} catch (error) {
-							dispose?.dispose();
-							reject(error);
+		// Listen to notifications:
+		const dispose = this.Connection.on(
+			async (frame) => {
+				try {
+					if (frame instanceof GW_LIMITATION_STATUS_NTF && frame.SessionID === sessionID) {
+						if (frame.NodeID !== this.NodeID) {
+							throw new Error(`Unexpected node ID: ${frame.NodeID}`);
 						}
-					},
-					[GatewayCommand.GW_LIMITATION_STATUS_NTF, GatewayCommand.GW_SESSION_FINISHED_NTF],
-				);
-			} catch (error) {
-				reject(error);
-			}
-		});
+						if (frame.ParameterID !== parameterActive) {
+							throw new Error(`Unexpected parameter ID: ${frame.ParameterID}`);
+						}
+						if (limitationTypes.indexOf(LimitationType.MinimumLimitation) !== -1) {
+							if (frame.LimitationValueMin !== this._limitationMinRaw[frame.ParameterID]) {
+								this._limitationMinRaw[frame.ParameterID] = frame.LimitationValueMin;
+								await this.propertyChanged("LimitationMinRaw");
+							}
+						}
+						if (limitationTypes.indexOf(LimitationType.MaximumLimitation) !== -1) {
+							if (frame.LimitationValueMax !== this._limitationMaxRaw[frame.ParameterID]) {
+								this._limitationMaxRaw[frame.ParameterID] = frame.LimitationValueMax;
+								await this.propertyChanged("LimitationMaxRaw");
+							}
+						}
+						if (frame.LimitationOriginator !== this._limitationOriginator[frame.ParameterID]) {
+							this._limitationOriginator[frame.ParameterID] = frame.LimitationOriginator;
+							await this.propertyChanged("LimitationOriginator");
+						}
+						if (frame.LimitationTime !== this._limitationTimeRaw[frame.ParameterID]) {
+							this._limitationTimeRaw[frame.ParameterID] = frame.LimitationTime;
+							await this.propertyChanged("LimitationTimeRaw");
+						}
+					} else if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === sessionID) {
+						dispose?.dispose();
+						resolve();
+					}
+				} catch (error) {
+					dispose?.dispose();
+					reject(error);
+				}
+			},
+			[GatewayCommand.GW_LIMITATION_STATUS_NTF, GatewayCommand.GW_SESSION_FINISHED_NTF],
+		);
+
+		return dispose;
 	}
 
 	/**
@@ -1023,15 +1021,26 @@ export class Product extends Component {
 		parameterActive: ParameterActive = ParameterActive.MP,
 	): Promise<void> {
 		try {
-			const confirmationFrame = <GW_GET_LIMITATION_STATUS_CFM>(
-				await this.Connection.sendFrameAsync(
-					new GW_GET_LIMITATION_STATUS_REQ(this.NodeID, limitationType, parameterActive),
-				)
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+			const waitForLimitationFinishedPromise = new Promise((res, rej) => {
+				resolve = res;
+				reject = rej;
+			});
+
+			const frameToSend = new GW_GET_LIMITATION_STATUS_REQ(this.NodeID, limitationType, parameterActive);
+			this.setupWaitForLimitationFinished(
+				frameToSend.SessionID,
+				limitationType,
+				parameterActive,
+				resolve!,
+				reject!,
 			);
+
+			const confirmationFrame = <GW_GET_LIMITATION_STATUS_CFM>await this.Connection.sendFrameAsync(frameToSend);
 			if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
-				return Promise.resolve(
-					this.waitForLimitationFinished(confirmationFrame.SessionID, limitationType, parameterActive),
-				);
+				await waitForLimitationFinishedPromise;
 			} else {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
@@ -1060,27 +1069,34 @@ export class Product extends Component {
 		priorityLevel: PriorityLevel = PriorityLevel.ComfortLevel2,
 	): Promise<void> {
 		try {
-			const confirmationFrame = <GW_SET_LIMITATION_CFM>(
-				await this.Connection.sendFrameAsync(
-					new GW_SET_LIMITATION_REQ(
-						this.NodeID,
-						minValue,
-						maxValue,
-						limitationTime,
-						priorityLevel,
-						commandOriginator,
-						parameterActive,
-					),
-				)
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+			const waitForLimitationFinishedPromise = new Promise((res, rej) => {
+				resolve = res;
+				reject = rej;
+			});
+
+			const frameToSend = new GW_SET_LIMITATION_REQ(
+				this.NodeID,
+				minValue,
+				maxValue,
+				limitationTime,
+				priorityLevel,
+				commandOriginator,
+				parameterActive,
 			);
+			this.setupWaitForLimitationFinished(
+				frameToSend.SessionID,
+				[LimitationType.MinimumLimitation, LimitationType.MaximumLimitation],
+				parameterActive,
+				resolve!,
+				reject!,
+			);
+
+			const confirmationFrame = <GW_SET_LIMITATION_CFM>await this.Connection.sendFrameAsync(frameToSend);
 			if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
-				return Promise.resolve(
-					this.waitForLimitationFinished(
-						confirmationFrame.SessionID,
-						[LimitationType.MinimumLimitation, LimitationType.MaximumLimitation],
-						parameterActive,
-					),
-				);
+				await waitForLimitationFinishedPromise;
 			} else {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
@@ -1587,7 +1603,12 @@ export class Products {
 				if (dispose) {
 					dispose.dispose();
 				}
-				return Promise.reject(new Error(getAllNodesInformation.getError()));
+				if (
+					getAllNodesInformation.Status !==
+					GW_COMMON_STATUS.ERROR /* No nodes available -> not a real error */
+				) {
+					return Promise.reject(new Error(getAllNodesInformation.getError()));
+				}
 			}
 
 			// Wait for nodes information notifications, but only, if there are nodes

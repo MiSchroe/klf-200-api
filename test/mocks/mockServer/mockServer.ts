@@ -20,6 +20,7 @@ import {
 	NodeVariation,
 	SLIPProtocol,
 	SceneInformationEntry,
+	StatusType,
 	Velocity,
 	readZString,
 } from "../../../src";
@@ -28,6 +29,7 @@ import { ArrayBuilder } from "./ArrayBuilder";
 import { AcknowledgeMessage, CommandWithGuid } from "./commands";
 import { Gateway } from "./gateway";
 import { Group } from "./groups";
+import { Limitation } from "./limitations";
 import { Product } from "./products";
 import { Scene } from "./scenes";
 
@@ -95,6 +97,7 @@ const __dirname = dirname(__filename);
 	const products: Map<number, Product> = new Map();
 	const groups: Map<number, Group> = new Map();
 	const scenes: Map<number, Scene> = new Map();
+	const limitations: Map<string, Limitation> = new Map();
 	type confirmationData = {
 		gatewayConfirmation: GatewayCommand;
 		data: string;
@@ -212,6 +215,16 @@ const __dirname = dirname(__filename);
 				acknowledgeMessageACK(message);
 				break;
 
+			case "SetLimitation":
+				limitations.set(`${message.limitation.NodeID}:${message.limitation.ParameterID}`, message.limitation);
+				acknowledgeMessageACK(message);
+				break;
+
+			case "DeleteLimitation":
+				limitations.delete(`${message.nodeId}:${message.parameterId}`);
+				acknowledgeMessageACK(message);
+				break;
+
 			case "SendData":
 				const data_SendData = Buffer.from(message.data, "base64");
 				tlsSocket?.write(
@@ -227,6 +240,7 @@ const __dirname = dirname(__filename);
 				products.clear();
 				groups.clear();
 				scenes.clear();
+				limitations.clear();
 				confirmations.clear();
 				acknowledgeMessageACK(message);
 				break;
@@ -438,16 +452,20 @@ const __dirname = dirname(__filename);
 				return [addCommandAndLengthToBuffer(GatewayCommand.GW_HOUSE_STATUS_MONITOR_DISABLE_CFM, [])];
 
 			// Products
-			case GatewayCommand.GW_GET_ALL_NODES_INFORMATION_REQ:
-				const returnBuffers_GW_GET_ALL_NODES_INFORMATION_REQ: Buffer[] = [
+			case GatewayCommand.GW_GET_ALL_NODES_INFORMATION_REQ: {
+				if (products.size === 0) {
+					return [addCommandAndLengthToBuffer(GatewayCommand.GW_GET_ALL_NODES_INFORMATION_CFM, [1, 0])];
+				}
+				const returnBuffers: Buffer[] = [
 					addCommandAndLengthToBuffer(GatewayCommand.GW_GET_ALL_NODES_INFORMATION_CFM, [
 						GW_COMMON_STATUS.SUCCESS,
 						products.size,
 					]),
 				];
 				for (const product of products.values()) {
-					const ab = new ArrayBuilder();
-					ab.addBytes(product.NodeID)
+					const numberOfAliases = product.ProductAlias.length;
+					const ab = new ArrayBuilder()
+						.addBytes(product.NodeID)
 						.addInts(product.Order)
 						.addBytes(product.Placement)
 						.addString(product.Name, 64)
@@ -458,12 +476,13 @@ const __dirname = dirname(__filename);
 							product.ProductType,
 							product.NodeVariation,
 							product.PowerSaveMode,
+							0,
 							...Buffer.from(product.SerialNumber, "base64"),
 							product.State,
 						)
 						.addInts(
 							product.CurrentPositionRaw,
-							product.CurrentPositionRaw,
+							product.TargetPositionRaw,
 							product.FP1CurrentPositionRaw,
 							product.FP2CurrentPositionRaw,
 							product.FP3CurrentPositionRaw,
@@ -471,18 +490,24 @@ const __dirname = dirname(__filename);
 							product.RemainingTime,
 						)
 						.addLongs(Date.parse(product.TimeStamp) / 1000)
-						.addBytes(0)
-						.fill(5 * 4);
-					returnBuffers_GW_GET_ALL_NODES_INFORMATION_REQ.push(
+						.addBytes(numberOfAliases);
+					for (const ProductAlias of product.ProductAlias) {
+						ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+					}
+					if (numberOfAliases < 5) {
+						ab.fill((5 - numberOfAliases) * 4);
+					}
+					returnBuffers.push(
 						addCommandAndLengthToBuffer(GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, ab.toBuffer()),
 					);
 				}
-				returnBuffers_GW_GET_ALL_NODES_INFORMATION_REQ.push(
+				returnBuffers.push(
 					addCommandAndLengthToBuffer(GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF, []),
 				);
-				return returnBuffers_GW_GET_ALL_NODES_INFORMATION_REQ;
+				return returnBuffers;
+			}
 
-			case GatewayCommand.GW_GET_NODE_INFORMATION_REQ:
+			case GatewayCommand.GW_GET_NODE_INFORMATION_REQ: {
 				const nodeID = frameBuffer[3];
 				const product = products.get(nodeID);
 
@@ -494,75 +519,365 @@ const __dirname = dirname(__filename);
 						]),
 					];
 				} else {
+					const numberOfAliases = product.ProductAlias.length;
+					const ab = new ArrayBuilder()
+						.addBytes(product.NodeID)
+						.addInts(product.Order)
+						.addBytes(product.Placement)
+						.addString(product.Name, 64)
+						.addBytes(product.Velocity)
+						.addInts((product.TypeID << 6) | product.SubType)
+						.addBytes(
+							product.ProductGroup,
+							product.ProductType,
+							product.NodeVariation,
+							product.PowerSaveMode,
+							0,
+							...Buffer.from(product.SerialNumber, "base64"),
+							product.State,
+						)
+						.addInts(
+							product.CurrentPositionRaw,
+							product.TargetPositionRaw,
+							product.FP1CurrentPositionRaw,
+							product.FP2CurrentPositionRaw,
+							product.FP3CurrentPositionRaw,
+							product.FP4CurrentPositionRaw,
+							product.RemainingTime,
+						)
+						.addLongs(Date.parse(product.TimeStamp) / 1000)
+						.addBytes(numberOfAliases);
+					for (const ProductAlias of product.ProductAlias) {
+						ab.addInts(ProductAlias.AliasType, ProductAlias.AliasValue);
+					}
+					if (numberOfAliases < 5) {
+						ab.fill((5 - numberOfAliases) * 4);
+					}
 					return [
 						addCommandAndLengthToBuffer(GatewayCommand.GW_GET_NODE_INFORMATION_CFM, [
 							GW_COMMON_STATUS.SUCCESS,
 							nodeID,
 						]),
+						addCommandAndLengthToBuffer(GatewayCommand.GW_GET_NODE_INFORMATION_NTF, ab.toBuffer()),
+					];
+				}
+			}
+
+			case GatewayCommand.GW_SET_NODE_NAME_REQ: {
+				const nodeId = frameBuffer.readUInt8(3);
+				const name = readZString(frameBuffer.subarray(4, 68));
+				const product = products.get(nodeId);
+				if (product === undefined) {
+					return [addCommandAndLengthToBuffer(GatewayCommand.GW_SET_NODE_NAME_CFM, [2, nodeId])];
+				} else {
+					return [
+						addCommandAndLengthToBuffer(GatewayCommand.GW_SET_NODE_NAME_CFM, [0, nodeId]),
 						addCommandAndLengthToBuffer(
-							GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+							GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
 							new ArrayBuilder()
-								.addBytes(product.NodeID)
+								.addBytes(nodeId)
+								.addString(name, 64)
 								.addInts(product.Order)
-								.addBytes(product.Placement)
-								.addString(product.Name, 64)
-								.addBytes(product.Velocity)
-								.addInts((product.TypeID << 6) | product.SubType)
-								.addBytes(
-									product.ProductGroup,
-									product.ProductType,
-									product.NodeVariation,
-									product.PowerSaveMode,
-									...Buffer.from(product.SerialNumber, "base64"),
-									product.State,
-								)
-								.addInts(
-									product.CurrentPositionRaw,
-									product.CurrentPositionRaw,
-									product.FP1CurrentPositionRaw,
-									product.FP2CurrentPositionRaw,
-									product.FP3CurrentPositionRaw,
-									product.FP4CurrentPositionRaw,
-									product.RemainingTime,
-								)
-								.addLongs(Date.parse(product.TimeStamp) / 1000)
-								.addBytes(0)
-								.fill(5 * 4)
+								.addBytes(product.Placement, product.NodeVariation)
 								.toBuffer(),
 						),
 					];
 				}
+			}
 
-			case GatewayCommand.GW_GET_LIMITATION_STATUS_REQ:
-				return [
+			case GatewayCommand.GW_SET_NODE_VARIATION_REQ: {
+				const nodeId = frameBuffer.readUInt8(3);
+				const nodeVariation = frameBuffer.readUInt8(4);
+				const product = products.get(nodeId);
+				if (product === undefined) {
+					return [addCommandAndLengthToBuffer(GatewayCommand.GW_SET_NODE_VARIATION_CFM, [2, nodeId])];
+				} else {
+					return [
+						addCommandAndLengthToBuffer(GatewayCommand.GW_SET_NODE_VARIATION_CFM, [0, nodeId]),
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
+							new ArrayBuilder()
+								.addBytes(nodeId)
+								.addString(product.Name, 64)
+								.addInts(product.Order)
+								.addBytes(product.Placement, nodeVariation)
+								.toBuffer(),
+						),
+					];
+				}
+			}
+
+			case GatewayCommand.GW_SET_NODE_ORDER_AND_PLACEMENT_REQ: {
+				const nodeId = frameBuffer.readUInt8(3);
+				const order = frameBuffer.readUInt16BE(4);
+				const placement = frameBuffer.readUInt8(6);
+				const product = products.get(nodeId);
+				if (product === undefined) {
+					return [
+						addCommandAndLengthToBuffer(GatewayCommand.GW_SET_NODE_ORDER_AND_PLACEMENT_CFM, [2, nodeId]),
+					];
+				} else {
+					return [
+						addCommandAndLengthToBuffer(GatewayCommand.GW_SET_NODE_ORDER_AND_PLACEMENT_CFM, [0, nodeId]),
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
+							new ArrayBuilder()
+								.addBytes(nodeId)
+								.addString(product.Name, 64)
+								.addInts(order)
+								.addBytes(placement, product.NodeVariation)
+								.toBuffer(),
+						),
+					];
+				}
+			}
+
+			case GatewayCommand.GW_STATUS_REQUEST_REQ: {
+				const sessionId = frameBuffer.readUInt16BE(3);
+				const numberOfNodes = frameBuffer.readUInt8(5);
+				const nodes = Array.from(frameBuffer.subarray(6, 6 + numberOfNodes));
+				const statusType = frameBuffer.readUInt8(26);
+				const fp = getFunctionalParamters(frameBuffer.readUInt8(27), frameBuffer.readUInt8(28));
+				const resultBuffers: Buffer[] = [];
+
+				resultBuffers.push(
 					addCommandAndLengthToBuffer(
-						GatewayCommand.GW_GET_LIMITATION_STATUS_CFM,
-						new ArrayBuilder()
-							.addInts(getSession(frameBuffer))
-							.addBytes(GW_INVERSE_STATUS.SUCCESS)
-							.toBuffer(),
+						GatewayCommand.GW_STATUS_REQUEST_CFM,
+						new ArrayBuilder().addInts(sessionId).addBytes(1).toBuffer(),
 					),
-					// addCommandAndLengthToBuffer(GatewayCommand.GW_LIMITATION_STATUS_NTF, new ArrayBuilder()
-					// .addInts(getSession(frameBuffer))
-					// .addBytes(frameBuffer.readInt8(5), frameBuffer.readInt8(6))
-					// .addInts(0, 0xC800)
-					// .addBytes(0, 253)
-					// .toBuffer()
-					// ),
+				);
+
+				if (statusType === StatusType.RequestMainInfo) {
+					for (const nodeId of nodes) {
+						const product = products.get(nodeId)!;
+						resultBuffers.push(
+							addCommandAndLengthToBuffer(
+								GatewayCommand.GW_STATUS_REQUEST_NTF,
+								new ArrayBuilder()
+									.addInts(sessionId)
+									.addBytes(13, product.NodeID, product.RunStatus, product.StatusReply, statusType)
+									.addInts(
+										product.TargetPositionRaw,
+										product.CurrentPositionRaw,
+										product.RemainingTime,
+									)
+									.addLongs(0)
+									.addBytes(13)
+									.toBuffer(),
+							),
+						);
+					}
+				} else {
+					for (const nodeId of nodes) {
+						const product = products.get(nodeId)!;
+						const ab = new ArrayBuilder()
+							.addInts(sessionId)
+							.addBytes(
+								13,
+								product.NodeID,
+								product.RunStatus,
+								product.StatusReply,
+								statusType,
+								fp.length + 1,
+								0,
+							)
+							.addInts(
+								statusType === StatusType.RequestCurrentPosition
+									? product.CurrentPositionRaw
+									: statusType === StatusType.RequestTargetPosition
+										? product.TargetPositionRaw
+										: product.RemainingTime,
+							);
+						for (const functionalParameter of fp) {
+							ab.addBytes(functionalParameter + 1);
+							switch (functionalParameter) {
+								case 0:
+									ab.addInts(
+										statusType === StatusType.RequestCurrentPosition
+											? product.FP1CurrentPositionRaw
+											: statusType === StatusType.RequestTargetPosition
+												? product.FP1TargetPositionRaw
+												: product.RemainingTime,
+									);
+									break;
+
+								case 1:
+									ab.addInts(
+										statusType === StatusType.RequestCurrentPosition
+											? product.FP2CurrentPositionRaw
+											: statusType === StatusType.RequestTargetPosition
+												? product.FP2TargetPositionRaw
+												: product.RemainingTime,
+									);
+									break;
+
+								case 2:
+									ab.addInts(
+										statusType === StatusType.RequestCurrentPosition
+											? product.FP3CurrentPositionRaw
+											: statusType === StatusType.RequestTargetPosition
+												? product.FP3TargetPositionRaw
+												: product.RemainingTime,
+									);
+									break;
+
+								case 3:
+									ab.addInts(
+										statusType === StatusType.RequestCurrentPosition
+											? product.FP4CurrentPositionRaw
+											: statusType === StatusType.RequestTargetPosition
+												? product.FP4TargetPositionRaw
+												: product.RemainingTime,
+									);
+									break;
+
+								default:
+									throw new Error(`Only FP1-4 are supported. You tried ${functionalParameter + 1}.`);
+							}
+						}
+
+						resultBuffers.push(
+							addCommandAndLengthToBuffer(GatewayCommand.GW_STATUS_REQUEST_NTF, ab.toBuffer()),
+						);
+					}
+				}
+
+				// GW_SESSION_FINISHED_NTF
+				resultBuffers.push(
 					addCommandAndLengthToBuffer(
 						GatewayCommand.GW_SESSION_FINISHED_NTF,
-						new ArrayBuilder().addInts(getSession(frameBuffer)).toBuffer(),
+						new ArrayBuilder().addInts(sessionId).toBuffer(),
 					),
-				];
+				);
+
+				return resultBuffers;
+			}
+
+			case GatewayCommand.GW_GET_LIMITATION_STATUS_REQ: {
+				const sessionId = frameBuffer.readUInt16BE(3);
+				const numberOfNodes = frameBuffer.readUInt8(5);
+				const nodes = Array.from(frameBuffer.subarray(6, 6 + numberOfNodes));
+				const parameterId = frameBuffer.readUInt8(26);
+				const limitationType = frameBuffer.readUInt8(27);
+				if (nodes.some((node) => !products.has(node))) {
+					return [
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_GET_LIMITATION_STATUS_CFM,
+							new ArrayBuilder().addInts(sessionId).addBytes(GW_INVERSE_STATUS.ERROR).toBuffer(),
+						),
+					];
+				}
+				const resultBuffers: Buffer[] = [];
+				resultBuffers.push(
+					addCommandAndLengthToBuffer(
+						GatewayCommand.GW_GET_LIMITATION_STATUS_CFM,
+						new ArrayBuilder().addInts(sessionId).addBytes(GW_INVERSE_STATUS.SUCCESS).toBuffer(),
+					),
+				);
+				for (const node of nodes) {
+					const limitation = limitations.get(`${node}:${parameterId}`);
+					if (limitation !== undefined) {
+						resultBuffers.push(
+							addCommandAndLengthToBuffer(
+								GatewayCommand.GW_LIMITATION_STATUS_NTF,
+								new ArrayBuilder()
+									.addInts(sessionId)
+									.addBytes(node, parameterId)
+									.addInts(
+										limitationType === 0 ? limitation.MinValue : 0,
+										limitationType === 1 ? limitation.MaxValue : 0,
+									)
+									.addBytes(limitation.LimitationOriginator, limitation.LimitationTime)
+									.toBuffer(),
+							),
+						);
+					}
+				}
+
+				// GW_SESSION_FINISHED_NTF
+				resultBuffers.push(
+					addCommandAndLengthToBuffer(
+						GatewayCommand.GW_SESSION_FINISHED_NTF,
+						new ArrayBuilder().addInts(sessionId).toBuffer(),
+					),
+				);
+
+				return resultBuffers;
+			}
+
+			case GatewayCommand.GW_SET_LIMITATION_REQ: {
+				const sessionId = frameBuffer.readUInt16BE(3);
+				const commandOriginator = frameBuffer.readUInt8(5);
+				// const priorityLevel = frameBuffer.readUInt8(6);
+				const numberOfNodes = frameBuffer.readUInt8(7);
+				const nodes = Array.from(frameBuffer.subarray(8, 8 + numberOfNodes));
+				const parameterId = frameBuffer.readUInt8(28);
+				const limitationValueMin = frameBuffer.readUInt16BE(29);
+				const limitationValueMax = frameBuffer.readUInt16BE(31);
+				const limitationTime = frameBuffer.readUInt8(33);
+				if (nodes.some((node) => !products.has(node))) {
+					return [
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_SET_LIMITATION_CFM,
+							new ArrayBuilder().addInts(sessionId).addBytes(GW_INVERSE_STATUS.ERROR).toBuffer(),
+						),
+					];
+				}
+				const resultBuffers: Buffer[] = [];
+				resultBuffers.push(
+					addCommandAndLengthToBuffer(
+						GatewayCommand.GW_SET_LIMITATION_CFM,
+						new ArrayBuilder().addInts(sessionId).addBytes(GW_INVERSE_STATUS.SUCCESS).toBuffer(),
+					),
+				);
+				for (const node of nodes) {
+					const limitation = limitations.get(`${node}:${parameterId}`);
+					if (limitation !== undefined) {
+						resultBuffers.push(
+							addCommandAndLengthToBuffer(
+								GatewayCommand.GW_LIMITATION_STATUS_NTF,
+								new ArrayBuilder()
+									.addInts(sessionId)
+									.addBytes(node, parameterId)
+									.addInts(limitationValueMin, limitationValueMax)
+									.addBytes(commandOriginator, limitationTime)
+									.toBuffer(),
+							),
+						);
+					}
+					const product = products.get(node);
+					resultBuffers.push(
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+							new ArrayBuilder()
+								.addInts(sessionId)
+								.addBytes(commandOriginator, node, parameterId)
+								.addInts(getProductCurrentParameter(product!, parameterId))
+								.addBytes(2, 1, 0, 0, 0, 0)
+								.toBuffer(),
+						),
+					);
+				}
+
+				// GW_SESSION_FINISHED_NTF
+				resultBuffers.push(
+					addCommandAndLengthToBuffer(
+						GatewayCommand.GW_SESSION_FINISHED_NTF,
+						new ArrayBuilder().addInts(sessionId).toBuffer(),
+					),
+				);
+
+				return resultBuffers;
+			}
 
 			// Scenes
-			case GatewayCommand.GW_GET_SCENE_LIST_REQ:
+			case GatewayCommand.GW_GET_SCENE_LIST_REQ: {
 				let remainingScenes = scenes.size;
-				const returnBuffers_GW_GET_SCENE_LIST_REQ: Buffer[] = [
+				const returnBuffers: Buffer[] = [
 					addCommandAndLengthToBuffer(GatewayCommand.GW_GET_SCENE_LIST_CFM, [remainingScenes]),
 				];
 				if (remainingScenes === 0) {
-					returnBuffers_GW_GET_SCENE_LIST_REQ.push(
+					returnBuffers.push(
 						addCommandAndLengthToBuffer(
 							GatewayCommand.GW_GET_SCENE_LIST_NTF,
 							new ArrayBuilder().addBytes(0, 0).toBuffer(),
@@ -590,14 +905,15 @@ const __dirname = dirname(__filename);
 								ab.addBytes(scene.SceneID).addString(scene.Name, 64);
 							}
 							ab.addBytes(remainingScenes);
-							returnBuffers_GW_GET_SCENE_LIST_REQ.push(
+							returnBuffers.push(
 								addCommandAndLengthToBuffer(GatewayCommand.GW_GET_SCENE_LIST_NTF, ab.toBuffer()),
 							);
 						});
 				}
-				return returnBuffers_GW_GET_SCENE_LIST_REQ;
+				return returnBuffers;
+			}
 
-			case GatewayCommand.GW_GET_SCENE_INFORMATION_REQ:
+			case GatewayCommand.GW_GET_SCENE_INFORMATION_REQ: {
 				const sceneID = frameBuffer[3];
 				const scene = scenes.get(sceneID);
 
@@ -609,7 +925,7 @@ const __dirname = dirname(__filename);
 						]),
 					];
 				} else {
-					const returnBuffers_GW_GET_SCENE_INFORMATION_REQ: Buffer[] = [
+					const returnBuffers: Buffer[] = [
 						addCommandAndLengthToBuffer(GatewayCommand.GW_GET_SCENE_INFORMATION_CFM, [
 							GW_COMMON_STATUS.SUCCESS,
 							sceneID,
@@ -642,12 +958,13 @@ const __dirname = dirname(__filename);
 							);
 						}
 						ab.addBytes(remainingNodes);
-						returnBuffers_GW_GET_SCENE_INFORMATION_REQ.push(
+						returnBuffers.push(
 							addCommandAndLengthToBuffer(GatewayCommand.GW_GET_SCENE_INFORMATION_NTF, ab.toBuffer()),
 						);
 					});
-					return returnBuffers_GW_GET_SCENE_INFORMATION_REQ;
+					return returnBuffers;
 				}
+			}
 
 			case GatewayCommand.GW_ACTIVATE_SCENE_REQ: {
 				const sessionId = frameBuffer.readUInt16BE(3);
@@ -770,8 +1087,8 @@ const __dirname = dirname(__filename);
 						groups.size,
 					]),
 				];
-				const useFilter: boolean = frameBuffer.readInt8(3) !== 0;
-				const groupType: GroupType = frameBuffer.readInt8(4);
+				const useFilter: boolean = frameBuffer.readUInt8(3) !== 0;
+				const groupType: GroupType = frameBuffer.readUInt8(4);
 				let groupNtfSent: boolean = false;
 				for (const group of groups.values()) {
 					if (!useFilter || groupType === group.GroupType) {
@@ -834,7 +1151,7 @@ const __dirname = dirname(__filename);
 				return returnBuffers_GW_GET_ALL_GROUPS_INFORMATION_REQ;
 
 			case GatewayCommand.GW_SET_GROUP_INFORMATION_REQ: {
-				const groupId = frameBuffer.readInt8(3);
+				const groupId = frameBuffer.readUInt8(3);
 				if (!groups.has(groupId)) {
 					return [
 						addCommandAndLengthToBuffer(GatewayCommand.GW_ERROR_NTF, [GW_ERROR.InvalidSystemTableIndex]),
@@ -845,7 +1162,7 @@ const __dirname = dirname(__filename);
 
 				// Check Group Type and revision
 				const revision = frameBuffer.readUInt16BE(100);
-				const groupType = frameBuffer.readInt8(73);
+				const groupType = frameBuffer.readUInt8(73);
 				if (
 					groupId === 0 ||
 					groupId === 1 ||
@@ -857,10 +1174,10 @@ const __dirname = dirname(__filename);
 					return [addCommandAndLengthToBuffer(GatewayCommand.GW_SET_GROUP_INFORMATION_CFM, [1, groupId])];
 				} else {
 					group.Order = frameBuffer.readUInt16BE(4);
-					group.Placement = frameBuffer.readInt8(6);
+					group.Placement = frameBuffer.readUInt8(6);
 					group.Name = readZString(frameBuffer.subarray(7, 71));
-					group.Velocity = frameBuffer.readInt8(71);
-					group.NodeVariation = frameBuffer.readInt8(72);
+					group.Velocity = frameBuffer.readUInt8(71);
+					group.NodeVariation = frameBuffer.readUInt8(72);
 					group.Nodes = bitArrayToArray(frameBuffer.subarray(75, 100));
 					return [
 						addCommandAndLengthToBuffer(GatewayCommand.GW_SET_GROUP_INFORMATION_CFM, [0, groupId]),
@@ -881,7 +1198,7 @@ const __dirname = dirname(__filename);
 			}
 
 			case GatewayCommand.GW_GET_GROUP_INFORMATION_REQ: {
-				const groupId = frameBuffer.readInt8(3);
+				const groupId = frameBuffer.readUInt8(3);
 				if (!groups.has(groupId)) {
 					return [
 						addCommandAndLengthToBuffer(
@@ -914,15 +1231,15 @@ const __dirname = dirname(__filename);
 
 			case GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_REQ: {
 				const sessionId = frameBuffer.readUInt16BE(3);
-				const commandOriginator = frameBuffer.readInt8(5);
-				// const priorityLevel = frameBuffer.readInt8(6);
-				const groupId = frameBuffer.readInt8(7);
-				const parameterId = frameBuffer.readInt8(8);
+				const commandOriginator = frameBuffer.readUInt8(5);
+				// const priorityLevel = frameBuffer.readUInt8(6);
+				const groupId = frameBuffer.readUInt8(7);
+				const parameterId = frameBuffer.readUInt8(8);
 				const position = frameBuffer.readUInt16BE(9);
-				// const velocity = frameBuffer.readInt8(11);
-				// const priorityLevelLock = frameBuffer.readInt8(12);
+				// const velocity = frameBuffer.readUInt8(11);
+				// const priorityLevelLock = frameBuffer.readUInt8(12);
 				// const PL = frameBuffer.readUInt16BE(13);
-				// const lockTime = frameBuffer.readInt8(15);
+				// const lockTime = frameBuffer.readUInt8(15);
 
 				if (!groups.has(groupId)) {
 					return [
@@ -995,43 +1312,147 @@ const __dirname = dirname(__filename);
 				return finalResults;
 			}
 
-			// case GatewayCommand.GW_COMMAND_SEND_REQ:
-			//     const sessionID = getSession(frameBuffer);
-			//     products[frameBuffer[45]].CurrentPositionRaw = frameBuffer.readUInt16BE(10);
+			case GatewayCommand.GW_COMMAND_SEND_REQ: {
+				const sessionId = frameBuffer.readUInt16BE(3);
+				const commandOriginator = frameBuffer.readUInt8(5);
+				// const priorityLevel = frameBuffer.readUInt8(6);
+				const parameterId = frameBuffer.readUInt8(7);
+				const fpi1 = frameBuffer.readUInt8(8);
+				const fpi2 = frameBuffer.readUInt8(9);
+				const functionalParameters = getFunctionalParamters(fpi1, fpi2);
+				const functionalParamtersValues = Array.from(frameBuffer.subarray(10, 10 + 17 * 2));
+				const nodeCount = frameBuffer.readUInt8(44);
+				const nodes = Array.from(frameBuffer.subarray(45, 45 + nodeCount));
+				// const priorityLevelLock = frameBuffer.readUInt8(65);
+				// const PL = frameBuffer.readUInt16BE(66);
+				// const lockTime = frameBuffer.readUInt8(68);
 
-			//     let ab = new ArrayBuilder()
-			//         .addInts(sessionID)
-			//         .addBytes(CommandStatus.CommandAccepted);
-			//     const returnBuffers_GW_COMMAND_SEND_REQ: Buffer[] = [addCommandAndLengthToBuffer(GatewayCommand.GW_COMMAND_SEND_CFM, ab.toBuffer())];
-			//     returnBuffers_GW_COMMAND_SEND_REQ.push(addCommandAndLengthToBuffer(GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF, new ArrayBuilder()
-			//         .addBytes(frameBuffer[45], NodeOperatingState.Done)
-			//         .addInts(products[frameBuffer[45]].CurrentPositionRaw,
-			//             products[frameBuffer[45]].CurrentPositionRaw,
-			//             products[frameBuffer[45]].FP1CurrentPositionRaw,
-			//             products[frameBuffer[45]].FP2CurrentPositionRaw,
-			//             products[frameBuffer[45]].FP3CurrentPositionRaw,
-			//             products[frameBuffer[45]].FP4CurrentPositionRaw,
-			//             0)
-			//         .addLongs(products[frameBuffer[45]].TimeStamp.getTime() / 1000)
-			//         .toBuffer()));
-			//     ab = new ArrayBuilder()
-			//         .addInts(sessionID)
-			//         .addBytes(StatusOwner.User, frameBuffer[45], 0)
-			//         .addInts(frameBuffer.readUInt16BE(10))
-			//         .addBytes(RunStatus.ExecutionCompleted, StatusReply.Ok)
-			//         .addLongs(0);
-			//     returnBuffers_GW_COMMAND_SEND_REQ.push(addCommandAndLengthToBuffer(GatewayCommand.GW_COMMAND_RUN_STATUS_NTF, ab.toBuffer()));
-			//     returnBuffers_GW_COMMAND_SEND_REQ.push(addCommandAndLengthToBuffer(GatewayCommand.GW_SESSION_FINISHED_NTF, new ArrayBuilder().addInts(sessionID).toBuffer()));
+				if (nodes.some((nodeId) => !products.has(nodeId))) {
+					return [
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_COMMAND_SEND_CFM,
+							new ArrayBuilder().addInts(sessionId).addBytes(0).toBuffer(),
+						),
+					];
+				} else {
+					const returnBuffers: Buffer[] = [];
+					returnBuffers.push(
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_COMMAND_SEND_CFM,
+							new ArrayBuilder().addInts(sessionId).addBytes(1).toBuffer(),
+						),
+					);
+					// One GW_COMMAND_RUN_STATUS_NTF for each product in group
+					for (const productId of nodes) {
+						const product = products.get(productId);
+						returnBuffers.push(
+							addCommandAndLengthToBuffer(
+								GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								new ArrayBuilder()
+									.addInts(sessionId)
+									.addBytes(commandOriginator, productId, parameterId)
+									.addInts(getProductCurrentParameter(product!, parameterId))
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer(),
+							),
+						);
+					}
 
-			//     return returnBuffers_GW_COMMAND_SEND_REQ;
+					// One set of GW_COMMAND_REMAINING_TIME_NTF and GW_COMMAND_RUN_STATUS_NTF
+					for (const productId of nodes) {
+						const product = products.get(productId);
+						setProductCurrentParameter(product!, 0, functionalParamtersValues[0]);
+						for (const fp of functionalParameters) {
+							setProductCurrentParameter(product!, fp, functionalParamtersValues[fp]);
+						}
+						returnBuffers.push(
+							addCommandAndLengthToBuffer(
+								GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF,
+								new ArrayBuilder()
+									.addInts(sessionId)
+									.addBytes(productId, parameterId)
+									.addInts(42)
+									.toBuffer(),
+							),
+							addCommandAndLengthToBuffer(
+								GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								new ArrayBuilder()
+									.addInts(sessionId)
+									.addBytes(commandOriginator, productId, parameterId)
+									.addInts(getProductCurrentParameter(product!, parameterId))
+									.addBytes(0, 1, 0, 0, 0, 0)
+									.toBuffer(),
+							),
+						);
+					}
+
+					// Add GW_SESSION_FINISHED_NTF
+					returnBuffers.push(
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_SESSION_FINISHED_NTF,
+							new ArrayBuilder().addInts(sessionId).toBuffer(),
+						),
+					);
+
+					return returnBuffers;
+				}
+			}
+
+			case GatewayCommand.GW_WINK_SEND_REQ: {
+				const sessionId = frameBuffer.readUInt16BE(3);
+				const commandOriginator = frameBuffer.readUInt8(5);
+				// const priorityLevel = frameBuffer.readUInt8(6);
+				// const winkState = frameBuffer.readUInt8(7);
+				// const winkTime = frameBuffer.readUInt8(8);
+				const nodeCount = frameBuffer.readUInt8(9);
+				const nodes = Array.from(frameBuffer.subarray(10, 10 + nodeCount));
+
+				if (nodes.some((nodeId) => !products.has(nodeId))) {
+					return [
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_WINK_SEND_CFM,
+							new ArrayBuilder().addInts(sessionId).addBytes(0).toBuffer(),
+						),
+					];
+				} else {
+					const returnBuffers: Buffer[] = [];
+					returnBuffers.push(
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_WINK_SEND_CFM,
+							new ArrayBuilder().addInts(sessionId).addBytes(1).toBuffer(),
+						),
+					);
+					// One GW_COMMAND_RUN_STATUS_NTF for each product in group
+					for (const productId of nodes) {
+						const product = products.get(productId);
+						returnBuffers.push(
+							addCommandAndLengthToBuffer(
+								GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+								new ArrayBuilder()
+									.addInts(sessionId)
+									.addBytes(commandOriginator, productId, 0)
+									.addInts(getProductCurrentParameter(product!, 0))
+									.addBytes(2, 1, 0, 0, 0, 0)
+									.toBuffer(),
+							),
+						);
+					}
+
+					// Add GW_WINK_SEND_NTF
+					returnBuffers.push(
+						addCommandAndLengthToBuffer(
+							GatewayCommand.GW_WINK_SEND_NTF,
+							new ArrayBuilder().addInts(sessionId).toBuffer(),
+						),
+					);
+
+					return returnBuffers;
+				}
+			}
 
 			default:
 				return [addCommandAndLengthToBuffer(GatewayCommand.GW_ERROR_NTF, [255])];
 		}
-	}
-
-	function getSession(buf: Buffer): number {
-		return buf.readUInt16BE(3);
 	}
 
 	function addCommandAndLengthToBuffer(command: GatewayCommand, buffer: ArrayLike<number>): Buffer {
@@ -1093,5 +1514,16 @@ const __dirname = dirname(__filename);
 			default:
 				throw new Error(`Only MP and FP1-4 are supported. You tried ${parameterId}.`);
 		}
+	}
+
+	function getFunctionalParamters(FPI1: number, FPI2: number): number[] {
+		const result: number[] = [];
+		for (let index = 1; index < 9; index++) {
+			if (FPI1 & 0x80) result.push(index);
+		}
+		for (let index = 9; index < 17; index++) {
+			if (FPI2 & 0x80) result.push(index);
+		}
+		return result;
 	}
 })();

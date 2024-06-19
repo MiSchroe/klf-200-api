@@ -1,6 +1,7 @@
 import { GatewayCommand } from "../../../src";
 import { Gateway } from "./gateway";
 import { Group } from "./groups";
+import { Limitation } from "./limitations";
 import { Product } from "./products";
 import { Scene } from "./scenes";
 
@@ -40,6 +41,17 @@ export type CommandDeleteScene = {
 export type CommandSetGateway = {
 	command: "SetGateway";
 	gateway: Partial<Gateway>;
+};
+
+export type CommandSetLimitation = {
+	command: "SetLimitation";
+	limitation: Limitation;
+};
+
+export type CommandDeleteLimitation = {
+	command: "DeleteLimitation";
+	nodeId: number;
+	parameterId: number;
 };
 
 export type CommandSendData = {
@@ -84,6 +96,8 @@ export type Command =
 	| CommandSetScene
 	| CommandDeleteScene
 	| CommandSetGateway
+	| CommandSetLimitation
+	| CommandDeleteLimitation
 	| CommandReset
 	| CommandKill
 	| CommandSendData
