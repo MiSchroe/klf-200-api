@@ -164,12 +164,15 @@ describe("scenes", function () {
 					const onChangedSceneSpy = sinon.spy();
 					const disposable = sc.onChangedScene(onChangedSceneSpy);
 					try {
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
+						});
 						await mockServerController.sendCommand({
 							command: "SendData",
 							gatewayCommand: GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF,
 							data: Buffer.from([1, 1]).toString("base64"),
 						});
-						await waitForNotificationHandler(conn);
+						await waitPromise;
 						// Wait for outstanding promises to finish
 						await new Promise((resolve) => {
 							setImmediate(resolve);
@@ -201,12 +204,15 @@ describe("scenes", function () {
 					const onRemovedSceneSpy = sinon.spy();
 					const disposable = sc.onRemovedScene(onRemovedSceneSpy);
 					try {
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
+						});
 						await mockServerController.sendCommand({
 							command: "SendData",
 							gatewayCommand: GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF,
 							data: Buffer.from([0, 1]).toString("base64"),
 						});
-						await waitForNotificationHandler(conn);
+						await waitPromise;
 						// Wait for outstanding promises to finish
 						await new Promise((resolve) => {
 							setImmediate(resolve);
@@ -536,12 +542,11 @@ describe("scenes", function () {
 						await setupHouseMockup(mockServerController);
 						const sc = await Scenes.createScenesAsync(conn);
 						const scene = sc.Scenes[1];
-						const sessionId = getNextSessionID() + 1;
 						await mockServerController.sendCommand({
 							command: "SetConfirmation",
 							gatewayCommand: GatewayCommand.GW_GET_SCENE_INFORMATION_REQ,
-							gatewayConfirmation: GatewayCommand.GW_STOP_SCENE_CFM,
-							data: new ArrayBuilder().addBytes(1).addInts(sessionId).toBuffer().toString("base64"),
+							gatewayConfirmation: GatewayCommand.GW_GET_SCENE_INFORMATION_CFM,
+							data: new ArrayBuilder().addBytes(1, scene.SceneID).toBuffer().toString("base64"),
 						});
 						await expect(scene.refreshAsync()).to.be.rejectedWith(Error);
 					} finally {
