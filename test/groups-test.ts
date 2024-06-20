@@ -22,7 +22,6 @@ import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder";
 import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands";
 import { MockServerController } from "./mocks/mockServerController";
 import { setupHouseMockup } from "./setupHouse";
-import { waitForNotificationHandler } from "./testUtitlites";
 
 const testHOST = "localhost";
 const __dirname = import.meta.dirname;
@@ -298,6 +297,9 @@ describe("groups", function () {
 						groupRemovedSpy(groupID);
 					});
 
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
+					});
 					await mockServerController.sendCommand({
 						command: "SendData",
 						gatewayCommand: GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF,
@@ -305,7 +307,7 @@ describe("groups", function () {
 					});
 
 					// Let the asynchronous stuff run and give the notification some time
-					await waitForNotificationHandler(conn);
+					await waitPromise;
 
 					expect(
 						groupRemovedSpy,
@@ -348,6 +350,9 @@ describe("groups", function () {
 						groupChangedSpy(groupID);
 					});
 
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
+					});
 					await mockServerController.sendCommand({
 						command: "SendData",
 						gatewayCommand: GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF,
@@ -365,7 +370,7 @@ describe("groups", function () {
 					});
 
 					// Let the asynchronous stuff run and give the notification some time
-					await waitForNotificationHandler(conn);
+					await waitPromise;
 
 					expect(
 						groupChangedSpy,
@@ -399,6 +404,9 @@ describe("groups", function () {
 						groupChangedSpy(groupID);
 					});
 
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF]);
+					});
 					await mockServerController.sendCommand({
 						command: "SendData",
 						gatewayCommand: GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF,
@@ -416,7 +424,7 @@ describe("groups", function () {
 					});
 
 					// Let the asynchronous stuff run and give the notification some time
-					await waitForNotificationHandler(conn);
+					await waitPromise;
 
 					expect(
 						groupChangedSpy,
@@ -927,6 +935,9 @@ describe("groups", function () {
 
 				describe("GW_GET_GROUP_INFORMATION_NTF", function () {
 					it("should send notifications for Name", async function () {
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
+						});
 						await mockServerController.sendCommand({
 							command: "SendData",
 							gatewayCommand: GatewayCommand.GW_GET_GROUP_INFORMATION_NTF,
@@ -943,7 +954,7 @@ describe("groups", function () {
 						});
 
 						// Let the asynchronous stuff run and give the notification some time
-						await waitForNotificationHandler(conn);
+						await waitPromise;
 
 						expect(propertyChangedSpy, "Name").to.be.calledWith({
 							o: group,
