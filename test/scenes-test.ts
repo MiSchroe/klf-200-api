@@ -7,11 +7,11 @@ import { join } from "path";
 import sinon, { SinonSandbox } from "sinon";
 import sinonChai from "sinon-chai";
 import { Connection, GW_ERROR, GW_SESSION_FINISHED_NTF, GatewayCommand, Scene, Scenes, getNextSessionID } from "../src";
-import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder";
-import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands";
-import { MockServerController } from "./mocks/mockServerController";
-import { setupHouseMockup } from "./setupHouse";
-import { waitForNotificationHandler } from "./testUtitlites";
+import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder.js";
+import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
+import { MockServerController } from "./mocks/mockServerController.js";
+import { setupHouseMockup } from "./setupHouse.js";
+import { waitForNotificationHandler } from "./testUtitlites.js";
 
 const testHOST = "localhost";
 const __dirname = import.meta.dirname;

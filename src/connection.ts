@@ -12,10 +12,9 @@ import {
 	connect,
 } from "tls";
 import { fileURLToPath } from "url";
-import { GW_PASSWORD_ENTER_CFM, GW_PASSWORD_ENTER_REQ } from ".";
-import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF";
-import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ";
-import { KLF200SocketProtocol } from "./KLF200-API/KLF200SocketProtocol";
+import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF.js";
+import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ.js";
+import { KLF200SocketProtocol } from "./KLF200-API/KLF200SocketProtocol.js";
 import {
 	GW_COMMON_STATUS,
 	GW_FRAME_COMMAND_REQ,
@@ -24,8 +23,9 @@ import {
 	IGW_FRAME_RCV,
 	IGW_FRAME_REQ,
 	KLF200_PORT,
-} from "./KLF200-API/common";
-import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent";
+} from "./KLF200-API/common.js";
+import { GW_PASSWORD_ENTER_CFM, GW_PASSWORD_ENTER_REQ } from "./index.js";
+import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
 
 const debug = debugModule(`klf-200-api:${parse(import.meta.filename).name}`);
 

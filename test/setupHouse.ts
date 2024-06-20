@@ -12,10 +12,10 @@ import {
 	StatusReply,
 	Velocity,
 } from "../src";
-import { Group } from "./mocks/mockServer/groups";
-import { Product } from "./mocks/mockServer/products";
-import { Scene } from "./mocks/mockServer/scenes";
-import { MockServerController } from "./mocks/mockServerController";
+import { Group } from "./mocks/mockServer/groups.js";
+import { Product } from "./mocks/mockServer/products.js";
+import { Scene } from "./mocks/mockServer/scenes.js";
+import { MockServerController } from "./mocks/mockServerController.js";
 
 export async function setupHouseMockup(mockServerController: MockServerController): Promise<void> {
 	// Setup products

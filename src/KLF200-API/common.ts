@@ -1,4 +1,4 @@
-import { getNextSessionID } from "./GW_COMMAND";
+import { getNextSessionID } from "./GW_COMMAND.js";
 
 ("use strict");
 

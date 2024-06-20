@@ -3,9 +3,9 @@
 import debugModule from "debug";
 import { Socket } from "net";
 import { parse } from "path";
-import { Disposable, Listener, TypedEvent } from "../utils/TypedEvent";
-import { FrameRcvFactory } from "./FrameRcvFactory";
-import { IGW_FRAME_RCV, KLF200Protocol, SLIPProtocol, SLIP_END } from "./common";
+import { Disposable, Listener, TypedEvent } from "../utils/TypedEvent.js";
+import { FrameRcvFactory } from "./FrameRcvFactory.js";
+import { IGW_FRAME_RCV, KLF200Protocol, SLIPProtocol, SLIP_END } from "./common.js";
 
 const debug = debugModule(`klf-200-api:${parse(import.meta.filename).name}`);
 

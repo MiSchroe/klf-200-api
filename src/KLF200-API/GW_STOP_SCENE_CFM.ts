@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common";
-import { ActivateSceneStatus } from "./GW_SCENES";
+import { GW_FRAME_CFM } from "./common.js";
+import { ActivateSceneStatus } from "./GW_SCENES.js";
 
 export class GW_STOP_SCENE_CFM extends GW_FRAME_CFM {
 	public readonly SessionID: number;

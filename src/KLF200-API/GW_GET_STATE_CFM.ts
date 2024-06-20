@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common";
+import { GW_FRAME_CFM } from "./common.js";
 
 export enum GatewayState {
 	TestMode = 0,

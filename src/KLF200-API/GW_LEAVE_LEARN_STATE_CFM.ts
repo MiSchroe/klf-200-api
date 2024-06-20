@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_CFM, GW_INVERSE_STATUS } from "./common";
+import { GW_FRAME_CFM, GW_INVERSE_STATUS } from "./common.js";
 
 export class GW_LEAVE_LEARN_STATE_CFM extends GW_FRAME_CFM {
 	public readonly Status: GW_INVERSE_STATUS;

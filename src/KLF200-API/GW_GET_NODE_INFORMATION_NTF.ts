@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_NTF, readZString } from "./common";
+import { GW_FRAME_NTF, readZString } from "./common.js";
 import {
 	ActuatorAlias,
 	ActuatorType,
@@ -9,7 +9,7 @@ import {
 	PowerSaveMode,
 	splitActuatorType,
 	Velocity,
-} from "./GW_SYSTEMTABLE_DATA";
+} from "./GW_SYSTEMTABLE_DATA.js";
 
 export class GW_GET_NODE_INFORMATION_NTF extends GW_FRAME_NTF {
 	public readonly NodeID: number;

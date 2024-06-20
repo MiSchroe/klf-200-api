@@ -1,9 +1,9 @@
 import { GatewayCommand } from "../../../src";
-import { Gateway } from "./gateway";
-import { Group } from "./groups";
-import { Limitation } from "./limitations";
-import { Product } from "./products";
-import { Scene } from "./scenes";
+import { Gateway } from "./gateway.js";
+import { Group } from "./groups.js";
+import { Limitation } from "./limitations.js";
+import { Product } from "./products.js";
+import { Scene } from "./scenes.js";
 
 export type CommandSetProduct = {
 	command: "SetProduct";

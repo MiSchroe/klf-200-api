@@ -25,13 +25,13 @@ import {
 	readZString,
 } from "../../../src";
 import { bitArrayToArray } from "../../../src/utils/BitArray";
-import { ArrayBuilder } from "./ArrayBuilder";
-import { AcknowledgeMessage, CommandWithGuid } from "./commands";
-import { Gateway } from "./gateway";
-import { Group } from "./groups";
-import { Limitation } from "./limitations";
-import { Product } from "./products";
-import { Scene } from "./scenes";
+import { ArrayBuilder } from "./ArrayBuilder.js";
+import { AcknowledgeMessage, CommandWithGuid } from "./commands.js";
+import { Gateway } from "./gateway.js";
+import { Group } from "./groups.js";
+import { Limitation } from "./limitations.js";
+import { Product } from "./products.js";
+import { Scene } from "./scenes.js";
 
 const debug = debugModule(`${path.parse(import.meta.filename).name}:server`);
 

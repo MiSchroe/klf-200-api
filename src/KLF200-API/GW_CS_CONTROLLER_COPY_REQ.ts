@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_REQ } from "./common";
-import { ControllerCopyMode } from "./GW_SYSTEMTABLE_DATA";
+import { GW_FRAME_REQ } from "./common.js";
+import { ControllerCopyMode } from "./GW_SYSTEMTABLE_DATA.js";
 
 export class GW_CS_CONTROLLER_COPY_REQ extends GW_FRAME_REQ {
 	constructor(readonly ControllerCopyMode: ControllerCopyMode) {

@@ -14,8 +14,8 @@ import {
 	GatewayState,
 	GatewaySubState,
 } from "../src";
-import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands";
-import { MockServerController } from "./mocks/mockServerController";
+import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
+import { MockServerController } from "./mocks/mockServerController.js";
 
 use(chaiAsPromised);
 

@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common";
-import { ParameterActive, CommandOriginator } from "./GW_COMMAND";
+import { GW_FRAME_NTF } from "./common.js";
+import { CommandOriginator, ParameterActive } from "./GW_COMMAND.js";
 
 export class GW_LIMITATION_STATUS_NTF extends GW_FRAME_NTF {
 	public readonly SessionID: number;

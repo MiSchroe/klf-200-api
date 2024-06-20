@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_NTF, readZString } from "./common";
+import { GW_FRAME_NTF, readZString } from "./common.js";
 
 export type SceneListEntry = {
 	SceneID: number;

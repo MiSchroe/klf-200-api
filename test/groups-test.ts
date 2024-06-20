@@ -18,10 +18,10 @@ import {
 	Velocity,
 	getNextSessionID,
 } from "../src";
-import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder";
-import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands";
-import { MockServerController } from "./mocks/mockServerController";
-import { setupHouseMockup } from "./setupHouse";
+import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder.js";
+import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
+import { MockServerController } from "./mocks/mockServerController.js";
+import { setupHouseMockup } from "./setupHouse.js";
 
 const testHOST = "localhost";
 const __dirname = import.meta.dirname;

@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_REQ } from "./common";
-import { GroupType } from "./GW_GROUPS";
+import { GW_FRAME_REQ } from "./common.js";
+import { GroupType } from "./GW_GROUPS.js";
 
 export class GW_GET_ALL_GROUPS_INFORMATION_REQ extends GW_FRAME_REQ {
 	constructor(GroupType?: GroupType) {

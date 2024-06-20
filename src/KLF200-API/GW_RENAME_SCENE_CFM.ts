@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common";
-import { RenameSceneStatus } from "./GW_SCENES";
+import { GW_FRAME_CFM } from "./common.js";
+import { RenameSceneStatus } from "./GW_SCENES.js";
 
 export class GW_RENAME_SCENE_CFM extends GW_FRAME_CFM {
 	public readonly Status: RenameSceneStatus;

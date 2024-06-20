@@ -1,4 +1,4 @@
-import { ActuatorType } from "./GW_SYSTEMTABLE_DATA";
+import { ActuatorType } from "./GW_SYSTEMTABLE_DATA.js";
 
 ("use strict");
 

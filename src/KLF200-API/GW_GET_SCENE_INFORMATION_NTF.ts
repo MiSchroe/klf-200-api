@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_NTF, readZString } from "./common";
-import { ParameterActive } from "./GW_COMMAND";
+import { GW_FRAME_NTF, readZString } from "./common.js";
+import { ParameterActive } from "./GW_COMMAND.js";
 
 export type SceneInformationEntry = {
 	NodeID: number;

@@ -11,8 +11,8 @@ import { fileURLToPath } from "url";
 import { GW_ERROR, GW_GET_STATE_REQ, GW_PASSWORD_ENTER_REQ, GW_SET_UTC_REQ, KLF200SocketProtocol } from "../src";
 import { GW_COMMON_STATUS, GatewayCommand } from "../src/KLF200-API/common";
 import { Connection } from "../src/connection";
-import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands";
-import { MockServerController } from "./mocks/mockServerController";
+import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
+import { MockServerController } from "./mocks/mockServerController.js";
 
 const debug = debugModule(`${parse(import.meta.filename).name}`);
 

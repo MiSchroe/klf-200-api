@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common";
+import { GW_FRAME_NTF } from "./common.js";
 
 export class GW_WINK_SEND_NTF extends GW_FRAME_NTF {
 	public readonly SessionID: number;

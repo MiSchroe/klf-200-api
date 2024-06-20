@@ -5,7 +5,7 @@ import chaiAsPromised from "chai-as-promised";
 import { ChildProcess } from "child_process";
 import sinon, { SinonSandbox } from "sinon";
 import sinonChai from "sinon-chai";
-import { MockServerController } from "./mocks/mockServerController";
+import { MockServerController } from "./mocks/mockServerController.js";
 
 use(chaiAsPromised);
 use(sinonChai);

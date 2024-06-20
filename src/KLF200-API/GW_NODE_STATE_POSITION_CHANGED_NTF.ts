@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common";
-import { NodeOperatingState } from "./GW_SYSTEMTABLE_DATA";
+import { GW_FRAME_NTF } from "./common.js";
+import { NodeOperatingState } from "./GW_SYSTEMTABLE_DATA.js";
 
 export class GW_NODE_STATE_POSITION_CHANGED_NTF extends GW_FRAME_NTF {
 	public readonly NodeID: number;

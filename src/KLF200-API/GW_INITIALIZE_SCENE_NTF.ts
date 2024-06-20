@@ -1,8 +1,8 @@
 "use strict";
 
-import { bitArrayToArray } from "../utils/BitArray";
-import { InitializeSceneNotificationStatus } from "./GW_SCENES";
-import { GW_FRAME_NTF } from "./common";
+import { bitArrayToArray } from "../utils/BitArray.js";
+import { InitializeSceneNotificationStatus } from "./GW_SCENES.js";
+import { GW_FRAME_NTF } from "./common.js";
 
 export class GW_INITIALIZE_SCENE_NTF extends GW_FRAME_NTF {
 	public readonly Status: InitializeSceneNotificationStatus;

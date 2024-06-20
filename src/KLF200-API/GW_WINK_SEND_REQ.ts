@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_COMMAND_REQ } from "./common";
-import { CommandOriginator, PriorityLevel } from "./GW_COMMAND";
+import { GW_FRAME_COMMAND_REQ } from "./common.js";
+import { CommandOriginator, PriorityLevel } from "./GW_COMMAND.js";
 
 export class GW_WINK_SEND_REQ extends GW_FRAME_COMMAND_REQ {
 	constructor(

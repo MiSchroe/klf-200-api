@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common";
+import { GW_FRAME_CFM } from "./common.js";
 
 export class GW_GET_ACTIVATION_LOG_HEADER_CFM extends GW_FRAME_CFM {
 	public readonly MaxLineCount: number;

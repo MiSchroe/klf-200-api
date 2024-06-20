@@ -1,9 +1,9 @@
 "use strict";
 
-import { CommandOriginator, ParameterActive, PriorityLevel } from "./GW_COMMAND";
-import { ContactInputAssignment, LockPriorityLevel } from "./GW_CONTACTINPUT";
-import { Velocity } from "./GW_SYSTEMTABLE_DATA";
-import { GW_FRAME_CFM } from "./common";
+import { CommandOriginator, ParameterActive, PriorityLevel } from "./GW_COMMAND.js";
+import { ContactInputAssignment, LockPriorityLevel } from "./GW_CONTACTINPUT.js";
+import { Velocity } from "./GW_SYSTEMTABLE_DATA.js";
+import { GW_FRAME_CFM } from "./common.js";
 
 export type ContactInputObject = {
 	ContactInputID: number;

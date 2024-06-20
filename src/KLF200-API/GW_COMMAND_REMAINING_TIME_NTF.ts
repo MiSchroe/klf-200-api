@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common";
-import { ParameterActive } from "./GW_COMMAND";
+import { GW_FRAME_NTF } from "./common.js";
+import { ParameterActive } from "./GW_COMMAND.js";
 
 export class GW_COMMAND_REMAINING_TIME_NTF extends GW_FRAME_NTF {
 	public readonly SessionID: number;

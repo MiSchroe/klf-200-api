@@ -29,10 +29,10 @@ import {
 	getNextSessionID,
 } from "../src";
 import { PropertyChangedEvent } from "../src/utils/PropertyChangedEvent";
-import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder";
-import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands";
-import { MockServerController } from "./mocks/mockServerController";
-import { setupHouseMockup } from "./setupHouse";
+import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder.js";
+import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
+import { MockServerController } from "./mocks/mockServerController.js";
+import { setupHouseMockup } from "./setupHouse.js";
 
 const testHOST = "localhost";
 const __dirname = import.meta.dirname;
@@ -295,8 +295,14 @@ describe("products", function () {
 							FP4TargetPositionRaw: 0xd400,
 						},
 					});
+					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_GET_STATE_REQ,
+						gatewayConfirmation: GatewayCommand.GW_GET_STATE_CFM,
+						data: Buffer.from([2, 1, 0, 0, 0, 0]).toString("base64"),
+					});
 					const waitPromise = new Promise((resolve) => {
-						conn.on(resolve, [GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
+						conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
 					});
 					await mockServerController.sendCommand({
 						command: "SendData",
@@ -310,6 +316,7 @@ describe("products", function () {
 
 					// Just let the asynchronous stuff run before our checks
 					await waitPromise;
+					await new Promise((resolve) => setImmediate(resolve));
 
 					expect(
 						productAddedSpy,

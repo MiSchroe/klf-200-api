@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common";
-import { ModeStatus } from "./GW_COMMAND";
+import { GW_FRAME_CFM } from "./common.js";
+import { ModeStatus } from "./GW_COMMAND.js";
 
 export class GW_MODE_SEND_CFM extends GW_FRAME_CFM {
 	public readonly SessionID: number;

@@ -1,6 +1,5 @@
 ﻿"use strict";
 
-import { setTimeout } from "timers/promises";
 import {
 	CommandOriginator,
 	CommandStatus,
@@ -16,36 +15,38 @@ import {
 	StatusType,
 	convertPosition,
 	convertPositionRaw,
-} from "./KLF200-API/GW_COMMAND";
-import { GW_COMMAND_REMAINING_TIME_NTF } from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF";
-import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF";
-import { GW_COMMAND_SEND_CFM } from "./KLF200-API/GW_COMMAND_SEND_CFM";
-import { GW_COMMAND_SEND_REQ } from "./KLF200-API/GW_COMMAND_SEND_REQ";
-import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "./KLF200-API/GW_CS_SYSTEM_TABLE_UPDATE_NTF";
-import { GW_GET_ALL_NODES_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_CFM";
-import { GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF";
-import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF";
-import { GW_GET_ALL_NODES_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_REQ";
-import { GW_GET_LIMITATION_STATUS_CFM } from "./KLF200-API/GW_GET_LIMITATION_STATUS_CFM";
-import { GW_GET_LIMITATION_STATUS_REQ } from "./KLF200-API/GW_GET_LIMITATION_STATUS_REQ";
-import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM";
-import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
-import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
-import { GW_LIMITATION_STATUS_NTF } from "./KLF200-API/GW_LIMITATION_STATUS_NTF";
-import { GW_NODE_INFORMATION_CHANGED_NTF } from "./KLF200-API/GW_NODE_INFORMATION_CHANGED_NTF";
-import { GW_NODE_STATE_POSITION_CHANGED_NTF } from "./KLF200-API/GW_NODE_STATE_POSITION_CHANGED_NTF";
-import { GW_SESSION_FINISHED_NTF } from "./KLF200-API/GW_SESSION_FINISHED_NTF";
-import { GW_SET_LIMITATION_CFM } from "./KLF200-API/GW_SET_LIMITATION_CFM";
-import { GW_SET_LIMITATION_REQ } from "./KLF200-API/GW_SET_LIMITATION_REQ";
-import { GW_SET_NODE_NAME_CFM } from "./KLF200-API/GW_SET_NODE_NAME_CFM";
-import { GW_SET_NODE_NAME_REQ } from "./KLF200-API/GW_SET_NODE_NAME_REQ";
-import { GW_SET_NODE_ORDER_AND_PLACEMENT_CFM } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_CFM";
-import { GW_SET_NODE_ORDER_AND_PLACEMENT_REQ } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_REQ";
-import { GW_SET_NODE_VARIATION_CFM } from "./KLF200-API/GW_SET_NODE_VARIATION_CFM";
-import { GW_SET_NODE_VARIATION_REQ } from "./KLF200-API/GW_SET_NODE_VARIATION_REQ";
-import { GW_STATUS_REQUEST_CFM } from "./KLF200-API/GW_STATUS_REQUEST_CFM";
-import { GW_STATUS_REQUEST_NTF } from "./KLF200-API/GW_STATUS_REQUEST_NTF";
-import { GW_STATUS_REQUEST_REQ } from "./KLF200-API/GW_STATUS_REQUEST_REQ";
+} from "./KLF200-API/GW_COMMAND.js";
+import { GW_COMMAND_REMAINING_TIME_NTF } from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF.js";
+import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF.js";
+import { GW_COMMAND_SEND_CFM } from "./KLF200-API/GW_COMMAND_SEND_CFM.js";
+import { GW_COMMAND_SEND_REQ } from "./KLF200-API/GW_COMMAND_SEND_REQ.js";
+import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "./KLF200-API/GW_CS_SYSTEM_TABLE_UPDATE_NTF.js";
+import { GW_GET_ALL_NODES_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_CFM.js";
+import { GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF.js";
+import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF.js";
+import { GW_GET_ALL_NODES_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_REQ.js";
+import { GW_GET_LIMITATION_STATUS_CFM } from "./KLF200-API/GW_GET_LIMITATION_STATUS_CFM.js";
+import { GW_GET_LIMITATION_STATUS_REQ } from "./KLF200-API/GW_GET_LIMITATION_STATUS_REQ.js";
+import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM.js";
+import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF.js";
+import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ.js";
+import { GW_GET_STATE_CFM, GatewayState, GatewaySubState } from "./KLF200-API/GW_GET_STATE_CFM.js";
+import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ.js";
+import { GW_LIMITATION_STATUS_NTF } from "./KLF200-API/GW_LIMITATION_STATUS_NTF.js";
+import { GW_NODE_INFORMATION_CHANGED_NTF } from "./KLF200-API/GW_NODE_INFORMATION_CHANGED_NTF.js";
+import { GW_NODE_STATE_POSITION_CHANGED_NTF } from "./KLF200-API/GW_NODE_STATE_POSITION_CHANGED_NTF.js";
+import { GW_SESSION_FINISHED_NTF } from "./KLF200-API/GW_SESSION_FINISHED_NTF.js";
+import { GW_SET_LIMITATION_CFM } from "./KLF200-API/GW_SET_LIMITATION_CFM.js";
+import { GW_SET_LIMITATION_REQ } from "./KLF200-API/GW_SET_LIMITATION_REQ.js";
+import { GW_SET_NODE_NAME_CFM } from "./KLF200-API/GW_SET_NODE_NAME_CFM.js";
+import { GW_SET_NODE_NAME_REQ } from "./KLF200-API/GW_SET_NODE_NAME_REQ.js";
+import { GW_SET_NODE_ORDER_AND_PLACEMENT_CFM } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_CFM.js";
+import { GW_SET_NODE_ORDER_AND_PLACEMENT_REQ } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_REQ.js";
+import { GW_SET_NODE_VARIATION_CFM } from "./KLF200-API/GW_SET_NODE_VARIATION_CFM.js";
+import { GW_SET_NODE_VARIATION_REQ } from "./KLF200-API/GW_SET_NODE_VARIATION_REQ.js";
+import { GW_STATUS_REQUEST_CFM } from "./KLF200-API/GW_STATUS_REQUEST_CFM.js";
+import { GW_STATUS_REQUEST_NTF } from "./KLF200-API/GW_STATUS_REQUEST_NTF.js";
+import { GW_STATUS_REQUEST_REQ } from "./KLF200-API/GW_STATUS_REQUEST_REQ.js";
 import {
 	ActuatorAlias,
 	ActuatorType,
@@ -53,13 +54,13 @@ import {
 	NodeVariation,
 	PowerSaveMode,
 	Velocity,
-} from "./KLF200-API/GW_SYSTEMTABLE_DATA";
-import { GW_WINK_SEND_CFM } from "./KLF200-API/GW_WINK_SEND_CFM";
-import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ";
-import { GW_COMMON_STATUS, GW_INVERSE_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common";
-import { IConnection } from "./connection";
-import { Component } from "./utils/PropertyChangedEvent";
-import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent";
+} from "./KLF200-API/GW_SYSTEMTABLE_DATA.js";
+import { GW_WINK_SEND_CFM } from "./KLF200-API/GW_WINK_SEND_CFM.js";
+import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ.js";
+import { GW_COMMON_STATUS, GW_INVERSE_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common.js";
+import { IConnection } from "./connection.js";
+import { Component } from "./utils/PropertyChangedEvent.js";
+import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
 
 /**
  * Each product that is registered at the KLF-200 interface will be created
@@ -1677,14 +1678,28 @@ export class Products {
 
 			// Add nodes
 			if (frame.AddedNodes.length > 0) {
-				// Wait a little bit, otherwise we will receive a busy error.
-				// console.log(`Wait before adding ${frame.AddedNodes}`);
-				await setTimeout(100);
-				// console.log("Finished waiting...");
-				for (const nodeID of frame.AddedNodes) {
-					this.Products[nodeID] = await this.addNodeAsync(nodeID);
-					await this.notifyNewProduct(nodeID);
-				}
+				// Wait until the KLF-200 leaves configuration services handler.
+				// Otherwise, we would receive a Busy error.
+				const checkForIdle = async (): Promise<boolean> => {
+					const getStateCfm = <GW_GET_STATE_CFM>await this.Connection.sendFrameAsync(new GW_GET_STATE_REQ());
+					return (
+						getStateCfm.GatewayState === GatewayState.GatewayMode_WithActuatorNodes &&
+						getStateCfm.GatewaySubState === GatewaySubState.Idle
+					);
+				};
+
+				// Checking for Idle state and adding nodes will be done outside of this handler
+				const waitForIdle = async (): Promise<void> => {
+					if (await checkForIdle()) {
+						for (const nodeID of frame.AddedNodes) {
+							this.Products[nodeID] = await this.addNodeAsync(nodeID);
+							await this.notifyNewProduct(nodeID);
+						}
+					} else {
+						setImmediate(waitForIdle);
+					}
+				};
+				setImmediate(waitForIdle);
 			}
 		}
 	}

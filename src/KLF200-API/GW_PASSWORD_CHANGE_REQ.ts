@@ -1,6 +1,6 @@
 "use strict";
 
-import { C_MAX_PWD_LENGTH, GW_FRAME_REQ } from "./common";
+import { C_MAX_PWD_LENGTH, GW_FRAME_REQ } from "./common.js";
 
 export class GW_PASSWORD_CHANGE_REQ extends GW_FRAME_REQ {
 	constructor(

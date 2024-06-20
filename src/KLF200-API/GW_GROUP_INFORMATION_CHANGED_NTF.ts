@@ -1,9 +1,9 @@
 "use strict";
 
-import { bitArrayToArray } from "../utils/BitArray";
-import { GroupType } from "./GW_GROUPS";
-import { NodeVariation, Velocity } from "./GW_SYSTEMTABLE_DATA";
-import { GW_FRAME_NTF, readZString } from "./common";
+import { bitArrayToArray } from "../utils/BitArray.js";
+import { GroupType } from "./GW_GROUPS.js";
+import { NodeVariation, Velocity } from "./GW_SYSTEMTABLE_DATA.js";
+import { GW_FRAME_NTF, readZString } from "./common.js";
 
 export enum ChangeType {
 	Deleted = 0,

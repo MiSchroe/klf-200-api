@@ -5,7 +5,7 @@ import deepEqual from "deep-eql";
 import { dirname, join, parse } from "path";
 import { timeout } from "promise-timeout";
 import { fileURLToPath } from "url";
-import { AcknowledgeMessage, Command, CommandWithGuid, KillCommand } from "./mockServer/commands";
+import { AcknowledgeMessage, Command, CommandWithGuid, KillCommand } from "./mockServer/commands.js";
 
 const debug = debugModule(`${parse(import.meta.filename).name}:client`);
 

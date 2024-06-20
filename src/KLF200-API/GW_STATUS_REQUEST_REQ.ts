@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_COMMAND_REQ } from "./common";
-import { StatusType } from "./GW_COMMAND";
+import { GW_FRAME_COMMAND_REQ } from "./common.js";
+import { StatusType } from "./GW_COMMAND.js";
 
 export class GW_STATUS_REQUEST_REQ extends GW_FRAME_COMMAND_REQ {
 	constructor(
