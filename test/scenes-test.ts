@@ -3,9 +3,10 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { readFileSync } from "fs";
-import { join } from "path";
+import { dirname, join } from "path";
 import sinon, { SinonSandbox } from "sinon";
 import sinonChai from "sinon-chai";
+import { fileURLToPath } from "url";
 import { Connection, GW_ERROR, GW_SESSION_FINISHED_NTF, GatewayCommand, Scene, Scenes, getNextSessionID } from "../src";
 import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder.js";
 import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
@@ -14,7 +15,8 @@ import { setupHouseMockup } from "./setupHouse.js";
 import { waitForNotificationHandler } from "./testUtitlites.js";
 
 const testHOST = "localhost";
-const __dirname = import.meta.dirname;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 use(chaiAsPromised);
 use(sinonChai);

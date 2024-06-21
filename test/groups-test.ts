@@ -3,9 +3,10 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { readFileSync } from "fs";
-import { join } from "path";
+import { dirname, join } from "path";
 import sinon, { SinonSandbox, SinonSpy } from "sinon";
 import sinonChai from "sinon-chai";
+import { fileURLToPath } from "url";
 import {
 	Connection,
 	GW_ERROR,
@@ -24,7 +25,8 @@ import { MockServerController } from "./mocks/mockServerController.js";
 import { setupHouseMockup } from "./setupHouse.js";
 
 const testHOST = "localhost";
-const __dirname = import.meta.dirname;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 use(chaiAsPromised);
 use(sinonChai);

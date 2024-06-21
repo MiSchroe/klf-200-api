@@ -3,7 +3,8 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { readFileSync } from "fs";
-import { join } from "path";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 import {
 	Connection,
 	GW_COMMON_STATUS,
@@ -20,7 +21,8 @@ import { MockServerController } from "./mocks/mockServerController.js";
 use(chaiAsPromised);
 
 const testHOST = "localhost";
-const __dirname = import.meta.dirname;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 describe("Gateway", function () {
 	this.timeout(10000);
