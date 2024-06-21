@@ -7,10 +7,10 @@ import { timeout } from "promise-timeout";
 import { fileURLToPath } from "url";
 import { AcknowledgeMessage, Command, CommandWithGuid, KillCommand } from "./mockServer/commands.js";
 
-const debug = debugModule(`${parse(import.meta.filename).name}:client`);
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const debug = debugModule(`${parse(__filename).name}:client`);
 
 export class MockServerController {
 	serverProcess: ChildProcess;

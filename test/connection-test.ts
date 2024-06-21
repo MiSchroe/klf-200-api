@@ -14,10 +14,10 @@ import { Connection } from "../src/connection";
 import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
 import { MockServerController } from "./mocks/mockServerController.js";
 
-const debug = debugModule(`${parse(import.meta.filename).name}`);
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const debug = debugModule(`${parse(__filename).name}`);
 
 use(chaiAsPromised);
 

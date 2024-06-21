@@ -6,9 +6,13 @@ import debugModule from "debug";
 import "mocha";
 import * as net from "net";
 import path from "path";
+import { fileURLToPath } from "url";
 import { GW_PASSWORD_ENTER_CFM, KLF200Protocol, KLF200SocketProtocol, SLIPProtocol } from "../../src";
 
-const debug = debugModule(path.parse(import.meta.filename).name);
+const __filename = fileURLToPath(import.meta.url);
+
+const debug = debugModule(path.parse(__filename).name);
+
 use(chaibytes);
 
 describe("KLF200-API", function () {

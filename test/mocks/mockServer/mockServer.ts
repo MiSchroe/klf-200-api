@@ -33,10 +33,10 @@ import { Limitation } from "./limitations.js";
 import { Product } from "./products.js";
 import { Scene } from "./scenes.js";
 
-const debug = debugModule(`${path.parse(import.meta.filename).name}:server`);
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const debug = debugModule(`${path.parse(__filename).name}:server`);
 
 (function () {
 	/*
