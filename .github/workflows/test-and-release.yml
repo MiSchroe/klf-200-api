@@ -38,6 +38,7 @@ jobs:
             matrix:
                 node-version: [18.x, 20.x, 22.x]
                 os: [ubuntu-latest, windows-latest, macos-latest]
+            max-parallel: 1
 
         steps:
             - uses: actions/checkout@v4

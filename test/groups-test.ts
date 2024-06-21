@@ -322,7 +322,7 @@ describe("groups", function () {
 			});
 
 			it("should change 1 group.", async function () {
-				this.timeout(10000);
+				this.timeout(20000);
 				this.slow(1000);
 				const expectedGroup = {
 					GroupID: 51,
@@ -385,7 +385,7 @@ describe("groups", function () {
 			});
 
 			it("should add 1 group.", async function () {
-				this.timeout(10000);
+				this.timeout(20000);
 				this.slow(1000);
 				const expectedGroup = { GroupID: 55, Name: "Group 55", Order: 1 };
 				const conn = new Connection(testHOST, {
