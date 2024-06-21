@@ -468,16 +468,14 @@ export class Group extends Component {
 
 			// Setup notification to receive notification with actuator type
 			let dispose: Disposable | undefined;
-			const nodeTypeID = new Promise<ActuatorType>((resolve, reject) => {
+			const nodeTypeIDPromise = new Promise<ActuatorType>((resolve, reject) => {
 				try {
-					let nodeTypeID: ActuatorType;
-
 					// Register notification handler
 					dispose = this.Connection.on(
 						(frame) => {
 							try {
 								if (frame instanceof GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
-									nodeTypeID = frame.ActuatorType;
+									const nodeTypeID = frame.ActuatorType;
 									if (dispose) {
 										dispose.dispose();
 									}
@@ -518,7 +516,7 @@ export class Group extends Component {
 			}
 
 			return this.setTargetPositionRawAsync(
-				convertPosition(newPosition, await nodeTypeID),
+				convertPosition(newPosition, await nodeTypeIDPromise),
 				Velocity,
 				PriorityLevel,
 				CommandOriginator,
