@@ -13,6 +13,8 @@
 -   Converted to ECMAScript modules ES2022.
 -   Update dependencies.
 -   Unit tests run with a real (mocked) KLF-200 server.
+-   Added missing unit tests.
+-   Fixed unit tests.
 
 ## 3.5.0 (2024-02-15)
 

@@ -1,5 +1,6 @@
 ﻿"use strict";
 
+import { setImmediate } from "timers/promises";
 import {
 	CommandOriginator,
 	CommandStatus,
@@ -21,6 +22,7 @@ import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NT
 import { GW_COMMAND_SEND_CFM } from "./KLF200-API/GW_COMMAND_SEND_CFM.js";
 import { GW_COMMAND_SEND_REQ } from "./KLF200-API/GW_COMMAND_SEND_REQ.js";
 import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "./KLF200-API/GW_CS_SYSTEM_TABLE_UPDATE_NTF.js";
+import { GW_ERROR, GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF.js";
 import { GW_GET_ALL_NODES_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_CFM.js";
 import { GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF.js";
 import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF.js";
@@ -1681,11 +1683,24 @@ export class Products {
 				// Wait until the KLF-200 leaves configuration services handler.
 				// Otherwise, we would receive a Busy error.
 				const checkForIdle = async (): Promise<boolean> => {
-					const getStateCfm = <GW_GET_STATE_CFM>await this.Connection.sendFrameAsync(new GW_GET_STATE_REQ());
-					return (
-						getStateCfm.GatewayState === GatewayState.GatewayMode_WithActuatorNodes &&
-						getStateCfm.GatewaySubState === GatewaySubState.Idle
-					);
+					try {
+						const getStateCfm = <GW_GET_STATE_CFM>(
+							await this.Connection.sendFrameAsync(new GW_GET_STATE_REQ())
+						);
+						return (
+							getStateCfm.GatewayState === GatewayState.GatewayMode_WithActuatorNodes &&
+							getStateCfm.GatewaySubState === GatewaySubState.Idle
+						);
+					} catch (error) {
+						if (
+							error instanceof Error &&
+							error.cause instanceof GW_ERROR_NTF &&
+							error.cause.ErrorNumber === GW_ERROR.Busy
+						) {
+							return false;
+						}
+						throw error;
+					}
 				};
 
 				// Checking for Idle state and adding nodes will be done outside of this handler
@@ -1696,10 +1711,10 @@ export class Products {
 							await this.notifyNewProduct(nodeID);
 						}
 					} else {
-						setImmediate(waitForIdle);
+						await setImmediate(await waitForIdle());
 					}
 				};
-				setImmediate(waitForIdle);
+				await setImmediate(await waitForIdle());
 			}
 		}
 	}
@@ -1727,9 +1742,28 @@ export class Products {
 					reject(error);
 				}
 			});
-			const getNodeInformation = <GW_GET_NODE_INFORMATION_CFM>(
-				await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID))
-			);
+			const maxRetryTimestamp = Date.now() + 60_000; // Wait max. 60 seconds.
+			const retryIfNotBusy = async (): Promise<GW_GET_NODE_INFORMATION_CFM> => {
+				if (Date.now() > maxRetryTimestamp) {
+					throw new Error("Can't read node information of added node after 60 seconds.");
+				}
+				try {
+					const getNodeInformation = <GW_GET_NODE_INFORMATION_CFM>(
+						await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID))
+					);
+					return getNodeInformation;
+				} catch (error) {
+					if (
+						error instanceof Error &&
+						error.cause instanceof GW_ERROR_NTF &&
+						error.cause.ErrorNumber === GW_ERROR.Busy
+					) {
+						return await setImmediate(await retryIfNotBusy());
+					}
+					throw error;
+				}
+			};
+			const getNodeInformation = await setImmediate(await retryIfNotBusy());
 			if (getNodeInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
 				if (dispose) {
 					dispose.dispose();

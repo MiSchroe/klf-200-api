@@ -292,7 +292,7 @@ export class Connection implements IConnection {
 									debug(`sendFrameAsync GW_ERROR_NTF recieved: ${JSON.stringify(frame)}.`);
 									errHandler.dispose();
 									cfmHandler?.dispose();
-									reject(new Error(frame.getError()));
+									reject(new Error(frame.getError(), { cause: frame }));
 								} else if (
 									frame.Command === expectedConfirmationFrameCommand &&
 									(typeof sessionID === "undefined" ||

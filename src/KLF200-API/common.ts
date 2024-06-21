@@ -391,7 +391,7 @@ export abstract class GW_FRAME_REQ extends GW_FRAME implements IGW_FRAME_REQ {
 	 * @param {boolean} CopyData Set to true to copy the data in case of reallocating the buffer. Default is true.
 	 * @memberof GW_FRAME
 	 */
-	protected AllocBuffer(BufferSize: number, CopyData = true): void {
+	protected AllocBuffer(BufferSize: number, CopyData: boolean = true): void {
 		const oldData = this.data;
 		this.data = Buffer.alloc(BufferSize + this.offset);
 		this.data.writeUInt16BE(this.Command, C_BUFFERLEN_SIZE);

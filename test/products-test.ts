@@ -297,12 +297,15 @@ describe("products", function () {
 					});
 					await mockServerController.sendCommand({
 						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_GET_STATE_REQ,
-						gatewayConfirmation: GatewayCommand.GW_GET_STATE_CFM,
-						data: Buffer.from([2, 1, 0, 0, 0, 0]).toString("base64"),
+						gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 					});
 					const waitPromise = new Promise((resolve) => {
-						conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_NTF]);
+						conn.on(resolve, [GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
+					});
+					const waitPromise2 = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_CFM]);
 					});
 					await mockServerController.sendCommand({
 						command: "SendData",
@@ -316,6 +319,7 @@ describe("products", function () {
 
 					// Just let the asynchronous stuff run before our checks
 					await waitPromise;
+					await waitPromise2;
 					await new Promise((resolve) => setImmediate(resolve));
 
 					expect(
