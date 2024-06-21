@@ -364,11 +364,17 @@ return new Promise((resolve) => {
 				const handlerSpy = sinon.spy();
 				conn.on(handlerSpy);
 				// Send a frame
+				const waitPromise = new Promise((resolve) => {
+					conn.on(resolve, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
+				});
 				await (this.mockServerController as MockServerController).sendCommand({
 					command: "SendData",
 					gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_CFM,
 					data: Buffer.from([GW_COMMON_STATUS.SUCCESS]).toString("base64"),
 				});
+
+				// Let the asynchronous stuff run and give the notification some time
+				await waitPromise;
 
 				expect(handlerSpy).to.be.calledOnce;
 			} finally {
@@ -389,11 +395,17 @@ return new Promise((resolve) => {
 				const handlerSpy = sinon.spy();
 				conn.on(handlerSpy, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
 				// Send a frame
+				const waitPromise = new Promise((resolve) => {
+					conn.on(resolve, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
+				});
 				await (this.mockServerController as MockServerController).sendCommand({
 					command: "SendData",
 					gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_CFM,
 					data: Buffer.from([GW_COMMON_STATUS.SUCCESS]).toString("base64"),
 				});
+
+				// Let the asynchronous stuff run and give the notification some time
+				await waitPromise;
 
 				expect(handlerSpy).to.be.calledOnce;
 			} finally {
@@ -414,11 +426,17 @@ return new Promise((resolve) => {
 				const handlerSpy = sinon.spy();
 				conn.on(handlerSpy, [GatewayCommand.GW_PASSWORD_CHANGE_CFM]);
 				// Send a frame
+				const waitPromise = new Promise((resolve) => {
+					conn.on(resolve, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
+				});
 				await (this.mockServerController as MockServerController).sendCommand({
 					command: "SendData",
 					gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_CFM,
 					data: Buffer.from([GW_COMMON_STATUS.SUCCESS]).toString("base64"),
 				});
+
+				// Let the asynchronous stuff run and give the notification some time
+				await waitPromise;
 
 				expect(handlerSpy).not.to.be.called;
 			} finally {
