@@ -269,7 +269,18 @@ export class Connection implements IConnection {
 	 */
 	public async sendFrameAsync(frame: IGW_FRAME_REQ, timeout: number = 10): Promise<IGW_FRAME_RCV> {
 		try {
-			debug(`sendFrameAsync called with frame: ${JSON.stringify(frame)}, timeout: ${timeout}.`);
+			debug(
+				`sendFrameAsync called with frame: ${
+					(JSON.stringify(frame),
+					(key: string, value: any) => {
+						if (key.match(/password/i)) {
+							return "**********";
+						} else {
+							return value;
+						}
+					})
+				}, timeout: ${timeout}.`,
+			);
 			const frameName = GatewayCommand[frame.Command];
 			const expectedConfirmationFrameName: keyof typeof GatewayCommand = (frameName.slice(0, -3) +
 				"CFM") as keyof typeof GatewayCommand;
