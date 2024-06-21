@@ -27,10 +27,10 @@ import {
 import { GW_PASSWORD_ENTER_CFM, GW_PASSWORD_ENTER_REQ } from "./index.js";
 import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
 
-const debug = debugModule(`klf-200-api:${parse(import.meta.filename).name}`);
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
 
 /**
  * Interface for the connection.
