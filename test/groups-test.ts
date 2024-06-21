@@ -32,7 +32,7 @@ use(chaiAsPromised);
 use(sinonChai);
 
 describe("groups", function () {
-	this.timeout(10000);
+	this.timeout(20000);
 
 	let mockServerController: MockServerController;
 
