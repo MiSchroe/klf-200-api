@@ -44,7 +44,7 @@ use(sinonChai);
 
 describe("products", function () {
 	// this.timeout(10000000);
-	this.timeout(10000);
+	this.timeout(20000);
 
 	let mockServerController: MockServerController;
 

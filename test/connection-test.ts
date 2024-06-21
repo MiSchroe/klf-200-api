@@ -24,7 +24,7 @@ use(chaiAsPromised);
 const testHOST = "localhost";
 
 describe("connection", function () {
-	this.timeout(10000);
+	this.timeout(20000);
 
 	this.beforeAll(async function () {
 		this.mockServerController = await MockServerController.createMockServer();

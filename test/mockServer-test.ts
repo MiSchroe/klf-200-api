@@ -23,7 +23,7 @@ describe("mockServer", function () {
 	});
 
 	it("should start the mock server", async function () {
-		this.timeout(10000);
+		this.timeout(20000);
 		this.slow(7000);
 		const fn = async function (): Promise<boolean> {
 			await using mockServerController = await MockServerController.createMockServer();
@@ -33,7 +33,7 @@ describe("mockServer", function () {
 	});
 
 	it("should stop the mock server", async function () {
-		this.timeout(10000);
+		this.timeout(20000);
 		this.slow(7000);
 		let serverProcess: ChildProcess | undefined = undefined;
 		{

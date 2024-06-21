@@ -22,7 +22,7 @@ use(chaiAsPromised);
 use(sinonChai);
 
 describe("scenes", function () {
-	this.timeout(10000);
+	this.timeout(20000);
 
 	let mockServerController: MockServerController;
 

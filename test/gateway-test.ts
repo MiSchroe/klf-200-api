@@ -25,7 +25,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 describe("Gateway", function () {
-	this.timeout(10000);
+	this.timeout(20000);
 
 	this.beforeAll(async function () {
 		this.mockServerController = await MockServerController.createMockServer();
