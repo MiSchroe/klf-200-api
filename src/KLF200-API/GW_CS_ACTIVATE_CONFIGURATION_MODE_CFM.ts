@@ -1,7 +1,7 @@
 "use strict";
 
-import { bitArrayToArray } from "../utils/BitArray";
-import { GW_FRAME_CFM } from "./common";
+import { bitArrayToArray } from "../utils/BitArray.js";
+import { GW_FRAME_CFM } from "./common.js";
 
 export class GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM extends GW_FRAME_CFM {
 	public readonly ActivatedNodes: number[];

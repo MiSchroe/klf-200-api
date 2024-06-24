@@ -1,7 +1,7 @@
 "use strict";
 
-import { bitArrayToArray } from "../utils/BitArray";
-import { GW_FRAME_NTF } from "./common";
+import { bitArrayToArray } from "../utils/BitArray.js";
+import { GW_FRAME_NTF } from "./common.js";
 
 export enum DiscoverStatus {
 	OK = 0,

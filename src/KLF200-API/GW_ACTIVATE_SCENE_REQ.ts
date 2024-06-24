@@ -1,8 +1,8 @@
 "use strict";
 
-import { GW_FRAME_COMMAND_REQ } from "./common";
-import { CommandOriginator, PriorityLevel } from "./GW_COMMAND";
-import { Velocity } from "./GW_SYSTEMTABLE_DATA";
+import { GW_FRAME_COMMAND_REQ } from "./common.js";
+import { CommandOriginator, PriorityLevel } from "./GW_COMMAND.js";
+import { Velocity } from "./GW_SYSTEMTABLE_DATA.js";
 
 export class GW_ACTIVATE_SCENE_REQ extends GW_FRAME_COMMAND_REQ {
 	constructor(

@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_NTF, readZString } from "./common";
+import { GW_FRAME_NTF, readZString } from "./common.js";
 
 export class GW_PASSWORD_CHANGE_NTF extends GW_FRAME_NTF {
 	public readonly NewPassword: string;

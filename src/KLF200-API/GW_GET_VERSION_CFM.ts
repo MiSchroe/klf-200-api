@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common";
+import { GW_FRAME_CFM } from "./common.js";
 
 export class SoftwareVersion {
 	public constructor(

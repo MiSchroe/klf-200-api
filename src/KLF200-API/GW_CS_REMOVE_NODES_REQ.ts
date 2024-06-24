@@ -1,7 +1,7 @@
 "use strict";
 
-import { arrayToBitArray } from "../utils/BitArray";
-import { GW_FRAME_REQ } from "./common";
+import { arrayToBitArray } from "../utils/BitArray.js";
+import { GW_FRAME_REQ } from "./common.js";
 
 export class GW_CS_REMOVE_NODES_REQ extends GW_FRAME_REQ {
 	constructor(readonly Nodes: number[]) {

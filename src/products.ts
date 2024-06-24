@@ -1,5 +1,9 @@
 ﻿"use strict";
 
+import debugModule from "debug";
+import { dirname, parse } from "path";
+import { setImmediate } from "timers/promises";
+import { fileURLToPath } from "url";
 import {
 	CommandOriginator,
 	CommandStatus,
@@ -15,36 +19,39 @@ import {
 	StatusType,
 	convertPosition,
 	convertPositionRaw,
-} from "./KLF200-API/GW_COMMAND";
-import { GW_COMMAND_REMAINING_TIME_NTF } from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF";
-import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF";
-import { GW_COMMAND_SEND_CFM } from "./KLF200-API/GW_COMMAND_SEND_CFM";
-import { GW_COMMAND_SEND_REQ } from "./KLF200-API/GW_COMMAND_SEND_REQ";
-import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "./KLF200-API/GW_CS_SYSTEM_TABLE_UPDATE_NTF";
-import { GW_GET_ALL_NODES_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_CFM";
-import { GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF";
-import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF";
-import { GW_GET_ALL_NODES_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_REQ";
-import { GW_GET_LIMITATION_STATUS_CFM } from "./KLF200-API/GW_GET_LIMITATION_STATUS_CFM";
-import { GW_GET_LIMITATION_STATUS_REQ } from "./KLF200-API/GW_GET_LIMITATION_STATUS_REQ";
-import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM";
-import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
-import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
-import { GW_LIMITATION_STATUS_NTF } from "./KLF200-API/GW_LIMITATION_STATUS_NTF";
-import { GW_NODE_INFORMATION_CHANGED_NTF } from "./KLF200-API/GW_NODE_INFORMATION_CHANGED_NTF";
-import { GW_NODE_STATE_POSITION_CHANGED_NTF } from "./KLF200-API/GW_NODE_STATE_POSITION_CHANGED_NTF";
-import { GW_SESSION_FINISHED_NTF } from "./KLF200-API/GW_SESSION_FINISHED_NTF";
-import { GW_SET_LIMITATION_CFM } from "./KLF200-API/GW_SET_LIMITATION_CFM";
-import { GW_SET_LIMITATION_REQ } from "./KLF200-API/GW_SET_LIMITATION_REQ";
-import { GW_SET_NODE_NAME_CFM } from "./KLF200-API/GW_SET_NODE_NAME_CFM";
-import { GW_SET_NODE_NAME_REQ } from "./KLF200-API/GW_SET_NODE_NAME_REQ";
-import { GW_SET_NODE_ORDER_AND_PLACEMENT_CFM } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_CFM";
-import { GW_SET_NODE_ORDER_AND_PLACEMENT_REQ } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_REQ";
-import { GW_SET_NODE_VARIATION_CFM } from "./KLF200-API/GW_SET_NODE_VARIATION_CFM";
-import { GW_SET_NODE_VARIATION_REQ } from "./KLF200-API/GW_SET_NODE_VARIATION_REQ";
-import { GW_STATUS_REQUEST_CFM } from "./KLF200-API/GW_STATUS_REQUEST_CFM";
-import { GW_STATUS_REQUEST_NTF } from "./KLF200-API/GW_STATUS_REQUEST_NTF";
-import { GW_STATUS_REQUEST_REQ } from "./KLF200-API/GW_STATUS_REQUEST_REQ";
+} from "./KLF200-API/GW_COMMAND.js";
+import { GW_COMMAND_REMAINING_TIME_NTF } from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF.js";
+import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF.js";
+import { GW_COMMAND_SEND_CFM } from "./KLF200-API/GW_COMMAND_SEND_CFM.js";
+import { GW_COMMAND_SEND_REQ } from "./KLF200-API/GW_COMMAND_SEND_REQ.js";
+import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "./KLF200-API/GW_CS_SYSTEM_TABLE_UPDATE_NTF.js";
+import { GW_ERROR, GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF.js";
+import { GW_GET_ALL_NODES_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_CFM.js";
+import { GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF.js";
+import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF.js";
+import { GW_GET_ALL_NODES_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_REQ.js";
+import { GW_GET_LIMITATION_STATUS_CFM } from "./KLF200-API/GW_GET_LIMITATION_STATUS_CFM.js";
+import { GW_GET_LIMITATION_STATUS_REQ } from "./KLF200-API/GW_GET_LIMITATION_STATUS_REQ.js";
+import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM.js";
+import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF.js";
+import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ.js";
+import { GW_GET_STATE_CFM, GatewayState, GatewaySubState } from "./KLF200-API/GW_GET_STATE_CFM.js";
+import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ.js";
+import { GW_LIMITATION_STATUS_NTF } from "./KLF200-API/GW_LIMITATION_STATUS_NTF.js";
+import { GW_NODE_INFORMATION_CHANGED_NTF } from "./KLF200-API/GW_NODE_INFORMATION_CHANGED_NTF.js";
+import { GW_NODE_STATE_POSITION_CHANGED_NTF } from "./KLF200-API/GW_NODE_STATE_POSITION_CHANGED_NTF.js";
+import { GW_SESSION_FINISHED_NTF } from "./KLF200-API/GW_SESSION_FINISHED_NTF.js";
+import { GW_SET_LIMITATION_CFM } from "./KLF200-API/GW_SET_LIMITATION_CFM.js";
+import { GW_SET_LIMITATION_REQ } from "./KLF200-API/GW_SET_LIMITATION_REQ.js";
+import { GW_SET_NODE_NAME_CFM } from "./KLF200-API/GW_SET_NODE_NAME_CFM.js";
+import { GW_SET_NODE_NAME_REQ } from "./KLF200-API/GW_SET_NODE_NAME_REQ.js";
+import { GW_SET_NODE_ORDER_AND_PLACEMENT_CFM } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_CFM.js";
+import { GW_SET_NODE_ORDER_AND_PLACEMENT_REQ } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_REQ.js";
+import { GW_SET_NODE_VARIATION_CFM } from "./KLF200-API/GW_SET_NODE_VARIATION_CFM.js";
+import { GW_SET_NODE_VARIATION_REQ } from "./KLF200-API/GW_SET_NODE_VARIATION_REQ.js";
+import { GW_STATUS_REQUEST_CFM } from "./KLF200-API/GW_STATUS_REQUEST_CFM.js";
+import { GW_STATUS_REQUEST_NTF } from "./KLF200-API/GW_STATUS_REQUEST_NTF.js";
+import { GW_STATUS_REQUEST_REQ } from "./KLF200-API/GW_STATUS_REQUEST_REQ.js";
 import {
 	ActuatorAlias,
 	ActuatorType,
@@ -52,13 +59,18 @@ import {
 	NodeVariation,
 	PowerSaveMode,
 	Velocity,
-} from "./KLF200-API/GW_SYSTEMTABLE_DATA";
-import { GW_WINK_SEND_CFM } from "./KLF200-API/GW_WINK_SEND_CFM";
-import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ";
-import { GW_COMMON_STATUS, GW_INVERSE_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common";
-import { IConnection } from "./connection";
-import { Component } from "./utils/PropertyChangedEvent";
-import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent";
+} from "./KLF200-API/GW_SYSTEMTABLE_DATA.js";
+import { GW_WINK_SEND_CFM } from "./KLF200-API/GW_WINK_SEND_CFM.js";
+import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ.js";
+import { GW_COMMON_STATUS, GW_INVERSE_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common.js";
+import { IConnection } from "./connection.js";
+import { Component } from "./utils/PropertyChangedEvent.js";
+import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
 
 /**
  * Each product that is registered at the KLF-200 interface will be created
@@ -217,7 +229,12 @@ export class Product extends Component {
 		this._limitationTimeRaw = new Array<number>(17).fill(LockTime.lockTimeTolockTimeValueForLimitation(Infinity));
 
 		this.Connection.on(
-			(frame) => this.onNotificationHandler(frame),
+			async (frame) => {
+				debug(
+					`Calling onNotificationHandler for GW_NODE_INFORMATION_CHANGED_NTF, GW_NODE_STATE_POSITION_CHANGED_NTF, GW_COMMAND_RUN_STATUS_NTF, GW_COMMAND_REMAINING_TIME_NTF, GW_GET_NODE_INFORMATION_NTF, GW_STATUS_REQUEST_NTF added in Product constructor.`,
+				);
+				await this.onNotificationHandler(frame);
+			},
 			[
 				GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
 				GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
@@ -947,11 +964,13 @@ export class Product extends Component {
 		}
 	}
 
-	private async waitForLimitationFinished(
+	private setupWaitForLimitationFinished(
 		sessionID: number,
 		limitationType: LimitationType | LimitationType[],
 		parameterActive: ParameterActive,
-	): Promise<void> {
+		resolve: (value: void | PromiseLike<void>) => void,
+		reject: (reason?: any) => void,
+	): Disposable {
 		const limitationTypes: LimitationType[] = [];
 
 		if (Array.isArray(limitationType)) {
@@ -960,54 +979,53 @@ export class Product extends Component {
 			limitationTypes.push(limitationType);
 		}
 
-		return new Promise((resolve, reject) => {
-			try {
-				// Listen to notifications:
-				const dispose = this.Connection.on(
-					(frame) => {
-						try {
-							if (frame instanceof GW_LIMITATION_STATUS_NTF && frame.SessionID === sessionID) {
-								if (frame.NodeID !== this.NodeID) {
-									throw new Error(`Unexpected node ID: ${frame.NodeID}`);
-								}
-								if (frame.ParameterID !== parameterActive) {
-									throw new Error(`Unexpected parameter ID: ${frame.ParameterID}`);
-								}
-								if (limitationTypes.indexOf(LimitationType.MinimumLimitation) !== -1) {
-									if (frame.LimitationValueMin !== this._limitationMinRaw[frame.ParameterID]) {
-										this._limitationMinRaw[frame.ParameterID] = frame.LimitationValueMin;
-										this.propertyChanged("LimitationMinRaw");
-									}
-								}
-								if (limitationTypes.indexOf(LimitationType.MaximumLimitation) !== -1) {
-									if (frame.LimitationValueMax !== this._limitationMaxRaw[frame.ParameterID]) {
-										this._limitationMaxRaw[frame.ParameterID] = frame.LimitationValueMax;
-										this.propertyChanged("LimitationMaxRaw");
-									}
-								}
-								if (frame.LimitationOriginator !== this._limitationOriginator[frame.ParameterID]) {
-									this._limitationOriginator[frame.ParameterID] = frame.LimitationOriginator;
-									this.propertyChanged("LimitationOriginator");
-								}
-								if (frame.LimitationTime !== this._limitationTimeRaw[frame.ParameterID]) {
-									this._limitationTimeRaw[frame.ParameterID] = frame.LimitationTime;
-									this.propertyChanged("LimitationTimeRaw");
-								}
-							} else if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === sessionID) {
-								dispose?.dispose();
-								resolve();
-							}
-						} catch (error) {
-							dispose?.dispose();
-							reject(error);
+		// Listen to notifications:
+		const dispose = this.Connection.on(
+			async (frame) => {
+				try {
+					debug(
+						`Calling handler for GW_LIMITATION_STATUS_NTF, GW_SESSION_FINISHED_NTF in Product.setupWaitForLimitationFinished.`,
+					);
+					if (frame instanceof GW_LIMITATION_STATUS_NTF && frame.SessionID === sessionID) {
+						if (frame.NodeID !== this.NodeID) {
+							throw new Error(`Unexpected node ID: ${frame.NodeID}`);
 						}
-					},
-					[GatewayCommand.GW_LIMITATION_STATUS_NTF, GatewayCommand.GW_SESSION_FINISHED_NTF],
-				);
-			} catch (error) {
-				reject(error);
-			}
-		});
+						if (frame.ParameterID !== parameterActive) {
+							throw new Error(`Unexpected parameter ID: ${frame.ParameterID}`);
+						}
+						if (limitationTypes.indexOf(LimitationType.MinimumLimitation) !== -1) {
+							if (frame.LimitationValueMin !== this._limitationMinRaw[frame.ParameterID]) {
+								this._limitationMinRaw[frame.ParameterID] = frame.LimitationValueMin;
+								await this.propertyChanged("LimitationMinRaw");
+							}
+						}
+						if (limitationTypes.indexOf(LimitationType.MaximumLimitation) !== -1) {
+							if (frame.LimitationValueMax !== this._limitationMaxRaw[frame.ParameterID]) {
+								this._limitationMaxRaw[frame.ParameterID] = frame.LimitationValueMax;
+								await this.propertyChanged("LimitationMaxRaw");
+							}
+						}
+						if (frame.LimitationOriginator !== this._limitationOriginator[frame.ParameterID]) {
+							this._limitationOriginator[frame.ParameterID] = frame.LimitationOriginator;
+							await this.propertyChanged("LimitationOriginator");
+						}
+						if (frame.LimitationTime !== this._limitationTimeRaw[frame.ParameterID]) {
+							this._limitationTimeRaw[frame.ParameterID] = frame.LimitationTime;
+							await this.propertyChanged("LimitationTimeRaw");
+						}
+					} else if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === sessionID) {
+						dispose?.dispose();
+						resolve();
+					}
+				} catch (error) {
+					dispose?.dispose();
+					reject(error);
+				}
+			},
+			[GatewayCommand.GW_LIMITATION_STATUS_NTF, GatewayCommand.GW_SESSION_FINISHED_NTF],
+		);
+
+		return dispose;
 	}
 
 	/**
@@ -1022,13 +1040,26 @@ export class Product extends Component {
 		parameterActive: ParameterActive = ParameterActive.MP,
 	): Promise<void> {
 		try {
-			const confirmationFrame = <GW_GET_LIMITATION_STATUS_CFM>(
-				await this.Connection.sendFrameAsync(
-					new GW_GET_LIMITATION_STATUS_REQ(this.NodeID, limitationType, parameterActive),
-				)
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+			const waitForLimitationFinishedPromise = new Promise((res, rej) => {
+				resolve = res;
+				reject = rej;
+			});
+
+			const frameToSend = new GW_GET_LIMITATION_STATUS_REQ(this.NodeID, limitationType, parameterActive);
+			this.setupWaitForLimitationFinished(
+				frameToSend.SessionID,
+				limitationType,
+				parameterActive,
+				resolve!,
+				reject!,
 			);
+
+			const confirmationFrame = <GW_GET_LIMITATION_STATUS_CFM>await this.Connection.sendFrameAsync(frameToSend);
 			if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
-				return this.waitForLimitationFinished(confirmationFrame.SessionID, limitationType, parameterActive);
+				await waitForLimitationFinishedPromise;
 			} else {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
@@ -1057,25 +1088,34 @@ export class Product extends Component {
 		priorityLevel: PriorityLevel = PriorityLevel.ComfortLevel2,
 	): Promise<void> {
 		try {
-			const confirmationFrame = <GW_SET_LIMITATION_CFM>(
-				await this.Connection.sendFrameAsync(
-					new GW_SET_LIMITATION_REQ(
-						this.NodeID,
-						minValue,
-						maxValue,
-						limitationTime,
-						priorityLevel,
-						commandOriginator,
-						parameterActive,
-					),
-				)
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+			const waitForLimitationFinishedPromise = new Promise((res, rej) => {
+				resolve = res;
+				reject = rej;
+			});
+
+			const frameToSend = new GW_SET_LIMITATION_REQ(
+				this.NodeID,
+				minValue,
+				maxValue,
+				limitationTime,
+				priorityLevel,
+				commandOriginator,
+				parameterActive,
 			);
+			this.setupWaitForLimitationFinished(
+				frameToSend.SessionID,
+				[LimitationType.MinimumLimitation, LimitationType.MaximumLimitation],
+				parameterActive,
+				resolve!,
+				reject!,
+			);
+
+			const confirmationFrame = <GW_SET_LIMITATION_CFM>await this.Connection.sendFrameAsync(frameToSend);
 			if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
-				return this.waitForLimitationFinished(
-					confirmationFrame.SessionID,
-					[LimitationType.MinimumLimitation, LimitationType.MaximumLimitation],
-					parameterActive,
-				);
+				await waitForLimitationFinishedPromise;
 			} else {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
@@ -1153,124 +1193,124 @@ export class Product extends Component {
 		return this.setLimitationRawAsync(0xd400, 0xd400, parameterActive, 255, commandOriginator, priorityLevel);
 	}
 
-	private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (typeof this === "undefined") return;
 
 		if (frame instanceof GW_NODE_INFORMATION_CHANGED_NTF) {
-			this.onNodeInformationChanged(frame);
+			await this.onNodeInformationChanged(frame);
 		} else if (frame instanceof GW_NODE_STATE_POSITION_CHANGED_NTF) {
-			this.onNodeStatePositionChanged(frame);
+			await this.onNodeStatePositionChanged(frame);
 		} else if (frame instanceof GW_COMMAND_RUN_STATUS_NTF) {
-			this.onRunStatus(frame);
+			await this.onRunStatus(frame);
 		} else if (frame instanceof GW_COMMAND_REMAINING_TIME_NTF) {
-			this.onRemainingTime(frame);
+			await this.onRemainingTime(frame);
 		} else if (frame instanceof GW_GET_NODE_INFORMATION_NTF) {
-			this.onGetNodeInformation(frame);
+			await this.onGetNodeInformation(frame);
 		} else if (frame instanceof GW_STATUS_REQUEST_NTF) {
-			this.onStatusRequest(frame);
+			await this.onStatusRequest(frame);
 		}
 	}
 
-	private onNodeInformationChanged(frame: GW_NODE_INFORMATION_CHANGED_NTF): void {
+	private async onNodeInformationChanged(frame: GW_NODE_INFORMATION_CHANGED_NTF): Promise<void> {
 		if (frame.NodeID === this.NodeID) {
 			if (frame.Name !== this._name) {
 				this._name = frame.Name;
-				this.propertyChanged("Name");
+				await this.propertyChanged("Name");
 			}
 			if (frame.NodeVariation !== this._nodeVariation) {
 				this._nodeVariation = frame.NodeVariation;
-				this.propertyChanged("NodeVariation");
+				await this.propertyChanged("NodeVariation");
 			}
 			if (frame.Order !== this._order) {
 				this._order = frame.Order;
-				this.propertyChanged("Order");
+				await this.propertyChanged("Order");
 			}
 			if (frame.Placement !== this._placement) {
 				this._placement = frame.Placement;
-				this.propertyChanged("Placement");
+				await this.propertyChanged("Placement");
 			}
 		}
 	}
 
-	private onNodeStatePositionChanged(frame: GW_NODE_STATE_POSITION_CHANGED_NTF): void {
+	private async onNodeStatePositionChanged(frame: GW_NODE_STATE_POSITION_CHANGED_NTF): Promise<void> {
 		if (frame.NodeID === this.NodeID) {
 			if (frame.OperatingState !== this._state) {
 				this._state = frame.OperatingState;
-				this.propertyChanged("State");
+				await this.propertyChanged("State");
 			}
 			if (frame.CurrentPosition !== this._currentPositionRaw) {
 				this._currentPositionRaw = frame.CurrentPosition;
-				this.propertyChanged("CurrentPositionRaw");
-				this.propertyChanged("CurrentPosition");
+				await this.propertyChanged("CurrentPositionRaw");
+				await this.propertyChanged("CurrentPosition");
 			}
 			if (frame.TargetPosition !== this._targetPositionRaw) {
 				this._targetPositionRaw = frame.TargetPosition;
-				this.propertyChanged("TargetPositionRaw");
-				this.propertyChanged("TargetPosition");
+				await this.propertyChanged("TargetPositionRaw");
+				await this.propertyChanged("TargetPosition");
 			}
 			if (frame.FunctionalPosition1CurrentPosition !== this._fp1CurrentPositionRaw) {
 				this._fp1CurrentPositionRaw = frame.FunctionalPosition1CurrentPosition;
-				this.propertyChanged("FP1CurrentPositionRaw");
+				await this.propertyChanged("FP1CurrentPositionRaw");
 			}
 			if (frame.FunctionalPosition2CurrentPosition !== this._fp2CurrentPositionRaw) {
 				this._fp2CurrentPositionRaw = frame.FunctionalPosition2CurrentPosition;
-				this.propertyChanged("FP2CurrentPositionRaw");
+				await this.propertyChanged("FP2CurrentPositionRaw");
 			}
 			if (frame.FunctionalPosition3CurrentPosition !== this._fp3CurrentPositionRaw) {
 				this._fp3CurrentPositionRaw = frame.FunctionalPosition3CurrentPosition;
-				this.propertyChanged("FP3CurrentPositionRaw");
+				await this.propertyChanged("FP3CurrentPositionRaw");
 			}
 			if (frame.FunctionalPosition4CurrentPosition !== this._fp4CurrentPositionRaw) {
 				this._fp4CurrentPositionRaw = frame.FunctionalPosition4CurrentPosition;
-				this.propertyChanged("FP4CurrentPositionRaw");
+				await this.propertyChanged("FP4CurrentPositionRaw");
 			}
 			if (frame.RemainingTime !== this._remainingTime) {
 				this._remainingTime = frame.RemainingTime;
-				this.propertyChanged("RemainingTime");
+				await this.propertyChanged("RemainingTime");
 			}
 			// if (frame.TimeStamp.valueOf() !== this._timeStamp.valueOf()) {
 			//     this._timeStamp = frame.TimeStamp;
-			//     this.propertyChanged("TimeStamp");
+			//     await this.propertyChanged("TimeStamp");
 			// }
 		}
 	}
 
-	private onRunStatus(frame: GW_COMMAND_RUN_STATUS_NTF): void {
+	private async onRunStatus(frame: GW_COMMAND_RUN_STATUS_NTF): Promise<void> {
 		if (frame.NodeID === this.NodeID) {
 			switch (frame.NodeParameter) {
 				case ParameterActive.MP:
 					if (frame.ParameterValue !== this._currentPositionRaw) {
 						this._currentPositionRaw = frame.ParameterValue;
-						this.propertyChanged("CurrentPositionRaw");
-						this.propertyChanged("CurrentPosition");
+						await this.propertyChanged("CurrentPositionRaw");
+						await this.propertyChanged("CurrentPosition");
 					}
 					break;
 
 				case ParameterActive.FP1:
 					if (frame.ParameterValue !== this._fp1CurrentPositionRaw) {
 						this._fp1CurrentPositionRaw = frame.ParameterValue;
-						this.propertyChanged("FP1CurrentPositionRaw");
+						await this.propertyChanged("FP1CurrentPositionRaw");
 					}
 					break;
 
 				case ParameterActive.FP2:
 					if (frame.ParameterValue !== this._fp2CurrentPositionRaw) {
 						this._fp2CurrentPositionRaw = frame.ParameterValue;
-						this.propertyChanged("FP2CurrentPositionRaw");
+						await this.propertyChanged("FP2CurrentPositionRaw");
 					}
 					break;
 
 				case ParameterActive.FP3:
 					if (frame.ParameterValue !== this._fp3CurrentPositionRaw) {
 						this._fp3CurrentPositionRaw = frame.ParameterValue;
-						this.propertyChanged("FP3CurrentPositionRaw");
+						await this.propertyChanged("FP3CurrentPositionRaw");
 					}
 					break;
 
 				case ParameterActive.FP4:
 					if (frame.ParameterValue !== this._fp4CurrentPositionRaw) {
 						this._fp4CurrentPositionRaw = frame.ParameterValue;
-						this.propertyChanged("FP4CurrentPositionRaw");
+						await this.propertyChanged("FP4CurrentPositionRaw");
 					}
 					break;
 
@@ -1280,106 +1320,106 @@ export class Product extends Component {
 
 			if (frame.RunStatus !== this._runStatus) {
 				this._runStatus = frame.RunStatus;
-				this.propertyChanged("RunStatus");
+				await this.propertyChanged("RunStatus");
 			}
 
 			if (frame.StatusReply !== this._statusReply) {
 				this._statusReply = frame.StatusReply;
-				this.propertyChanged("StatusReply");
+				await this.propertyChanged("StatusReply");
 			}
 		}
 	}
 
-	private onRemainingTime(frame: GW_COMMAND_REMAINING_TIME_NTF): void {
+	private async onRemainingTime(frame: GW_COMMAND_REMAINING_TIME_NTF): Promise<void> {
 		if (
 			frame.NodeID === this.NodeID &&
 			frame.NodeParameter === ParameterActive.MP &&
 			frame.RemainingTime !== this._remainingTime
 		) {
 			this._remainingTime = frame.RemainingTime;
-			this.propertyChanged("RemainingTime");
+			await this.propertyChanged("RemainingTime");
 		}
 	}
 
-	private onGetNodeInformation(frame: GW_GET_NODE_INFORMATION_NTF): void {
+	private async onGetNodeInformation(frame: GW_GET_NODE_INFORMATION_NTF): Promise<void> {
 		if (frame.NodeID === this.NodeID) {
 			if (frame.Order !== this._order) {
 				this._order = frame.Order;
-				this.propertyChanged("Order");
+				await this.propertyChanged("Order");
 			}
 			if (frame.Placement !== this._placement) {
 				this._placement = frame.Placement;
-				this.propertyChanged("Placement");
+				await this.propertyChanged("Placement");
 			}
 			if (frame.Name !== this._name) {
 				this._name = frame.Name;
-				this.propertyChanged("Name");
+				await this.propertyChanged("Name");
 			}
 			if (frame.Velocity !== this._velocity) {
 				this._velocity = frame.Velocity;
-				this.propertyChanged("Velocity");
+				await this.propertyChanged("Velocity");
 			}
 			if (frame.ActuatorType !== this._TypeID) {
 				this._TypeID = frame.ActuatorType;
-				this.propertyChanged("TypeID");
+				await this.propertyChanged("TypeID");
 			}
 			if (frame.ActuatorSubType !== this._SubType) {
 				this._SubType = frame.ActuatorSubType;
-				this.propertyChanged("SubType");
+				await this.propertyChanged("SubType");
 			}
 			if (frame.ProductType !== this._ProductType) {
 				this._ProductType = frame.ProductType;
-				this.propertyChanged("ProductType");
+				await this.propertyChanged("ProductType");
 			}
 			if (frame.NodeVariation !== this._nodeVariation) {
 				this._nodeVariation = frame.NodeVariation;
-				this.propertyChanged("NodeVariation");
+				await this.propertyChanged("NodeVariation");
 			}
 			if (frame.PowerSaveMode !== this._PowerSaveMode) {
 				this._PowerSaveMode = frame.PowerSaveMode;
-				this.propertyChanged("PowerSaveMode");
+				await this.propertyChanged("PowerSaveMode");
 			}
 			if (!frame.SerialNumber.equals(this._SerialNumber)) {
 				this._SerialNumber = frame.SerialNumber;
-				this.propertyChanged("SerialNumber");
+				await this.propertyChanged("SerialNumber");
 			}
 			if (frame.OperatingState !== this._state) {
 				this._state = frame.OperatingState;
-				this.propertyChanged("State");
+				await this.propertyChanged("State");
 			}
 			if (frame.CurrentPosition !== this._currentPositionRaw) {
 				this._currentPositionRaw = frame.CurrentPosition;
-				this.propertyChanged("CurrentPositionRaw");
-				this.propertyChanged("CurrentPosition");
+				await this.propertyChanged("CurrentPositionRaw");
+				await this.propertyChanged("CurrentPosition");
 			}
 			if (frame.TargetPosition !== this._targetPositionRaw) {
 				this._targetPositionRaw = frame.TargetPosition;
-				this.propertyChanged("TargetPositionRaw");
-				this.propertyChanged("TargetPosition");
+				await this.propertyChanged("TargetPositionRaw");
+				await this.propertyChanged("TargetPosition");
 			}
 			if (frame.FunctionalPosition1CurrentPosition !== this._fp1CurrentPositionRaw) {
 				this._fp1CurrentPositionRaw = frame.FunctionalPosition1CurrentPosition;
-				this.propertyChanged("FP1CurrentPositionRaw");
+				await this.propertyChanged("FP1CurrentPositionRaw");
 			}
 			if (frame.FunctionalPosition2CurrentPosition !== this._fp2CurrentPositionRaw) {
 				this._fp2CurrentPositionRaw = frame.FunctionalPosition2CurrentPosition;
-				this.propertyChanged("FP2CurrentPositionRaw");
+				await this.propertyChanged("FP2CurrentPositionRaw");
 			}
 			if (frame.FunctionalPosition3CurrentPosition !== this._fp3CurrentPositionRaw) {
 				this._fp3CurrentPositionRaw = frame.FunctionalPosition3CurrentPosition;
-				this.propertyChanged("FP3CurrentPositionRaw");
+				await this.propertyChanged("FP3CurrentPositionRaw");
 			}
 			if (frame.FunctionalPosition4CurrentPosition !== this._fp4CurrentPositionRaw) {
 				this._fp4CurrentPositionRaw = frame.FunctionalPosition4CurrentPosition;
-				this.propertyChanged("FP4CurrentPositionRaw");
+				await this.propertyChanged("FP4CurrentPositionRaw");
 			}
 			if (frame.RemainingTime !== this._remainingTime) {
 				this._remainingTime = frame.RemainingTime;
-				this.propertyChanged("RemainingTime");
+				await this.propertyChanged("RemainingTime");
 			}
 			if (frame.TimeStamp.valueOf() !== this._timeStamp.valueOf()) {
 				this._timeStamp = frame.TimeStamp;
-				this.propertyChanged("TimeStamp");
+				await this.propertyChanged("TimeStamp");
 			}
 			if (
 				// If length differ, then they can't be equal anymore
@@ -1400,105 +1440,105 @@ export class Product extends Component {
 				)
 			) {
 				this._ProductAlias = frame.ActuatorAliases;
-				this.propertyChanged("ProductAlias");
+				await this.propertyChanged("ProductAlias");
 			}
 		}
 	}
 
-	private onStatusRequest(frame: GW_STATUS_REQUEST_NTF): void {
+	private async onStatusRequest(frame: GW_STATUS_REQUEST_NTF): Promise<void> {
 		if (frame.NodeID === this.NodeID) {
 			if (this._runStatus !== frame.RunStatus) {
 				this._runStatus = frame.RunStatus;
-				this.propertyChanged("RunStatus");
+				await this.propertyChanged("RunStatus");
 			}
 			if (this._statusReply !== frame.StatusReply) {
 				this._statusReply = frame.StatusReply;
-				this.propertyChanged("StatusReply");
+				await this.propertyChanged("StatusReply");
 			}
 			switch (frame.StatusType) {
 				case StatusType.RequestMainInfo:
 					if (this._targetPositionRaw !== frame.TargetPosition) {
 						this._targetPositionRaw = frame.TargetPosition!;
-						this.propertyChanged("TargetPositionRaw");
-						this.propertyChanged("TargetPosition");
+						await this.propertyChanged("TargetPositionRaw");
+						await this.propertyChanged("TargetPosition");
 					}
 					if (this._currentPositionRaw !== frame.CurrentPosition) {
 						this._currentPositionRaw = frame.CurrentPosition!;
-						this.propertyChanged("CurrentPositionRaw");
-						this.propertyChanged("CurrentPosition");
+						await this.propertyChanged("CurrentPositionRaw");
+						await this.propertyChanged("CurrentPosition");
 					}
 					if (this._remainingTime !== frame.RemainingTime) {
 						this._remainingTime = frame.RemainingTime!;
-						this.propertyChanged("RemainingTime");
+						await this.propertyChanged("RemainingTime");
 					}
 					break;
 
 				case StatusType.RequestTargetPosition:
-					frame.ParameterData?.forEach((paramData) => {
+					for (const paramData of frame.ParameterData || []) {
 						if (paramData.ID === 0) {
 							if (this._targetPositionRaw !== paramData.Value) {
 								this._targetPositionRaw = paramData.Value!;
-								this.propertyChanged("TargetPositionRaw");
-								this.propertyChanged("TargetPosition");
+								await this.propertyChanged("TargetPositionRaw");
+								await this.propertyChanged("TargetPosition");
 							}
 						}
-					});
+					}
 					break;
 
 				case StatusType.RequestCurrentPosition:
-					frame.ParameterData?.forEach((paramData) => {
+					for (const paramData of frame.ParameterData || []) {
 						switch (paramData.ID) {
 							case 0:
 								if (this._currentPositionRaw !== paramData.Value) {
 									this._currentPositionRaw = paramData.Value!;
-									this.propertyChanged("CurrentPositionRaw");
-									this.propertyChanged("CurrentPosition");
+									await this.propertyChanged("CurrentPositionRaw");
+									await this.propertyChanged("CurrentPosition");
 								}
 								break;
 
 							case 1:
 								if (this._fp1CurrentPositionRaw !== paramData.Value) {
 									this._fp1CurrentPositionRaw = paramData.Value!;
-									this.propertyChanged("FP1CurrentPositionRaw");
+									await this.propertyChanged("FP1CurrentPositionRaw");
 								}
 								break;
 
 							case 2:
 								if (this._fp2CurrentPositionRaw !== paramData.Value) {
 									this._fp2CurrentPositionRaw = paramData.Value!;
-									this.propertyChanged("FP2CurrentPositionRaw");
+									await this.propertyChanged("FP2CurrentPositionRaw");
 								}
 								break;
 
 							case 3:
 								if (this._fp3CurrentPositionRaw !== paramData.Value) {
 									this._fp3CurrentPositionRaw = paramData.Value!;
-									this.propertyChanged("FP3CurrentPositionRaw");
+									await this.propertyChanged("FP3CurrentPositionRaw");
 								}
 								break;
 
 							case 4:
 								if (this._fp4CurrentPositionRaw !== paramData.Value) {
 									this._fp4CurrentPositionRaw = paramData.Value!;
-									this.propertyChanged("FP4CurrentPositionRaw");
+									await this.propertyChanged("FP4CurrentPositionRaw");
 								}
 								break;
 
 							default:
 								break;
 						}
-					});
+					}
 					break;
 
 				case StatusType.RequestRemainingTime:
-					frame.ParameterData?.forEach((paramData) => {
+					for (const paramData of frame.ParameterData || []) {
 						if (paramData.ID === 0) {
 							if (this._remainingTime !== paramData.Value) {
 								this._remainingTime = paramData.Value!;
-								this.propertyChanged("RemainingTime");
+								await this.propertyChanged("RemainingTime");
 							}
 						}
-					});
+					}
 					break;
 
 				default:
@@ -1544,36 +1584,50 @@ export class Products {
 		let dispose: Disposable | undefined;
 
 		try {
-			const onNotificationHandler = new Promise<void>((resolve, reject) => {
-				try {
-					dispose = this.Connection.on(
-						(frame) => {
-							if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF) {
-								const newProduct = new Product(this.Connection, frame);
-								this.Products[frame.NodeID] = newProduct;
-							} else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
-								if (dispose) {
-									dispose.dispose();
-								}
-								this.Connection.on(
-									(frame) => this.onNotificationHandler(frame),
-									[GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF],
-								);
-								resolve();
-							}
-						},
-						[
-							GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF,
-							GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF,
-						],
-					);
-				} catch (error) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					reject(error);
-				}
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+			const onNotificationHandler = new Promise((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
+
+			dispose = this.Connection.on(
+				(frame) => {
+					try {
+						debug(
+							`Calling handler for GW_GET_ALL_NODES_INFORMATION_NTF, GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF in Products.initializeProductsAsync.`,
+						);
+						if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF) {
+							const newProduct = new Product(this.Connection, frame);
+							this.Products[frame.NodeID] = newProduct;
+						} else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
+							if (dispose) {
+								dispose.dispose();
+							}
+							this.Connection.on(
+								async (frame) => {
+									debug(
+										`Calling handler for GW_CS_SYTEM_TABLE_UPDATE_NTF in Products.initializeProductsAsync.`,
+									);
+									await this.onNotificationHandler(frame);
+								},
+								[GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF],
+							);
+							resolve();
+						}
+					} catch (error) {
+						if (dispose) {
+							dispose.dispose();
+						}
+						reject(error);
+					}
+				},
+				[
+					GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF,
+					GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF,
+				],
+			);
 
 			const getAllNodesInformation = <GW_GET_ALL_NODES_INFORMATION_CFM>(
 				await this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ())
@@ -1582,7 +1636,12 @@ export class Products {
 				if (dispose) {
 					dispose.dispose();
 				}
-				return Promise.reject(new Error(getAllNodesInformation.getError()));
+				if (
+					getAllNodesInformation.Status !==
+					GW_COMMON_STATUS.ERROR /* No nodes available -> not a real error */
+				) {
+					return Promise.reject(new Error(getAllNodesInformation.getError()));
+				}
 			}
 
 			// Wait for nodes information notifications, but only, if there are nodes
@@ -1633,29 +1692,60 @@ export class Products {
 		return this._onRemovedProduct.on(handler);
 	}
 
-	private notifyNewProduct(nodeId: number): void {
-		this._onNewProduct.emit(nodeId);
+	private async notifyNewProduct(nodeId: number): Promise<void> {
+		await this._onNewProduct.emit(nodeId);
 	}
 
-	private notifiyRemovedProduct(nodeId: number): void {
-		this._onRemovedProduct.emit(nodeId);
+	private async notifiyRemovedProduct(nodeId: number): Promise<void> {
+		await this._onRemovedProduct.emit(nodeId);
 	}
 
-	private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (frame instanceof GW_CS_SYSTEM_TABLE_UPDATE_NTF) {
 			// Remove nodes
 			for (const nodeID of frame.RemovedNodes) {
 				delete this.Products[nodeID];
-				this.notifiyRemovedProduct(nodeID);
+				await this.notifiyRemovedProduct(nodeID);
 			}
 
 			// Add nodes
-			(async () => {
-				for (const nodeID of frame.AddedNodes) {
-					this.Products[nodeID] = await this.addNodeAsync(nodeID);
-					this.notifyNewProduct(nodeID);
-				}
-			})().catch(() => {});
+			if (frame.AddedNodes.length > 0) {
+				// Wait until the KLF-200 leaves configuration services handler.
+				// Otherwise, we would receive a Busy error.
+				const checkForIdle = async (): Promise<boolean> => {
+					try {
+						const getStateCfm = <GW_GET_STATE_CFM>(
+							await this.Connection.sendFrameAsync(new GW_GET_STATE_REQ())
+						);
+						return (
+							getStateCfm.GatewayState === GatewayState.GatewayMode_WithActuatorNodes &&
+							getStateCfm.GatewaySubState === GatewaySubState.Idle
+						);
+					} catch (error) {
+						if (
+							error instanceof Error &&
+							error.cause instanceof GW_ERROR_NTF &&
+							error.cause.ErrorNumber === GW_ERROR.Busy
+						) {
+							return false;
+						}
+						throw error;
+					}
+				};
+
+				// Checking for Idle state and adding nodes will be done outside of this handler
+				const waitForIdle = async (): Promise<void> => {
+					if (await checkForIdle()) {
+						for (const nodeID of frame.AddedNodes) {
+							this.Products[nodeID] = await this.addNodeAsync(nodeID);
+							await this.notifyNewProduct(nodeID);
+						}
+					} else {
+						await setImmediate(await waitForIdle());
+					}
+				};
+				await setImmediate(await waitForIdle());
+			}
 		}
 	}
 
@@ -1664,27 +1754,54 @@ export class Products {
 		let dispose: Disposable | undefined;
 
 		try {
-			const notificationHandler = new Promise<Product>((resolve, reject) => {
-				try {
-					dispose = this.Connection.on(
-						(frame) => {
-							if (dispose) {
-								dispose.dispose();
-							}
-							resolve(new Product(this.Connection, frame as GW_GET_NODE_INFORMATION_NTF));
-						},
-						[GatewayCommand.GW_GET_NODE_INFORMATION_NTF],
-					);
-				} catch (error) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					reject(error);
-				}
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: Product | PromiseLike<Product>) => void, reject: (reason?: any) => void;
+			const notificationHandler = new Promise<Product>((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
-			const getNodeInformation = <GW_GET_NODE_INFORMATION_CFM>(
-				await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID))
+
+			dispose = this.Connection.on(
+				(frame) => {
+					try {
+						debug(`Calling handler for GW_GET_NODE_INFORMATION_NTF in Products.addNodeAsync.`);
+						if (dispose) {
+							dispose.dispose();
+						}
+						resolve(new Product(this.Connection, frame as GW_GET_NODE_INFORMATION_NTF));
+					} catch (error) {
+						if (dispose) {
+							dispose.dispose();
+						}
+						reject(error);
+					}
+				},
+				[GatewayCommand.GW_GET_NODE_INFORMATION_NTF],
 			);
+
+			const maxRetryTimestamp = Date.now() + 60_000; // Wait max. 60 seconds.
+			const retryIfNotBusy = async (): Promise<GW_GET_NODE_INFORMATION_CFM> => {
+				if (Date.now() > maxRetryTimestamp) {
+					throw new Error("Can't read node information of added node after 60 seconds.");
+				}
+				try {
+					const getNodeInformation = <GW_GET_NODE_INFORMATION_CFM>(
+						await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID))
+					);
+					return getNodeInformation;
+				} catch (error) {
+					if (
+						error instanceof Error &&
+						error.cause instanceof GW_ERROR_NTF &&
+						error.cause.ErrorNumber === GW_ERROR.Busy
+					) {
+						return await setImmediate(await retryIfNotBusy());
+					}
+					throw error;
+				}
+			};
+			const getNodeInformation = await setImmediate(await retryIfNotBusy());
 			if (getNodeInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
 				if (dispose) {
 					dispose.dispose();

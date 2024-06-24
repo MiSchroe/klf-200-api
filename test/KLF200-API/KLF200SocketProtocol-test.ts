@@ -1,11 +1,18 @@
 "use strict";
 
 import { expect, use } from "chai";
+import chaibytes from "chai-bytes";
+import debugModule from "debug";
 import "mocha";
 import * as net from "net";
+import path from "path";
+import { fileURLToPath } from "url";
 import { GW_PASSWORD_ENTER_CFM, KLF200Protocol, KLF200SocketProtocol, SLIPProtocol } from "../../src";
 
-import chaibytes from "chai-bytes";
+const __filename = fileURLToPath(import.meta.url);
+
+const debug = debugModule(path.parse(__filename).name);
+
 use(chaibytes);
 
 describe("KLF200-API", function () {
@@ -14,18 +21,18 @@ describe("KLF200-API", function () {
 		let server: net.Server;
 		before(function (done) {
 			// Create a listening echo server, so that
-			console.log("Starting socket server...");
+			debug("Starting socket server...");
 			server = net.createServer((c) => {
-				console.log("Client connected.");
+				debug("Client connected.");
 				c.on("end", () => {
-					console.log("Client disconnected.");
+					debug("Client disconnected.");
 				});
 				c.setNoDelay();
 				c.pipe(c);
 			});
 			server.listen(() => {
 				serverPort = (server.address() as net.AddressInfo).port;
-				console.log(`Server listens on port ${serverPort}.`);
+				debug(`Server listens on port ${serverPort}.`);
 				done();
 			});
 		});
@@ -33,9 +40,9 @@ describe("KLF200-API", function () {
 		after(function (done) {
 			// Tear down the echo server
 			if (server) {
-				console.log("Stopping socket server...");
+				debug("Stopping socket server...");
 				server.close(() => {
-					console.log("Socket server stopped.");
+					debug("Socket server stopped.");
 					done();
 				});
 			} else {
@@ -46,7 +53,7 @@ describe("KLF200-API", function () {
 		let client: net.Socket;
 		this.beforeEach(function (done) {
 			// Start socket
-			console.log("Connecting...");
+			debug("Connecting...");
 			client = net.connect(serverPort, undefined, () => {
 				client.setNoDelay(); // Write each packet without buffering -> split frames
 				done();
@@ -55,7 +62,7 @@ describe("KLF200-API", function () {
 
 		this.afterEach(function (done) {
 			// Stop socket
-			console.log("Disconnecting...");
+			debug("Disconnecting...");
 			client.end(done);
 		});
 

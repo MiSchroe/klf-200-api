@@ -1,5 +1,10 @@
-import { GW_ACTIVATE_PRODUCTGROUP_CFM } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_CFM";
-import { GW_ACTIVATE_PRODUCTGROUP_REQ } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_REQ";
+"use strict";
+
+import debugModule from "debug";
+import { dirname, parse } from "path";
+import { fileURLToPath } from "url";
+import { GW_ACTIVATE_PRODUCTGROUP_CFM } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_CFM.js";
+import { GW_ACTIVATE_PRODUCTGROUP_REQ } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_REQ.js";
 import {
 	ActivateProductGroupStatus,
 	CommandOriginator,
@@ -8,33 +13,36 @@ import {
 	PriorityLevelInformation,
 	PriorityLevelLock,
 	convertPosition,
-} from "./KLF200-API/GW_COMMAND";
-import { GW_GET_ALL_GROUPS_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_CFM";
-import { GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF";
-import { GW_GET_ALL_GROUPS_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_NTF";
-import { GW_GET_ALL_GROUPS_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_REQ";
-import { GW_GET_GROUP_INFORMATION_CFM } from "./KLF200-API/GW_GET_GROUP_INFORMATION_CFM";
-import { GW_GET_GROUP_INFORMATION_NTF } from "./KLF200-API/GW_GET_GROUP_INFORMATION_NTF";
-import { GW_GET_GROUP_INFORMATION_REQ } from "./KLF200-API/GW_GET_GROUP_INFORMATION_REQ";
-import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM";
-import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF";
-import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ";
-import { GroupType } from "./KLF200-API/GW_GROUPS";
+} from "./KLF200-API/GW_COMMAND.js";
+import { GW_GET_ALL_GROUPS_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_CFM.js";
+import { GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF.js";
+import { GW_GET_ALL_GROUPS_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_NTF.js";
+import { GW_GET_ALL_GROUPS_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_REQ.js";
+import { GW_GET_GROUP_INFORMATION_CFM } from "./KLF200-API/GW_GET_GROUP_INFORMATION_CFM.js";
+import { GW_GET_GROUP_INFORMATION_NTF } from "./KLF200-API/GW_GET_GROUP_INFORMATION_NTF.js";
+import { GW_GET_GROUP_INFORMATION_REQ } from "./KLF200-API/GW_GET_GROUP_INFORMATION_REQ.js";
+import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM.js";
+import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF.js";
+import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ.js";
+import { GroupType } from "./KLF200-API/GW_GROUPS.js";
 import {
 	ChangeType,
 	GW_GROUP_INFORMATION_CHANGED_NTF,
 	GW_GROUP_INFORMATION_CHANGED_NTF_Modified,
-} from "./KLF200-API/GW_GROUP_INFORMATION_CHANGED_NTF";
-import { GW_SET_GROUP_INFORMATION_CFM } from "./KLF200-API/GW_SET_GROUP_INFORMATION_CFM";
-import { GW_SET_GROUP_INFORMATION_REQ } from "./KLF200-API/GW_SET_GROUP_INFORMATION_REQ";
-import { ActuatorType, NodeVariation, Velocity } from "./KLF200-API/GW_SYSTEMTABLE_DATA";
-import { GW_COMMON_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common";
-import { IConnection } from "./connection";
-import { Component } from "./utils/PropertyChangedEvent";
-import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent";
-import { isArrayEqual } from "./utils/UtilityFunctions";
+} from "./KLF200-API/GW_GROUP_INFORMATION_CHANGED_NTF.js";
+import { GW_SET_GROUP_INFORMATION_CFM } from "./KLF200-API/GW_SET_GROUP_INFORMATION_CFM.js";
+import { GW_SET_GROUP_INFORMATION_REQ } from "./KLF200-API/GW_SET_GROUP_INFORMATION_REQ.js";
+import { ActuatorType, NodeVariation, Velocity } from "./KLF200-API/GW_SYSTEMTABLE_DATA.js";
+import { GW_COMMON_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common.js";
+import { IConnection } from "./connection.js";
+import { Component } from "./utils/PropertyChangedEvent.js";
+import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
+import { isArrayEqual } from "./utils/UtilityFunctions.js";
 
-("use strict");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
 
 /**
  * The gateway can hold up to 100 groups. A group is a collection of actuator nodes in
@@ -103,7 +111,13 @@ export class Group extends Component {
 		this.Nodes.push(...frame.Nodes);
 		this._revision = frame.Revision;
 
-		this.Connection.on((frame) => this.onNotificationHandler(frame), [GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
+		this.Connection.on(
+			async (frame) => {
+				debug(`Calling onNotificationHandler for GW_GET_GROUP_INFORMATION_NTF added in Group constructor.`);
+				await this.onNotificationHandler(frame);
+			},
+			[GatewayCommand.GW_GET_GROUP_INFORMATION_NTF],
+		);
 	}
 
 	/**
@@ -115,35 +129,35 @@ export class Group extends Component {
 	 * @param {GW_GROUP_INFORMATION_CHANGED_NTF_Modified} frame Change notification frame to calculate the changes.
 	 * @memberof Group
 	 */
-	public changeFromNotification(frame: GW_GROUP_INFORMATION_CHANGED_NTF_Modified): void {
+	public async changeFromNotification(frame: GW_GROUP_INFORMATION_CHANGED_NTF_Modified): Promise<void> {
 		if (this._order !== frame.Order) {
 			this._order = frame.Order;
-			this.propertyChanged("Order");
+			await this.propertyChanged("Order");
 		}
 		if (this._placement !== frame.Placement) {
 			this._placement = frame.Placement;
-			this.propertyChanged("Placement");
+			await this.propertyChanged("Placement");
 		}
 		if (this._name !== frame.Name) {
 			this._name = frame.Name;
-			this.propertyChanged("Name");
+			await this.propertyChanged("Name");
 		}
 		if (this._velocity !== frame.Velocity) {
 			this._velocity = frame.Velocity;
-			this.propertyChanged("Velocity");
+			await this.propertyChanged("Velocity");
 		}
 		if (this._nodeVariation !== frame.NodeVariation) {
 			this._nodeVariation = frame.NodeVariation;
-			this.propertyChanged("NodeVariation");
+			await this.propertyChanged("NodeVariation");
 		}
 		if (this._groupType !== frame.GroupType) {
 			this._groupType = frame.GroupType;
-			this.propertyChanged("GroupType");
+			await this.propertyChanged("GroupType");
 		}
 		if (!isArrayEqual(this.Nodes, frame.Nodes)) {
 			this.Nodes.length = 0; // Clear nodes array
 			this.Nodes.push(...frame.Nodes);
-			this.propertyChanged("Nodes");
+			await this.propertyChanged("Nodes");
 		}
 		this._revision = frame.Revision;
 	}
@@ -396,7 +410,7 @@ export class Group extends Component {
 	 * @param PriorityLevelLock Flag if the priority level lock should be used.
 	 * @param PriorityLevels Up to 8 priority levels.
 	 * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
-	 * @returns {Promise<number>}
+	 * @returns {Promise<number>} Returns the session ID of the command.
 	 * @memberof Group
 	 */
 	public async setTargetPositionRawAsync(
@@ -446,7 +460,7 @@ export class Group extends Component {
 	 * @param PriorityLevelLock Flag if the priority level lock should be used.
 	 * @param PriorityLevels Up to 8 priority levels.
 	 * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
-	 * @returns {Promise<number>}
+	 * @returns {Promise<number>} Returns the session ID of the command.
 	 * @memberof Group
 	 */
 	public async setTargetPositionAsync(
@@ -463,39 +477,36 @@ export class Group extends Component {
 			// Get product type from first node ID for conversion
 			const nodeID = this.Nodes[0];
 
-			// Setup notification to receive notification with actuator type
-			let dispose: Disposable | undefined;
-			const nodeTypeID = new Promise<ActuatorType>((resolve, reject) => {
-				try {
-					let nodeTypeID: ActuatorType;
-
-					// Register notification handler
-					dispose = this.Connection.on(
-						(frame) => {
-							try {
-								if (frame instanceof GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
-									nodeTypeID = frame.ActuatorType;
-									if (dispose) {
-										dispose.dispose();
-									}
-									resolve(nodeTypeID);
-								}
-							} catch (error) {
-								if (dispose) {
-									dispose.dispose();
-								}
-								reject(error);
-							}
-						},
-						[GatewayCommand.GW_GET_NODE_INFORMATION_NTF],
-					);
-				} catch (error) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					reject(error);
-				}
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: ActuatorType | PromiseLike<ActuatorType>) => void, reject: (reason?: any) => void;
+			const nodeTypeIDPromise = new Promise<ActuatorType>((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
+
+			// Setup notification to receive notification with actuator type
+			// Register notification handler
+			const dispose = this.Connection.on(
+				(frame) => {
+					try {
+						debug(`Calling handler for GW_GET_NODE_INFORMATION_NTF in Group.setTargetPositionAsync.`);
+						if (frame instanceof GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
+							const nodeTypeID = frame.ActuatorType;
+							if (dispose) {
+								dispose.dispose();
+							}
+							resolve(nodeTypeID);
+						}
+					} catch (error) {
+						if (dispose) {
+							dispose.dispose();
+						}
+						reject(error);
+					}
+				},
+				[GatewayCommand.GW_GET_NODE_INFORMATION_NTF],
+			);
 
 			try {
 				const productInformation = <GW_GET_NODE_INFORMATION_CFM>(
@@ -515,7 +526,7 @@ export class Group extends Component {
 			}
 
 			return this.setTargetPositionRawAsync(
-				convertPosition(newPosition, await nodeTypeID),
+				convertPosition(newPosition, await nodeTypeIDPromise),
 				Velocity,
 				PriorityLevel,
 				CommandOriginator,
@@ -554,46 +565,46 @@ export class Group extends Component {
 		}
 	}
 
-	private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (typeof this === "undefined") return;
 
 		if (frame instanceof GW_GET_GROUP_INFORMATION_NTF) {
-			this.onGetGroupInformation(frame);
+			await this.onGetGroupInformation(frame);
 		}
 	}
 
-	private onGetGroupInformation(frame: GW_GET_GROUP_INFORMATION_NTF): void {
+	private async onGetGroupInformation(frame: GW_GET_GROUP_INFORMATION_NTF): Promise<void> {
 		if (frame.GroupID === this.GroupID) {
 			if (frame.Order !== this._order) {
 				this._order = frame.Order;
-				this.propertyChanged("Order");
+				await this.propertyChanged("Order");
 			}
 			if (frame.Placement !== this._placement) {
 				this._placement = frame.Placement;
-				this.propertyChanged("Placement");
+				await this.propertyChanged("Placement");
 			}
 			if (frame.Name !== this._name) {
 				this._name = frame.Name;
-				this.propertyChanged("Name");
+				await this.propertyChanged("Name");
 			}
 			if (frame.Velocity !== this._velocity) {
 				this._velocity = frame.Velocity;
-				this.propertyChanged("Velocity");
+				await this.propertyChanged("Velocity");
 			}
 			if (frame.NodeVariation !== this._nodeVariation) {
 				this._nodeVariation = frame.NodeVariation;
-				this.propertyChanged("NodeVariation");
+				await this.propertyChanged("NodeVariation");
 			}
 			if (frame.GroupType !== this._groupType) {
 				this._groupType = frame.GroupType;
-				this.propertyChanged("GroupType");
+				await this.propertyChanged("GroupType");
 			}
 			const hasRemovedNodes = this.Nodes.every((item) => frame.Nodes.includes(item));
 			const hasNewNodes = frame.Nodes.every((item) => this.Nodes.includes(item));
 			if (hasRemovedNodes || hasNewNodes) {
 				this.Nodes.length = 0;
 				this.Nodes.push(...frame.Nodes);
-				this.propertyChanged("Nodes");
+				await this.propertyChanged("Nodes");
 			}
 			this._revision = frame.Revision;
 		}
@@ -630,39 +641,44 @@ export class Groups {
 		let dispose: Disposable | undefined;
 
 		try {
-			const notificationHandler = new Promise<void>((resolve, reject) => {
-				try {
-					dispose = this.Connection.on(
-						(frame) => {
-							if (
-								frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF ||
-								frame instanceof GW_GET_GROUP_INFORMATION_NTF
-							) {
-								this.Groups[frame.GroupID] = new Group(this.Connection, frame);
-							} else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
-								if (dispose) {
-									dispose.dispose();
-								}
-								this.Connection.on(
-									(frame) => this.onNotificationHandler(frame),
-									[GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF],
-								);
-								resolve();
-							}
-						},
-						[
-							GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF,
-							GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF,
-							GatewayCommand.GW_GET_GROUP_INFORMATION_NTF,
-						],
-					);
-				} catch (error) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					reject(error);
-				}
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+			const notificationHandler = new Promise((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
+
+			dispose = this.Connection.on(
+				(frame) => {
+					try {
+						debug(
+							`Calling handler for GW_GET_ALL_GROUPS_INFORMATION_NTF, GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, GW_GET_GROUP_INFORMATION_NTF in Groups.initializeGroupsAsync.`,
+						);
+						if (
+							frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF ||
+							frame instanceof GW_GET_GROUP_INFORMATION_NTF
+						) {
+							this.Groups[frame.GroupID] = new Group(this.Connection, frame);
+						} else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
+							if (dispose) {
+								dispose.dispose();
+							}
+							resolve();
+						}
+					} catch (error) {
+						if (dispose) {
+							dispose.dispose();
+						}
+						reject(error);
+					}
+				},
+				[
+					GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF,
+					GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF,
+					GatewayCommand.GW_GET_GROUP_INFORMATION_NTF,
+				],
+			);
 
 			const getAllGroupsInformation = <GW_GET_ALL_GROUPS_INFORMATION_CFM>(
 				await this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ(this.groupType))
@@ -671,7 +687,12 @@ export class Groups {
 				if (dispose) {
 					dispose.dispose();
 				}
-				return Promise.reject(new Error(getAllGroupsInformation.getError()));
+				if (
+					getAllGroupsInformation.Status !==
+					GW_COMMON_STATUS.INVALID_NODE_ID /* No groups available -> not a real error */
+				) {
+					return Promise.reject(new Error(getAllGroupsInformation.getError()));
+				}
 			}
 
 			// Only wait for notifications if there are groups defined
@@ -682,6 +703,17 @@ export class Groups {
 					dispose.dispose();
 				}
 			}
+
+			// Finally, setup the event handler for notifications
+			this.Connection.on(
+				async (frame) => {
+					debug(
+						`Calling onNotificationHandler for GW_GROUP_INFORMATION_CHANGED_NTF added in Groups.initializeGroupsAsync.`,
+					);
+					await this.onNotificationHandler(frame);
+				},
+				[GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF],
+			);
 		} catch (error) {
 			if (dispose) {
 				dispose.dispose();
@@ -712,21 +744,21 @@ export class Groups {
 		return this._onRemovedGroup.on(handler);
 	}
 
-	private notifyChangedGroup(groupId: number): void {
-		this._onChangedGroup.emit(groupId);
+	private async notifyChangedGroup(groupId: number): Promise<void> {
+		await this._onChangedGroup.emit(groupId);
 	}
 
-	private notifyRemovedGroup(groupId: number): void {
-		this._onRemovedGroup.emit(groupId);
+	private async notifyRemovedGroup(groupId: number): Promise<void> {
+		await this._onRemovedGroup.emit(groupId);
 	}
 
-	private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (frame instanceof GW_GROUP_INFORMATION_CHANGED_NTF) {
 			switch (frame.ChangeType) {
 				case ChangeType.Deleted:
 					// Remove group
 					delete this.Groups[frame.GroupID];
-					this.notifyRemovedGroup(frame.GroupID);
+					await this.notifyRemovedGroup(frame.GroupID);
 					break;
 
 				case ChangeType.Modified:
@@ -739,11 +771,11 @@ export class Groups {
 						);
 					} else {
 						// Change group
-						this.Groups[frame.GroupID].changeFromNotification(
+						await this.Groups[frame.GroupID].changeFromNotification(
 							frame as GW_GROUP_INFORMATION_CHANGED_NTF_Modified,
 						);
 					}
-					this.notifyChangedGroup(frame.GroupID);
+					await this.notifyChangedGroup(frame.GroupID);
 
 				default:
 					break;

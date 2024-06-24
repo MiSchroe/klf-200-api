@@ -1,24 +1,32 @@
-﻿import { GW_ACTIVATE_SCENE_CFM } from "./KLF200-API/GW_ACTIVATE_SCENE_CFM";
-import { GW_ACTIVATE_SCENE_REQ } from "./KLF200-API/GW_ACTIVATE_SCENE_REQ";
-import { CommandOriginator, PriorityLevel } from "./KLF200-API/GW_COMMAND";
-import { GW_GET_SCENE_INFORMATION_CFM } from "./KLF200-API/GW_GET_SCENE_INFORMATION_CFM";
-import { GW_GET_SCENE_INFORMATION_NTF, SceneInformationEntry } from "./KLF200-API/GW_GET_SCENE_INFORMATION_NTF";
-import { GW_GET_SCENE_INFORMATION_REQ } from "./KLF200-API/GW_GET_SCENE_INFORMATION_REQ";
-import { GW_GET_SCENE_LIST_CFM } from "./KLF200-API/GW_GET_SCENE_LIST_CFM";
-import { GW_GET_SCENE_LIST_NTF } from "./KLF200-API/GW_GET_SCENE_LIST_NTF";
-import { GW_GET_SCENE_LIST_REQ } from "./KLF200-API/GW_GET_SCENE_LIST_REQ";
-import { ActivateSceneStatus } from "./KLF200-API/GW_SCENES";
-import { GW_SCENE_INFORMATION_CHANGED_NTF, SceneChangeType } from "./KLF200-API/GW_SCENE_INFORMATION_CHANGED_NTF";
-import { GW_SESSION_FINISHED_NTF } from "./KLF200-API/GW_SESSION_FINISHED_NTF";
-import { GW_STOP_SCENE_CFM } from "./KLF200-API/GW_STOP_SCENE_CFM";
-import { GW_STOP_SCENE_REQ } from "./KLF200-API/GW_STOP_SCENE_REQ";
-import { Velocity } from "./KLF200-API/GW_SYSTEMTABLE_DATA";
-import { GW_COMMON_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common";
-import { IConnection } from "./connection";
-import { Component } from "./utils/PropertyChangedEvent";
-import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent";
+﻿"use strict";
 
-("use strict");
+import debugModule from "debug";
+import { dirname, parse } from "path";
+import { fileURLToPath } from "url";
+import { GW_ACTIVATE_SCENE_CFM } from "./KLF200-API/GW_ACTIVATE_SCENE_CFM.js";
+import { GW_ACTIVATE_SCENE_REQ } from "./KLF200-API/GW_ACTIVATE_SCENE_REQ.js";
+import { CommandOriginator, PriorityLevel } from "./KLF200-API/GW_COMMAND.js";
+import { GW_GET_SCENE_INFORMATION_CFM } from "./KLF200-API/GW_GET_SCENE_INFORMATION_CFM.js";
+import { GW_GET_SCENE_INFORMATION_NTF, SceneInformationEntry } from "./KLF200-API/GW_GET_SCENE_INFORMATION_NTF.js";
+import { GW_GET_SCENE_INFORMATION_REQ } from "./KLF200-API/GW_GET_SCENE_INFORMATION_REQ.js";
+import { GW_GET_SCENE_LIST_CFM } from "./KLF200-API/GW_GET_SCENE_LIST_CFM.js";
+import { GW_GET_SCENE_LIST_NTF } from "./KLF200-API/GW_GET_SCENE_LIST_NTF.js";
+import { GW_GET_SCENE_LIST_REQ } from "./KLF200-API/GW_GET_SCENE_LIST_REQ.js";
+import { ActivateSceneStatus } from "./KLF200-API/GW_SCENES.js";
+import { GW_SCENE_INFORMATION_CHANGED_NTF, SceneChangeType } from "./KLF200-API/GW_SCENE_INFORMATION_CHANGED_NTF.js";
+import { GW_SESSION_FINISHED_NTF } from "./KLF200-API/GW_SESSION_FINISHED_NTF.js";
+import { GW_STOP_SCENE_CFM } from "./KLF200-API/GW_STOP_SCENE_CFM.js";
+import { GW_STOP_SCENE_REQ } from "./KLF200-API/GW_STOP_SCENE_REQ.js";
+import { Velocity } from "./KLF200-API/GW_SYSTEMTABLE_DATA.js";
+import { GW_COMMON_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common.js";
+import { IConnection } from "./connection.js";
+import { Component } from "./utils/PropertyChangedEvent.js";
+import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
 
 /**
  * The scene object contains the ID, name and a list of products that are contained in the scene.
@@ -57,7 +65,13 @@ export class Scene extends Component {
 
 		this._sceneName = SceneName;
 
-		this.Connection.on((frame) => this.onNotificationHandler(frame), [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+		this.Connection.on(
+			async (frame) => {
+				debug(`Calling onNotificationHandler for GW_SESSION_FINISHED_NTF added in Scene constructor.`);
+				await this.onNotificationHandler(frame);
+			},
+			[GatewayCommand.GW_SESSION_FINISHED_NTF],
+		);
 	}
 
 	/**
@@ -105,7 +119,7 @@ export class Scene extends Component {
 			if (confirmationFrame.Status === ActivateSceneStatus.OK) {
 				this._isRunning = true;
 				this._runningSession = confirmationFrame.SessionID;
-				this.propertyChanged("IsRunning");
+				await this.propertyChanged("IsRunning");
 				return confirmationFrame.SessionID;
 			} else {
 				return Promise.reject(new Error(confirmationFrame.getError()));
@@ -136,7 +150,7 @@ export class Scene extends Component {
 			if (confirmationFrame.Status === ActivateSceneStatus.OK) {
 				this._isRunning = false;
 				this._runningSession = confirmationFrame.SessionID;
-				this.propertyChanged("IsRunning");
+				await this.propertyChanged("IsRunning");
 				return confirmationFrame.SessionID;
 			} else {
 				return Promise.reject(new Error(confirmationFrame.getError()));
@@ -160,42 +174,48 @@ export class Scene extends Component {
 
 		try {
 			const tempResult: SceneInformationEntry[] = []; // Store results temporary until finished without error.
-			const notificationHandler = new Promise<void>((resolve, reject) => {
-				try {
-					dispose = this.Connection.on(
-						(frame) => {
-							if (frame instanceof GW_GET_SCENE_INFORMATION_NTF) {
-								tempResult.push(...frame.Nodes);
-								// Check, if last notification message
-								if (frame.NumberOfRemainingNodes === 0) {
-									if (dispose) {
-										dispose.dispose();
-									}
-
-									// Finished without error -> update Products array
-									this.Products.length = 0; // Clear array of products
-									this.Products.push(...tempResult);
-									this.propertyChanged("Products");
-
-									// It seems that currently the notification frame doesn't return the scene name.
-									// Though we only change it if it's not empty and different.
-									if (frame.Name !== this._sceneName && frame.Name !== "") {
-										this._sceneName = frame.Name;
-										this.propertyChanged("SceneName");
-									}
-									resolve();
-								}
-							}
-						},
-						[GatewayCommand.GW_GET_SCENE_INFORMATION_NTF],
-					);
-				} catch (error) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					reject(error);
-				}
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+			const notificationHandler = new Promise<void>((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
+			dispose = this.Connection.on(
+				async (frame) => {
+					try {
+						debug(`Calling handler for GW_GET_SCENE_INFORMATION_NTF in Scene.refreshAsync.`);
+						if (frame instanceof GW_GET_SCENE_INFORMATION_NTF) {
+							tempResult.push(...frame.Nodes);
+							// Check, if last notification message
+							if (frame.NumberOfRemainingNodes === 0) {
+								if (dispose) {
+									dispose.dispose();
+								}
+
+								// Finished without error -> update Products array
+								this.Products.length = 0; // Clear array of products
+								this.Products.push(...tempResult);
+								await this.propertyChanged("Products");
+
+								// It seems that currently the notification frame doesn't return the scene name.
+								// Though we only change it if it's not empty and different.
+								if (frame.Name !== this._sceneName && frame.Name !== "") {
+									this._sceneName = frame.Name;
+									await this.propertyChanged("SceneName");
+								}
+								resolve();
+							}
+						}
+					} catch (error) {
+						if (dispose) {
+							dispose.dispose();
+						}
+						reject(error);
+					}
+				},
+				[GatewayCommand.GW_GET_SCENE_INFORMATION_NTF],
+			);
 
 			const confirmationFrame = <GW_GET_SCENE_INFORMATION_CFM>(
 				await this.Connection.sendFrameAsync(new GW_GET_SCENE_INFORMATION_REQ(this.SceneID))
@@ -210,7 +230,7 @@ export class Scene extends Component {
 			}
 
 			// The notifications will resolve the promise
-			return notificationHandler;
+			await notificationHandler;
 		} catch (error) {
 			if (dispose) {
 				dispose.dispose();
@@ -219,17 +239,17 @@ export class Scene extends Component {
 		}
 	}
 
-	private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (frame instanceof GW_SESSION_FINISHED_NTF) {
-			this.onSessionFinished(frame);
+			await this.onSessionFinished(frame);
 		}
 	}
 
-	private onSessionFinished(frame: GW_SESSION_FINISHED_NTF): void {
+	private async onSessionFinished(frame: GW_SESSION_FINISHED_NTF): Promise<void> {
 		if (frame.SessionID === this._runningSession) {
 			this._isRunning = false;
 			this._runningSession = -1;
-			this.propertyChanged("IsRunning");
+			await this.propertyChanged("IsRunning");
 		}
 	}
 }
@@ -283,36 +303,44 @@ export class Scenes {
 		const newScenes: Scene[] = [];
 
 		try {
-			const notificationHandlerSceneList = new Promise<void>((resolve, reject) => {
-				try {
-					dispose = this.Connection.on(
-						(frame) => {
-							if (frame instanceof GW_GET_SCENE_LIST_NTF) {
-								frame.Scenes.forEach((scene) => {
-									if (typeof this.Scenes[scene.SceneID] === "undefined") {
-										const newScene = new Scene(this.Connection, scene.SceneID, scene.Name);
-										this.Scenes[scene.SceneID] = newScene;
-										newScenes.push(newScene);
-									}
-								});
-								if (frame.NumberOfRemainingScenes === 0) {
-									if (dispose) {
-										dispose.dispose();
-									}
-
-									resolve();
-								}
-							}
-						},
-						[GatewayCommand.GW_GET_SCENE_LIST_NTF],
-					);
-				} catch (error) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					reject(error);
-				}
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+			const notificationHandlerSceneList = new Promise((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
+
+			dispose = this.Connection.on(
+				(frame) => {
+					try {
+						debug(`Calling handler for GW_GET_SCENE_LIST_NTF in Scenes.refreshScenesAsync.`);
+						if (frame instanceof GW_GET_SCENE_LIST_NTF) {
+							frame.Scenes.forEach((scene) => {
+								if (typeof this.Scenes[scene.SceneID] === "undefined") {
+									const newScene = new Scene(this.Connection, scene.SceneID, scene.Name);
+									this.Scenes[scene.SceneID] = newScene;
+									newScenes.push(newScene);
+								}
+							});
+							if (frame.NumberOfRemainingScenes === 0) {
+								if (dispose) {
+									dispose.dispose();
+								}
+
+								resolve();
+							}
+						}
+					} catch (error) {
+						if (dispose) {
+							dispose.dispose();
+						}
+						reject(error);
+					}
+				},
+				[GatewayCommand.GW_GET_SCENE_LIST_NTF],
+			);
+
 			const getSceneListConfirmation = (await this.Connection.sendFrameAsync(
 				new GW_GET_SCENE_LIST_REQ(),
 			)) as GW_GET_SCENE_LIST_CFM;
@@ -336,13 +364,18 @@ export class Scenes {
 
 			// Notify about added scenes
 			for (const scene of newScenes) {
-				this.notifyAddedScene(scene.SceneID);
+				await this.notifyAddedScene(scene.SceneID);
 			}
 
 			// Setup notification handler
 			if (typeof this._notificationHandler === "undefined") {
 				this._notificationHandler = this.Connection.on(
-					(frame) => this.onNotificationHandler(frame),
+					async (frame) => {
+						debug(
+							`Calling onNotificationHandler for GW_SCENE_INFORMATION_CHANGED_NTF in Scenes.refreshSCenesAsync.`,
+						);
+						await this.onNotificationHandler(frame);
+					},
 					[GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF],
 				);
 			}
@@ -356,21 +389,17 @@ export class Scenes {
 		}
 	}
 
-	private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (frame instanceof GW_SCENE_INFORMATION_CHANGED_NTF) {
 			switch (frame.SceneChangeType) {
 				case SceneChangeType.Deleted:
 					delete this.Scenes[frame.SceneID];
-					this.notifyRemovedScene(frame.SceneID);
+					await this.notifyRemovedScene(frame.SceneID);
 					break;
 
 				case SceneChangeType.Modified:
-					this.Scenes[frame.SceneID]
-						.refreshAsync()
-						.then(() => this.notifyChangedScene(frame.SceneID))
-						.catch((reason) => {
-							throw reason;
-						});
+					await this.Scenes[frame.SceneID].refreshAsync();
+					await this.notifyChangedScene(frame.SceneID);
 
 				default:
 					break;
@@ -411,16 +440,16 @@ export class Scenes {
 		return this._onAddedScenes.on(handler);
 	}
 
-	private notifyChangedScene(sceneId: number): void {
-		this._onChangedScenes.emit(sceneId);
+	private async notifyChangedScene(sceneId: number): Promise<void> {
+		await this._onChangedScenes.emit(sceneId);
 	}
 
-	private notifyRemovedScene(sceneId: number): void {
-		this._onRemovedScenes.emit(sceneId);
+	private async notifyRemovedScene(sceneId: number): Promise<void> {
+		await this._onRemovedScenes.emit(sceneId);
 	}
 
-	private notifyAddedScene(sceneId: number): void {
-		this._onAddedScenes.emit(sceneId);
+	private async notifyAddedScene(sceneId: number): Promise<void> {
+		await this._onAddedScenes.emit(sceneId);
 	}
 
 	/**

@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_REQ } from "./common";
-import { NodeVariation } from "./GW_SYSTEMTABLE_DATA";
+import { GW_FRAME_REQ } from "./common.js";
+import { NodeVariation } from "./GW_SYSTEMTABLE_DATA.js";
 
 export class GW_SET_NODE_VARIATION_REQ extends GW_FRAME_REQ {
 	constructor(

@@ -14,15 +14,15 @@ import {
 import { Disposable, Listener, TypedEvent } from "../../src/utils/TypedEvent";
 
 export class MockExceptionConnection implements IConnection {
-	loginAsync(_password: string, _timeout?: number): Promise<void> {
+	async loginAsync(_password: string, _timeout?: number): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
 
-	logoutAsync(_timeout?: number): Promise<void> {
+	async logoutAsync(_timeout?: number): Promise<void> {
 		throw new Error("Method not implemented.");
 	}
 
-	sendFrameAsync(_frame: IGW_FRAME_REQ, _timeout?: number): Promise<IGW_FRAME_RCV> {
+	async sendFrameAsync(_frame: IGW_FRAME_REQ, _timeout?: number): Promise<IGW_FRAME_RCV> {
 		return Promise.reject(new Error("Test Exception"));
 	}
 
@@ -57,7 +57,7 @@ export class MockConnection extends MockExceptionConnection {
 		}
 	}
 
-	sendFrameAsync(_frame: IGW_FRAME_REQ, _timeout?: number): Promise<IGW_FRAME_RCV> {
+	async sendFrameAsync(_frame: IGW_FRAME_REQ, _timeout?: number): Promise<IGW_FRAME_RCV> {
 		// Loop through the frames until an error frame or an confirmation frame.
 		// All frames will be emitted to notification handlers, if any.
 		// We will reject with an error, if no more frames are available.
@@ -79,9 +79,12 @@ export class MockConnection extends MockExceptionConnection {
 		}
 	}
 
-	sendNotification(notificationFrame: IGW_FRAME_NTF, responseFrames: IGW_FRAME_RCV | IGW_FRAME_RCV[]): void {
+	async sendNotification(
+		notificationFrame: IGW_FRAME_NTF,
+		responseFrames: IGW_FRAME_RCV | IGW_FRAME_RCV[],
+	): Promise<void> {
 		this.setValueToReturn(responseFrames);
-		this._onHandler.emit(notificationFrame);
+		await this._onHandler.emit(notificationFrame);
 	}
 
 	private _onHandler = new TypedEvent<IGW_FRAME_RCV>();
@@ -89,9 +92,9 @@ export class MockConnection extends MockExceptionConnection {
 		if (typeof filter === "undefined") {
 			return this._onHandler.on(handler);
 		} else {
-			return this._onHandler.on((frame) => {
+			return this._onHandler.on(async (frame) => {
 				if (filter.indexOf(frame.Command) >= 0) {
-					handler(frame);
+					await Promise.resolve(handler(frame));
 				}
 			});
 		}

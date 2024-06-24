@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_REQ } from "./common";
+import { GW_FRAME_REQ } from "./common.js";
 
 export class GW_SET_NODE_NAME_REQ extends GW_FRAME_REQ {
 	constructor(

@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_REQ } from "./common";
+import { GW_FRAME_REQ } from "./common.js";
 
 export class GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ extends GW_FRAME_REQ {
 	constructor(readonly TimeStamp: Date) {

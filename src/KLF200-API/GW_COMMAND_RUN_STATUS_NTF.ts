@@ -1,7 +1,7 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common";
-import { StatusOwner, ParameterActive, RunStatus, StatusReply } from "./GW_COMMAND";
+import { GW_FRAME_NTF } from "./common.js";
+import { ParameterActive, RunStatus, StatusOwner, StatusReply } from "./GW_COMMAND.js";
 
 export class GW_COMMAND_RUN_STATUS_NTF extends GW_FRAME_NTF {
 	public readonly SessionID: number;

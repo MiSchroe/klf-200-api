@@ -1,4 +1,4 @@
-import { TypedEvent } from "./TypedEvent";
+import { TypedEvent } from "./TypedEvent.js";
 
 ("use strict");
 
@@ -25,8 +25,8 @@ export abstract class Component {
 	 * @param {keyof Component} propertyName Name of the property that has changed.
 	 * @memberof Component
 	 */
-	protected propertyChanged(propertyName: keyof this): void {
-		this.propertyChangedEvent.emit({
+	protected async propertyChanged(propertyName: keyof this): Promise<void> {
+		await this.propertyChangedEvent.emit({
 			o: this,
 			propertyName: <string>propertyName,
 			propertyValue: this[propertyName],

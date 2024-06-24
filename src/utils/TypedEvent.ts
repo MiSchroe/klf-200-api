@@ -1,5 +1,14 @@
 "use strict";
 
+import debugModule from "debug";
+import { dirname, parse } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
+
 /**
  * Generic typed interface for defining a typed listener function.
  *
@@ -52,7 +61,9 @@ export class TypedEvent<T> {
 	 * @memberof TypedEvent<T>
 	 */
 	on = (listener: Listener<T>): Disposable => {
+		debug(`TypedEvent on.`);
 		this.listeners.push(listener);
+		debug(`${this.listeners.length} listeners registered.`);
 		return {
 			dispose: () => this.off(listener),
 		};
@@ -66,19 +77,26 @@ export class TypedEvent<T> {
 	 * @memberof TypedEvent<T>
 	 */
 	once = (listener: Listener<T>): void => {
+		debug(`TypedEvent once.`);
 		this.listenersOncer.push(listener);
+		debug(`${this.listenersOncer.length} listeners registered.`);
 	};
 
 	/**
 	 * Removes a listener function from an event emitter.
+	 * If it is called from inside an event handler
+	 * the current event will still call the removed handler
+	 * if it wasn't called so far.
 	 *
 	 * @param listener Function that should be removed.
 	 * @returns {void}
 	 * @memberof TypedEvent<T>
 	 */
 	off = (listener: Listener<T>): void => {
+		debug(`TypedEvent off.`);
 		const callbackIndex = this.listeners.indexOf(listener);
 		if (callbackIndex > -1) this.listeners.splice(callbackIndex, 1);
+		debug(`${this.listeners.length} listeners registered.`);
 	};
 
 	/**
@@ -86,15 +104,36 @@ export class TypedEvent<T> {
 	 * The order in which the functions are called is not defined.
 	 *
 	 * @param {T} event The typed event parameter that will be provided to each listener.
-	 * @returns {void}
+	 * @returns {Promise<void>}
 	 * @memberof TypedEvent<T>
 	 */
-	emit = (event: T): void => {
+	emit = async (event: T): Promise<void> => {
+		debug(
+			`TypedEvent emit. ${this.listeners.length} listeners and ${this.listenersOncer.length} once listeners to be called.`,
+		);
+		// Copy all listeners to a temporary array
+		// in case that an event listener would
+		// remove itself from the list.
+		const temporaryListeners = this.listeners.slice();
+
 		/** Update any general listeners */
-		this.listeners.forEach((listener) => listener(event));
+		for (const listener of temporaryListeners) {
+			debug(`Calling Listener ${listener.toString()}.`);
+			await Promise.resolve(listener(event));
+			debug(`Listener ${listener.toString()} called.`);
+		}
+
+		// Copy all listeners to a temporary array
+		// in case that an event listener would
+		// remove itself from the list.
+		const temporaryListenersOnce = this.listenersOncer.slice();
 
 		/** Clear the `once` queue */
-		this.listenersOncer.forEach((listener) => listener(event));
+		for (const listener of temporaryListenersOnce) {
+			debug(`Calling Listener Once ${listener.toString()}.`);
+			await Promise.resolve(listener(event));
+			debug(`Listener Once ${listener.toString()} called.`);
+		}
 		this.listenersOncer = [];
 	};
 
@@ -106,6 +145,7 @@ export class TypedEvent<T> {
 	 * @memberof TypedEvent<T>
 	 */
 	pipe = (te: TypedEvent<T>): Disposable => {
-		return this.on((e) => te.emit(e));
+		debug(`TypedEvent pipe.`);
+		return this.on(async (e) => await te.emit(e));
 	};
 }

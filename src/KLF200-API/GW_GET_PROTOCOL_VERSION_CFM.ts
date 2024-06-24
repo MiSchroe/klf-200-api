@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common";
+import { GW_FRAME_CFM } from "./common.js";
 
 export class GW_GET_PROTOCOL_VERSION_CFM extends GW_FRAME_CFM {
 	public readonly MajorVersion: number;

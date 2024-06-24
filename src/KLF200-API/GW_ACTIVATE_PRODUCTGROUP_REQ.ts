@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_COMMAND_REQ } from "./common";
+import { GW_FRAME_COMMAND_REQ } from "./common.js";
 import {
 	CommandOriginator,
 	LockTime as lt,
@@ -8,8 +8,8 @@ import {
 	PriorityLevel,
 	PriorityLevelInformation,
 	PriorityLevelLock,
-} from "./GW_COMMAND";
-import { Velocity } from "./GW_SYSTEMTABLE_DATA";
+} from "./GW_COMMAND.js";
+import { Velocity } from "./GW_SYSTEMTABLE_DATA.js";
 
 export class GW_ACTIVATE_PRODUCTGROUP_REQ extends GW_FRAME_COMMAND_REQ {
 	constructor(

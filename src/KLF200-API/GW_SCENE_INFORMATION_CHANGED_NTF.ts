@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common";
+import { GW_FRAME_NTF } from "./common.js";
 
 export enum SceneChangeType {
 	Deleted = 0,

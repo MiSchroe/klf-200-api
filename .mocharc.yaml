@@ -1,5 +1,4 @@
 require:
-    - "ts-node/register"
     - "source-map-support/register"
 recursive: true
 full-trace: true
@@ -7,3 +6,6 @@ bail: true
 reporter: "mocha-multi-reporters"
 trace-warnings: true
 spec: "test/**/*.ts"
+node-option:
+    - "import=tsx"
+    - "trace-warnings"

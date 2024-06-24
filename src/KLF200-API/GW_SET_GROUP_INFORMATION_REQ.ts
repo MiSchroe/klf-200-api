@@ -1,9 +1,9 @@
 "use strict";
 
-import { arrayToBitArray } from "../utils/BitArray";
-import { GroupType } from "./GW_GROUPS";
-import { NodeVariation, Velocity } from "./GW_SYSTEMTABLE_DATA";
-import { GW_FRAME_REQ } from "./common";
+import { arrayToBitArray } from "../utils/BitArray.js";
+import { GroupType } from "./GW_GROUPS.js";
+import { NodeVariation, Velocity } from "./GW_SYSTEMTABLE_DATA.js";
+import { GW_FRAME_REQ } from "./common.js";
 
 export class GW_SET_GROUP_INFORMATION_REQ extends GW_FRAME_REQ {
 	constructor(

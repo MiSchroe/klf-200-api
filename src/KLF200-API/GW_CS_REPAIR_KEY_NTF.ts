@@ -1,8 +1,8 @@
 "use strict";
 
-import { bitArrayToArray } from "../utils/BitArray";
-import { ChangeKeyStatus } from "./GW_SYSTEMTABLE_DATA";
-import { GW_FRAME_NTF } from "./common";
+import { bitArrayToArray } from "../utils/BitArray.js";
+import { ChangeKeyStatus } from "./GW_SYSTEMTABLE_DATA.js";
+import { GW_FRAME_NTF } from "./common.js";
 
 export class GW_CS_REPAIR_KEY_NTF extends GW_FRAME_NTF {
 	public readonly ChangeKeyStatus: ChangeKeyStatus;

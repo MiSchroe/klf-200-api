@@ -1,9 +1,15 @@
 "use strict";
 
+import debugModule from "debug";
 import { Socket } from "net";
-import { Disposable, Listener, TypedEvent } from "../utils/TypedEvent";
-import { FrameRcvFactory } from "./FrameRcvFactory";
-import { IGW_FRAME_RCV, KLF200Protocol, SLIPProtocol, SLIP_END } from "./common";
+import { parse } from "path";
+import { fileURLToPath } from "url";
+import { Disposable, Listener, TypedEvent } from "../utils/TypedEvent.js";
+import { FrameRcvFactory } from "./FrameRcvFactory.js";
+import { IGW_FRAME_RCV, KLF200Protocol, SLIPProtocol, SLIP_END } from "./common.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
 
 export type FrameReceivedHandler = (frame: IGW_FRAME_RCV) => void;
 
@@ -22,11 +28,11 @@ export class KLF200SocketProtocol {
 	private queue: Buffer[] = [];
 
 	constructor(readonly socket: Socket) {
-		socket.on("data", (data) => this.processData(data));
+		socket.on("data", async (data) => await this.processData(data));
 		socket.on("close", (had_error) => this.onSocketClose(had_error));
 	}
 
-	private processData(data: Buffer): void {
+	private async processData(data: Buffer): Promise<void> {
 		switch (this.state) {
 			case KLF200SocketProtocolState.Invalid:
 				// Find first END mark
@@ -58,7 +64,7 @@ export class KLF200SocketProtocol {
 
 				// Clear queue and process remaining data, if any
 				this.queue = [];
-				this.send(frameBuffer);
+				await this.send(frameBuffer);
 
 				if (positionEnd + 1 < data.byteLength) this.processData(data.subarray(positionEnd + 1));
 
@@ -99,8 +105,8 @@ export class KLF200SocketProtocol {
 		this._onDataReceived.off(handler);
 	}
 
-	onError(handler: Listener<Error>): void {
-		this._onError.on(handler);
+	onError(handler: Listener<Error>): Disposable {
+		return this._onError.on(handler);
 	}
 
 	offError(handler: Listener<Error>): void {
@@ -109,19 +115,25 @@ export class KLF200SocketProtocol {
 
 	async send(data: Buffer): Promise<void> {
 		try {
-			this._onDataReceived.emit(data);
+			debug(`Method send: data: ${JSON.stringify(data)}`);
+			await this._onDataReceived.emit(data);
 			const frameBuffer = KLF200Protocol.Decode(SLIPProtocol.Decode(data));
+			debug(`Method send: decoded frame buffer: ${JSON.stringify(frameBuffer)}`);
 			const frame = await FrameRcvFactory.CreateRcvFrame(frameBuffer);
-			this._onFrameReceived.emit(frame);
+			debug(`Method send: converted into frame ${frame.constructor.name}: ${JSON.stringify(frame)}`);
+			await this._onFrameReceived.emit(frame);
+			debug(
+				`Method send: after emitting on events for frame ${frame.constructor.name}: ${JSON.stringify(frame)}`,
+			);
 			return Promise.resolve();
 		} catch (e) {
-			this._onError.emit(e as Error);
+			await this._onError.emit(e as Error);
 			return Promise.resolve();
 		}
 	}
 
-	write(data: Buffer): boolean {
-		this._onDataSent.emit(data);
+	async write(data: Buffer): Promise<boolean> {
+		await this._onDataSent.emit(data);
 		const slipBuffer = SLIPProtocol.Encode(KLF200Protocol.Encode(data));
 		return this.socket.write(slipBuffer);
 	}

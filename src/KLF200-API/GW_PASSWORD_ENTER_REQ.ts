@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_REQ, C_MAX_PWD_LENGTH } from "./common";
+import { C_MAX_PWD_LENGTH, GW_FRAME_REQ } from "./common.js";
 
 export class GW_PASSWORD_ENTER_REQ extends GW_FRAME_REQ {
 	constructor(password: string) {
