@@ -399,7 +399,7 @@ export class Group extends Component {
 	 * @param PriorityLevelLock Flag if the priority level lock should be used.
 	 * @param PriorityLevels Up to 8 priority levels.
 	 * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
-	 * @returns {Promise<number>}
+	 * @returns {Promise<number>} Returns the session ID of the command.
 	 * @memberof Group
 	 */
 	public async setTargetPositionRawAsync(
@@ -449,7 +449,7 @@ export class Group extends Component {
 	 * @param PriorityLevelLock Flag if the priority level lock should be used.
 	 * @param PriorityLevels Up to 8 priority levels.
 	 * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
-	 * @returns {Promise<number>}
+	 * @returns {Promise<number>} Returns the session ID of the command.
 	 * @memberof Group
 	 */
 	public async setTargetPositionAsync(
