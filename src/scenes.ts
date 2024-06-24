@@ -58,7 +58,7 @@ export class Scene extends Component {
 		this._sceneName = SceneName;
 
 		this.Connection.on(
-			async (frame) => this.onNotificationHandler(frame),
+			async (frame) => await this.onNotificationHandler(frame),
 			[GatewayCommand.GW_SESSION_FINISHED_NTF],
 		);
 	}
@@ -227,9 +227,9 @@ export class Scene extends Component {
 		}
 	}
 
-	private onNotificationHandler(frame: IGW_FRAME_RCV): void {
+	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (frame instanceof GW_SESSION_FINISHED_NTF) {
-			this.onSessionFinished(frame);
+			await this.onSessionFinished(frame);
 		}
 	}
 
@@ -300,7 +300,7 @@ export class Scenes {
 			});
 
 			dispose = this.Connection.on(
-				async (frame) => {
+				(frame) => {
 					try {
 						if (frame instanceof GW_GET_SCENE_LIST_NTF) {
 							frame.Scenes.forEach((scene) => {

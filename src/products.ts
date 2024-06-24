@@ -1577,7 +1577,7 @@ export class Products {
 			});
 
 			dispose = this.Connection.on(
-				async (frame) => {
+				(frame) => {
 					try {
 						if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF) {
 							const newProduct = new Product(this.Connection, frame);
@@ -1739,7 +1739,7 @@ export class Products {
 			});
 
 			dispose = this.Connection.on(
-				async (frame) => {
+				(frame) => {
 					try {
 						if (dispose) {
 							dispose.dispose();
