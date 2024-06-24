@@ -408,6 +408,12 @@ describe("products", function () {
 						conn.on(resolve, [GatewayCommand.GW_ERROR_NTF]);
 					});
 					await mockServerController.sendCommand({
+						command: "SetConfirmation",
+						gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_REQ,
+						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
+					});
+					await mockServerController.sendCommand({
 						command: "SendData",
 						gatewayCommand: GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF,
 						data: new ArrayBuilder()
@@ -415,12 +421,6 @@ describe("products", function () {
 							.addBitArray(26, [2, 3])
 							.toBuffer()
 							.toString("base64"),
-					});
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
-						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 					});
 
 					// Just let the asynchronous stuff run before our checks
