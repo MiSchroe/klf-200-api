@@ -1,4 +1,9 @@
-﻿import { GW_ACTIVATE_SCENE_CFM } from "./KLF200-API/GW_ACTIVATE_SCENE_CFM.js";
+﻿"use strict";
+
+import debugModule from "debug";
+import { dirname, parse } from "path";
+import { fileURLToPath } from "url";
+import { GW_ACTIVATE_SCENE_CFM } from "./KLF200-API/GW_ACTIVATE_SCENE_CFM.js";
 import { GW_ACTIVATE_SCENE_REQ } from "./KLF200-API/GW_ACTIVATE_SCENE_REQ.js";
 import { CommandOriginator, PriorityLevel } from "./KLF200-API/GW_COMMAND.js";
 import { GW_GET_SCENE_INFORMATION_CFM } from "./KLF200-API/GW_GET_SCENE_INFORMATION_CFM.js";
@@ -18,7 +23,10 @@ import { IConnection } from "./connection.js";
 import { Component } from "./utils/PropertyChangedEvent.js";
 import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
 
-("use strict");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
 
 /**
  * The scene object contains the ID, name and a list of products that are contained in the scene.
@@ -58,7 +66,10 @@ export class Scene extends Component {
 		this._sceneName = SceneName;
 
 		this.Connection.on(
-			async (frame) => await this.onNotificationHandler(frame),
+			async (frame) => {
+				debug(`Calling onNotificationHandler for GW_SESSION_FINISHED_NTF added in Scene constructor.`);
+				await this.onNotificationHandler(frame);
+			},
 			[GatewayCommand.GW_SESSION_FINISHED_NTF],
 		);
 	}
@@ -173,6 +184,7 @@ export class Scene extends Component {
 			dispose = this.Connection.on(
 				async (frame) => {
 					try {
+						debug(`Calling handler for GW_GET_SCENE_INFORMATION_NTF in Scene.refreshAsync.`);
 						if (frame instanceof GW_GET_SCENE_INFORMATION_NTF) {
 							tempResult.push(...frame.Nodes);
 							// Check, if last notification message
@@ -302,6 +314,7 @@ export class Scenes {
 			dispose = this.Connection.on(
 				(frame) => {
 					try {
+						debug(`Calling handler for GW_GET_SCENE_LIST_NTF in Scenes.refreshScenesAsync.`);
 						if (frame instanceof GW_GET_SCENE_LIST_NTF) {
 							frame.Scenes.forEach((scene) => {
 								if (typeof this.Scenes[scene.SceneID] === "undefined") {
@@ -357,7 +370,12 @@ export class Scenes {
 			// Setup notification handler
 			if (typeof this._notificationHandler === "undefined") {
 				this._notificationHandler = this.Connection.on(
-					async (frame) => await this.onNotificationHandler(frame),
+					async (frame) => {
+						debug(
+							`Calling onNotificationHandler for GW_SCENE_INFORMATION_CHANGED_NTF in Scenes.refreshSCenesAsync.`,
+						);
+						await this.onNotificationHandler(frame);
+					},
 					[GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF],
 				);
 			}

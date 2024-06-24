@@ -1,6 +1,9 @@
 ﻿"use strict";
 
+import debugModule from "debug";
+import { dirname, parse } from "path";
 import { setImmediate } from "timers/promises";
+import { fileURLToPath } from "url";
 import {
 	CommandOriginator,
 	CommandStatus,
@@ -63,6 +66,11 @@ import { GW_COMMON_STATUS, GW_INVERSE_STATUS, GatewayCommand, IGW_FRAME_RCV } fr
 import { IConnection } from "./connection.js";
 import { Component } from "./utils/PropertyChangedEvent.js";
 import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
 
 /**
  * Each product that is registered at the KLF-200 interface will be created
@@ -221,7 +229,12 @@ export class Product extends Component {
 		this._limitationTimeRaw = new Array<number>(17).fill(LockTime.lockTimeTolockTimeValueForLimitation(Infinity));
 
 		this.Connection.on(
-			async (frame) => await this.onNotificationHandler(frame),
+			async (frame) => {
+				debug(
+					`Calling onNotificationHandler for GW_NODE_INFORMATION_CHANGED_NTF, GW_NODE_STATE_POSITION_CHANGED_NTF, GW_COMMAND_RUN_STATUS_NTF, GW_COMMAND_REMAINING_TIME_NTF, GW_GET_NODE_INFORMATION_NTF, GW_STATUS_REQUEST_NTF added in Product constructor.`,
+				);
+				await this.onNotificationHandler(frame);
+			},
 			[
 				GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
 				GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
@@ -970,6 +983,9 @@ export class Product extends Component {
 		const dispose = this.Connection.on(
 			async (frame) => {
 				try {
+					debug(
+						`Calling handler for GW_LIMITATION_STATUS_NTF, GW_SESSION_FINISHED_NTF in Product.setupWaitForLimitationFinished.`,
+					);
 					if (frame instanceof GW_LIMITATION_STATUS_NTF && frame.SessionID === sessionID) {
 						if (frame.NodeID !== this.NodeID) {
 							throw new Error(`Unexpected node ID: ${frame.NodeID}`);
@@ -1579,6 +1595,9 @@ export class Products {
 			dispose = this.Connection.on(
 				(frame) => {
 					try {
+						debug(
+							`Calling handler for GW_GET_ALL_NODES_INFORMATION_NTF, GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF in Products.initializeProductsAsync.`,
+						);
 						if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF) {
 							const newProduct = new Product(this.Connection, frame);
 							this.Products[frame.NodeID] = newProduct;
@@ -1741,6 +1760,7 @@ export class Products {
 			dispose = this.Connection.on(
 				(frame) => {
 					try {
+						debug(`Calling handler for GW_GET_NODE_INFORMATION_NTF in Products.addNodeAsync.`);
 						if (dispose) {
 							dispose.dispose();
 						}

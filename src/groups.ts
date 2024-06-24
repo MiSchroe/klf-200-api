@@ -1,3 +1,8 @@
+"use strict";
+
+import debugModule from "debug";
+import { dirname, parse } from "path";
+import { fileURLToPath } from "url";
 import { GW_ACTIVATE_PRODUCTGROUP_CFM } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_CFM.js";
 import { GW_ACTIVATE_PRODUCTGROUP_REQ } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_REQ.js";
 import {
@@ -34,7 +39,10 @@ import { Component } from "./utils/PropertyChangedEvent.js";
 import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
 import { isArrayEqual } from "./utils/UtilityFunctions.js";
 
-("use strict");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
 
 /**
  * The gateway can hold up to 100 groups. A group is a collection of actuator nodes in
@@ -104,7 +112,10 @@ export class Group extends Component {
 		this._revision = frame.Revision;
 
 		this.Connection.on(
-			async (frame) => await this.onNotificationHandler(frame),
+			async (frame) => {
+				debug(`Calling onNotificationHandler for GW_GET_GROUP_INFORMATION_NTF added in Group constructor.`);
+				await this.onNotificationHandler(frame);
+			},
 			[GatewayCommand.GW_GET_GROUP_INFORMATION_NTF],
 		);
 	}
@@ -479,6 +490,7 @@ export class Group extends Component {
 			const dispose = this.Connection.on(
 				(frame) => {
 					try {
+						debug(`Calling handler for GW_GET_NODE_INFORMATION_NTF in Group.setTargetPositionAsync.`);
 						if (frame instanceof GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
 							const nodeTypeID = frame.ActuatorType;
 							if (dispose) {
@@ -640,6 +652,9 @@ export class Groups {
 			dispose = this.Connection.on(
 				(frame) => {
 					try {
+						debug(
+							`Calling handler for GW_GET_ALL_GROUPS_INFORMATION_NTF, GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, GW_GET_GROUP_INFORMATION_NTF in Groups.initializeGroupsAsync.`,
+						);
 						if (
 							frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF ||
 							frame instanceof GW_GET_GROUP_INFORMATION_NTF
@@ -691,7 +706,12 @@ export class Groups {
 
 			// Finally, setup the event handler for notifications
 			this.Connection.on(
-				async (frame) => await this.onNotificationHandler(frame),
+				async (frame) => {
+					debug(
+						`Calling onNotificationHandler for GW_GROUP_INFORMATION_CHANGED_NTF added in Groups.initializeGroupsAsync.`,
+					);
+					await this.onNotificationHandler(frame);
+				},
 				[GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF],
 			);
 		} catch (error) {
