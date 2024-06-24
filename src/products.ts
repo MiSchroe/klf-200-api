@@ -1606,7 +1606,12 @@ export class Products {
 								dispose.dispose();
 							}
 							this.Connection.on(
-								async (frame) => await this.onNotificationHandler(frame),
+								async (frame) => {
+									debug(
+										`Calling handler for GW_CS_SYTEM_TABLE_UPDATE_NTF in Products.initializeProductsAsync.`,
+									);
+									await this.onNotificationHandler(frame);
+								},
 								[GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF],
 							);
 							resolve();

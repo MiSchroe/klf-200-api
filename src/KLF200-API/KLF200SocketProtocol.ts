@@ -122,6 +122,9 @@ export class KLF200SocketProtocol {
 			const frame = await FrameRcvFactory.CreateRcvFrame(frameBuffer);
 			debug(`Method send: converted into frame ${frame.constructor.name}: ${JSON.stringify(frame)}`);
 			await this._onFrameReceived.emit(frame);
+			debug(
+				`Method send: after emitting on events for frame ${frame.constructor.name}: ${JSON.stringify(frame)}`,
+			);
 			return Promise.resolve();
 		} catch (e) {
 			await this._onError.emit(e as Error);
