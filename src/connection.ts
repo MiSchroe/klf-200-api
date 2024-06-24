@@ -19,6 +19,7 @@ import {
 	GW_COMMON_STATUS,
 	GW_FRAME_COMMAND_REQ,
 	GatewayCommand,
+	IGW_FRAME,
 	IGW_FRAME_COMMAND,
 	IGW_FRAME_RCV,
 	IGW_FRAME_REQ,
@@ -269,15 +270,7 @@ export class Connection implements IConnection {
 	 */
 	public async sendFrameAsync(frame: IGW_FRAME_REQ, timeout: number = 10): Promise<IGW_FRAME_RCV> {
 		try {
-			debug(
-				`sendFrameAsync called with frame: ${JSON.stringify(frame, (key: string, value: any) => {
-					if (key.match(/password/i)) {
-						return "**********";
-					} else {
-						return value;
-					}
-				})}, timeout: ${timeout}.`,
-			);
+			debug(`sendFrameAsync called with frame: ${stringifyFrame(frame)}, timeout: ${timeout}.`);
 			const frameName = GatewayCommand[frame.Command];
 			const expectedConfirmationFrameName: keyof typeof GatewayCommand = (frameName.slice(0, -3) +
 				"CFM") as keyof typeof GatewayCommand;
@@ -288,50 +281,67 @@ export class Connection implements IConnection {
 				`Expected confirmation frame is ${expectedConfirmationFrameName} (${expectedConfirmationFrameCommand}). Session ID: ${sessionID}`,
 			);
 
-			return await promiseTimeout(
-				new Promise<IGW_FRAME_RCV>(async (resolve, reject) => {
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: IGW_FRAME_RCV | PromiseLike<IGW_FRAME_RCV>) => void, reject: (reason?: any) => void;
+			const notificationHandler = new Promise<IGW_FRAME_RCV>((res, rej) => {
+				resolve = res;
+				reject = rej;
+			});
+
+			try {
+				let cfmHandler: Disposable | undefined = undefined;
+				const errHandler = (this.klfProtocol as KLF200SocketProtocol).onError((error) => {
+					debug(`sendFrameAsync protocol error handler: ${error}.`);
+					errHandler.dispose();
+					cfmHandler?.dispose();
+					reject(error);
+				});
+				cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((notificationFrame) => {
 					try {
-						let cfmHandler: Disposable | undefined = undefined;
-						const errHandler = (this.klfProtocol as KLF200SocketProtocol).onError((error) => {
-							debug(`sendFrameAsync protocol error handler: ${error}.`);
+						debug(`sendFrameAsync frame recieved: ${stringifyFrame(notificationFrame)}.`);
+						if (notificationFrame instanceof GW_ERROR_NTF) {
+							debug(`sendFrameAsync GW_ERROR_NTF recieved: ${stringifyFrame(notificationFrame)}.`);
 							errHandler.dispose();
 							cfmHandler?.dispose();
-							reject(error);
-						});
-						cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((frame) => {
-							try {
-								debug(`sendFrameAsync frame recieved: ${JSON.stringify(frame)}.`);
-								if (frame instanceof GW_ERROR_NTF) {
-									debug(`sendFrameAsync GW_ERROR_NTF recieved: ${JSON.stringify(frame)}.`);
-									errHandler.dispose();
-									cfmHandler?.dispose();
-									reject(new Error(frame.getError(), { cause: frame }));
-								} else if (
-									frame.Command === expectedConfirmationFrameCommand &&
-									(typeof sessionID === "undefined" ||
-										sessionID === (frame as IGW_FRAME_COMMAND).SessionID)
-								) {
-									debug(`sendFrameAsync expected frame recieved: ${JSON.stringify(frame)}.`);
-									errHandler.dispose();
-									cfmHandler?.dispose();
-									resolve(frame);
-								}
-							} catch (error) {
-								reject(error);
-							}
-						});
-						this.shiftKeepAlive();
-						await (this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
-						await this.notifyFrameSent(frame);
+							reject(new Error(notificationFrame.getError(), { cause: notificationFrame }));
+						} else if (
+							notificationFrame.Command === expectedConfirmationFrameCommand &&
+							(typeof sessionID === "undefined" ||
+								sessionID === (notificationFrame as IGW_FRAME_COMMAND).SessionID)
+						) {
+							debug(`sendFrameAsync expected frame recieved: ${stringifyFrame(notificationFrame)}.`);
+							errHandler.dispose();
+							cfmHandler?.dispose();
+							resolve(notificationFrame);
+						}
 					} catch (error) {
+						errHandler.dispose();
+						cfmHandler?.dispose();
 						reject(error);
 					}
-				}),
-				timeout * 1000,
-			);
+				});
+				this.shiftKeepAlive();
+				await (this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
+				await this.notifyFrameSent(frame);
+			} catch (error) {
+				reject!(error);
+			}
+
+			return await promiseTimeout(notificationHandler, timeout * 1000);
 		} catch (error) {
 			debug(`sendFrameAsync error occurred: ${error} with frame sent: ${JSON.stringify(frame)}.`);
 			return Promise.reject(error);
+		}
+
+		function stringifyFrame(frame: IGW_FRAME): string {
+			return JSON.stringify(frame, (key: string, value: any) => {
+				if (key.match(/password/i)) {
+					return "**********";
+				} else {
+					return value;
+				}
+			});
 		}
 	}
 

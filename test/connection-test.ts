@@ -243,7 +243,7 @@ describe("connection", function () {
 });`,
 					});
 					const sendFramePromise = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 2);
-					clock.runAll();
+					await clock.runAllAsync();
 					await expect(sendFramePromise).to.be.rejectedWith(Error);
 				} finally {
 					clock.restore();
