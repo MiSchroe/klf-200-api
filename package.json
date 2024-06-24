@@ -81,7 +81,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/MiSchroe/klf-200-api"
+    "url": "git+https://github.com/MiSchroe/klf-200-api.git"
   },
   "keywords": [
     "klf-200",
