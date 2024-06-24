@@ -330,7 +330,7 @@ export class Connection implements IConnection {
 
 			return await promiseTimeout(notificationHandler, timeout * 1000);
 		} catch (error) {
-			debug(`sendFrameAsync error occurred: ${error} with frame sent: ${JSON.stringify(frame)}.`);
+			debug(`sendFrameAsync error occurred: ${error} with frame sent: ${stringifyFrame(frame)}.`);
 			return Promise.reject(error);
 		}
 
