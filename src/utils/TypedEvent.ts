@@ -1,5 +1,14 @@
 "use strict";
 
+import debugModule from "debug";
+import { dirname, parse } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
+
 /**
  * Generic typed interface for defining a typed listener function.
  *
@@ -52,7 +61,9 @@ export class TypedEvent<T> {
 	 * @memberof TypedEvent<T>
 	 */
 	on = (listener: Listener<T>): Disposable => {
+		debug(`TypedEvent on.`);
 		this.listeners.push(listener);
+		debug(`${this.listeners.length} listeners registered.`);
 		return {
 			dispose: () => this.off(listener),
 		};
@@ -66,7 +77,9 @@ export class TypedEvent<T> {
 	 * @memberof TypedEvent<T>
 	 */
 	once = (listener: Listener<T>): void => {
+		debug(`TypedEvent once.`);
 		this.listenersOncer.push(listener);
+		debug(`${this.listenersOncer.length} listeners registered.`);
 	};
 
 	/**
@@ -77,8 +90,10 @@ export class TypedEvent<T> {
 	 * @memberof TypedEvent<T>
 	 */
 	off = (listener: Listener<T>): void => {
+		debug(`TypedEvent off.`);
 		const callbackIndex = this.listeners.indexOf(listener);
 		if (callbackIndex > -1) this.listeners.splice(callbackIndex, 1);
+		debug(`${this.listeners.length} listeners registered.`);
 	};
 
 	/**
@@ -90,14 +105,19 @@ export class TypedEvent<T> {
 	 * @memberof TypedEvent<T>
 	 */
 	emit = async (event: T): Promise<void> => {
+		debug(`TypedEvent emit. ${this.listeners.length} listeners and ${this.listenersOncer.length} to be called.`);
 		/** Update any general listeners */
 		for (const listener of this.listeners) {
+			debug(`Calling Listener ${JSON.stringify(listener)}.`);
 			await Promise.resolve(listener(event));
+			debug(`Listener ${JSON.stringify(listener)} called.`);
 		}
 
 		/** Clear the `once` queue */
 		for (const listener of this.listenersOncer) {
+			debug(`Calling Listener Once ${JSON.stringify(listener)}.`);
 			await Promise.resolve(listener(event));
+			debug(`Listener Once ${JSON.stringify(listener)} called.`);
 		}
 		this.listenersOncer = [];
 	};
@@ -110,6 +130,7 @@ export class TypedEvent<T> {
 	 * @memberof TypedEvent<T>
 	 */
 	pipe = (te: TypedEvent<T>): Disposable => {
+		debug(`TypedEvent pipe.`);
 		return this.on(async (e) => await te.emit(e));
 	};
 }
