@@ -105,19 +105,21 @@ export class TypedEvent<T> {
 	 * @memberof TypedEvent<T>
 	 */
 	emit = async (event: T): Promise<void> => {
-		debug(`TypedEvent emit. ${this.listeners.length} listeners and ${this.listenersOncer.length} to be called.`);
+		debug(
+			`TypedEvent emit. ${this.listeners.length} listeners and ${this.listenersOncer.length} once listeners to be called.`,
+		);
 		/** Update any general listeners */
 		for (const listener of this.listeners) {
-			debug(`Calling Listener ${JSON.stringify(listener)}.`);
+			debug(`Calling Listener ${listener.toString()}.`);
 			await Promise.resolve(listener(event));
-			debug(`Listener ${JSON.stringify(listener)} called.`);
+			debug(`Listener ${listener.toString()} called.`);
 		}
 
 		/** Clear the `once` queue */
 		for (const listener of this.listenersOncer) {
-			debug(`Calling Listener Once ${JSON.stringify(listener)}.`);
+			debug(`Calling Listener Once ${listener.toString()}.`);
 			await Promise.resolve(listener(event));
-			debug(`Listener Once ${JSON.stringify(listener)} called.`);
+			debug(`Listener Once ${listener.toString()} called.`);
 		}
 		this.listenersOncer = [];
 	};
