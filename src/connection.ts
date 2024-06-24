@@ -291,13 +291,13 @@ export class Connection implements IConnection {
 
 			try {
 				let cfmHandler: Disposable | undefined = undefined;
-				const errHandler = (this.klfProtocol as KLF200SocketProtocol).onError((error) => {
+				const errHandler = (this.klfProtocol as KLF200SocketProtocol).onError(async (error) => {
 					debug(`sendFrameAsync protocol error handler: ${error}.`);
 					errHandler.dispose();
 					cfmHandler?.dispose();
 					reject(error);
 				});
-				cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((notificationFrame) => {
+				cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on(async (notificationFrame) => {
 					try {
 						debug(`sendFrameAsync frame recieved: ${stringifyFrame(notificationFrame)}.`);
 						if (notificationFrame instanceof GW_ERROR_NTF) {
@@ -357,7 +357,9 @@ export class Connection implements IConnection {
 	 */
 	public on(handler: Listener<IGW_FRAME_RCV>, filter?: GatewayCommand[]): Disposable {
 		if (typeof filter === "undefined") {
-			return (this.klfProtocol as KLF200SocketProtocol).on(handler);
+			return (this.klfProtocol as KLF200SocketProtocol).on(async (frame) => {
+				await Promise.resolve(handler(frame));
+			});
 		} else {
 			return (this.klfProtocol as KLF200SocketProtocol).on(async (frame) => {
 				if (filter.indexOf(frame.Command) >= 0) {

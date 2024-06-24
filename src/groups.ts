@@ -477,7 +477,7 @@ export class Group extends Component {
 			// Setup notification to receive notification with actuator type
 			// Register notification handler
 			const dispose = this.Connection.on(
-				(frame) => {
+				async (frame) => {
 					try {
 						if (frame instanceof GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
 							const nodeTypeID = frame.ActuatorType;
@@ -638,7 +638,7 @@ export class Groups {
 			});
 
 			dispose = this.Connection.on(
-				(frame) => {
+				async (frame) => {
 					try {
 						if (
 							frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF ||

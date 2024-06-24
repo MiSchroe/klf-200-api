@@ -57,7 +57,10 @@ export class Scene extends Component {
 
 		this._sceneName = SceneName;
 
-		this.Connection.on((frame) => this.onNotificationHandler(frame), [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+		this.Connection.on(
+			async (frame) => this.onNotificationHandler(frame),
+			[GatewayCommand.GW_SESSION_FINISHED_NTF],
+		);
 	}
 
 	/**
@@ -297,7 +300,7 @@ export class Scenes {
 			});
 
 			dispose = this.Connection.on(
-				(frame) => {
+				async (frame) => {
 					try {
 						if (frame instanceof GW_GET_SCENE_LIST_NTF) {
 							frame.Scenes.forEach((scene) => {
