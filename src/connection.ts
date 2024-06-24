@@ -284,6 +284,10 @@ export class Connection implements IConnection {
 			const expectedConfirmationFrameCommand = GatewayCommand[expectedConfirmationFrameName];
 			const sessionID = frame instanceof GW_FRAME_COMMAND_REQ ? frame.SessionID : undefined;
 
+			debug(
+				`Expected confirmation frame is ${expectedConfirmationFrameName} (${expectedConfirmationFrameCommand}). Session ID: ${sessionID}`,
+			);
+
 			return await promiseTimeout(
 				new Promise<IGW_FRAME_RCV>(async (resolve, reject) => {
 					try {
@@ -296,6 +300,7 @@ export class Connection implements IConnection {
 						});
 						cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((frame) => {
 							try {
+								debug(`sendFrameAsync frame recieved: ${JSON.stringify(frame)}.`);
 								if (frame instanceof GW_ERROR_NTF) {
 									debug(`sendFrameAsync GW_ERROR_NTF recieved: ${JSON.stringify(frame)}.`);
 									errHandler.dispose();
@@ -306,7 +311,7 @@ export class Connection implements IConnection {
 									(typeof sessionID === "undefined" ||
 										sessionID === (frame as IGW_FRAME_COMMAND).SessionID)
 								) {
-									debug(`sendFrameAsync frame recieved: ${JSON.stringify(frame)}.`);
+									debug(`sendFrameAsync expected frame recieved: ${JSON.stringify(frame)}.`);
 									errHandler.dispose();
 									cfmHandler?.dispose();
 									resolve(frame);
