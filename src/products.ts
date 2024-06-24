@@ -1568,36 +1568,42 @@ export class Products {
 		let dispose: Disposable | undefined;
 
 		try {
-			const onNotificationHandler = new Promise<void>((resolve, reject) => {
-				try {
-					dispose = this.Connection.on(
-						(frame) => {
-							if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF) {
-								const newProduct = new Product(this.Connection, frame);
-								this.Products[frame.NodeID] = newProduct;
-							} else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
-								if (dispose) {
-									dispose.dispose();
-								}
-								this.Connection.on(
-									async (frame) => await this.onNotificationHandler(frame),
-									[GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF],
-								);
-								resolve();
-							}
-						},
-						[
-							GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF,
-							GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF,
-						],
-					);
-				} catch (error) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					reject(error);
-				}
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+			const onNotificationHandler = new Promise((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
+
+			dispose = this.Connection.on(
+				(frame) => {
+					try {
+						if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF) {
+							const newProduct = new Product(this.Connection, frame);
+							this.Products[frame.NodeID] = newProduct;
+						} else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
+							if (dispose) {
+								dispose.dispose();
+							}
+							this.Connection.on(
+								async (frame) => await this.onNotificationHandler(frame),
+								[GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF],
+							);
+							resolve();
+						}
+					} catch (error) {
+						if (dispose) {
+							dispose.dispose();
+						}
+						reject(error);
+					}
+				},
+				[
+					GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF,
+					GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF,
+				],
+			);
 
 			const getAllNodesInformation = <GW_GET_ALL_NODES_INFORMATION_CFM>(
 				await this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ())
@@ -1724,24 +1730,31 @@ export class Products {
 		let dispose: Disposable | undefined;
 
 		try {
-			const notificationHandler = new Promise<Product>((resolve, reject) => {
-				try {
-					dispose = this.Connection.on(
-						(frame) => {
-							if (dispose) {
-								dispose.dispose();
-							}
-							resolve(new Product(this.Connection, frame as GW_GET_NODE_INFORMATION_NTF));
-						},
-						[GatewayCommand.GW_GET_NODE_INFORMATION_NTF],
-					);
-				} catch (error) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					reject(error);
-				}
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: Product | PromiseLike<Product>) => void, reject: (reason?: any) => void;
+			const notificationHandler = new Promise<Product>((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
+
+			dispose = this.Connection.on(
+				(frame) => {
+					try {
+						if (dispose) {
+							dispose.dispose();
+						}
+						resolve(new Product(this.Connection, frame as GW_GET_NODE_INFORMATION_NTF));
+					} catch (error) {
+						if (dispose) {
+							dispose.dispose();
+						}
+						reject(error);
+					}
+				},
+				[GatewayCommand.GW_GET_NODE_INFORMATION_NTF],
+			);
+
 			const maxRetryTimestamp = Date.now() + 60_000; // Wait max. 60 seconds.
 			const retryIfNotBusy = async (): Promise<GW_GET_NODE_INFORMATION_CFM> => {
 				if (Date.now() > maxRetryTimestamp) {

@@ -160,42 +160,47 @@ export class Scene extends Component {
 
 		try {
 			const tempResult: SceneInformationEntry[] = []; // Store results temporary until finished without error.
-			const notificationHandler = new Promise<void>((resolve, reject) => {
-				try {
-					dispose = this.Connection.on(
-						async (frame) => {
-							if (frame instanceof GW_GET_SCENE_INFORMATION_NTF) {
-								tempResult.push(...frame.Nodes);
-								// Check, if last notification message
-								if (frame.NumberOfRemainingNodes === 0) {
-									if (dispose) {
-										dispose.dispose();
-									}
-
-									// Finished without error -> update Products array
-									this.Products.length = 0; // Clear array of products
-									this.Products.push(...tempResult);
-									await this.propertyChanged("Products");
-
-									// It seems that currently the notification frame doesn't return the scene name.
-									// Though we only change it if it's not empty and different.
-									if (frame.Name !== this._sceneName && frame.Name !== "") {
-										this._sceneName = frame.Name;
-										await this.propertyChanged("SceneName");
-									}
-									resolve();
-								}
-							}
-						},
-						[GatewayCommand.GW_GET_SCENE_INFORMATION_NTF],
-					);
-				} catch (error) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					reject(error);
-				}
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+			const notificationHandler = new Promise<void>((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
+			dispose = this.Connection.on(
+				async (frame) => {
+					try {
+						if (frame instanceof GW_GET_SCENE_INFORMATION_NTF) {
+							tempResult.push(...frame.Nodes);
+							// Check, if last notification message
+							if (frame.NumberOfRemainingNodes === 0) {
+								if (dispose) {
+									dispose.dispose();
+								}
+
+								// Finished without error -> update Products array
+								this.Products.length = 0; // Clear array of products
+								this.Products.push(...tempResult);
+								await this.propertyChanged("Products");
+
+								// It seems that currently the notification frame doesn't return the scene name.
+								// Though we only change it if it's not empty and different.
+								if (frame.Name !== this._sceneName && frame.Name !== "") {
+									this._sceneName = frame.Name;
+									await this.propertyChanged("SceneName");
+								}
+								resolve();
+							}
+						}
+					} catch (error) {
+						if (dispose) {
+							dispose.dispose();
+						}
+						reject(error);
+					}
+				},
+				[GatewayCommand.GW_GET_SCENE_INFORMATION_NTF],
+			);
 
 			const confirmationFrame = <GW_GET_SCENE_INFORMATION_CFM>(
 				await this.Connection.sendFrameAsync(new GW_GET_SCENE_INFORMATION_REQ(this.SceneID))
@@ -210,7 +215,7 @@ export class Scene extends Component {
 			}
 
 			// The notifications will resolve the promise
-			return notificationHandler;
+			await notificationHandler;
 		} catch (error) {
 			if (dispose) {
 				dispose.dispose();
@@ -283,36 +288,43 @@ export class Scenes {
 		const newScenes: Scene[] = [];
 
 		try {
-			const notificationHandlerSceneList = new Promise<void>((resolve, reject) => {
-				try {
-					dispose = this.Connection.on(
-						(frame) => {
-							if (frame instanceof GW_GET_SCENE_LIST_NTF) {
-								frame.Scenes.forEach((scene) => {
-									if (typeof this.Scenes[scene.SceneID] === "undefined") {
-										const newScene = new Scene(this.Connection, scene.SceneID, scene.Name);
-										this.Scenes[scene.SceneID] = newScene;
-										newScenes.push(newScene);
-									}
-								});
-								if (frame.NumberOfRemainingScenes === 0) {
-									if (dispose) {
-										dispose.dispose();
-									}
-
-									resolve();
-								}
-							}
-						},
-						[GatewayCommand.GW_GET_SCENE_LIST_NTF],
-					);
-				} catch (error) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					reject(error);
-				}
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+			const notificationHandlerSceneList = new Promise((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
+
+			dispose = this.Connection.on(
+				(frame) => {
+					try {
+						if (frame instanceof GW_GET_SCENE_LIST_NTF) {
+							frame.Scenes.forEach((scene) => {
+								if (typeof this.Scenes[scene.SceneID] === "undefined") {
+									const newScene = new Scene(this.Connection, scene.SceneID, scene.Name);
+									this.Scenes[scene.SceneID] = newScene;
+									newScenes.push(newScene);
+								}
+							});
+							if (frame.NumberOfRemainingScenes === 0) {
+								if (dispose) {
+									dispose.dispose();
+								}
+
+								resolve();
+							}
+						}
+					} catch (error) {
+						if (dispose) {
+							dispose.dispose();
+						}
+						reject(error);
+					}
+				},
+				[GatewayCommand.GW_GET_SCENE_LIST_NTF],
+			);
+
 			const getSceneListConfirmation = (await this.Connection.sendFrameAsync(
 				new GW_GET_SCENE_LIST_REQ(),
 			)) as GW_GET_SCENE_LIST_CFM;

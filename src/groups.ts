@@ -466,37 +466,35 @@ export class Group extends Component {
 			// Get product type from first node ID for conversion
 			const nodeID = this.Nodes[0];
 
-			// Setup notification to receive notification with actuator type
-			let dispose: Disposable | undefined;
-			const nodeTypeIDPromise = new Promise<ActuatorType>((resolve, reject) => {
-				try {
-					// Register notification handler
-					dispose = this.Connection.on(
-						(frame) => {
-							try {
-								if (frame instanceof GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
-									const nodeTypeID = frame.ActuatorType;
-									if (dispose) {
-										dispose.dispose();
-									}
-									resolve(nodeTypeID);
-								}
-							} catch (error) {
-								if (dispose) {
-									dispose.dispose();
-								}
-								reject(error);
-							}
-						},
-						[GatewayCommand.GW_GET_NODE_INFORMATION_NTF],
-					);
-				} catch (error) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					reject(error);
-				}
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: ActuatorType | PromiseLike<ActuatorType>) => void, reject: (reason?: any) => void;
+			const nodeTypeIDPromise = new Promise<ActuatorType>((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
+
+			// Setup notification to receive notification with actuator type
+			// Register notification handler
+			const dispose = this.Connection.on(
+				(frame) => {
+					try {
+						if (frame instanceof GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
+							const nodeTypeID = frame.ActuatorType;
+							if (dispose) {
+								dispose.dispose();
+							}
+							resolve(nodeTypeID);
+						}
+					} catch (error) {
+						if (dispose) {
+							dispose.dispose();
+						}
+						reject(error);
+					}
+				},
+				[GatewayCommand.GW_GET_NODE_INFORMATION_NTF],
+			);
 
 			try {
 				const productInformation = <GW_GET_NODE_INFORMATION_CFM>(
@@ -631,35 +629,41 @@ export class Groups {
 		let dispose: Disposable | undefined;
 
 		try {
-			const notificationHandler = new Promise<void>((resolve, reject) => {
-				try {
-					dispose = this.Connection.on(
-						(frame) => {
-							if (
-								frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF ||
-								frame instanceof GW_GET_GROUP_INFORMATION_NTF
-							) {
-								this.Groups[frame.GroupID] = new Group(this.Connection, frame);
-							} else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
-								if (dispose) {
-									dispose.dispose();
-								}
-								resolve();
-							}
-						},
-						[
-							GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF,
-							GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF,
-							GatewayCommand.GW_GET_GROUP_INFORMATION_NTF,
-						],
-					);
-				} catch (error) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					reject(error);
-				}
+			// Setup the event handlers first to prevent a race condition
+			// where we don't see the events.
+			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+			const notificationHandler = new Promise((res, rej) => {
+				resolve = res;
+				reject = rej;
 			});
+
+			dispose = this.Connection.on(
+				(frame) => {
+					try {
+						if (
+							frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF ||
+							frame instanceof GW_GET_GROUP_INFORMATION_NTF
+						) {
+							this.Groups[frame.GroupID] = new Group(this.Connection, frame);
+						} else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
+							if (dispose) {
+								dispose.dispose();
+							}
+							resolve();
+						}
+					} catch (error) {
+						if (dispose) {
+							dispose.dispose();
+						}
+						reject(error);
+					}
+				},
+				[
+					GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF,
+					GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF,
+					GatewayCommand.GW_GET_GROUP_INFORMATION_NTF,
+				],
+			);
 
 			const getAllGroupsInformation = <GW_GET_ALL_GROUPS_INFORMATION_CFM>(
 				await this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ(this.groupType))
