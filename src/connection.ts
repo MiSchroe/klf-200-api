@@ -325,7 +325,7 @@ export class Connection implements IConnection {
 				timeout * 1000,
 			);
 		} catch (error) {
-			debug(`sendFrameAsync error occurred: ${error}.`);
+			debug(`sendFrameAsync error occurred: ${error} with frame sent: ${frame}.`);
 			return Promise.reject(error);
 		}
 	}
