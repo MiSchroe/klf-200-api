@@ -84,6 +84,9 @@ export class TypedEvent<T> {
 
 	/**
 	 * Removes a listener function from an event emitter.
+	 * If it is called from inside an event handler
+	 * the current event will still call the removed handler
+	 * if it wasn't called so far.
 	 *
 	 * @param listener Function that should be removed.
 	 * @returns {void}
@@ -108,15 +111,25 @@ export class TypedEvent<T> {
 		debug(
 			`TypedEvent emit. ${this.listeners.length} listeners and ${this.listenersOncer.length} once listeners to be called.`,
 		);
+		// Copy all listeners to a temporary array
+		// in case that an event listener would
+		// remove itself from the list.
+		const temporaryListeners = this.listeners.slice();
+
 		/** Update any general listeners */
-		for (const listener of this.listeners) {
+		for (const listener of temporaryListeners) {
 			debug(`Calling Listener ${listener.toString()}.`);
 			await Promise.resolve(listener(event));
 			debug(`Listener ${listener.toString()} called.`);
 		}
 
+		// Copy all listeners to a temporary array
+		// in case that an event listener would
+		// remove itself from the list.
+		const temporaryListenersOnce = this.listenersOncer.slice();
+
 		/** Clear the `once` queue */
-		for (const listener of this.listenersOncer) {
+		for (const listener of temporaryListenersOnce) {
 			debug(`Calling Listener Once ${listener.toString()}.`);
 			await Promise.resolve(listener(event));
 			debug(`Listener Once ${listener.toString()} called.`);
