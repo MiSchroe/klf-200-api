@@ -1,9 +1,7 @@
 ﻿"use strict";
 
 import debugModule from "debug";
-import { dirname, parse } from "path";
 import { setImmediate } from "timers/promises";
-import { fileURLToPath } from "url";
 import {
 	CommandOriginator,
 	CommandStatus,
@@ -67,10 +65,7 @@ import { IConnection } from "./connection.js";
 import { Component } from "./utils/PropertyChangedEvent.js";
 import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
+const debug = debugModule(`klf-200-api:products`);
 
 /**
  * Each product that is registered at the KLF-200 interface will be created

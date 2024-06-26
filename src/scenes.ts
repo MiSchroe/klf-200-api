@@ -1,8 +1,6 @@
 ﻿"use strict";
 
 import debugModule from "debug";
-import { dirname, parse } from "path";
-import { fileURLToPath } from "url";
 import { GW_ACTIVATE_SCENE_CFM } from "./KLF200-API/GW_ACTIVATE_SCENE_CFM.js";
 import { GW_ACTIVATE_SCENE_REQ } from "./KLF200-API/GW_ACTIVATE_SCENE_REQ.js";
 import { CommandOriginator, PriorityLevel } from "./KLF200-API/GW_COMMAND.js";
@@ -23,10 +21,7 @@ import { IConnection } from "./connection.js";
 import { Component } from "./utils/PropertyChangedEvent.js";
 import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
+const debug = debugModule(`klf-200-api:scenes`);
 
 /**
  * The scene object contains the ID, name and a list of products that are contained in the scene.

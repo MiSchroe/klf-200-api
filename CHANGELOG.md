@@ -4,6 +4,11 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
+
+## **WORK IN PROGRESS**
+
+-   [#132](https://github.com/MiSchroe/klf-200-api/issues/132) Generate ESM and CJS targets.
+
 ## 4.0.0 (2024-06-24)
 
 -   [#112](https://github.com/MiSchroe/klf-200-api/issues/112) Fixes Busy error when new products are added.

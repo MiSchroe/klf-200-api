@@ -2,14 +2,11 @@
 
 import debugModule from "debug";
 import { Socket } from "net";
-import { parse } from "path";
-import { fileURLToPath } from "url";
 import { Disposable, Listener, TypedEvent } from "../utils/TypedEvent.js";
 import { FrameRcvFactory } from "./FrameRcvFactory.js";
 import { IGW_FRAME_RCV, KLF200Protocol, SLIPProtocol, SLIP_END } from "./common.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
+const debug = debugModule(`klf-200-api:KLF200SocketProtocol`);
 
 export type FrameReceivedHandler = (frame: IGW_FRAME_RCV) => void;
 

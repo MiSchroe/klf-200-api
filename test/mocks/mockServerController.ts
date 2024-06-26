@@ -2,7 +2,7 @@ import { ChildProcess, fork } from "child_process";
 import { randomUUID } from "crypto";
 import debugModule from "debug";
 import deepEqual from "deep-eql";
-import { dirname, join, parse } from "path";
+import { dirname, join } from "path";
 import { timeout } from "promise-timeout";
 import { fileURLToPath } from "url";
 import { AcknowledgeMessage, Command, CommandWithGuid, KillCommand } from "./mockServer/commands.js";
@@ -10,7 +10,7 @@ import { AcknowledgeMessage, Command, CommandWithGuid, KillCommand } from "./moc
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const debug = debugModule(`${parse(__filename).name}:client`);
+const debug = debugModule(`mockServerController:client`);
 
 export class MockServerController {
 	serverProcess: ChildProcess;

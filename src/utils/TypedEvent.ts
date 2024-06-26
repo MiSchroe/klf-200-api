@@ -1,13 +1,8 @@
 "use strict";
 
 import debugModule from "debug";
-import { dirname, parse } from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
+const debug = debugModule(`klf-200-api:TypedEvents`);
 
 /**
  * Generic typed interface for defining a typed listener function.

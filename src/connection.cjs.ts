@@ -1,8 +1,8 @@
-﻿"use strict";
+"use strict";
 
 import debugModule from "debug";
 import { readFileSync } from "fs";
-import { dirname, join } from "path";
+import { join } from "path";
 import { timeout as promiseTimeout } from "promise-timeout";
 import {
 	ConnectionOptions,
@@ -11,7 +11,6 @@ import {
 	checkServerIdentity as checkServerIdentityOriginal,
 	connect,
 } from "tls";
-import { fileURLToPath } from "url";
 import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF.js";
 import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ.js";
 import { KLF200SocketProtocol } from "./KLF200-API/KLF200SocketProtocol.js";
@@ -27,9 +26,6 @@ import {
 } from "./KLF200-API/common.js";
 import { GW_PASSWORD_ENTER_CFM, GW_PASSWORD_ENTER_REQ } from "./index.js";
 import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const debug = debugModule(`klf-200-api:connection`);
 
