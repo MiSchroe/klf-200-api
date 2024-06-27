@@ -7,7 +7,7 @@
 
 ## **WORK IN PROGRESS**
 
--   [#132](https://github.com/MiSchroe/klf-200-api/issues/132) Generate ESM and CJS targets.
+-   [#132](https://github.com/MiSchroe/klf-200-api/issues/132) Generate ESM and CommonJS targets.
 
 ## 4.0.0 (2024-06-24)
 
