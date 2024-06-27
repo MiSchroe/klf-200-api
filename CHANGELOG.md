@@ -4,8 +4,7 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
-
-## **WORK IN PROGRESS**
+## 4.1.0 (2024-06-27)
 
 -   [#132](https://github.com/MiSchroe/klf-200-api/issues/132) Generate ESM and CommonJS targets.
 
