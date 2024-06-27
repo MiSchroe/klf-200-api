@@ -69,7 +69,7 @@
     "compile:esm": "tsc -b ./tsconfig.esm.json",
     "compile": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json",
     "build:clean": "rm -rf ./dist",
-    "build": "npm run build:clean && npm run compile && shx cp ./deployment/package.esm.json ./dist/esm/package.json && shx cp ./deployment/package.cjs.json ./dist/cjs/package.json && shx cp ./velux-cert.pem ./dist/velux-cert.pem",
+    "build": "npm run build:clean && tsx ./deployment/prepare-cjs.ts && npm run compile && shx cp ./deployment/package.esm.json ./dist/esm/package.json && shx cp ./deployment/package.cjs.json ./dist/cjs/package.json && shx cp ./velux-cert.pem ./dist/velux-cert.pem",
     "watch": "tsc --watch",
     "test": "cross-env DEBUG=-mockServer*,-klf-200-api*,-connection-test c8 mocha",
     "lint": "eslint --ext .ts src test",
