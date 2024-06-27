@@ -20,4 +20,4 @@ appveyor.yml
 azure-pipelines.yml
 gulpfile.js
 tsconfig.json
-*.pem
+velux-mock-cert.pem
