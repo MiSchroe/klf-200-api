@@ -5,11 +5,13 @@
 /.nyc_output
 /.vscode
 /coverage
+/deployment
 /docs
 /velux-api/TestResults
 /velux-api/.vs
 *.user
 /src
+/src-cjs
 xunit.xml
 /test
 .jsdoc.json
@@ -18,3 +20,4 @@ appveyor.yml
 azure-pipelines.yml
 gulpfile.js
 tsconfig.json
+*.pem

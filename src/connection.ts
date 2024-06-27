@@ -2,7 +2,7 @@
 
 import debugModule from "debug";
 import { readFileSync } from "fs";
-import { dirname, join, parse } from "path";
+import { dirname, join } from "path";
 import { timeout as promiseTimeout } from "promise-timeout";
 import {
 	ConnectionOptions,
@@ -31,7 +31,7 @@ import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
+const debug = debugModule(`klf-200-api:connection`);
 
 /**
  * Interface for the connection.

@@ -1,8 +1,6 @@
 "use strict";
 
 import debugModule from "debug";
-import { dirname, parse } from "path";
-import { fileURLToPath } from "url";
 import { GW_ACTIVATE_PRODUCTGROUP_CFM } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_CFM.js";
 import { GW_ACTIVATE_PRODUCTGROUP_REQ } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_REQ.js";
 import {
@@ -39,10 +37,7 @@ import { Component } from "./utils/PropertyChangedEvent.js";
 import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
 import { isArrayEqual } from "./utils/UtilityFunctions.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const debug = debugModule(`klf-200-api:${parse(__filename).name}`);
+const debug = debugModule(`klf-200-api:groups`);
 
 /**
  * The gateway can hold up to 100 groups. A group is a collection of actuator nodes in

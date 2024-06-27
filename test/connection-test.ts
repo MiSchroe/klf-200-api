@@ -4,7 +4,7 @@ import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import debugModule from "debug";
 import { readFileSync } from "fs";
-import { dirname, join, parse } from "path";
+import { dirname, join } from "path";
 import { TimeoutError } from "promise-timeout";
 import sinon from "sinon";
 import { fileURLToPath } from "url";
@@ -17,7 +17,7 @@ import { MockServerController } from "./mocks/mockServerController.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const debug = debugModule(`${parse(__filename).name}`);
+const debug = debugModule(`connection-test`);
 
 use(chaiAsPromised);
 
