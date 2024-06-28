@@ -19,10 +19,7 @@ export class FrameRcvFactory {
 	} = {};
 	private static async LoadModule(moduleName: string): Promise<void> {
 		if (!this.modules[moduleName]) {
-			let modulePath = resolve(__dirname, moduleName + ".js");
-			if (!modulePath.startsWith("file://")) {
-				modulePath = `file://${modulePath}`;
-			}
+			let modulePath = resolve(__dirname, moduleName);
 			this.modules[moduleName] = await import(modulePath);
 		}
 	}
