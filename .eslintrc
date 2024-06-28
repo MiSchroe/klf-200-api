@@ -3,12 +3,13 @@
 	"parserOptions": {
 		"ecmaVersion": 2020,
 		"sourceType": "module",
-		"project": "./tsconfig.lint.json" // <-- Point to your project's tsconfig.json or create new one
+		"project": "./tsconfig.lint.json", // <-- Point to your project's tsconfig.json or create new one
 	},
 	"extends": [
 		"plugin:@typescript-eslint/recommended", // Uses the recommended rules from the @typescript-eslint/eslint-plugin
+		"plugin:@typescript-eslint/recommended-type-checked",
 		"plugin:deprecation/recommended",
-		"plugin:prettier/recommended" // Enables eslint-plugin-prettier and displays prettier errors as ESLint errors. Make sure this is always the last configuration in the extends array.
+		"plugin:prettier/recommended", // Enables eslint-plugin-prettier and displays prettier errors as ESLint errors. Make sure this is always the last configuration in the extends array.
 	],
 	"plugins": [],
 	"rules": {
@@ -19,22 +20,22 @@
 			{
 				"functions": false,
 				"typedefs": false,
-				"classes": false
-			}
+				"classes": false,
+			},
 		],
 		"@typescript-eslint/no-unused-vars": [
 			"error",
 			{
 				"ignoreRestSiblings": true,
-				"argsIgnorePattern": "^_"
-			}
+				"argsIgnorePattern": "^_",
+			},
 		],
 		"@typescript-eslint/explicit-function-return-type": [
 			"warn",
 			{
 				"allowExpressions": true,
-				"allowTypedFunctionExpressions": true
-			}
+				"allowTypedFunctionExpressions": true,
+			},
 		],
 		"@typescript-eslint/no-object-literal-type-assertion": "off",
 		"@typescript-eslint/interface-name-prefix": "off",
@@ -44,8 +45,8 @@
 		"prettier/prettier": [
 			"error",
 			{
-				"endOfLine": "auto"
-			}
-		]
-	}
+				"endOfLine": "auto",
+			},
+		],
+	},
 }

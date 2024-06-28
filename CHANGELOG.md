@@ -4,6 +4,11 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
+
+## **WORK IN PROGRESS**
+
+-   [#136](https://github.com/MiSchroe/klf-200-api/issues/136) Fix dynamic loading error in CommonJS part.
+
 ## 4.1.1 (2024-06-27)
 
 -   [#134](https://github.com/MiSchroe/klf-200-api/issues/134) Add file velux-cert.pem to npm package.
