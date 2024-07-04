@@ -4,6 +4,11 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
+
+## **WORK IN PROGRESS**
+
+-   [#143](https://github.com/MiSchroe/klf-200-api/issues/143) Fix unconsistent min/max limitation values.
+
 ## 4.1.2 (2024-06-28)
 
 -   [#136](https://github.com/MiSchroe/klf-200-api/issues/136) Fix dynamic loading error in CommonJS part.

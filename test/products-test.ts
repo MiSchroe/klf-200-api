@@ -460,7 +460,7 @@ describe("products", function () {
 			});
 
 			this.afterEach(async () => {
-				conn.logoutAsync();
+				await conn.logoutAsync();
 			});
 
 			describe("Name", function () {
@@ -740,8 +740,8 @@ describe("products", function () {
 			}
 
 			describe("getLimitations", function () {
-				it("should return [0.25, 0.5] for a window", function () {
-					const expectedResult = [0.25, 0.5];
+				it("should return [0.5, 0.25] for a window", function () {
+					const expectedResult = [0.5, 0.25];
 
 					// Mock the expected raw values:
 					sinon.stub(product, "getLimitationMinRaw").withArgs(ParameterActive.MP).returns(0x6400);
@@ -772,8 +772,8 @@ describe("products", function () {
 			});
 
 			describe("getLimitationMin", function () {
-				it("should return 0.25 for a window", function () {
-					const expectedResult = 0.25;
+				it("should return 0.5 for a window", function () {
+					const expectedResult = 0.5;
 
 					// Mock the expected raw values:
 					sinon.stub(product, "getLimitationMinRaw").withArgs(ParameterActive.MP).returns(0x6400);
@@ -804,8 +804,8 @@ describe("products", function () {
 			});
 
 			describe("getLimitationMax", function () {
-				it("should return 0.5 for a window", function () {
-					const expectedResult = 0.5;
+				it("should return 0.25 for a window", function () {
+					const expectedResult = 0.25;
 
 					// Mock the expected raw values:
 					sinon.stub(product, "getLimitationMinRaw").withArgs(ParameterActive.MP).returns(0x6400);
@@ -1543,7 +1543,7 @@ describe("products", function () {
 				let propertyChangedSpy: SinonSpy<PropertyChangedEvent[]>;
 
 				this.beforeEach(function () {
-					propertyChangedSpy = sandbox.spy();
+					propertyChangedSpy = sandbox.spy() as sinon.SinonSpy<PropertyChangedEvent[], any>;
 					product.propertyChangedEvent.on((event) => {
 						propertyChangedSpy(event);
 					});
