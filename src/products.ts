@@ -812,20 +812,18 @@ export class Product extends Component {
 	}
 
 	/**
-	 * Returns a tuple of min and max values for the limitation of the profided parameter.
+	 * Returns a tuple of min and max values for the limitation of the provided parameter.
 	 *
 	 * @param functionalParameter Parameter for which the limitations should be returned.
 	 * @returns A tuple of the min and max values as percentage in the range [0, 1].
+	 * 			The first value of the tuple corresponds always to the min raw value
+	 * 			and the second value corresponds always to the max raw value.
 	 */
 	public getLimitations(functionalParameter: ParameterActive): [min: number, max: number] {
 		const limitationMin = convertPositionRaw(this.getLimitationMinRaw(functionalParameter), this.TypeID);
 		const limitationMax = convertPositionRaw(this.getLimitationMaxRaw(functionalParameter), this.TypeID);
 
-		if (limitationMin <= limitationMax) {
-			return [limitationMin, limitationMax];
-		} else {
-			return [limitationMax, limitationMin];
-		}
+		return [limitationMin, limitationMax];
 	}
 
 	/**
