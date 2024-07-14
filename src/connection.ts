@@ -23,7 +23,121 @@ import {
 	KLF200_PORT,
 } from "./KLF200-API/common.js";
 import { ca } from "./ca.js";
-import { GW_PASSWORD_ENTER_CFM, GW_PASSWORD_ENTER_REQ } from "./index.js";
+import {
+	GW_ACTIVATE_PRODUCTGROUP_CFM,
+	GW_ACTIVATE_PRODUCTGROUP_REQ,
+	GW_ACTIVATE_SCENE_CFM,
+	GW_ACTIVATE_SCENE_REQ,
+	GW_CLEAR_ACTIVATION_LOG_CFM,
+	GW_CLEAR_ACTIVATION_LOG_REQ,
+	GW_COMMAND_SEND_CFM,
+	GW_COMMAND_SEND_REQ,
+	GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM,
+	GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ,
+	GW_CS_CONTROLLER_COPY_CFM,
+	GW_CS_CONTROLLER_COPY_REQ,
+	GW_CS_DISCOVER_NODES_CFM,
+	GW_CS_DISCOVER_NODES_REQ,
+	GW_CS_GENERATE_NEW_KEY_CFM,
+	GW_CS_GENERATE_NEW_KEY_REQ,
+	GW_CS_GET_SYSTEMTABLE_DATA_CFM,
+	GW_CS_GET_SYSTEMTABLE_DATA_REQ,
+	GW_CS_RECEIVE_KEY_CFM,
+	GW_CS_RECEIVE_KEY_REQ,
+	GW_CS_REMOVE_NODES_CFM,
+	GW_CS_REMOVE_NODES_REQ,
+	GW_CS_REPAIR_KEY_CFM,
+	GW_CS_REPAIR_KEY_REQ,
+	GW_CS_VIRGIN_STATE_CFM,
+	GW_CS_VIRGIN_STATE_REQ,
+	GW_DELETE_GROUP_CFM,
+	GW_DELETE_GROUP_REQ,
+	GW_DELETE_SCENE_CFM,
+	GW_DELETE_SCENE_REQ,
+	GW_GET_ACTIVATION_LOG_HEADER_CFM,
+	GW_GET_ACTIVATION_LOG_HEADER_REQ,
+	GW_GET_ACTIVATION_LOG_LINE_CFM,
+	GW_GET_ACTIVATION_LOG_LINE_REQ,
+	GW_GET_ALL_GROUPS_INFORMATION_CFM,
+	GW_GET_ALL_GROUPS_INFORMATION_REQ,
+	GW_GET_ALL_NODES_INFORMATION_CFM,
+	GW_GET_ALL_NODES_INFORMATION_REQ,
+	GW_GET_CONTACT_INPUT_LINK_LIST_CFM,
+	GW_GET_CONTACT_INPUT_LINK_LIST_REQ,
+	GW_GET_GROUP_INFORMATION_CFM,
+	GW_GET_GROUP_INFORMATION_REQ,
+	GW_GET_LIMITATION_STATUS_CFM,
+	GW_GET_LIMITATION_STATUS_REQ,
+	GW_GET_LOCAL_TIME_CFM,
+	GW_GET_LOCAL_TIME_REQ,
+	GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM,
+	GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ,
+	GW_GET_NETWORK_SETUP_CFM,
+	GW_GET_NETWORK_SETUP_REQ,
+	GW_GET_NODE_INFORMATION_CFM,
+	GW_GET_NODE_INFORMATION_REQ,
+	GW_GET_PROTOCOL_VERSION_CFM,
+	GW_GET_PROTOCOL_VERSION_REQ,
+	GW_GET_SCENE_INFORMATION_CFM,
+	GW_GET_SCENE_INFORMATION_REQ,
+	GW_GET_SCENE_LIST_CFM,
+	GW_GET_SCENE_LIST_REQ,
+	GW_GET_STATE_CFM,
+	GW_GET_VERSION_CFM,
+	GW_GET_VERSION_REQ,
+	GW_HOUSE_STATUS_MONITOR_DISABLE_CFM,
+	GW_HOUSE_STATUS_MONITOR_DISABLE_REQ,
+	GW_HOUSE_STATUS_MONITOR_ENABLE_CFM,
+	GW_HOUSE_STATUS_MONITOR_ENABLE_REQ,
+	GW_INITIALIZE_SCENE_CANCEL_CFM,
+	GW_INITIALIZE_SCENE_CANCEL_REQ,
+	GW_INITIALIZE_SCENE_CFM,
+	GW_INITIALIZE_SCENE_REQ,
+	GW_LEAVE_LEARN_STATE_CFM,
+	GW_LEAVE_LEARN_STATE_REQ,
+	GW_MODE_SEND_CFM,
+	GW_MODE_SEND_REQ,
+	GW_NEW_GROUP_CFM,
+	GW_NEW_GROUP_REQ,
+	GW_PASSWORD_CHANGE_CFM,
+	GW_PASSWORD_CHANGE_REQ,
+	GW_PASSWORD_ENTER_CFM,
+	GW_PASSWORD_ENTER_REQ,
+	GW_REBOOT_CFM,
+	GW_REBOOT_REQ,
+	GW_RECORD_SCENE_CFM,
+	GW_RECORD_SCENE_REQ,
+	GW_REMOVE_CONTACT_INPUT_LINK_CFM,
+	GW_REMOVE_CONTACT_INPUT_LINK_REQ,
+	GW_RENAME_SCENE_CFM,
+	GW_RENAME_SCENE_REQ,
+	GW_RTC_SET_TIME_ZONE_CFM,
+	GW_RTC_SET_TIME_ZONE_REQ,
+	GW_SET_CONTACT_INPUT_LINK_CFM,
+	GW_SET_CONTACT_INPUT_LINK_REQ,
+	GW_SET_FACTORY_DEFAULT_CFM,
+	GW_SET_FACTORY_DEFAULT_REQ,
+	GW_SET_GROUP_INFORMATION_CFM,
+	GW_SET_GROUP_INFORMATION_REQ,
+	GW_SET_LIMITATION_CFM,
+	GW_SET_LIMITATION_REQ,
+	GW_SET_NETWORK_SETUP_CFM,
+	GW_SET_NETWORK_SETUP_REQ,
+	GW_SET_NODE_NAME_CFM,
+	GW_SET_NODE_NAME_REQ,
+	GW_SET_NODE_ORDER_AND_PLACEMENT_CFM,
+	GW_SET_NODE_ORDER_AND_PLACEMENT_REQ,
+	GW_SET_NODE_VARIATION_CFM,
+	GW_SET_NODE_VARIATION_REQ,
+	GW_SET_UTC_CFM,
+	GW_SET_UTC_REQ,
+	GW_STATUS_REQUEST_CFM,
+	GW_STATUS_REQUEST_REQ,
+	GW_STOP_SCENE_CFM,
+	GW_STOP_SCENE_REQ,
+	GW_WINK_SEND_CFM,
+	GW_WINK_SEND_REQ,
+} from "./index.js";
 import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
 
 const debug = debugModule(`klf-200-api:connection`);
@@ -190,9 +304,7 @@ export class Connection implements IConnection {
 		try {
 			await this.initSocketAsync();
 			this.klfProtocol = new KLF200SocketProtocol(<TLSSocket>this.sckt);
-			const passwordCFM = <GW_PASSWORD_ENTER_CFM>(
-				await this.sendFrameAsync(new GW_PASSWORD_ENTER_REQ(password), timeout)
-			);
+			const passwordCFM = await this.sendFrameAsync(new GW_PASSWORD_ENTER_REQ(password), timeout);
 			if (passwordCFM.Status !== GW_COMMON_STATUS.SUCCESS) {
 				return Promise.reject(new Error("Login failed."));
 			} else {
@@ -270,6 +382,135 @@ export class Connection implements IConnection {
 	 *                                   resolved by the corresponding confirmation frame with a matching session ID.
 	 * @memberof Connection
 	 */
+	public async sendFrameAsync(frame: GW_REBOOT_REQ, timeout?: number): Promise<GW_REBOOT_CFM>;
+	public async sendFrameAsync(
+		frame: GW_SET_FACTORY_DEFAULT_REQ,
+		timeout?: number,
+	): Promise<GW_SET_FACTORY_DEFAULT_CFM>;
+	public async sendFrameAsync(frame: GW_GET_VERSION_REQ, timeout?: number): Promise<GW_GET_VERSION_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_PROTOCOL_VERSION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_PROTOCOL_VERSION_CFM>;
+	public async sendFrameAsync(frame: GW_GET_STATE_REQ, timeout?: number): Promise<GW_GET_STATE_CFM>;
+	public async sendFrameAsync(frame: GW_LEAVE_LEARN_STATE_REQ, timeout?: number): Promise<GW_LEAVE_LEARN_STATE_CFM>;
+	public async sendFrameAsync(frame: GW_GET_NETWORK_SETUP_REQ, timeout?: number): Promise<GW_GET_NETWORK_SETUP_CFM>;
+	public async sendFrameAsync(frame: GW_SET_NETWORK_SETUP_REQ, timeout?: number): Promise<GW_SET_NETWORK_SETUP_CFM>;
+	public async sendFrameAsync(
+		frame: GW_CS_GET_SYSTEMTABLE_DATA_REQ,
+		timeout?: number,
+	): Promise<GW_CS_GET_SYSTEMTABLE_DATA_CFM>;
+	public async sendFrameAsync(frame: GW_CS_DISCOVER_NODES_REQ, timeout?: number): Promise<GW_CS_DISCOVER_NODES_CFM>;
+	public async sendFrameAsync(frame: GW_CS_REMOVE_NODES_REQ, timeout?: number): Promise<GW_CS_REMOVE_NODES_CFM>;
+	public async sendFrameAsync(frame: GW_CS_VIRGIN_STATE_REQ, timeout?: number): Promise<GW_CS_VIRGIN_STATE_CFM>;
+	public async sendFrameAsync(frame: GW_CS_CONTROLLER_COPY_REQ, timeout?: number): Promise<GW_CS_CONTROLLER_COPY_CFM>;
+	public async sendFrameAsync(frame: GW_CS_RECEIVE_KEY_REQ, timeout?: number): Promise<GW_CS_RECEIVE_KEY_CFM>;
+	public async sendFrameAsync(
+		frame: GW_CS_GENERATE_NEW_KEY_REQ,
+		timeout?: number,
+	): Promise<GW_CS_GENERATE_NEW_KEY_CFM>;
+	public async sendFrameAsync(frame: GW_CS_REPAIR_KEY_REQ, timeout?: number): Promise<GW_CS_REPAIR_KEY_CFM>;
+	public async sendFrameAsync(
+		frame: GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ,
+		timeout?: number,
+	): Promise<GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_NODE_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_NODE_INFORMATION_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_ALL_NODES_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_ALL_NODES_INFORMATION_CFM>;
+	public async sendFrameAsync(frame: GW_SET_NODE_VARIATION_REQ, timeout?: number): Promise<GW_SET_NODE_VARIATION_CFM>;
+	public async sendFrameAsync(frame: GW_SET_NODE_NAME_REQ, timeout?: number): Promise<GW_SET_NODE_NAME_CFM>;
+	public async sendFrameAsync(
+		frame: GW_SET_NODE_ORDER_AND_PLACEMENT_REQ,
+		timeout?: number,
+	): Promise<GW_SET_NODE_ORDER_AND_PLACEMENT_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_GROUP_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_GROUP_INFORMATION_CFM>;
+	public async sendFrameAsync(
+		frame: GW_SET_GROUP_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_SET_GROUP_INFORMATION_CFM>;
+	public async sendFrameAsync(frame: GW_DELETE_GROUP_REQ, timeout?: number): Promise<GW_DELETE_GROUP_CFM>;
+	public async sendFrameAsync(frame: GW_NEW_GROUP_REQ, timeout?: number): Promise<GW_NEW_GROUP_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_ALL_GROUPS_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_ALL_GROUPS_INFORMATION_CFM>;
+	public async sendFrameAsync(
+		frame: GW_HOUSE_STATUS_MONITOR_ENABLE_REQ,
+		timeout?: number,
+	): Promise<GW_HOUSE_STATUS_MONITOR_ENABLE_CFM>;
+	public async sendFrameAsync(
+		frame: GW_HOUSE_STATUS_MONITOR_DISABLE_REQ,
+		timeout?: number,
+	): Promise<GW_HOUSE_STATUS_MONITOR_DISABLE_CFM>;
+	public async sendFrameAsync(frame: GW_COMMAND_SEND_REQ, timeout?: number): Promise<GW_COMMAND_SEND_CFM>;
+	public async sendFrameAsync(frame: GW_STATUS_REQUEST_REQ, timeout?: number): Promise<GW_STATUS_REQUEST_CFM>;
+	public async sendFrameAsync(frame: GW_WINK_SEND_REQ, timeout?: number): Promise<GW_WINK_SEND_CFM>;
+	public async sendFrameAsync(frame: GW_SET_LIMITATION_REQ, timeout?: number): Promise<GW_SET_LIMITATION_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_LIMITATION_STATUS_REQ,
+		timeout?: number,
+	): Promise<GW_GET_LIMITATION_STATUS_CFM>;
+	public async sendFrameAsync(frame: GW_MODE_SEND_REQ, timeout?: number): Promise<GW_MODE_SEND_CFM>;
+	public async sendFrameAsync(frame: GW_INITIALIZE_SCENE_REQ, timeout?: number): Promise<GW_INITIALIZE_SCENE_CFM>;
+	public async sendFrameAsync(
+		frame: GW_INITIALIZE_SCENE_CANCEL_REQ,
+		timeout?: number,
+	): Promise<GW_INITIALIZE_SCENE_CANCEL_CFM>;
+	public async sendFrameAsync(frame: GW_RECORD_SCENE_REQ, timeout?: number): Promise<GW_RECORD_SCENE_CFM>;
+	public async sendFrameAsync(frame: GW_DELETE_SCENE_REQ, timeout?: number): Promise<GW_DELETE_SCENE_CFM>;
+	public async sendFrameAsync(frame: GW_RENAME_SCENE_REQ, timeout?: number): Promise<GW_RENAME_SCENE_CFM>;
+	public async sendFrameAsync(frame: GW_GET_SCENE_LIST_REQ, timeout?: number): Promise<GW_GET_SCENE_LIST_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_SCENE_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_SCENE_INFORMATION_CFM>;
+	public async sendFrameAsync(frame: GW_ACTIVATE_SCENE_REQ, timeout?: number): Promise<GW_ACTIVATE_SCENE_CFM>;
+	public async sendFrameAsync(frame: GW_STOP_SCENE_REQ, timeout?: number): Promise<GW_STOP_SCENE_CFM>;
+	public async sendFrameAsync(
+		frame: GW_ACTIVATE_PRODUCTGROUP_REQ,
+		timeout?: number,
+	): Promise<GW_ACTIVATE_PRODUCTGROUP_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_CONTACT_INPUT_LINK_LIST_REQ,
+		timeout?: number,
+	): Promise<GW_GET_CONTACT_INPUT_LINK_LIST_CFM>;
+	public async sendFrameAsync(
+		frame: GW_SET_CONTACT_INPUT_LINK_REQ,
+		timeout?: number,
+	): Promise<GW_SET_CONTACT_INPUT_LINK_CFM>;
+	public async sendFrameAsync(
+		frame: GW_REMOVE_CONTACT_INPUT_LINK_REQ,
+		timeout?: number,
+	): Promise<GW_REMOVE_CONTACT_INPUT_LINK_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_ACTIVATION_LOG_HEADER_REQ,
+		timeout?: number,
+	): Promise<GW_GET_ACTIVATION_LOG_HEADER_CFM>;
+	public async sendFrameAsync(
+		frame: GW_CLEAR_ACTIVATION_LOG_REQ,
+		timeout?: number,
+	): Promise<GW_CLEAR_ACTIVATION_LOG_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_ACTIVATION_LOG_LINE_REQ,
+		timeout?: number,
+	): Promise<GW_GET_ACTIVATION_LOG_LINE_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ,
+		timeout?: number,
+	): Promise<GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM>;
+	public async sendFrameAsync(frame: GW_SET_UTC_REQ, timeout?: number): Promise<GW_SET_UTC_CFM>;
+	public async sendFrameAsync(frame: GW_RTC_SET_TIME_ZONE_REQ, timeout?: number): Promise<GW_RTC_SET_TIME_ZONE_CFM>;
+	public async sendFrameAsync(frame: GW_GET_LOCAL_TIME_REQ, timeout?: number): Promise<GW_GET_LOCAL_TIME_CFM>;
+	public async sendFrameAsync(frame: GW_PASSWORD_ENTER_REQ, timeout?: number): Promise<GW_PASSWORD_ENTER_CFM>;
+	public async sendFrameAsync(frame: GW_PASSWORD_CHANGE_REQ, timeout?: number): Promise<GW_PASSWORD_CHANGE_CFM>;
 	public async sendFrameAsync(frame: IGW_FRAME_REQ, timeout: number = 10): Promise<IGW_FRAME_RCV> {
 		try {
 			debug(`sendFrameAsync called with frame: ${stringifyFrame(frame)}, timeout: ${timeout}.`);
