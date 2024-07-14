@@ -83,7 +83,7 @@ export class MockServerController {
 				debug("After Kill command");
 				return await waitOnClosePromise;
 			} catch (e) {
-				debug(`Exception occurred in Symbol.asyncDispose: ${e}`);
+				debug(`Exception occurred in Symbol.asyncDispose: ${typeof e === "string" ? e : JSON.stringify(e)}`);
 			} finally {
 				debug("In finally in Symbol.asyncDispose.");
 				if (this.serverProcess?.connected) {

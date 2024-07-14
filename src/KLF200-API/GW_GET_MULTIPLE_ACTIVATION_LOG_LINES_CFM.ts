@@ -1,8 +1,9 @@
 "use strict";
 
-import { GW_FRAME_CFM, GW_INVERSE_STATUS } from "./common.js";
+import { GatewayCommand, GW_FRAME_CFM, GW_INVERSE_STATUS } from "./common.js";
 
 export class GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM;
 	public readonly LineCount: number;
 	public readonly Status: GW_INVERSE_STATUS;
 
@@ -22,7 +23,7 @@ export class GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM extends GW_FRAME_CFM {
 				return "Request failed.";
 
 			default:
-				return `Unknown error ${this.Status}.`;
+				return `Unknown error ${this.Status as number}.`;
 		}
 	}
 }

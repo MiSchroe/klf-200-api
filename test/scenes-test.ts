@@ -48,7 +48,7 @@ describe("scenes", function () {
 	});
 
 	describe("Scenes class", function () {
-		describe("createScenesAsync", async function () {
+		describe("createScenesAsync", function () {
 			it("should create without error with 2 scenes.", async function () {
 				const conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
@@ -128,7 +128,7 @@ describe("scenes", function () {
 			});
 		});
 
-		describe("findByName", async function () {
+		describe("findByName", function () {
 			it("should find scene 'Dummy 1'.", async function () {
 				const conn = new Connection(testHOST, {
 					rejectUnauthorized: true,

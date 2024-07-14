@@ -444,6 +444,7 @@ describe("groups", function () {
 			let conn: Connection;
 			let groups: Groups;
 			let group: Group;
+
 			this.beforeEach(async () => {
 				conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
@@ -929,7 +930,7 @@ describe("groups", function () {
 				let propertyChangedSpy: SinonSpy<PropertyChangedEvent[]>;
 
 				this.beforeEach(function () {
-					propertyChangedSpy = sandbox.spy();
+					propertyChangedSpy = sandbox.spy() as SinonSpy<PropertyChangedEvent[]>;
 					group.propertyChangedEvent.on((event) => {
 						propertyChangedSpy(event);
 					});

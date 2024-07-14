@@ -1,8 +1,9 @@
 "use strict";
 
-import { GW_FRAME_REQ } from "./common.js";
+import { GatewayCommand, GW_FRAME_REQ } from "./common.js";
 
 export class GW_SET_NODE_ORDER_AND_PLACEMENT_REQ extends GW_FRAME_REQ {
+	declare readonly Command: GatewayCommand.GW_SET_NODE_ORDER_AND_PLACEMENT_REQ;
 	constructor(
 		readonly NodeID: number,
 		readonly Order: number,

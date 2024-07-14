@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_NTF, readZString } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF, readZString } from "./common.js";
 
 export type SceneListEntry = {
 	SceneID: number;
@@ -8,6 +8,7 @@ export type SceneListEntry = {
 };
 
 export class GW_GET_SCENE_LIST_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_GET_SCENE_LIST_NTF;
 	public readonly NumberOfScenes: number;
 	public readonly NumberOfRemainingScenes: number;
 	public readonly Scenes: SceneListEntry[] = [];

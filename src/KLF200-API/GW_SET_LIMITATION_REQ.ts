@@ -1,9 +1,10 @@
 "use strict";
 
-import { GW_FRAME_COMMAND_REQ } from "./common.js";
+import { GatewayCommand, GW_FRAME_COMMAND_REQ } from "./common.js";
 import { CommandOriginator, ParameterActive, PriorityLevel } from "./GW_COMMAND.js";
 
 export class GW_SET_LIMITATION_REQ extends GW_FRAME_COMMAND_REQ {
+	declare readonly Command: GatewayCommand.GW_SET_LIMITATION_REQ;
 	constructor(
 		readonly Nodes: number[] | number,
 		readonly LimitationValueMin: number,

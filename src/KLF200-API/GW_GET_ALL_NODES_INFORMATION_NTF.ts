@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_NTF, readZString } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF, readZString } from "./common.js";
 import {
 	ActuatorAlias,
 	ActuatorType,
@@ -12,6 +12,7 @@ import {
 } from "./GW_SYSTEMTABLE_DATA.js";
 
 export class GW_GET_ALL_NODES_INFORMATION_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF;
 	public readonly NodeID: number;
 	public readonly Order: number;
 	public readonly Placement: number;

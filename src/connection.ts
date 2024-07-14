@@ -1,8 +1,6 @@
 ﻿"use strict";
 
 import debugModule from "debug";
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
 import { timeout as promiseTimeout } from "promise-timeout";
 import {
 	ConnectionOptions,
@@ -11,7 +9,6 @@ import {
 	checkServerIdentity as checkServerIdentityOriginal,
 	connect,
 } from "tls";
-import { fileURLToPath } from "url";
 import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF.js";
 import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ.js";
 import { KLF200SocketProtocol } from "./KLF200-API/KLF200SocketProtocol.js";
@@ -25,11 +22,9 @@ import {
 	IGW_FRAME_REQ,
 	KLF200_PORT,
 } from "./KLF200-API/common.js";
+import { ca } from "./ca.js";
 import { GW_PASSWORD_ENTER_CFM, GW_PASSWORD_ENTER_REQ } from "./index.js";
 import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const debug = debugModule(`klf-200-api:connection`);
 
@@ -106,7 +101,6 @@ export interface IConnection {
 }
 
 const FINGERPRINT: string = "02:8C:23:A0:89:2B:62:98:C4:99:00:5B:D2:E7:2E:0A:70:3D:71:6A";
-const ca: Buffer = readFileSync(join(__dirname, "../velux-cert.pem"));
 
 /**
  * The Connection class is used to handle the communication with the Velux KLF interface.
@@ -234,6 +228,7 @@ export class Connection implements IConnection {
 	 */
 	public async logoutAsync(timeout: number = 10): Promise<void> {
 		try {
+			debug("Logging out from the KLF interface and closing the socket...");
 			if (this.sckt) {
 				if (this.klfProtocol) {
 					this.klfProtocol = undefined;
@@ -242,18 +237,25 @@ export class Connection implements IConnection {
 					new Promise<void>((resolve, reject) => {
 						try {
 							// Close socket
-							this.sckt?.end("", resolve);
+							debug("Closing socket...");
+							this.sckt?.end("", () => {
+								debug("Socket closed.");
+								resolve();
+							});
 						} catch (error) {
+							debug("Error while closing socket:", error);
 							reject(error);
 						}
 					}),
 					timeout * 1000,
 				);
 			} else {
+				debug("No socket to close.");
 				return Promise.resolve();
 			}
 		} catch (error) {
-			Promise.reject(error);
+			debug("Error while logging out:", error);
+			return Promise.reject(error);
 		}
 	}
 
@@ -289,11 +291,12 @@ export class Connection implements IConnection {
 				reject = rej;
 			});
 
+			let cfmHandler: Disposable | undefined = undefined;
+			let errHandler: Disposable | undefined = undefined;
 			try {
-				let cfmHandler: Disposable | undefined = undefined;
-				const errHandler = (this.klfProtocol as KLF200SocketProtocol).onError((error) => {
-					debug(`sendFrameAsync protocol error handler: ${error}.`);
-					errHandler.dispose();
+				errHandler = (this.klfProtocol as KLF200SocketProtocol).onError((error) => {
+					debug(`sendFrameAsync protocol error handler: ${JSON.stringify(error)}.`);
+					errHandler?.dispose();
 					cfmHandler?.dispose();
 					reject(error);
 				});
@@ -302,7 +305,7 @@ export class Connection implements IConnection {
 						debug(`sendFrameAsync frame recieved: ${stringifyFrame(notificationFrame)}.`);
 						if (notificationFrame instanceof GW_ERROR_NTF) {
 							debug(`sendFrameAsync GW_ERROR_NTF recieved: ${stringifyFrame(notificationFrame)}.`);
-							errHandler.dispose();
+							errHandler?.dispose();
 							cfmHandler?.dispose();
 							reject(new Error(notificationFrame.getError(), { cause: notificationFrame }));
 						} else if (
@@ -311,12 +314,12 @@ export class Connection implements IConnection {
 								sessionID === (notificationFrame as IGW_FRAME_COMMAND).SessionID)
 						) {
 							debug(`sendFrameAsync expected frame recieved: ${stringifyFrame(notificationFrame)}.`);
-							errHandler.dispose();
+							errHandler?.dispose();
 							cfmHandler?.dispose();
 							resolve(notificationFrame);
 						}
 					} catch (error) {
-						errHandler.dispose();
+						errHandler?.dispose();
 						cfmHandler?.dispose();
 						reject(error);
 					}
@@ -324,13 +327,21 @@ export class Connection implements IConnection {
 				this.shiftKeepAlive();
 				await (this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
 				await this.notifyFrameSent(frame);
-			} catch (error) {
-				reject!(error);
-			}
 
-			return await promiseTimeout(notificationHandler, timeout * 1000);
+				return await promiseTimeout(notificationHandler, timeout * 1000);
+			} catch (error) {
+				debug(
+					`sendFrameAsync error occurred: ${typeof error === "string" ? error : JSON.stringify(error)} with frame sent: ${stringifyFrame(frame)}.`,
+				);
+				errHandler?.dispose();
+				cfmHandler?.dispose();
+				reject!(error);
+				return Promise.reject(error);
+			}
 		} catch (error) {
-			debug(`sendFrameAsync error occurred: ${error} with frame sent: ${stringifyFrame(frame)}.`);
+			debug(
+				`sendFrameAsync error occurred (outer): ${typeof error === "string" ? error : JSON.stringify(error)} with frame sent: ${stringifyFrame(frame)}.`,
+			);
 			return Promise.reject(error);
 		}
 
@@ -339,6 +350,7 @@ export class Connection implements IConnection {
 				if (key.match(/password/i)) {
 					return "**********";
 				} else {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 					return value;
 				}
 			});
@@ -409,7 +421,9 @@ export class Connection implements IConnection {
 	public startKeepAlive(interval: number = 10 * 60 * 1000): void {
 		this.keepAliveInterval = interval;
 		this.keepAliveTimer = setInterval(() => {
-			this.sendKeepAlive();
+			this.sendKeepAlive().catch((error) =>
+				debug(`Error while sending keep alive: ${typeof error === "string" ? error : JSON.stringify(error)}`),
+			);
 		}, interval);
 	}
 
@@ -484,7 +498,7 @@ export class Connection implements IConnection {
 								} else {
 									const err = this.sckt?.authorizationError;
 									this.sckt = undefined;
-									console.error(`AuthorizationError: ${err}`);
+									console.error(`AuthorizationError: ${err!.toString()}`);
 									reject(err);
 								}
 							},

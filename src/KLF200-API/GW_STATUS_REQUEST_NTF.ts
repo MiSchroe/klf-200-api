@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF } from "./common.js";
 import {
 	CommandOriginator,
 	FunctionalParameter,
@@ -11,6 +11,7 @@ import {
 } from "./GW_COMMAND.js";
 
 export class GW_STATUS_REQUEST_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_STATUS_REQUEST_NTF;
 	public readonly SessionID: number;
 	public readonly StatusOwner: StatusOwner;
 	public readonly NodeID: number;

@@ -1,8 +1,9 @@
 "use strict";
 
-import { GW_FRAME_REQ } from "./common.js";
+import { GatewayCommand, GW_FRAME_REQ } from "./common.js";
 
 export class GW_SET_NETWORK_SETUP_REQ extends GW_FRAME_REQ {
+	declare readonly Command: GatewayCommand.GW_SET_NETWORK_SETUP_REQ;
 	constructor(
 		readonly DHCP: boolean,
 		readonly IPAddress: string = "0.0.0.0",

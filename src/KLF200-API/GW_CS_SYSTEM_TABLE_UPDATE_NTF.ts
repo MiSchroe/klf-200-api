@@ -1,9 +1,10 @@
 "use strict";
 
 import { bitArrayToArray } from "../utils/BitArray.js";
-import { GW_FRAME_NTF } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF } from "./common.js";
 
 export class GW_CS_SYSTEM_TABLE_UPDATE_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF;
 	public readonly AddedNodes: number[];
 	public readonly RemovedNodes: number[];
 

@@ -1,8 +1,9 @@
 "use strict";
 
-import { GW_FRAME_CFM, GW_INVERSE_STATUS } from "./common.js";
+import { GatewayCommand, GW_FRAME_CFM, GW_INVERSE_STATUS } from "./common.js";
 
 export class GW_REMOVE_CONTACT_INPUT_LINK_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_REMOVE_CONTACT_INPUT_LINK_CFM;
 	public readonly ContactInputID: number;
 	public readonly Status: GW_INVERSE_STATUS;
 
@@ -22,7 +23,7 @@ export class GW_REMOVE_CONTACT_INPUT_LINK_CFM extends GW_FRAME_CFM {
 				return "Request failed.";
 
 			default:
-				return `Unknown error ${this.Status}.`;
+				return `Unknown error ${this.Status as number}.`;
 		}
 	}
 }

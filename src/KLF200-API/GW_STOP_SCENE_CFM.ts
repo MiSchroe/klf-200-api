@@ -1,9 +1,10 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common.js";
+import { GatewayCommand, GW_FRAME_CFM } from "./common.js";
 import { ActivateSceneStatus } from "./GW_SCENES.js";
 
 export class GW_STOP_SCENE_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_STOP_SCENE_CFM;
 	public readonly SessionID: number;
 	public readonly Status: ActivateSceneStatus;
 
@@ -26,7 +27,7 @@ export class GW_STOP_SCENE_CFM extends GW_FRAME_CFM {
 				return "Invalid parameter.";
 
 			default:
-				return `Unknown error ${this.Status}.`;
+				return `Unknown error ${this.Status as number}.`;
 		}
 	}
 }

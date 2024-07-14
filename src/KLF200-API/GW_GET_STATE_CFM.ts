@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common.js";
+import { GatewayCommand, GW_FRAME_CFM } from "./common.js";
 
 export enum GatewayState {
 	TestMode = 0,
@@ -22,6 +22,7 @@ export enum GatewaySubState {
 }
 
 export class GW_GET_STATE_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_GET_STATE_CFM;
 	public readonly GatewayState: GatewayState;
 	public readonly GatewaySubState: GatewaySubState;
 	public readonly StateData: Buffer;

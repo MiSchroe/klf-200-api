@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF } from "./common.js";
 
 export enum SceneChangeType {
 	Deleted = 0,
@@ -8,6 +8,7 @@ export enum SceneChangeType {
 }
 
 export class GW_SCENE_INFORMATION_CHANGED_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF;
 	public readonly SceneID: number;
 	public readonly SceneChangeType: SceneChangeType;
 

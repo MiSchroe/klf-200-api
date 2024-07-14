@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_COMMAND_REQ } from "./common.js";
+import { GatewayCommand, GW_FRAME_COMMAND_REQ } from "./common.js";
 import {
 	CommandOriginator,
 	LockTime as lt,
@@ -11,6 +11,7 @@ import {
 } from "./GW_COMMAND.js";
 
 export class GW_MODE_SEND_REQ extends GW_FRAME_COMMAND_REQ {
+	declare readonly Command: GatewayCommand.GW_MODE_SEND_REQ;
 	constructor(
 		readonly Nodes: number[] | number,
 		readonly ModeNumber: number = 0,
@@ -51,7 +52,8 @@ export class GW_MODE_SEND_REQ extends GW_FRAME_COMMAND_REQ {
 		let PLI = 0;
 		for (let pliIndex = 0; pliIndex < this.PriorityLevels.length; pliIndex++) {
 			const pli = this.PriorityLevels[pliIndex];
-			if (pli < 0 || pli > 3) throw new Error("Priority level lock out of range.");
+			if (pli < PriorityLevelInformation.Disable || pli > PriorityLevelInformation.KeepCurrent)
+				throw new Error("Priority level lock out of range.");
 
 			PLI <<= 2;
 			PLI |= pli;

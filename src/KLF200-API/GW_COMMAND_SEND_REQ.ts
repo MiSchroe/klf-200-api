@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_COMMAND_REQ } from "./common.js";
+import { GatewayCommand, GW_FRAME_COMMAND_REQ } from "./common.js";
 import {
 	CommandOriginator,
 	FunctionalParameter,
@@ -12,6 +12,7 @@ import {
 } from "./GW_COMMAND.js";
 
 export class GW_COMMAND_SEND_REQ extends GW_FRAME_COMMAND_REQ {
+	declare readonly Command: GatewayCommand.GW_COMMAND_SEND_REQ;
 	constructor(
 		readonly Nodes: number[] | number,
 		readonly MainValue: number,
@@ -74,7 +75,8 @@ export class GW_COMMAND_SEND_REQ extends GW_FRAME_COMMAND_REQ {
 		let PLI = 0;
 		for (let pliIndex = 0; pliIndex < this.PriorityLevels.length; pliIndex++) {
 			const pli = this.PriorityLevels[pliIndex];
-			if (pli < 0 || pli > 3) throw new Error("Priority level lock out of range.");
+			if (pli < PriorityLevelInformation.Disable || pli > PriorityLevelInformation.KeepCurrent)
+				throw new Error("Priority level lock out of range.");
 
 			PLI <<= 2;
 			PLI |= pli;

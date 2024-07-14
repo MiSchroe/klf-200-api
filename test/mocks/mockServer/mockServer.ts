@@ -108,49 +108,61 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 
 	let tlsSocket: TLSSocket | undefined = undefined;
 
-	const server = new Server(options, async function (socket) {
-		debug(
-			`New connection. Current number of connections: ${await new Promise((resolve, reject) => {
-				server.getConnections((error, count) => {
-					if (error) {
-						reject(error);
-					} else {
-						resolve(count);
+	const server = new Server(options, (socket) => {
+		const handler = async function (socket: TLSSocket): Promise<void> {
+			debug(
+				`New connection. Current number of connections: ${await new Promise<number>((resolve, reject) => {
+					server.getConnections((error, count) => {
+						if (error) {
+							reject(error);
+						} else {
+							resolve(count);
+						}
+					});
+				})}`,
+			);
+
+			tlsSocket = socket;
+
+			socket.on("data", (data: Buffer) => {
+				const handler = async function (data: Buffer): Promise<void> {
+					debug(`on data received: ${data.toString("hex")}`);
+					const frameBuffer = KLF200Protocol.Decode(SLIPProtocol.Decode(data));
+					debug(`on data received (frameBuffer): ${frameBuffer.toString("hex")}`);
+
+					const rawBuffers = await handleFrameBuffer(socket, frameBuffer);
+
+					debug(`on data received rawBuffers: ${JSON.stringify(rawBuffers)}`);
+					for (const rawBuffer of rawBuffers) {
+						const klfBuffer = SLIPProtocol.Encode(KLF200Protocol.Encode(rawBuffer));
+						socket.write(klfBuffer);
 					}
+				};
+
+				handler(data).catch((error) => {
+					debug(`Error in socket on data handler: ${error}`);
 				});
-			})}`,
-		);
+			});
 
-		tlsSocket = socket;
+			socket.on("end", function () {
+				debug("end event received.");
+				tlsSocket?.end();
+				tlsSocket = undefined;
+			});
 
-		socket.on("data", async function (data: Buffer) {
-			debug(`on data received: ${data.toString("hex")}`);
-			const frameBuffer = KLF200Protocol.Decode(SLIPProtocol.Decode(data));
-			debug(`on data received (frameBuffer): ${frameBuffer.toString("hex")}`);
+			socket.on("close", (hadError: boolean) => {
+				debug(`close event received. hadError: ${hadError}`);
+				tlsSocket = undefined;
+			});
 
-			const rawBuffers = await handleFrameBuffer(socket, frameBuffer);
+			socket.on("error", (err) => {
+				debug(`error event received: ${JSON.stringify(err)}`);
+				tlsSocket = undefined;
+			});
+		};
 
-			debug(`on data received rawBuffers: ${JSON.stringify(rawBuffers)}`);
-			for (const rawBuffer of rawBuffers) {
-				const klfBuffer = SLIPProtocol.Encode(KLF200Protocol.Encode(rawBuffer));
-				socket.write(klfBuffer);
-			}
-		});
-
-		socket.on("end", function () {
-			debug("end event received.");
-			tlsSocket?.end();
-			tlsSocket = undefined;
-		});
-
-		socket.on("close", (hadError: boolean) => {
-			debug(`close event received. hadError: ${hadError}`);
-			tlsSocket = undefined;
-		});
-
-		socket.on("error", (err) => {
-			debug(`error event received: ${JSON.stringify(err)}`);
-			tlsSocket = undefined;
+		handler(socket).catch((error) => {
+			debug(`Error in New server handler: ${error}`);
 		});
 	});
 
@@ -177,149 +189,161 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 		}
 	}
 
-	process.on("message", async (message: CommandWithGuid) => {
-		debug(`Server has received a message: ${JSON.stringify(message)}`);
-		switch (message.command) {
-			case "SetProduct":
-				products.set(message.productId, message.product);
-				acknowledgeMessageACK(message);
-				break;
+	process.on("message", (message: CommandWithGuid) => {
+		const handler = async (message: CommandWithGuid): Promise<void> => {
+			debug(`Server has received a message: ${JSON.stringify(message)}`);
+			switch (message.command) {
+				case "SetProduct":
+					products.set(message.productId, message.product);
+					acknowledgeMessageACK(message);
+					break;
 
-			case "DeleteProduct":
-				products.delete(message.productId);
-				acknowledgeMessageACK(message);
-				break;
+				case "DeleteProduct":
+					products.delete(message.productId);
+					acknowledgeMessageACK(message);
+					break;
 
-			case "SetGroup":
-				groups.set(message.groupId, message.group);
-				acknowledgeMessageACK(message);
-				break;
+				case "SetGroup":
+					groups.set(message.groupId, message.group);
+					acknowledgeMessageACK(message);
+					break;
 
-			case "DeleteGroup":
-				groups.delete(message.groupId);
-				acknowledgeMessageACK(message);
-				break;
+				case "DeleteGroup":
+					groups.delete(message.groupId);
+					acknowledgeMessageACK(message);
+					break;
 
-			case "SetScene":
-				scenes.set(message.sceneId, message.scene);
-				acknowledgeMessageACK(message);
-				break;
+				case "SetScene":
+					scenes.set(message.sceneId, message.scene);
+					acknowledgeMessageACK(message);
+					break;
 
-			case "DeleteScene":
-				scenes.delete(message.sceneId);
-				acknowledgeMessageACK(message);
-				break;
+				case "DeleteScene":
+					scenes.delete(message.sceneId);
+					acknowledgeMessageACK(message);
+					break;
 
-			case "SetGateway":
-				gateway = { ...gateway, ...message.gateway };
-				acknowledgeMessageACK(message);
-				break;
+				case "SetGateway":
+					gateway = { ...gateway, ...message.gateway };
+					acknowledgeMessageACK(message);
+					break;
 
-			case "SetLimitation":
-				limitations.set(`${message.limitation.NodeID}:${message.limitation.ParameterID}`, message.limitation);
-				acknowledgeMessageACK(message);
-				break;
+				case "SetLimitation":
+					limitations.set(
+						`${message.limitation.NodeID}:${message.limitation.ParameterID}`,
+						message.limitation,
+					);
+					acknowledgeMessageACK(message);
+					break;
 
-			case "DeleteLimitation":
-				limitations.delete(`${message.nodeId}:${message.parameterId}`);
-				acknowledgeMessageACK(message);
-				break;
+				case "DeleteLimitation":
+					limitations.delete(`${message.nodeId}:${message.parameterId}`);
+					acknowledgeMessageACK(message);
+					break;
 
-			case "SendData":
-				const data_SendData = Buffer.from(message.data, "base64");
-				tlsSocket?.write(
-					SLIPProtocol.Encode(
-						KLF200Protocol.Encode(addCommandAndLengthToBuffer(message.gatewayCommand, data_SendData)),
-					),
-				);
-				acknowledgeMessageACK(message);
-				break;
+				case "SendData":
+					const data_SendData = Buffer.from(message.data, "base64");
+					tlsSocket?.write(
+						SLIPProtocol.Encode(
+							KLF200Protocol.Encode(addCommandAndLengthToBuffer(message.gatewayCommand, data_SendData)),
+						),
+					);
+					acknowledgeMessageACK(message);
+					break;
 
-			case "Reset":
-				gateway = structuredClone(DefaultGateway);
-				products.clear();
-				groups.clear();
-				scenes.clear();
-				limitations.clear();
-				confirmations.clear();
-				acknowledgeMessageACK(message);
-				break;
+				case "Reset":
+					gateway = structuredClone(DefaultGateway);
+					products.clear();
+					groups.clear();
+					scenes.clear();
+					limitations.clear();
+					confirmations.clear();
+					acknowledgeMessageACK(message);
+					break;
 
-			case "Kill":
-				debug("Kill command received");
-				tlsSocket?.destroy();
-				tlsSocket = undefined;
-				debug(
-					`Remaining number of connections: ${await new Promise((resolve, reject) => {
-						server.getConnections((error, count) => {
-							if (error) {
-								reject(error);
+				case "Kill":
+					debug("Kill command received");
+					tlsSocket?.destroy();
+					tlsSocket = undefined;
+					debug(
+						`Remaining number of connections: ${await new Promise<number>((resolve, reject) => {
+							server.getConnections((error, count) => {
+								if (error) {
+									reject(error);
+								} else {
+									resolve(count);
+								}
+							});
+						})}`,
+					);
+					server.close((err) => {
+						debug(`Close event in kill command received. err: ${JSON.stringify(err)}`);
+						if (err) {
+							acknowledgeMessageERR(message, `${err.message}`);
+							// debug(`Close with error: ${err}.`);
+							exit(1);
+						} else {
+							acknowledgeMessageACK(message);
+							// debug("Server closed.");
+							exit(0);
+						}
+					});
+					break;
+
+				case "SetConfirmation":
+					confirmations.set(message.gatewayCommand, {
+						gatewayConfirmation: message.gatewayConfirmation,
+						data: message.data,
+					});
+					acknowledgeMessageACK(message);
+					break;
+
+				case "SetFunction":
+					functions.set(
+						message.gatewayCommand,
+						// eslint-disable-next-line @typescript-eslint/no-implied-eval
+						Function("f", `"use strict";\n${message.func}`) as functionData,
+					);
+					acknowledgeMessageACK(message);
+					break;
+
+				case "CloseConnection":
+					if (tlsSocket) {
+						try {
+							await timeout(
+								// Try to end the "good" way:
+								new Promise<void>((resolve) => {
+									tlsSocket?.end(() => {
+										acknowledgeMessageACK(message);
+									});
+									tlsSocket = undefined;
+									resolve();
+								}),
+								1000,
+							);
+						} catch (error) {
+							if (error instanceof TimeoutError) {
+								// Otherwise destroy the socket after 1sec.
+								tlsSocket?.destroy();
+								tlsSocket = undefined;
+								acknowledgeMessageACK(message);
 							} else {
-								resolve(count);
+								throw error;
 							}
-						});
-					})}`,
-				);
-				server.close((err) => {
-					debug(`Close event in kill command received. err: ${JSON.stringify(err)}`);
-					if (err) {
-						acknowledgeMessageERR(message, `${err}`);
-						// debug(`Close with error: ${err}.`);
-						exit(1);
+						}
 					} else {
 						acknowledgeMessageACK(message);
-						// debug("Server closed.");
-						exit(0);
 					}
-				});
-				break;
+					break;
 
-			case "SetConfirmation":
-				confirmations.set(message.gatewayCommand, {
-					gatewayConfirmation: message.gatewayConfirmation,
-					data: message.data,
-				});
-				acknowledgeMessageACK(message);
-				break;
-
-			case "SetFunction":
-				functions.set(message.gatewayCommand, Function("f", `"use strict";\n${message.func}`) as functionData);
-				acknowledgeMessageACK(message);
-				break;
-
-			case "CloseConnection":
-				if (tlsSocket) {
-					try {
-						await timeout(
-							// Try to end the "good" way:
-							new Promise<void>((resolve) => {
-								tlsSocket?.end(() => {
-									acknowledgeMessageACK(message);
-								});
-								tlsSocket = undefined;
-								resolve();
-							}),
-							1000,
-						);
-					} catch (error) {
-						if (error instanceof TimeoutError) {
-							// Otherwise destroy the socket after 1sec.
-							tlsSocket?.destroy();
-							tlsSocket = undefined;
-							acknowledgeMessageACK(message);
-						} else {
-							throw error;
-						}
-					}
-				} else {
-					acknowledgeMessageACK(message);
-				}
-				break;
-
-			default:
-				acknowledgeMessageERR(message, "Unknown message.");
-				break;
-		}
+				default:
+					acknowledgeMessageERR(message, "Unknown message.");
+					break;
+			}
+		};
+		handler(message).catch((error) => {
+			console.error(error);
+		});
 	});
 
 	// Check for excluded ports:
@@ -636,7 +660,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 				const sessionId = frameBuffer.readUInt16BE(3);
 				const numberOfNodes = frameBuffer.readUInt8(5);
 				const nodes = Array.from(frameBuffer.subarray(6, 6 + numberOfNodes));
-				const statusType = frameBuffer.readUInt8(26);
+				const statusType = frameBuffer.readUInt8(26) as StatusType;
 				const fp = getFunctionalParamters(frameBuffer.readUInt8(27), frameBuffer.readUInt8(28));
 				const resultBuffers: Buffer[] = [];
 
@@ -1162,7 +1186,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 
 				// Check Group Type and revision
 				const revision = frameBuffer.readUInt16BE(100);
-				const groupType = frameBuffer.readUInt8(73);
+				const groupType = frameBuffer.readUInt8(73) as GroupType;
 				if (
 					groupId === 0 ||
 					groupId === 1 ||

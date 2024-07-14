@@ -1,9 +1,10 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common.js";
+import { GatewayCommand, GW_FRAME_CFM } from "./common.js";
 import { InitializeSceneConfirmationStatus } from "./GW_SCENES.js";
 
 export class GW_INITIALIZE_SCENE_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_INITIALIZE_SCENE_CFM;
 	public readonly Status: InitializeSceneConfirmationStatus;
 
 	constructor(Data: Buffer) {
@@ -24,7 +25,7 @@ export class GW_INITIALIZE_SCENE_CFM extends GW_FRAME_CFM {
 				return "Out of storage for scene.";
 
 			default:
-				return `Unknown error ${this.Status}.`;
+				return `Unknown error ${this.Status as number}.`;
 		}
 	}
 }
