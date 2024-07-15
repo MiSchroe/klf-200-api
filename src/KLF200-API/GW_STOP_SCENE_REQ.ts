@@ -1,9 +1,10 @@
 "use strict";
 
-import { GW_FRAME_COMMAND_REQ } from "./common.js";
+import { GatewayCommand, GW_FRAME_COMMAND_REQ } from "./common.js";
 import { CommandOriginator, PriorityLevel } from "./GW_COMMAND.js";
 
 export class GW_STOP_SCENE_REQ extends GW_FRAME_COMMAND_REQ {
+	declare readonly Command: GatewayCommand.GW_STOP_SCENE_REQ;
 	constructor(
 		readonly SceneID: number,
 		readonly PriorityLevel: PriorityLevel = 3,

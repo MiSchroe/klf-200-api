@@ -1,8 +1,6 @@
 ﻿"use strict";
 
 import debugModule from "debug";
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
 import { timeout as promiseTimeout } from "promise-timeout";
 import {
 	ConnectionOptions,
@@ -11,7 +9,6 @@ import {
 	checkServerIdentity as checkServerIdentityOriginal,
 	connect,
 } from "tls";
-import { fileURLToPath } from "url";
 import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF.js";
 import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ.js";
 import { KLF200SocketProtocol } from "./KLF200-API/KLF200SocketProtocol.js";
@@ -25,18 +22,129 @@ import {
 	IGW_FRAME_REQ,
 	KLF200_PORT,
 } from "./KLF200-API/common.js";
-import { GW_PASSWORD_ENTER_CFM, GW_PASSWORD_ENTER_REQ } from "./index.js";
+import { ca } from "./ca.js";
+import {
+	GW_ACTIVATE_PRODUCTGROUP_CFM,
+	GW_ACTIVATE_PRODUCTGROUP_REQ,
+	GW_ACTIVATE_SCENE_CFM,
+	GW_ACTIVATE_SCENE_REQ,
+	GW_CLEAR_ACTIVATION_LOG_CFM,
+	GW_CLEAR_ACTIVATION_LOG_REQ,
+	GW_COMMAND_SEND_CFM,
+	GW_COMMAND_SEND_REQ,
+	GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM,
+	GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ,
+	GW_CS_CONTROLLER_COPY_CFM,
+	GW_CS_CONTROLLER_COPY_REQ,
+	GW_CS_DISCOVER_NODES_CFM,
+	GW_CS_DISCOVER_NODES_REQ,
+	GW_CS_GENERATE_NEW_KEY_CFM,
+	GW_CS_GENERATE_NEW_KEY_REQ,
+	GW_CS_GET_SYSTEMTABLE_DATA_CFM,
+	GW_CS_GET_SYSTEMTABLE_DATA_REQ,
+	GW_CS_RECEIVE_KEY_CFM,
+	GW_CS_RECEIVE_KEY_REQ,
+	GW_CS_REMOVE_NODES_CFM,
+	GW_CS_REMOVE_NODES_REQ,
+	GW_CS_REPAIR_KEY_CFM,
+	GW_CS_REPAIR_KEY_REQ,
+	GW_CS_VIRGIN_STATE_CFM,
+	GW_CS_VIRGIN_STATE_REQ,
+	GW_DELETE_GROUP_CFM,
+	GW_DELETE_GROUP_REQ,
+	GW_DELETE_SCENE_CFM,
+	GW_DELETE_SCENE_REQ,
+	GW_GET_ACTIVATION_LOG_HEADER_CFM,
+	GW_GET_ACTIVATION_LOG_HEADER_REQ,
+	GW_GET_ACTIVATION_LOG_LINE_CFM,
+	GW_GET_ACTIVATION_LOG_LINE_REQ,
+	GW_GET_ALL_GROUPS_INFORMATION_CFM,
+	GW_GET_ALL_GROUPS_INFORMATION_REQ,
+	GW_GET_ALL_NODES_INFORMATION_CFM,
+	GW_GET_ALL_NODES_INFORMATION_REQ,
+	GW_GET_CONTACT_INPUT_LINK_LIST_CFM,
+	GW_GET_CONTACT_INPUT_LINK_LIST_REQ,
+	GW_GET_GROUP_INFORMATION_CFM,
+	GW_GET_GROUP_INFORMATION_REQ,
+	GW_GET_LIMITATION_STATUS_CFM,
+	GW_GET_LIMITATION_STATUS_REQ,
+	GW_GET_LOCAL_TIME_CFM,
+	GW_GET_LOCAL_TIME_REQ,
+	GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM,
+	GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ,
+	GW_GET_NETWORK_SETUP_CFM,
+	GW_GET_NETWORK_SETUP_REQ,
+	GW_GET_NODE_INFORMATION_CFM,
+	GW_GET_NODE_INFORMATION_REQ,
+	GW_GET_PROTOCOL_VERSION_CFM,
+	GW_GET_PROTOCOL_VERSION_REQ,
+	GW_GET_SCENE_INFORMATION_CFM,
+	GW_GET_SCENE_INFORMATION_REQ,
+	GW_GET_SCENE_LIST_CFM,
+	GW_GET_SCENE_LIST_REQ,
+	GW_GET_STATE_CFM,
+	GW_GET_VERSION_CFM,
+	GW_GET_VERSION_REQ,
+	GW_HOUSE_STATUS_MONITOR_DISABLE_CFM,
+	GW_HOUSE_STATUS_MONITOR_DISABLE_REQ,
+	GW_HOUSE_STATUS_MONITOR_ENABLE_CFM,
+	GW_HOUSE_STATUS_MONITOR_ENABLE_REQ,
+	GW_INITIALIZE_SCENE_CANCEL_CFM,
+	GW_INITIALIZE_SCENE_CANCEL_REQ,
+	GW_INITIALIZE_SCENE_CFM,
+	GW_INITIALIZE_SCENE_REQ,
+	GW_LEAVE_LEARN_STATE_CFM,
+	GW_LEAVE_LEARN_STATE_REQ,
+	GW_MODE_SEND_CFM,
+	GW_MODE_SEND_REQ,
+	GW_NEW_GROUP_CFM,
+	GW_NEW_GROUP_REQ,
+	GW_PASSWORD_CHANGE_CFM,
+	GW_PASSWORD_CHANGE_REQ,
+	GW_PASSWORD_ENTER_CFM,
+	GW_PASSWORD_ENTER_REQ,
+	GW_REBOOT_CFM,
+	GW_REBOOT_REQ,
+	GW_RECORD_SCENE_CFM,
+	GW_RECORD_SCENE_REQ,
+	GW_REMOVE_CONTACT_INPUT_LINK_CFM,
+	GW_REMOVE_CONTACT_INPUT_LINK_REQ,
+	GW_RENAME_SCENE_CFM,
+	GW_RENAME_SCENE_REQ,
+	GW_RTC_SET_TIME_ZONE_CFM,
+	GW_RTC_SET_TIME_ZONE_REQ,
+	GW_SET_CONTACT_INPUT_LINK_CFM,
+	GW_SET_CONTACT_INPUT_LINK_REQ,
+	GW_SET_FACTORY_DEFAULT_CFM,
+	GW_SET_FACTORY_DEFAULT_REQ,
+	GW_SET_GROUP_INFORMATION_CFM,
+	GW_SET_GROUP_INFORMATION_REQ,
+	GW_SET_LIMITATION_CFM,
+	GW_SET_LIMITATION_REQ,
+	GW_SET_NETWORK_SETUP_CFM,
+	GW_SET_NETWORK_SETUP_REQ,
+	GW_SET_NODE_NAME_CFM,
+	GW_SET_NODE_NAME_REQ,
+	GW_SET_NODE_ORDER_AND_PLACEMENT_CFM,
+	GW_SET_NODE_ORDER_AND_PLACEMENT_REQ,
+	GW_SET_NODE_VARIATION_CFM,
+	GW_SET_NODE_VARIATION_REQ,
+	GW_SET_UTC_CFM,
+	GW_SET_UTC_REQ,
+	GW_STATUS_REQUEST_CFM,
+	GW_STATUS_REQUEST_REQ,
+	GW_STOP_SCENE_CFM,
+	GW_STOP_SCENE_REQ,
+	GW_WINK_SEND_CFM,
+	GW_WINK_SEND_REQ,
+} from "./index.js";
 import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const debug = debugModule(`klf-200-api:connection`);
 
 /**
  * Interface for the connection.
  *
- * @export
  * @interface IConnection
  */
 export interface IConnection {
@@ -46,7 +154,6 @@ export interface IConnection {
 	 * @param {string} password The password needed for login. The factory default password is velux123.
 	 * @param {number} [timeout] A timeout in seconds. After the timeout the returned promise will be rejected.
 	 * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
-	 * @memberof IConnection
 	 */
 	loginAsync(password: string, timeout?: number): Promise<void>;
 
@@ -55,7 +162,6 @@ export interface IConnection {
 	 *
 	 * @param {number} [timeout] A timeout in seconds. After the timeout the returned promise will be rejected.
 	 * @returns {Promise<void>} Returns a promise that resolves to true on successful logout or rejects with the errors.
-	 * @memberof IConnection
 	 */
 	logoutAsync(timeout?: number): Promise<void>;
 
@@ -68,8 +174,94 @@ export interface IConnection {
 	 *                                   In case of an error frame the promise will be rejected with the error number.
 	 *                                   If the request frame is a command (with a SessionID) than the promise will be
 	 *                                   resolved by the corresponding confirmation frame with a matching session ID.
-	 * @memberof IConnection
 	 */
+	sendFrameAsync(frame: GW_REBOOT_REQ, timeout?: number): Promise<GW_REBOOT_CFM>;
+	sendFrameAsync(frame: GW_SET_FACTORY_DEFAULT_REQ, timeout?: number): Promise<GW_SET_FACTORY_DEFAULT_CFM>;
+	sendFrameAsync(frame: GW_GET_VERSION_REQ, timeout?: number): Promise<GW_GET_VERSION_CFM>;
+	sendFrameAsync(frame: GW_GET_PROTOCOL_VERSION_REQ, timeout?: number): Promise<GW_GET_PROTOCOL_VERSION_CFM>;
+	sendFrameAsync(frame: GW_GET_STATE_REQ, timeout?: number): Promise<GW_GET_STATE_CFM>;
+	sendFrameAsync(frame: GW_LEAVE_LEARN_STATE_REQ, timeout?: number): Promise<GW_LEAVE_LEARN_STATE_CFM>;
+	sendFrameAsync(frame: GW_GET_NETWORK_SETUP_REQ, timeout?: number): Promise<GW_GET_NETWORK_SETUP_CFM>;
+	sendFrameAsync(frame: GW_SET_NETWORK_SETUP_REQ, timeout?: number): Promise<GW_SET_NETWORK_SETUP_CFM>;
+	sendFrameAsync(frame: GW_CS_GET_SYSTEMTABLE_DATA_REQ, timeout?: number): Promise<GW_CS_GET_SYSTEMTABLE_DATA_CFM>;
+	sendFrameAsync(frame: GW_CS_DISCOVER_NODES_REQ, timeout?: number): Promise<GW_CS_DISCOVER_NODES_CFM>;
+	sendFrameAsync(frame: GW_CS_REMOVE_NODES_REQ, timeout?: number): Promise<GW_CS_REMOVE_NODES_CFM>;
+	sendFrameAsync(frame: GW_CS_VIRGIN_STATE_REQ, timeout?: number): Promise<GW_CS_VIRGIN_STATE_CFM>;
+	sendFrameAsync(frame: GW_CS_CONTROLLER_COPY_REQ, timeout?: number): Promise<GW_CS_CONTROLLER_COPY_CFM>;
+	sendFrameAsync(frame: GW_CS_RECEIVE_KEY_REQ, timeout?: number): Promise<GW_CS_RECEIVE_KEY_CFM>;
+	sendFrameAsync(frame: GW_CS_GENERATE_NEW_KEY_REQ, timeout?: number): Promise<GW_CS_GENERATE_NEW_KEY_CFM>;
+	sendFrameAsync(frame: GW_CS_REPAIR_KEY_REQ, timeout?: number): Promise<GW_CS_REPAIR_KEY_CFM>;
+	sendFrameAsync(
+		frame: GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ,
+		timeout?: number,
+	): Promise<GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM>;
+	sendFrameAsync(frame: GW_GET_NODE_INFORMATION_REQ, timeout?: number): Promise<GW_GET_NODE_INFORMATION_CFM>;
+	sendFrameAsync(
+		frame: GW_GET_ALL_NODES_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_ALL_NODES_INFORMATION_CFM>;
+	sendFrameAsync(frame: GW_SET_NODE_VARIATION_REQ, timeout?: number): Promise<GW_SET_NODE_VARIATION_CFM>;
+	sendFrameAsync(frame: GW_SET_NODE_NAME_REQ, timeout?: number): Promise<GW_SET_NODE_NAME_CFM>;
+	sendFrameAsync(
+		frame: GW_SET_NODE_ORDER_AND_PLACEMENT_REQ,
+		timeout?: number,
+	): Promise<GW_SET_NODE_ORDER_AND_PLACEMENT_CFM>;
+	sendFrameAsync(frame: GW_GET_GROUP_INFORMATION_REQ, timeout?: number): Promise<GW_GET_GROUP_INFORMATION_CFM>;
+	sendFrameAsync(frame: GW_SET_GROUP_INFORMATION_REQ, timeout?: number): Promise<GW_SET_GROUP_INFORMATION_CFM>;
+	sendFrameAsync(frame: GW_DELETE_GROUP_REQ, timeout?: number): Promise<GW_DELETE_GROUP_CFM>;
+	sendFrameAsync(frame: GW_NEW_GROUP_REQ, timeout?: number): Promise<GW_NEW_GROUP_CFM>;
+	sendFrameAsync(
+		frame: GW_GET_ALL_GROUPS_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_ALL_GROUPS_INFORMATION_CFM>;
+	sendFrameAsync(
+		frame: GW_HOUSE_STATUS_MONITOR_ENABLE_REQ,
+		timeout?: number,
+	): Promise<GW_HOUSE_STATUS_MONITOR_ENABLE_CFM>;
+	sendFrameAsync(
+		frame: GW_HOUSE_STATUS_MONITOR_DISABLE_REQ,
+		timeout?: number,
+	): Promise<GW_HOUSE_STATUS_MONITOR_DISABLE_CFM>;
+	sendFrameAsync(frame: GW_COMMAND_SEND_REQ, timeout?: number): Promise<GW_COMMAND_SEND_CFM>;
+	sendFrameAsync(frame: GW_STATUS_REQUEST_REQ, timeout?: number): Promise<GW_STATUS_REQUEST_CFM>;
+	sendFrameAsync(frame: GW_WINK_SEND_REQ, timeout?: number): Promise<GW_WINK_SEND_CFM>;
+	sendFrameAsync(frame: GW_SET_LIMITATION_REQ, timeout?: number): Promise<GW_SET_LIMITATION_CFM>;
+	sendFrameAsync(frame: GW_GET_LIMITATION_STATUS_REQ, timeout?: number): Promise<GW_GET_LIMITATION_STATUS_CFM>;
+	sendFrameAsync(frame: GW_MODE_SEND_REQ, timeout?: number): Promise<GW_MODE_SEND_CFM>;
+	sendFrameAsync(frame: GW_INITIALIZE_SCENE_REQ, timeout?: number): Promise<GW_INITIALIZE_SCENE_CFM>;
+	sendFrameAsync(frame: GW_INITIALIZE_SCENE_CANCEL_REQ, timeout?: number): Promise<GW_INITIALIZE_SCENE_CANCEL_CFM>;
+	sendFrameAsync(frame: GW_RECORD_SCENE_REQ, timeout?: number): Promise<GW_RECORD_SCENE_CFM>;
+	sendFrameAsync(frame: GW_DELETE_SCENE_REQ, timeout?: number): Promise<GW_DELETE_SCENE_CFM>;
+	sendFrameAsync(frame: GW_RENAME_SCENE_REQ, timeout?: number): Promise<GW_RENAME_SCENE_CFM>;
+	sendFrameAsync(frame: GW_GET_SCENE_LIST_REQ, timeout?: number): Promise<GW_GET_SCENE_LIST_CFM>;
+	sendFrameAsync(frame: GW_GET_SCENE_INFORMATION_REQ, timeout?: number): Promise<GW_GET_SCENE_INFORMATION_CFM>;
+	sendFrameAsync(frame: GW_ACTIVATE_SCENE_REQ, timeout?: number): Promise<GW_ACTIVATE_SCENE_CFM>;
+	sendFrameAsync(frame: GW_STOP_SCENE_REQ, timeout?: number): Promise<GW_STOP_SCENE_CFM>;
+	sendFrameAsync(frame: GW_ACTIVATE_PRODUCTGROUP_REQ, timeout?: number): Promise<GW_ACTIVATE_PRODUCTGROUP_CFM>;
+	sendFrameAsync(
+		frame: GW_GET_CONTACT_INPUT_LINK_LIST_REQ,
+		timeout?: number,
+	): Promise<GW_GET_CONTACT_INPUT_LINK_LIST_CFM>;
+	sendFrameAsync(frame: GW_SET_CONTACT_INPUT_LINK_REQ, timeout?: number): Promise<GW_SET_CONTACT_INPUT_LINK_CFM>;
+	sendFrameAsync(
+		frame: GW_REMOVE_CONTACT_INPUT_LINK_REQ,
+		timeout?: number,
+	): Promise<GW_REMOVE_CONTACT_INPUT_LINK_CFM>;
+	sendFrameAsync(
+		frame: GW_GET_ACTIVATION_LOG_HEADER_REQ,
+		timeout?: number,
+	): Promise<GW_GET_ACTIVATION_LOG_HEADER_CFM>;
+	sendFrameAsync(frame: GW_CLEAR_ACTIVATION_LOG_REQ, timeout?: number): Promise<GW_CLEAR_ACTIVATION_LOG_CFM>;
+	sendFrameAsync(frame: GW_GET_ACTIVATION_LOG_LINE_REQ, timeout?: number): Promise<GW_GET_ACTIVATION_LOG_LINE_CFM>;
+	sendFrameAsync(
+		frame: GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ,
+		timeout?: number,
+	): Promise<GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM>;
+	sendFrameAsync(frame: GW_SET_UTC_REQ, timeout?: number): Promise<GW_SET_UTC_CFM>;
+	sendFrameAsync(frame: GW_RTC_SET_TIME_ZONE_REQ, timeout?: number): Promise<GW_RTC_SET_TIME_ZONE_CFM>;
+	sendFrameAsync(frame: GW_GET_LOCAL_TIME_REQ, timeout?: number): Promise<GW_GET_LOCAL_TIME_CFM>;
+	sendFrameAsync(frame: GW_PASSWORD_ENTER_REQ, timeout?: number): Promise<GW_PASSWORD_ENTER_CFM>;
+	sendFrameAsync(frame: GW_PASSWORD_CHANGE_REQ, timeout?: number): Promise<GW_PASSWORD_CHANGE_CFM>;
 	sendFrameAsync(frame: IGW_FRAME_REQ, timeout?: number): Promise<IGW_FRAME_RCV>;
 
 	/**
@@ -80,7 +272,6 @@ export interface IConnection {
 	 * @param {Listener<IGW_FRAME_RCV>} handler Callback functions that is called for an event
 	 * @param {GatewayCommand[]} [filter] Array of GatewayCommand entries you want to listen to. Optional.
 	 * @returns {Disposable} Returns a Disposable that you can call to remove the handler.
-	 * @memberof Connection
 	 */
 	on(handler: Listener<IGW_FRAME_RCV>, filter?: GatewayCommand[]): Disposable;
 
@@ -92,7 +283,6 @@ export interface IConnection {
 	 * @param {Listener<IGW_FRAME_REQ>} handler Callback functions that is called for an event
 	 * @param {GatewayCommand[]} [filter] Array of GatewayCommand entries you want to listen to. Optional.
 	 * @returns {Disposable} Returns a Disposable that you can call to remove the handler.
-	 * @memberof Connection
 	 */
 	onFrameSent(handler: Listener<IGW_FRAME_REQ>, filter?: GatewayCommand[]): Disposable;
 
@@ -100,13 +290,11 @@ export interface IConnection {
 	 * Gets the underlying socket protocol handler.
 	 *
 	 * @type {KLF200SocketProtocol}
-	 * @memberof IConnection
 	 */
 	readonly KLF200SocketProtocol?: KLF200SocketProtocol;
 }
 
 const FINGERPRINT: string = "02:8C:23:A0:89:2B:62:98:C4:99:00:5B:D2:E7:2E:0A:70:3D:71:6A";
-const ca: Buffer = readFileSync(join(__dirname, "../velux-cert.pem"));
 
 /**
  * The Connection class is used to handle the communication with the Velux KLF interface.
@@ -127,7 +315,6 @@ const ca: Buffer = readFileSync(join(__dirname, "../velux-cert.pem"));
  *      });
  * ```
  *
- * @export
  * @class Connection
  */
 export class Connection implements IConnection {
@@ -149,7 +336,6 @@ export class Connection implements IConnection {
 	 *                         will be changed with subsequent firmware updates you can
 	 *                         provide the matching certificate with this parameter.
 	 * @param {string} [fingerprint=FINGERPRINT] The fingerprint of the certificate. This parameter is optional.
-	 * @memberof Connection
 	 */
 	constructor(host: string, CA?: Buffer, fingerprint?: string);
 	/**
@@ -177,7 +363,6 @@ export class Connection implements IConnection {
 	 * This property has a value after calling [[loginAsync]], only.
 	 *
 	 * @readonly
-	 * @memberof Connection
 	 */
 	public get KLF200SocketProtocol(): KLF200SocketProtocol | undefined {
 		return this.klfProtocol;
@@ -190,15 +375,12 @@ export class Connection implements IConnection {
 	 * @private
 	 * @param {string} password The password needed for login. The factory default password is velux123.
 	 * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
-	 * @memberof Connection
 	 */
 	private async _loginAsync(password: string, timeout: number): Promise<void> {
 		try {
 			await this.initSocketAsync();
 			this.klfProtocol = new KLF200SocketProtocol(<TLSSocket>this.sckt);
-			const passwordCFM = <GW_PASSWORD_ENTER_CFM>(
-				await this.sendFrameAsync(new GW_PASSWORD_ENTER_REQ(password), timeout)
-			);
+			const passwordCFM = await this.sendFrameAsync(new GW_PASSWORD_ENTER_REQ(password), timeout);
 			if (passwordCFM.Status !== GW_COMMON_STATUS.SUCCESS) {
 				return Promise.reject(new Error("Login failed."));
 			} else {
@@ -215,7 +397,6 @@ export class Connection implements IConnection {
 	 * @param {string} password The password needed for login. The factory default password is velux123.
 	 * @param {number} [timeout=60] A timeout in seconds. After the timeout the returned promise will be rejected.
 	 * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
-	 * @memberof Connection
 	 */
 	public async loginAsync(password: string, timeout: number = 60): Promise<void> {
 		try {
@@ -230,10 +411,10 @@ export class Connection implements IConnection {
 	 *
 	 * @param {number} [timeout=10] A timeout in seconds. After the timeout the returned promise will be rejected.
 	 * @returns {Promise<void>} Returns a promise that resolves to true on successful logout or rejects with the errors.
-	 * @memberof Connection
 	 */
 	public async logoutAsync(timeout: number = 10): Promise<void> {
 		try {
+			debug("Logging out from the KLF interface and closing the socket...");
 			if (this.sckt) {
 				if (this.klfProtocol) {
 					this.klfProtocol = undefined;
@@ -242,18 +423,25 @@ export class Connection implements IConnection {
 					new Promise<void>((resolve, reject) => {
 						try {
 							// Close socket
-							this.sckt?.end("", resolve);
+							debug("Closing socket...");
+							this.sckt?.end("", () => {
+								debug("Socket closed.");
+								resolve();
+							});
 						} catch (error) {
+							debug("Error while closing socket:", error);
 							reject(error);
 						}
 					}),
 					timeout * 1000,
 				);
 			} else {
+				debug("No socket to close.");
 				return Promise.resolve();
 			}
 		} catch (error) {
-			Promise.reject(error);
+			debug("Error while logging out:", error);
+			return Promise.reject(error);
 		}
 	}
 
@@ -266,8 +454,136 @@ export class Connection implements IConnection {
 	 *                                   In case of an error frame the promise will be rejected with the error number.
 	 *                                   If the request frame is a command (with a SessionID) than the promise will be
 	 *                                   resolved by the corresponding confirmation frame with a matching session ID.
-	 * @memberof Connection
 	 */
+	public async sendFrameAsync(frame: GW_REBOOT_REQ, timeout?: number): Promise<GW_REBOOT_CFM>;
+	public async sendFrameAsync(
+		frame: GW_SET_FACTORY_DEFAULT_REQ,
+		timeout?: number,
+	): Promise<GW_SET_FACTORY_DEFAULT_CFM>;
+	public async sendFrameAsync(frame: GW_GET_VERSION_REQ, timeout?: number): Promise<GW_GET_VERSION_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_PROTOCOL_VERSION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_PROTOCOL_VERSION_CFM>;
+	public async sendFrameAsync(frame: GW_GET_STATE_REQ, timeout?: number): Promise<GW_GET_STATE_CFM>;
+	public async sendFrameAsync(frame: GW_LEAVE_LEARN_STATE_REQ, timeout?: number): Promise<GW_LEAVE_LEARN_STATE_CFM>;
+	public async sendFrameAsync(frame: GW_GET_NETWORK_SETUP_REQ, timeout?: number): Promise<GW_GET_NETWORK_SETUP_CFM>;
+	public async sendFrameAsync(frame: GW_SET_NETWORK_SETUP_REQ, timeout?: number): Promise<GW_SET_NETWORK_SETUP_CFM>;
+	public async sendFrameAsync(
+		frame: GW_CS_GET_SYSTEMTABLE_DATA_REQ,
+		timeout?: number,
+	): Promise<GW_CS_GET_SYSTEMTABLE_DATA_CFM>;
+	public async sendFrameAsync(frame: GW_CS_DISCOVER_NODES_REQ, timeout?: number): Promise<GW_CS_DISCOVER_NODES_CFM>;
+	public async sendFrameAsync(frame: GW_CS_REMOVE_NODES_REQ, timeout?: number): Promise<GW_CS_REMOVE_NODES_CFM>;
+	public async sendFrameAsync(frame: GW_CS_VIRGIN_STATE_REQ, timeout?: number): Promise<GW_CS_VIRGIN_STATE_CFM>;
+	public async sendFrameAsync(frame: GW_CS_CONTROLLER_COPY_REQ, timeout?: number): Promise<GW_CS_CONTROLLER_COPY_CFM>;
+	public async sendFrameAsync(frame: GW_CS_RECEIVE_KEY_REQ, timeout?: number): Promise<GW_CS_RECEIVE_KEY_CFM>;
+	public async sendFrameAsync(
+		frame: GW_CS_GENERATE_NEW_KEY_REQ,
+		timeout?: number,
+	): Promise<GW_CS_GENERATE_NEW_KEY_CFM>;
+	public async sendFrameAsync(frame: GW_CS_REPAIR_KEY_REQ, timeout?: number): Promise<GW_CS_REPAIR_KEY_CFM>;
+	public async sendFrameAsync(
+		frame: GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ,
+		timeout?: number,
+	): Promise<GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_NODE_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_NODE_INFORMATION_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_ALL_NODES_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_ALL_NODES_INFORMATION_CFM>;
+	public async sendFrameAsync(frame: GW_SET_NODE_VARIATION_REQ, timeout?: number): Promise<GW_SET_NODE_VARIATION_CFM>;
+	public async sendFrameAsync(frame: GW_SET_NODE_NAME_REQ, timeout?: number): Promise<GW_SET_NODE_NAME_CFM>;
+	public async sendFrameAsync(
+		frame: GW_SET_NODE_ORDER_AND_PLACEMENT_REQ,
+		timeout?: number,
+	): Promise<GW_SET_NODE_ORDER_AND_PLACEMENT_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_GROUP_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_GROUP_INFORMATION_CFM>;
+	public async sendFrameAsync(
+		frame: GW_SET_GROUP_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_SET_GROUP_INFORMATION_CFM>;
+	public async sendFrameAsync(frame: GW_DELETE_GROUP_REQ, timeout?: number): Promise<GW_DELETE_GROUP_CFM>;
+	public async sendFrameAsync(frame: GW_NEW_GROUP_REQ, timeout?: number): Promise<GW_NEW_GROUP_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_ALL_GROUPS_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_ALL_GROUPS_INFORMATION_CFM>;
+	public async sendFrameAsync(
+		frame: GW_HOUSE_STATUS_MONITOR_ENABLE_REQ,
+		timeout?: number,
+	): Promise<GW_HOUSE_STATUS_MONITOR_ENABLE_CFM>;
+	public async sendFrameAsync(
+		frame: GW_HOUSE_STATUS_MONITOR_DISABLE_REQ,
+		timeout?: number,
+	): Promise<GW_HOUSE_STATUS_MONITOR_DISABLE_CFM>;
+	public async sendFrameAsync(frame: GW_COMMAND_SEND_REQ, timeout?: number): Promise<GW_COMMAND_SEND_CFM>;
+	public async sendFrameAsync(frame: GW_STATUS_REQUEST_REQ, timeout?: number): Promise<GW_STATUS_REQUEST_CFM>;
+	public async sendFrameAsync(frame: GW_WINK_SEND_REQ, timeout?: number): Promise<GW_WINK_SEND_CFM>;
+	public async sendFrameAsync(frame: GW_SET_LIMITATION_REQ, timeout?: number): Promise<GW_SET_LIMITATION_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_LIMITATION_STATUS_REQ,
+		timeout?: number,
+	): Promise<GW_GET_LIMITATION_STATUS_CFM>;
+	public async sendFrameAsync(frame: GW_MODE_SEND_REQ, timeout?: number): Promise<GW_MODE_SEND_CFM>;
+	public async sendFrameAsync(frame: GW_INITIALIZE_SCENE_REQ, timeout?: number): Promise<GW_INITIALIZE_SCENE_CFM>;
+	public async sendFrameAsync(
+		frame: GW_INITIALIZE_SCENE_CANCEL_REQ,
+		timeout?: number,
+	): Promise<GW_INITIALIZE_SCENE_CANCEL_CFM>;
+	public async sendFrameAsync(frame: GW_RECORD_SCENE_REQ, timeout?: number): Promise<GW_RECORD_SCENE_CFM>;
+	public async sendFrameAsync(frame: GW_DELETE_SCENE_REQ, timeout?: number): Promise<GW_DELETE_SCENE_CFM>;
+	public async sendFrameAsync(frame: GW_RENAME_SCENE_REQ, timeout?: number): Promise<GW_RENAME_SCENE_CFM>;
+	public async sendFrameAsync(frame: GW_GET_SCENE_LIST_REQ, timeout?: number): Promise<GW_GET_SCENE_LIST_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_SCENE_INFORMATION_REQ,
+		timeout?: number,
+	): Promise<GW_GET_SCENE_INFORMATION_CFM>;
+	public async sendFrameAsync(frame: GW_ACTIVATE_SCENE_REQ, timeout?: number): Promise<GW_ACTIVATE_SCENE_CFM>;
+	public async sendFrameAsync(frame: GW_STOP_SCENE_REQ, timeout?: number): Promise<GW_STOP_SCENE_CFM>;
+	public async sendFrameAsync(
+		frame: GW_ACTIVATE_PRODUCTGROUP_REQ,
+		timeout?: number,
+	): Promise<GW_ACTIVATE_PRODUCTGROUP_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_CONTACT_INPUT_LINK_LIST_REQ,
+		timeout?: number,
+	): Promise<GW_GET_CONTACT_INPUT_LINK_LIST_CFM>;
+	public async sendFrameAsync(
+		frame: GW_SET_CONTACT_INPUT_LINK_REQ,
+		timeout?: number,
+	): Promise<GW_SET_CONTACT_INPUT_LINK_CFM>;
+	public async sendFrameAsync(
+		frame: GW_REMOVE_CONTACT_INPUT_LINK_REQ,
+		timeout?: number,
+	): Promise<GW_REMOVE_CONTACT_INPUT_LINK_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_ACTIVATION_LOG_HEADER_REQ,
+		timeout?: number,
+	): Promise<GW_GET_ACTIVATION_LOG_HEADER_CFM>;
+	public async sendFrameAsync(
+		frame: GW_CLEAR_ACTIVATION_LOG_REQ,
+		timeout?: number,
+	): Promise<GW_CLEAR_ACTIVATION_LOG_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_ACTIVATION_LOG_LINE_REQ,
+		timeout?: number,
+	): Promise<GW_GET_ACTIVATION_LOG_LINE_CFM>;
+	public async sendFrameAsync(
+		frame: GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ,
+		timeout?: number,
+	): Promise<GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM>;
+	public async sendFrameAsync(frame: GW_SET_UTC_REQ, timeout?: number): Promise<GW_SET_UTC_CFM>;
+	public async sendFrameAsync(frame: GW_RTC_SET_TIME_ZONE_REQ, timeout?: number): Promise<GW_RTC_SET_TIME_ZONE_CFM>;
+	public async sendFrameAsync(frame: GW_GET_LOCAL_TIME_REQ, timeout?: number): Promise<GW_GET_LOCAL_TIME_CFM>;
+	public async sendFrameAsync(frame: GW_PASSWORD_ENTER_REQ, timeout?: number): Promise<GW_PASSWORD_ENTER_CFM>;
+	public async sendFrameAsync(frame: GW_PASSWORD_CHANGE_REQ, timeout?: number): Promise<GW_PASSWORD_CHANGE_CFM>;
 	public async sendFrameAsync(frame: IGW_FRAME_REQ, timeout: number = 10): Promise<IGW_FRAME_RCV> {
 		try {
 			debug(`sendFrameAsync called with frame: ${stringifyFrame(frame)}, timeout: ${timeout}.`);
@@ -289,11 +605,12 @@ export class Connection implements IConnection {
 				reject = rej;
 			});
 
+			let cfmHandler: Disposable | undefined = undefined;
+			let errHandler: Disposable | undefined = undefined;
 			try {
-				let cfmHandler: Disposable | undefined = undefined;
-				const errHandler = (this.klfProtocol as KLF200SocketProtocol).onError((error) => {
-					debug(`sendFrameAsync protocol error handler: ${error}.`);
-					errHandler.dispose();
+				errHandler = (this.klfProtocol as KLF200SocketProtocol).onError((error) => {
+					debug(`sendFrameAsync protocol error handler: ${JSON.stringify(error)}.`);
+					errHandler?.dispose();
 					cfmHandler?.dispose();
 					reject(error);
 				});
@@ -302,7 +619,7 @@ export class Connection implements IConnection {
 						debug(`sendFrameAsync frame recieved: ${stringifyFrame(notificationFrame)}.`);
 						if (notificationFrame instanceof GW_ERROR_NTF) {
 							debug(`sendFrameAsync GW_ERROR_NTF recieved: ${stringifyFrame(notificationFrame)}.`);
-							errHandler.dispose();
+							errHandler?.dispose();
 							cfmHandler?.dispose();
 							reject(new Error(notificationFrame.getError(), { cause: notificationFrame }));
 						} else if (
@@ -311,12 +628,12 @@ export class Connection implements IConnection {
 								sessionID === (notificationFrame as IGW_FRAME_COMMAND).SessionID)
 						) {
 							debug(`sendFrameAsync expected frame recieved: ${stringifyFrame(notificationFrame)}.`);
-							errHandler.dispose();
+							errHandler?.dispose();
 							cfmHandler?.dispose();
 							resolve(notificationFrame);
 						}
 					} catch (error) {
-						errHandler.dispose();
+						errHandler?.dispose();
 						cfmHandler?.dispose();
 						reject(error);
 					}
@@ -324,13 +641,21 @@ export class Connection implements IConnection {
 				this.shiftKeepAlive();
 				await (this.klfProtocol as KLF200SocketProtocol).write(frame.Data);
 				await this.notifyFrameSent(frame);
-			} catch (error) {
-				reject!(error);
-			}
 
-			return await promiseTimeout(notificationHandler, timeout * 1000);
+				return await promiseTimeout(notificationHandler, timeout * 1000);
+			} catch (error) {
+				debug(
+					`sendFrameAsync error occurred: ${typeof error === "string" ? error : JSON.stringify(error)} with frame sent: ${stringifyFrame(frame)}.`,
+				);
+				errHandler?.dispose();
+				cfmHandler?.dispose();
+				reject!(error);
+				return Promise.reject(error);
+			}
 		} catch (error) {
-			debug(`sendFrameAsync error occurred: ${error} with frame sent: ${stringifyFrame(frame)}.`);
+			debug(
+				`sendFrameAsync error occurred (outer): ${typeof error === "string" ? error : JSON.stringify(error)} with frame sent: ${stringifyFrame(frame)}.`,
+			);
 			return Promise.reject(error);
 		}
 
@@ -339,6 +664,7 @@ export class Connection implements IConnection {
 				if (key.match(/password/i)) {
 					return "**********";
 				} else {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 					return value;
 				}
 			});
@@ -353,7 +679,6 @@ export class Connection implements IConnection {
 	 * @param {Listener<IGW_FRAME_RCV>} handler Callback functions that is called for an event
 	 * @param {GatewayCommand[]} [filter] Array of GatewayCommand entries you want to listen to. Optional.
 	 * @returns {Disposable} Returns a Disposable that you can call to remove the handler.
-	 * @memberof Connection
 	 */
 	public on(handler: Listener<IGW_FRAME_RCV>, filter?: GatewayCommand[]): Disposable {
 		if (typeof filter === "undefined") {
@@ -376,7 +701,6 @@ export class Connection implements IConnection {
 	 * @param {Listener<IGW_FRAME_REQ>} handler Callback functions that is called for an event
 	 * @param {GatewayCommand[]} [filter] Array of GatewayCommand entries you want to listen to. Optional.
 	 * @returns {Disposable} Returns a Disposable that you can call to remove the handler.
-	 * @memberof Connection
 	 */
 	public onFrameSent(handler: Listener<IGW_FRAME_REQ>, filter?: GatewayCommand[]): Disposable {
 		if (typeof filter === "undefined") {
@@ -404,12 +728,13 @@ export class Connection implements IConnection {
 	 * after 15 minutes of inactivity.
 	 *
 	 * @param {number} [interval=600000] Keep-alive interval in minutes. Defaults to 10 min.
-	 * @memberof Connection
 	 */
 	public startKeepAlive(interval: number = 10 * 60 * 1000): void {
 		this.keepAliveInterval = interval;
 		this.keepAliveTimer = setInterval(() => {
-			this.sendKeepAlive();
+			this.sendKeepAlive().catch((error) =>
+				debug(`Error while sending keep alive: ${typeof error === "string" ? error : JSON.stringify(error)}`),
+			);
 		}, interval);
 	}
 
@@ -417,7 +742,6 @@ export class Connection implements IConnection {
 	 * Stops the keep-alive timer.
 	 * If not timer is set nothing happens.
 	 *
-	 * @memberof Connection
 	 */
 	public stopKeepAlive(): void {
 		if (this.keepAliveTimer) {
@@ -432,7 +756,6 @@ export class Connection implements IConnection {
 	 *
 	 * @private
 	 * @returns {Promise<void>} Resolves if successful, otherwise reject
-	 * @memberof Connection
 	 */
 	private async sendKeepAlive(): Promise<void> {
 		await this.sendFrameAsync(new GW_GET_STATE_REQ());
@@ -444,7 +767,6 @@ export class Connection implements IConnection {
 	 * If no keep-alive timer is active nothing happens.
 	 *
 	 * @private
-	 * @memberof Connection
 	 */
 	private shiftKeepAlive(): void {
 		if (this.keepAliveTimer) {
@@ -484,7 +806,7 @@ export class Connection implements IConnection {
 								} else {
 									const err = this.sckt?.authorizationError;
 									this.sckt = undefined;
-									console.error(`AuthorizationError: ${err}`);
+									console.error(`AuthorizationError: ${err!.toString()}`);
 									reject(err);
 								}
 							},

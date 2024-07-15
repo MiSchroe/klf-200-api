@@ -1,9 +1,10 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common.js";
+import { GatewayCommand, GW_FRAME_CFM } from "./common.js";
 import { CommandStatus } from "./GW_COMMAND.js";
 
 export class GW_STATUS_REQUEST_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_STATUS_REQUEST_CFM;
 	public readonly SessionID: number;
 	public readonly CommandStatus: CommandStatus;
 
@@ -23,7 +24,7 @@ export class GW_STATUS_REQUEST_CFM extends GW_FRAME_CFM {
 				return "Command rejected.";
 
 			default:
-				return `Unknown error ${this.CommandStatus}.`;
+				return `Unknown error ${this.CommandStatus as number}.`;
 		}
 	}
 }

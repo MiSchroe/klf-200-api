@@ -1,7 +1,6 @@
 "use strict";
 
 import debugModule from "debug";
-import { GW_ACTIVATE_PRODUCTGROUP_CFM } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_CFM.js";
 import { GW_ACTIVATE_PRODUCTGROUP_REQ } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_REQ.js";
 import {
 	ActivateProductGroupStatus,
@@ -12,14 +11,11 @@ import {
 	PriorityLevelLock,
 	convertPosition,
 } from "./KLF200-API/GW_COMMAND.js";
-import { GW_GET_ALL_GROUPS_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_CFM.js";
 import { GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF.js";
 import { GW_GET_ALL_GROUPS_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_NTF.js";
 import { GW_GET_ALL_GROUPS_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_GROUPS_INFORMATION_REQ.js";
-import { GW_GET_GROUP_INFORMATION_CFM } from "./KLF200-API/GW_GET_GROUP_INFORMATION_CFM.js";
 import { GW_GET_GROUP_INFORMATION_NTF } from "./KLF200-API/GW_GET_GROUP_INFORMATION_NTF.js";
 import { GW_GET_GROUP_INFORMATION_REQ } from "./KLF200-API/GW_GET_GROUP_INFORMATION_REQ.js";
-import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM.js";
 import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF.js";
 import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ.js";
 import { GroupType } from "./KLF200-API/GW_GROUPS.js";
@@ -28,7 +24,6 @@ import {
 	GW_GROUP_INFORMATION_CHANGED_NTF,
 	GW_GROUP_INFORMATION_CHANGED_NTF_Modified,
 } from "./KLF200-API/GW_GROUP_INFORMATION_CHANGED_NTF.js";
-import { GW_SET_GROUP_INFORMATION_CFM } from "./KLF200-API/GW_SET_GROUP_INFORMATION_CFM.js";
 import { GW_SET_GROUP_INFORMATION_REQ } from "./KLF200-API/GW_SET_GROUP_INFORMATION_REQ.js";
 import { ActuatorType, NodeVariation, Velocity } from "./KLF200-API/GW_SYSTEMTABLE_DATA.js";
 import { GW_COMMON_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common.js";
@@ -48,16 +43,13 @@ one instance of the group type house. The GroupID = 0 is reserved for the house 
 An actuator can only be represented in one room group. So, if an actuator is assigned to
 a room group it will automatically be removed from another existing room group.
  *
- * @export
  * @class Group
- * @extends {Component}
  */
 export class Group extends Component {
 	/**
 	 * ID of the group.
 	 *
 	 * @type {number}
-	 * @memberof Group
 	 */
 	public readonly GroupID: number;
 	private _order: number;
@@ -71,7 +63,6 @@ export class Group extends Component {
 	 * List of node IDs which are part of the group.
 	 *
 	 * @type {number[]}
-	 * @memberof Group
 	 */
 	private readonly _Nodes: number[] = [];
 	public get Nodes(): number[] {
@@ -85,7 +76,6 @@ export class Group extends Component {
 	 * to provide you with a list of all groups.
 	 * @param {IConnection} Connection The connection that will be used to send and receive commands.
 	 * @param {(GW_GET_GROUP_INFORMATION_NTF | GW_GET_ALL_GROUPS_INFORMATION_NTF | GW_GROUP_INFORMATION_CHANGED_NTF)} frame Notification frame that is used to set the properties of the Group class instance.
-	 * @memberof Group
 	 */
 	constructor(
 		readonly Connection: IConnection,
@@ -122,7 +112,6 @@ export class Group extends Component {
 	 * use it on your own.
 	 *
 	 * @param {GW_GROUP_INFORMATION_CHANGED_NTF_Modified} frame Change notification frame to calculate the changes.
-	 * @memberof Group
 	 */
 	public async changeFromNotification(frame: GW_GROUP_INFORMATION_CHANGED_NTF_Modified): Promise<void> {
 		if (this._order !== frame.Order) {
@@ -162,7 +151,6 @@ export class Group extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Group
 	 */
 	public get Order(): number {
 		return this._order;
@@ -173,7 +161,6 @@ export class Group extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Group
 	 */
 	public get Placement(): number {
 		return this._placement;
@@ -184,7 +171,6 @@ export class Group extends Component {
 	 *
 	 * @readonly
 	 * @type {string}
-	 * @memberof Group
 	 */
 	public get Name(): string {
 		return this._name;
@@ -195,7 +181,6 @@ export class Group extends Component {
 	 *
 	 * @readonly
 	 * @type {Velocity}
-	 * @memberof Group
 	 */
 	public get Velocity(): Velocity {
 		return this._velocity;
@@ -206,7 +191,6 @@ export class Group extends Component {
 	 *
 	 * @readonly
 	 * @type {NodeVariation}
-	 * @memberof Group
 	 */
 	public get NodeVariation(): NodeVariation {
 		return this._nodeVariation;
@@ -221,7 +205,6 @@ export class Group extends Component {
 	 *
 	 * @readonly
 	 * @type {GroupType}
-	 * @memberof Group
 	 */
 	public get GroupType(): GroupType {
 		return this._groupType;
@@ -239,7 +222,6 @@ export class Group extends Component {
 	 * @param {NodeVariation} nodeVariation New value for the NodeVariation property.
 	 * @param {number[]} nodes New list of nodes.
 	 * @returns {Promise<void>}
-	 * @memberof Group
 	 */
 	public async changeGroupAsync(
 		order: number,
@@ -261,20 +243,18 @@ export class Group extends Component {
 			// If there are no changes in the properties return directly with a resolved promise.
 			if (changedProperties.length === 0) return Promise.resolve();
 
-			const confirmationFrame = <GW_SET_GROUP_INFORMATION_CFM>(
-				await this.Connection.sendFrameAsync(
-					new GW_SET_GROUP_INFORMATION_REQ(
-						this.GroupID,
-						this._revision,
-						name,
-						this._groupType,
-						nodes,
-						order,
-						placement,
-						velocity,
-						nodeVariation,
-					),
-				)
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_SET_GROUP_INFORMATION_REQ(
+					this.GroupID,
+					this._revision,
+					name,
+					this._groupType,
+					nodes,
+					order,
+					placement,
+					velocity,
+					nodeVariation,
+				),
 			);
 			if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
 				return Promise.resolve();
@@ -291,7 +271,6 @@ export class Group extends Component {
 	 *
 	 * @param {number} newOrder New value for the order property.
 	 * @returns {Promise<void>}
-	 * @memberof Group
 	 */
 	public async setOrderAsync(newOrder: number): Promise<void> {
 		return this.changeGroupAsync(
@@ -309,7 +288,6 @@ export class Group extends Component {
 	 *
 	 * @param {number} newPlacement New value for the placement property.
 	 * @returns {Promise<void>}
-	 * @memberof Group
 	 */
 	public async setPlacementAsync(newPlacement: number): Promise<void> {
 		return this.changeGroupAsync(
@@ -327,7 +305,6 @@ export class Group extends Component {
 	 *
 	 * @param {string} newName New name of the group.
 	 * @returns {Promise<void>}
-	 * @memberof Group
 	 */
 	public async setNameAsync(newName: string): Promise<void> {
 		return this.changeGroupAsync(
@@ -345,7 +322,6 @@ export class Group extends Component {
 	 *
 	 * @param {Velocity} newVelocity New velocity value for the group.
 	 * @returns {Promise<void>}
-	 * @memberof Group
 	 */
 	public async setVelocityAsync(newVelocity: Velocity): Promise<void> {
 		return this.changeGroupAsync(
@@ -363,7 +339,6 @@ export class Group extends Component {
 	 *
 	 * @param {NodeVariation} newNodeVariation New value for the variation of the group.
 	 * @returns {Promise<void>}
-	 * @memberof Group
 	 */
 	public async setNodeVariationAsync(newNodeVariation: NodeVariation): Promise<void> {
 		return this.changeGroupAsync(
@@ -381,7 +356,6 @@ export class Group extends Component {
 	 *
 	 * @param {number[]} newNodes Array of new node IDs for the group.
 	 * @returns {Promise<void>}
-	 * @memberof Group
 	 */
 	public async setNodesAsync(newNodes: number[]): Promise<void> {
 		return this.changeGroupAsync(
@@ -406,7 +380,6 @@ export class Group extends Component {
 	 * @param PriorityLevels Up to 8 priority levels.
 	 * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
 	 * @returns {Promise<number>} Returns the session ID of the command.
-	 * @memberof Group
 	 */
 	public async setTargetPositionRawAsync(
 		newPositionRaw: number,
@@ -419,20 +392,18 @@ export class Group extends Component {
 		LockTime: number = Infinity,
 	): Promise<number> {
 		try {
-			const confirmationFrame = <GW_ACTIVATE_PRODUCTGROUP_CFM>(
-				await this.Connection.sendFrameAsync(
-					new GW_ACTIVATE_PRODUCTGROUP_REQ(
-						this.GroupID,
-						newPositionRaw,
-						PriorityLevel,
-						CommandOriginator,
-						ParameterActive,
-						Velocity,
-						PriorityLevelLock,
-						PriorityLevels,
-						LockTime,
-					),
-				)
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_ACTIVATE_PRODUCTGROUP_REQ(
+					this.GroupID,
+					newPositionRaw,
+					PriorityLevel,
+					CommandOriginator,
+					ParameterActive,
+					Velocity,
+					PriorityLevelLock,
+					PriorityLevels,
+					LockTime,
+				),
 			);
 			if (confirmationFrame.Status === ActivateProductGroupStatus.OK) {
 				return confirmationFrame.SessionID;
@@ -456,7 +427,6 @@ export class Group extends Component {
 	 * @param PriorityLevels Up to 8 priority levels.
 	 * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
 	 * @returns {Promise<number>} Returns the session ID of the command.
-	 * @memberof Group
 	 */
 	public async setTargetPositionAsync(
 		newPosition: number,
@@ -504,8 +474,8 @@ export class Group extends Component {
 			);
 
 			try {
-				const productInformation = <GW_GET_NODE_INFORMATION_CFM>(
-					await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID))
+				const productInformation = await this.Connection.sendFrameAsync(
+					new GW_GET_NODE_INFORMATION_REQ(nodeID),
 				);
 				if (productInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
 					if (dispose) {
@@ -543,12 +513,11 @@ export class Group extends Component {
 	 * the state of the group and you won't receive an event for it.
 	 *
 	 * @returns {Promise<void>}
-	 * @memberof Group
 	 */
 	public async refreshAsync(): Promise<void> {
 		try {
-			const confirmationFrame = <GW_GET_GROUP_INFORMATION_CFM>(
-				await this.Connection.sendFrameAsync(new GW_GET_GROUP_INFORMATION_REQ(this.GroupID))
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_GET_GROUP_INFORMATION_REQ(this.GroupID),
 			);
 			if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
 				return Promise.resolve();
@@ -609,7 +578,6 @@ export class Group extends Component {
 /**
  * The Groups class represent all groups defined in the KLF-200.
  *
- * @export
  * @class Groups
  */
 export class Groups {
@@ -622,7 +590,6 @@ export class Groups {
 	 * group ID.
 	 *
 	 * @type {Group[]}
-	 * @memberof Groups
 	 */
 	public readonly Groups: Group[] = [];
 
@@ -675,8 +642,8 @@ export class Groups {
 				],
 			);
 
-			const getAllGroupsInformation = <GW_GET_ALL_GROUPS_INFORMATION_CFM>(
-				await this.Connection.sendFrameAsync(new GW_GET_ALL_GROUPS_INFORMATION_REQ(this.groupType))
+			const getAllGroupsInformation = await this.Connection.sendFrameAsync(
+				new GW_GET_ALL_GROUPS_INFORMATION_REQ(this.groupType),
 			);
 			if (getAllGroupsInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
 				if (dispose) {
@@ -722,7 +689,6 @@ export class Groups {
 	 *
 	 * @param {Listener<number>} handler Event handler that is called if a new group is added or a group has been changed.
 	 * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
-	 * @memberof Groups
 	 */
 	public onChangedGroup(handler: Listener<number>): Disposable {
 		return this._onChangedGroup.on(handler);
@@ -733,7 +699,6 @@ export class Groups {
 	 *
 	 * @param {Listener<number>} handler Event handler that is called if a group is removed.
 	 * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
-	 * @memberof Groups
 	 */
 	public onRemovedGroup(handler: Listener<number>): Disposable {
 		return this._onRemovedGroup.on(handler);
@@ -789,11 +754,9 @@ export class Groups {
 	 * will be instantiated to watch for changes
 	 * to the groups.
 	 *
-	 * @static
 	 * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
 	 * @param [groupType=GroupType.UserGroup] The group type for which the groups should be read. Default is {@link GroupType.UserGroup}.
 	 * @returns {Promise<Groups>} Resolves to a new instance of the Groups class.
-	 * @memberof Groups
 	 */
 	static async createGroupsAsync(
 		Connection: IConnection,
@@ -813,7 +776,6 @@ export class Groups {
 	 *
 	 * @param {string} groupName The name of the group.
 	 * @returns {(Group | undefined)} Returns the group object if found, otherwise undefined.
-	 * @memberof Groups
 	 */
 	public findByName(groupName: string): Group | undefined {
 		return this.Groups.find((grp) => typeof grp !== "undefined" && grp.Name === groupName);

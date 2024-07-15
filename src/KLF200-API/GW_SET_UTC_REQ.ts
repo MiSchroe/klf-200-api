@@ -1,8 +1,9 @@
 "use strict";
 
-import { GW_FRAME_REQ } from "./common.js";
+import { GatewayCommand, GW_FRAME_REQ } from "./common.js";
 
 export class GW_SET_UTC_REQ extends GW_FRAME_REQ {
+	declare readonly Command: GatewayCommand.GW_SET_UTC_REQ;
 	constructor(readonly UTCTime: Date = new Date()) {
 		super(4);
 

@@ -32,12 +32,12 @@ describe("Gateway", function () {
 	});
 
 	this.afterAll(async function () {
-		await this.mockServerController[Symbol.asyncDispose]();
+		await (this.mockServerController as MockServerController)[Symbol.asyncDispose]();
 	});
 
 	this.afterEach(async function () {
-		await this.mockServerController.sendCommand(ResetCommand);
-		await this.mockServerController.sendCommand(CloseConnectionCommand);
+		await (this.mockServerController as MockServerController).sendCommand(ResetCommand);
+		await (this.mockServerController as MockServerController).sendCommand(CloseConnectionCommand);
 	});
 
 	describe("constructor", function () {

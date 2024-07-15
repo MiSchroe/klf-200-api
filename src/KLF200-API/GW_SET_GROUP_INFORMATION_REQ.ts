@@ -3,9 +3,10 @@
 import { arrayToBitArray } from "../utils/BitArray.js";
 import { GroupType } from "./GW_GROUPS.js";
 import { NodeVariation, Velocity } from "./GW_SYSTEMTABLE_DATA.js";
-import { GW_FRAME_REQ } from "./common.js";
+import { GatewayCommand, GW_FRAME_REQ } from "./common.js";
 
 export class GW_SET_GROUP_INFORMATION_REQ extends GW_FRAME_REQ {
+	declare readonly Command: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ;
 	constructor(
 		readonly GroupID: number,
 		readonly Revision: number,

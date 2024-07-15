@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_COMMAND_REQ } from "./common.js";
+import { GatewayCommand, GW_FRAME_COMMAND_REQ } from "./common.js";
 import {
 	CommandOriginator,
 	LockTime as lt,
@@ -12,6 +12,7 @@ import {
 import { Velocity } from "./GW_SYSTEMTABLE_DATA.js";
 
 export class GW_ACTIVATE_PRODUCTGROUP_REQ extends GW_FRAME_COMMAND_REQ {
+	declare readonly Command: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_REQ;
 	constructor(
 		readonly GroupID: number,
 		readonly Position: number,
@@ -41,7 +42,8 @@ export class GW_ACTIVATE_PRODUCTGROUP_REQ extends GW_FRAME_COMMAND_REQ {
 		let PLI = 0;
 		for (let pliIndex = 0; pliIndex < this.PriorityLevels.length; pliIndex++) {
 			const pli = this.PriorityLevels[pliIndex];
-			if (pli < 0 || pli > 3) throw new Error("Priority level lock out of range.");
+			if (pli < PriorityLevelInformation.Disable || pli > PriorityLevelInformation.KeepCurrent)
+				throw new Error("Priority level lock out of range.");
 
 			PLI <<= 2;
 			PLI |= pli;

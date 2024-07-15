@@ -1,9 +1,10 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF } from "./common.js";
 import { CommandOriginator, ParameterActive } from "./GW_COMMAND.js";
 
 export class GW_LIMITATION_STATUS_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_LIMITATION_STATUS_NTF;
 	public readonly SessionID: number;
 	public readonly NodeID: number;
 	public readonly ParameterID: ParameterActive;

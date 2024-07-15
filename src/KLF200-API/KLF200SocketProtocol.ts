@@ -25,7 +25,9 @@ export class KLF200SocketProtocol {
 	private queue: Buffer[] = [];
 
 	constructor(readonly socket: Socket) {
-		socket.on("data", async (data) => await this.processData(data));
+		socket.on("data", (data) => {
+			this.processData(data).catch((err) => debug(`Error occurred during processing the data: ${err}`));
+		});
 		socket.on("close", (had_error) => this.onSocketClose(had_error));
 	}
 
@@ -42,7 +44,7 @@ export class KLF200SocketProtocol {
 				this.queue.push(data.subarray(positionStart, positionStart + 1));
 
 				// Process remaining data
-				if (positionStart + 1 < data.byteLength) this.processData(data.subarray(positionStart + 1));
+				if (positionStart + 1 < data.byteLength) await this.processData(data.subarray(positionStart + 1));
 
 				break;
 
@@ -63,7 +65,7 @@ export class KLF200SocketProtocol {
 				this.queue = [];
 				await this.send(frameBuffer);
 
-				if (positionEnd + 1 < data.byteLength) this.processData(data.subarray(positionEnd + 1));
+				if (positionEnd + 1 < data.byteLength) await this.processData(data.subarray(positionEnd + 1));
 
 				break;
 

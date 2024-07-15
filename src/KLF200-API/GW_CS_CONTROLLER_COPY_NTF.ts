@@ -1,9 +1,10 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF } from "./common.js";
 import { ControllerCopyMode } from "./GW_SYSTEMTABLE_DATA.js";
 
 export class GW_CS_CONTROLLER_COPY_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_CS_CONTROLLER_COPY_NTF;
 	public readonly ControllerCopyMode: ControllerCopyMode;
 	public readonly ControllerCopyStatus: number;
 

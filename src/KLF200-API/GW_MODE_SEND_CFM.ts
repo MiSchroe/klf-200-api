@@ -1,9 +1,10 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common.js";
+import { GatewayCommand, GW_FRAME_CFM } from "./common.js";
 import { ModeStatus } from "./GW_COMMAND.js";
 
 export class GW_MODE_SEND_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_MODE_SEND_CFM;
 	public readonly SessionID: number;
 	public readonly ModeStatus: ModeStatus;
 
@@ -38,7 +39,7 @@ export class GW_MODE_SEND_CFM extends GW_FRAME_CFM {
 				return "Failed.";
 
 			default:
-				return `Unknown error ${this.ModeStatus}.`;
+				return `Unknown error ${this.ModeStatus as number}.`;
 		}
 	}
 }

@@ -3,7 +3,7 @@
 import { CommandOriginator, ParameterActive, PriorityLevel } from "./GW_COMMAND.js";
 import { ContactInputAssignment, LockPriorityLevel } from "./GW_CONTACTINPUT.js";
 import { Velocity } from "./GW_SYSTEMTABLE_DATA.js";
-import { GW_FRAME_CFM } from "./common.js";
+import { GatewayCommand, GW_FRAME_CFM } from "./common.js";
 
 export type ContactInputObject = {
 	ContactInputID: number;
@@ -25,6 +25,7 @@ export type ContactInputObject = {
 };
 
 export class GW_GET_CONTACT_INPUT_LINK_LIST_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_GET_CONTACT_INPUT_LINK_LIST_CFM;
 	public readonly ContactInputObjects: ContactInputObject[] = [];
 
 	constructor(Data: Buffer) {

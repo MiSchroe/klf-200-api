@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common.js";
+import { GatewayCommand, GW_FRAME_CFM } from "./common.js";
 
 export class SoftwareVersion {
 	public constructor(
@@ -17,6 +17,7 @@ export class SoftwareVersion {
 }
 
 export class GW_GET_VERSION_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_GET_VERSION_CFM;
 	public readonly SoftwareVersion: SoftwareVersion;
 	public readonly HardwareVersion: number;
 	public readonly ProductGroup: number;

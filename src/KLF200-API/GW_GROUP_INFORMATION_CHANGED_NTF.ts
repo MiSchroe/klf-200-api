@@ -3,7 +3,7 @@
 import { bitArrayToArray } from "../utils/BitArray.js";
 import { GroupType } from "./GW_GROUPS.js";
 import { NodeVariation, Velocity } from "./GW_SYSTEMTABLE_DATA.js";
-import { GW_FRAME_NTF, readZString } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF, readZString } from "./common.js";
 
 export enum ChangeType {
 	Deleted = 0,
@@ -29,6 +29,7 @@ export interface GW_GROUP_INFORMATION_CHANGED_NTF_Modified {
 }
 
 export class GW_GROUP_INFORMATION_CHANGED_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF;
 	public readonly GroupID: number;
 	public readonly ChangeType: ChangeType;
 	public readonly Order?: number;

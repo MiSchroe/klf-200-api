@@ -7,7 +7,6 @@ const debug = debugModule(`klf-200-api:TypedEvents`);
 /**
  * Generic typed interface for defining a typed listener function.
  *
- * @exports
  * @interface Listener<T>
  */
 export interface Listener<T> {
@@ -15,7 +14,6 @@ export interface Listener<T> {
 	 * This function is called in case of an event.
 	 * @param {T} event The typed event parameter.
 	 * @returns {any} The returned value of the function will be ignored.
-	 * @memberof Listener<T>
 	 */
 	(event: T): any;
 }
@@ -23,7 +21,6 @@ export interface Listener<T> {
 /**
  * You should call the method dispose if you don't need the listener anymore.
  *
- * @exports
  * @interface Disposable
  */
 export interface Disposable {
@@ -31,7 +28,6 @@ export interface Disposable {
 	 * When you call the dispose method the listener will be removed from the event emitter.
 	 *
 	 * @returns {void}
-	 * @memberof Disposable
 	 */
 	dispose(): void;
 }
@@ -41,7 +37,6 @@ export interface Disposable {
 /**
  * Event emitter class that handles typed events.
  *
- * @export
  * @class TypedEvent<T>
  */
 export class TypedEvent<T> {
@@ -53,7 +48,6 @@ export class TypedEvent<T> {
 	 *
 	 * @param listener Function that is called if the event is emitted.
 	 * @returns {Disposable} Returns a disposable object that should be disposed when not needed anymore.
-	 * @memberof TypedEvent<T>
 	 */
 	on = (listener: Listener<T>): Disposable => {
 		debug(`TypedEvent on.`);
@@ -69,7 +63,6 @@ export class TypedEvent<T> {
 	 *
 	 * @param listener Function that is called only once if the event is emitted.
 	 * @returns {void}
-	 * @memberof TypedEvent<T>
 	 */
 	once = (listener: Listener<T>): void => {
 		debug(`TypedEvent once.`);
@@ -85,7 +78,6 @@ export class TypedEvent<T> {
 	 *
 	 * @param listener Function that should be removed.
 	 * @returns {void}
-	 * @memberof TypedEvent<T>
 	 */
 	off = (listener: Listener<T>): void => {
 		debug(`TypedEvent off.`);
@@ -100,7 +92,6 @@ export class TypedEvent<T> {
 	 *
 	 * @param {T} event The typed event parameter that will be provided to each listener.
 	 * @returns {Promise<void>}
-	 * @memberof TypedEvent<T>
 	 */
 	emit = async (event: T): Promise<void> => {
 		debug(
@@ -137,7 +128,6 @@ export class TypedEvent<T> {
 	 *
 	 * @param te Event emitter that is called after this event emitter.
 	 * @returns {Disposable} Returns a disposable object that should be disposed when not needed anymore.
-	 * @memberof TypedEvent<T>
 	 */
 	pipe = (te: TypedEvent<T>): Disposable => {
 		debug(`TypedEvent pipe.`);

@@ -59,7 +59,7 @@
 		// "watch": true
 	},
 	"include": ["./src/**/*", "./test/**/*"],
-	"exclude": ["./src/**/*.cjs.ts"],
+	// "exclude": ["./src/**/*.cjs.ts"],
 	"typedocOptions": {
 		"mode": "modules",
 		"out": "docs"

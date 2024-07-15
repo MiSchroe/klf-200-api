@@ -1,9 +1,10 @@
 "use strict";
 
-import { GW_FRAME_NTF, readZString } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF, readZString } from "./common.js";
 import { NodeVariation } from "./GW_SYSTEMTABLE_DATA.js";
 
 export class GW_NODE_INFORMATION_CHANGED_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF;
 	public readonly NodeID: number;
 	public readonly Order: number;
 	public readonly Placement: number;

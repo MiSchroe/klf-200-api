@@ -1,11 +1,12 @@
 "use strict";
 
-import { GW_FRAME_REQ } from "./common.js";
+import { GatewayCommand, GW_FRAME_REQ } from "./common.js";
 import { CommandOriginator, ParameterActive, PriorityLevel, PriorityLevelInformation } from "./GW_COMMAND.js";
 import { ContactInputAssignment, LockPriorityLevel } from "./GW_CONTACTINPUT.js";
 import { Velocity } from "./GW_SYSTEMTABLE_DATA.js";
 
 export class GW_SET_CONTACT_INPUT_LINK_REQ extends GW_FRAME_REQ {
+	declare readonly Command: GatewayCommand.GW_SET_CONTACT_INPUT_LINK_REQ;
 	constructor(
 		readonly ContactInputID: number,
 		readonly ContactInputAssignment: ContactInputAssignment,

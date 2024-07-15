@@ -2,9 +2,10 @@
 
 import { bitArrayToArray } from "../utils/BitArray.js";
 import { ChangeKeyStatus } from "./GW_SYSTEMTABLE_DATA.js";
-import { GW_FRAME_NTF } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF } from "./common.js";
 
 export class GW_CS_RECEIVE_KEY_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_CS_RECEIVE_KEY_NTF;
 	public readonly ChangeKeyStatus: ChangeKeyStatus;
 	public readonly KeyChangedNodes: number[];
 	public readonly KeyNotChangedNodes: number[];

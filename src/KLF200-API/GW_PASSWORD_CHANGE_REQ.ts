@@ -1,8 +1,9 @@
 "use strict";
 
-import { C_MAX_PWD_LENGTH, GW_FRAME_REQ } from "./common.js";
+import { C_MAX_PWD_LENGTH, GatewayCommand, GW_FRAME_REQ } from "./common.js";
 
 export class GW_PASSWORD_CHANGE_REQ extends GW_FRAME_REQ {
+	declare readonly Command: GatewayCommand.GW_PASSWORD_CHANGE_REQ;
 	constructor(
 		readonly OldPassword: string,
 		readonly NewPassword: string,

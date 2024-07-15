@@ -144,23 +144,26 @@ describe("KLF200-API", function () {
 			client.write(data);
 		});
 
-		it("should write the data using the protocol.", function (done) {
+		it("should write the data using the protocol.", async function () {
 			const data = Buffer.from([0x04, 0x30, 0x01, 0x00]);
 			const expectedData = SLIPProtocol.Encode(KLF200Protocol.Encode(data));
 
 			const result = new KLF200SocketProtocol(client);
-			result.onDataReceived((dataReceived) => {
-				try {
-					expect(dataReceived).to.be.equalBytes(expectedData);
-					done();
-				} catch (error) {
-					done(error);
-				}
+			const resultPromise = new Promise<void>((resolve, reject) => {
+				result.onDataReceived((dataReceived) => {
+					try {
+						expect(dataReceived).to.be.equalBytes(expectedData);
+						resolve();
+					} catch (error) {
+						reject(error);
+					}
+				});
+				result.onError((error) => {
+					reject(error);
+				});
 			});
-			result.onError((error) => {
-				done(error);
-			});
-			result.write(data);
+			await result.write(data);
+			await resultPromise;
 		});
 	});
 });

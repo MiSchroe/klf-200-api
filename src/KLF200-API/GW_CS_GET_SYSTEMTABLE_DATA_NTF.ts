@@ -1,9 +1,10 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF } from "./common.js";
 import { SystemTableDataEntry } from "./GW_SYSTEMTABLE_DATA.js";
 
 export class GW_CS_GET_SYSTEMTABLE_DATA_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_CS_GET_SYSTEMTABLE_DATA_NTF;
 	public readonly NumberOfEntries: number;
 	public readonly RemainingNumberOfEntries: number;
 	public readonly SystemTableEntries: SystemTableDataEntry[] = [];

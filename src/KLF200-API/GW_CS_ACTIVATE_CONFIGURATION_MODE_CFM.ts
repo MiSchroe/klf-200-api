@@ -1,9 +1,10 @@
 "use strict";
 
 import { bitArrayToArray } from "../utils/BitArray.js";
-import { GW_FRAME_CFM } from "./common.js";
+import { GatewayCommand, GW_FRAME_CFM } from "./common.js";
 
 export class GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM;
 	public readonly ActivatedNodes: number[];
 	public readonly NoContactNodes: number[];
 	public readonly OtherErrorNodes: number[];

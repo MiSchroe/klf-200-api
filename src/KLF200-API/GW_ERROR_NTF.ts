@@ -1,6 +1,6 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF } from "./common.js";
 
 export enum GW_ERROR {
 	NotFurtherDefined = 0,
@@ -13,6 +13,7 @@ export enum GW_ERROR {
 }
 
 export class GW_ERROR_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_ERROR_NTF;
 	public readonly ErrorNumber: GW_ERROR;
 
 	constructor(Data: Buffer) {

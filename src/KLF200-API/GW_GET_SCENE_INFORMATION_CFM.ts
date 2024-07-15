@@ -1,8 +1,9 @@
 "use strict";
 
-import { GW_COMMON_STATUS, GW_FRAME_CFM } from "./common.js";
+import { GatewayCommand, GW_COMMON_STATUS, GW_FRAME_CFM } from "./common.js";
 
 export class GW_GET_SCENE_INFORMATION_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_GET_SCENE_INFORMATION_CFM;
 	public readonly Status: GW_COMMON_STATUS;
 	public readonly SceneID: number;
 
@@ -25,7 +26,7 @@ export class GW_GET_SCENE_INFORMATION_CFM extends GW_FRAME_CFM {
 				return "Invalid scene ID.";
 
 			default:
-				return `Unknown error ${this.Status}.`;
+				return `Unknown error ${this.Status as number}.`;
 		}
 	}
 }

@@ -1,8 +1,9 @@
 "use strict";
 
-import { GW_FRAME_REQ } from "./common.js";
+import { GatewayCommand, GW_FRAME_REQ } from "./common.js";
 
 export class GW_RENAME_SCENE_REQ extends GW_FRAME_REQ {
+	declare readonly Command: GatewayCommand.GW_RENAME_SCENE_REQ;
 	constructor(
 		readonly SceneID: number,
 		readonly Name: string,

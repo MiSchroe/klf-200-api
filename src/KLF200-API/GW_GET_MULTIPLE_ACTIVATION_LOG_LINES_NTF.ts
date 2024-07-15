@@ -1,9 +1,10 @@
 "use strict";
 
-import { GW_FRAME_NTF } from "./common.js";
+import { GatewayCommand, GW_FRAME_NTF } from "./common.js";
 import { ParameterActive, RunStatus, StatusOwner, StatusReply } from "./GW_COMMAND.js";
 
 export class GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF extends GW_FRAME_NTF {
+	declare readonly Command: GatewayCommand.GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF;
 	public readonly TimeStamp: Date;
 	public readonly SessionID: number;
 	public readonly StatusOwner: StatusOwner;

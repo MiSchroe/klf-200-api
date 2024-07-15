@@ -1,8 +1,9 @@
 "use strict";
 
-import { GW_FRAME_CFM } from "./common.js";
+import { GatewayCommand, GW_FRAME_CFM } from "./common.js";
 
 export class GW_GET_NETWORK_SETUP_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_GET_NETWORK_SETUP_CFM;
 	public readonly IPAddress: string;
 	public readonly Mask: string;
 	public readonly DefaultGateway: string;

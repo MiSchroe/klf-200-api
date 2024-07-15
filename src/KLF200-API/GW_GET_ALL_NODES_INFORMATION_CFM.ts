@@ -1,8 +1,9 @@
 "use strict";
 
-import { GW_COMMON_STATUS, GW_FRAME_CFM } from "./common.js";
+import { GatewayCommand, GW_COMMON_STATUS, GW_FRAME_CFM } from "./common.js";
 
 export class GW_GET_ALL_NODES_INFORMATION_CFM extends GW_FRAME_CFM {
+	declare readonly Command: GatewayCommand.GW_GET_ALL_NODES_INFORMATION_CFM;
 	public readonly Status: GW_COMMON_STATUS;
 	public readonly NumberOfNode: number;
 

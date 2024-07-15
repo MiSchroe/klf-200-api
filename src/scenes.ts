@@ -1,19 +1,15 @@
 ﻿"use strict";
 
 import debugModule from "debug";
-import { GW_ACTIVATE_SCENE_CFM } from "./KLF200-API/GW_ACTIVATE_SCENE_CFM.js";
 import { GW_ACTIVATE_SCENE_REQ } from "./KLF200-API/GW_ACTIVATE_SCENE_REQ.js";
 import { CommandOriginator, PriorityLevel } from "./KLF200-API/GW_COMMAND.js";
-import { GW_GET_SCENE_INFORMATION_CFM } from "./KLF200-API/GW_GET_SCENE_INFORMATION_CFM.js";
 import { GW_GET_SCENE_INFORMATION_NTF, SceneInformationEntry } from "./KLF200-API/GW_GET_SCENE_INFORMATION_NTF.js";
 import { GW_GET_SCENE_INFORMATION_REQ } from "./KLF200-API/GW_GET_SCENE_INFORMATION_REQ.js";
-import { GW_GET_SCENE_LIST_CFM } from "./KLF200-API/GW_GET_SCENE_LIST_CFM.js";
 import { GW_GET_SCENE_LIST_NTF } from "./KLF200-API/GW_GET_SCENE_LIST_NTF.js";
 import { GW_GET_SCENE_LIST_REQ } from "./KLF200-API/GW_GET_SCENE_LIST_REQ.js";
 import { ActivateSceneStatus } from "./KLF200-API/GW_SCENES.js";
 import { GW_SCENE_INFORMATION_CHANGED_NTF, SceneChangeType } from "./KLF200-API/GW_SCENE_INFORMATION_CHANGED_NTF.js";
 import { GW_SESSION_FINISHED_NTF } from "./KLF200-API/GW_SESSION_FINISHED_NTF.js";
-import { GW_STOP_SCENE_CFM } from "./KLF200-API/GW_STOP_SCENE_CFM.js";
 import { GW_STOP_SCENE_REQ } from "./KLF200-API/GW_STOP_SCENE_REQ.js";
 import { Velocity } from "./KLF200-API/GW_SYSTEMTABLE_DATA.js";
 import { GW_COMMON_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common.js";
@@ -27,9 +23,7 @@ const debug = debugModule(`klf-200-api:scenes`);
  * The scene object contains the ID, name and a list of products that are contained in the scene.
  * You have methods to start and stop a scene.
  *
- * @export
  * @class Scene
- * @extends {Component}
  */
 export class Scene extends Component {
 	private _isRunning: boolean = false;
@@ -40,7 +34,6 @@ export class Scene extends Component {
 	 * Contains a list of node IDs with their target values.
 	 *
 	 * @type {SceneInformationEntry[]}
-	 * @memberof Scene
 	 */
 	public readonly Products: SceneInformationEntry[] = [];
 
@@ -49,7 +42,6 @@ export class Scene extends Component {
 	 * @param {IConnection} Connection The connection that will be used to send and receive commands.
 	 * @param {number} SceneID The ID of the scene.
 	 * @param {string} SceneName The name of the scene.
-	 * @memberof Scene
 	 */
 	constructor(
 		readonly Connection: IConnection,
@@ -74,7 +66,6 @@ export class Scene extends Component {
 	 *
 	 * @readonly
 	 * @type {string}
-	 * @memberof Scene
 	 */
 	public get SceneName(): string {
 		return this._sceneName;
@@ -85,7 +76,6 @@ export class Scene extends Component {
 	 *
 	 * @readonly
 	 * @type {boolean}
-	 * @memberof Scene
 	 */
 	public get IsRunning(): boolean {
 		return this._isRunning;
@@ -98,7 +88,6 @@ export class Scene extends Component {
 	 * @param PriorityLevel The priority level for the run command.
 	 * @param CommandOriginator The command originator for the run command.
 	 * @returns {Promise<number>} Returns the session ID. You can listen for the GW_SESSION_FINISHED_NTF notification to determine when the scene has finished.
-	 * @memberof Scene
 	 */
 	public async runAsync(
 		Velocity: Velocity = 0,
@@ -106,10 +95,8 @@ export class Scene extends Component {
 		CommandOriginator: CommandOriginator = 1,
 	): Promise<number> {
 		try {
-			const confirmationFrame = <GW_ACTIVATE_SCENE_CFM>(
-				await this.Connection.sendFrameAsync(
-					new GW_ACTIVATE_SCENE_REQ(this.SceneID, PriorityLevel, CommandOriginator, Velocity),
-				)
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_ACTIVATE_SCENE_REQ(this.SceneID, PriorityLevel, CommandOriginator, Velocity),
 			);
 			if (confirmationFrame.Status === ActivateSceneStatus.OK) {
 				this._isRunning = true;
@@ -130,17 +117,14 @@ export class Scene extends Component {
 	 * @param PriorityLevel The priority level for the run command.
 	 * @param CommandOriginator The command originator for the run command.
 	 * @returns {Promise<number>} Returns the session ID.
-	 * @memberof Scene
 	 */
 	public async stopAsync(
 		PriorityLevel: PriorityLevel = 3,
 		CommandOriginator: CommandOriginator = 1,
 	): Promise<number> {
 		try {
-			const confirmationFrame = <GW_STOP_SCENE_CFM>(
-				await this.Connection.sendFrameAsync(
-					new GW_STOP_SCENE_REQ(this.SceneID, PriorityLevel, CommandOriginator),
-				)
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_STOP_SCENE_REQ(this.SceneID, PriorityLevel, CommandOriginator),
 			);
 			if (confirmationFrame.Status === ActivateSceneStatus.OK) {
 				this._isRunning = false;
@@ -161,7 +145,6 @@ export class Scene extends Component {
 	 * This method is called from the Scenes class if a change notification has been received.
 	 *
 	 * @returns {Promise<void>}
-	 * @memberof Scene
 	 */
 	public async refreshAsync(): Promise<void> {
 		// Setup notification to receive notification with actuator type
@@ -212,8 +195,8 @@ export class Scene extends Component {
 				[GatewayCommand.GW_GET_SCENE_INFORMATION_NTF],
 			);
 
-			const confirmationFrame = <GW_GET_SCENE_INFORMATION_CFM>(
-				await this.Connection.sendFrameAsync(new GW_GET_SCENE_INFORMATION_REQ(this.SceneID))
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_GET_SCENE_INFORMATION_REQ(this.SceneID),
 			);
 			if (confirmationFrame.SceneID === this.SceneID) {
 				if (confirmationFrame.Status !== GW_COMMON_STATUS.SUCCESS) {
@@ -252,7 +235,6 @@ export class Scene extends Component {
 /**
  * Use the scenes object to retrieve a list of scenes known to your KLF interface and to start one of them.
  *
- * @export
  * @class Scenes
  */
 export class Scenes {
@@ -266,7 +248,6 @@ export class Scenes {
 	 * The array index corresponds to the scene ID.
 	 *
 	 * @type {Scene[]}
-	 * @memberof Scenes
 	 */
 	public readonly Scenes: Scene[] = [];
 
@@ -275,10 +256,8 @@ export class Scenes {
 	/**
 	 * Creates an instance of Scenes.
 	 *
-	 * @static
 	 * @param {IConnection} Connection The connection that will be used to send and receive commands.
 	 * @returns {Promise<Scenes>} Returns a new Scenes object that is initialized, already.
-	 * @memberof Scenes
 	 */
 	static async createScenesAsync(Connection: IConnection): Promise<Scenes> {
 		try {
@@ -336,9 +315,7 @@ export class Scenes {
 				[GatewayCommand.GW_GET_SCENE_LIST_NTF],
 			);
 
-			const getSceneListConfirmation = (await this.Connection.sendFrameAsync(
-				new GW_GET_SCENE_LIST_REQ(),
-			)) as GW_GET_SCENE_LIST_CFM;
+			const getSceneListConfirmation = await this.Connection.sendFrameAsync(new GW_GET_SCENE_LIST_REQ());
 
 			// Wait for GW_GET_SCENE_LIST_NTF, but only if there are scenes defined
 			if (getSceneListConfirmation.NumberOfScenes > 0) {
@@ -407,7 +384,6 @@ export class Scenes {
 	 *
 	 * @param {Listener<number>} handler The handler that is called if the event is emitted.
 	 * @returns {Disposable} Call the dispose method of the returned object to remove the handler.
-	 * @memberof Scenes
 	 */
 	public onChangedScene(handler: Listener<number>): Disposable {
 		return this._onChangedScenes.on(handler);
@@ -418,7 +394,6 @@ export class Scenes {
 	 *
 	 * @param {Listener<number>} handler The handler that is called if the event is emitted.
 	 * @returns {Disposable} Call the dispose method of the returned object to remove the handler.
-	 * @memberof Scenes
 	 */
 	public onRemovedScene(handler: Listener<number>): Disposable {
 		return this._onRemovedScenes.on(handler);
@@ -429,7 +404,6 @@ export class Scenes {
 	 *
 	 * @param {Listener<number>} handler The handler that is called if the event is emitted.
 	 * @returns {Disposable} Call the dispose method of the returned object to remove the handler.
-	 * @memberof Scenes
 	 */
 	public onAddedScene(handler: Listener<number>): Disposable {
 		return this._onAddedScenes.on(handler);
@@ -452,7 +426,6 @@ export class Scenes {
 	 *
 	 * @param {string} sceneName The name of the scene.
 	 * @returns {(Scene | undefined)} Returns the scene object if found, otherwise undefined.
-	 * @memberof Scenes
 	 */
 	public findByName(sceneName: string): Scene | undefined {
 		return this.Scenes.find((sc) => typeof sc !== "undefined" && sc.SceneName === sceneName);
