@@ -367,7 +367,6 @@ export abstract class GW_FRAME_REQ extends GW_FRAME implements IGW_FRAME_REQ {
 	 * Creates an instance of GW_FRAME_REQ.
 	 *
 	 * @param {number} BufferSize The size of the buffer (only pure data, without protocol and command bytes)
-	 * @memberof GW_FRAME_REQ
 	 */
 	constructor(readonly BufferSize: number) {
 		super();
@@ -386,10 +385,8 @@ export abstract class GW_FRAME_REQ extends GW_FRAME implements IGW_FRAME_REQ {
 	 * A size of 0 means that the command has no further data.
 	 *
 	 * @protected
-	 * @abstract
 	 * @param {number} BufferSize Size for the buffer for the data part without length and command.
 	 * @param {boolean} CopyData Set to true to copy the data in case of reallocating the buffer. Default is true.
-	 * @memberof GW_FRAME
 	 */
 	protected AllocBuffer(BufferSize: number, CopyData: boolean = true): void {
 		const oldData = this.data;
@@ -447,7 +444,6 @@ export abstract class GW_FRAME_NTF extends GW_FRAME_RCV implements IGW_FRAME_NTF
 /**
  * Reads a zero-terminated string from the buffer.
  *
- * @export
  * @param {Buffer} data The buffer that contains the string data.
  * @returns {string} Returns the string data.
  */

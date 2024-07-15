@@ -145,7 +145,6 @@ const debug = debugModule(`klf-200-api:connection`);
 /**
  * Interface for the connection.
  *
- * @export
  * @interface IConnection
  */
 export interface IConnection {
@@ -155,7 +154,6 @@ export interface IConnection {
 	 * @param {string} password The password needed for login. The factory default password is velux123.
 	 * @param {number} [timeout] A timeout in seconds. After the timeout the returned promise will be rejected.
 	 * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
-	 * @memberof IConnection
 	 */
 	loginAsync(password: string, timeout?: number): Promise<void>;
 
@@ -164,7 +162,6 @@ export interface IConnection {
 	 *
 	 * @param {number} [timeout] A timeout in seconds. After the timeout the returned promise will be rejected.
 	 * @returns {Promise<void>} Returns a promise that resolves to true on successful logout or rejects with the errors.
-	 * @memberof IConnection
 	 */
 	logoutAsync(timeout?: number): Promise<void>;
 
@@ -177,7 +174,6 @@ export interface IConnection {
 	 *                                   In case of an error frame the promise will be rejected with the error number.
 	 *                                   If the request frame is a command (with a SessionID) than the promise will be
 	 *                                   resolved by the corresponding confirmation frame with a matching session ID.
-	 * @memberof IConnection
 	 */
 	sendFrameAsync(frame: GW_REBOOT_REQ, timeout?: number): Promise<GW_REBOOT_CFM>;
 	sendFrameAsync(frame: GW_SET_FACTORY_DEFAULT_REQ, timeout?: number): Promise<GW_SET_FACTORY_DEFAULT_CFM>;
@@ -276,7 +272,6 @@ export interface IConnection {
 	 * @param {Listener<IGW_FRAME_RCV>} handler Callback functions that is called for an event
 	 * @param {GatewayCommand[]} [filter] Array of GatewayCommand entries you want to listen to. Optional.
 	 * @returns {Disposable} Returns a Disposable that you can call to remove the handler.
-	 * @memberof Connection
 	 */
 	on(handler: Listener<IGW_FRAME_RCV>, filter?: GatewayCommand[]): Disposable;
 
@@ -288,7 +283,6 @@ export interface IConnection {
 	 * @param {Listener<IGW_FRAME_REQ>} handler Callback functions that is called for an event
 	 * @param {GatewayCommand[]} [filter] Array of GatewayCommand entries you want to listen to. Optional.
 	 * @returns {Disposable} Returns a Disposable that you can call to remove the handler.
-	 * @memberof Connection
 	 */
 	onFrameSent(handler: Listener<IGW_FRAME_REQ>, filter?: GatewayCommand[]): Disposable;
 
@@ -296,7 +290,6 @@ export interface IConnection {
 	 * Gets the underlying socket protocol handler.
 	 *
 	 * @type {KLF200SocketProtocol}
-	 * @memberof IConnection
 	 */
 	readonly KLF200SocketProtocol?: KLF200SocketProtocol;
 }
@@ -322,7 +315,6 @@ const FINGERPRINT: string = "02:8C:23:A0:89:2B:62:98:C4:99:00:5B:D2:E7:2E:0A:70:
  *      });
  * ```
  *
- * @export
  * @class Connection
  */
 export class Connection implements IConnection {
@@ -344,7 +336,6 @@ export class Connection implements IConnection {
 	 *                         will be changed with subsequent firmware updates you can
 	 *                         provide the matching certificate with this parameter.
 	 * @param {string} [fingerprint=FINGERPRINT] The fingerprint of the certificate. This parameter is optional.
-	 * @memberof Connection
 	 */
 	constructor(host: string, CA?: Buffer, fingerprint?: string);
 	/**
@@ -372,7 +363,6 @@ export class Connection implements IConnection {
 	 * This property has a value after calling [[loginAsync]], only.
 	 *
 	 * @readonly
-	 * @memberof Connection
 	 */
 	public get KLF200SocketProtocol(): KLF200SocketProtocol | undefined {
 		return this.klfProtocol;
@@ -385,7 +375,6 @@ export class Connection implements IConnection {
 	 * @private
 	 * @param {string} password The password needed for login. The factory default password is velux123.
 	 * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
-	 * @memberof Connection
 	 */
 	private async _loginAsync(password: string, timeout: number): Promise<void> {
 		try {
@@ -408,7 +397,6 @@ export class Connection implements IConnection {
 	 * @param {string} password The password needed for login. The factory default password is velux123.
 	 * @param {number} [timeout=60] A timeout in seconds. After the timeout the returned promise will be rejected.
 	 * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
-	 * @memberof Connection
 	 */
 	public async loginAsync(password: string, timeout: number = 60): Promise<void> {
 		try {
@@ -423,7 +411,6 @@ export class Connection implements IConnection {
 	 *
 	 * @param {number} [timeout=10] A timeout in seconds. After the timeout the returned promise will be rejected.
 	 * @returns {Promise<void>} Returns a promise that resolves to true on successful logout or rejects with the errors.
-	 * @memberof Connection
 	 */
 	public async logoutAsync(timeout: number = 10): Promise<void> {
 		try {
@@ -467,7 +454,6 @@ export class Connection implements IConnection {
 	 *                                   In case of an error frame the promise will be rejected with the error number.
 	 *                                   If the request frame is a command (with a SessionID) than the promise will be
 	 *                                   resolved by the corresponding confirmation frame with a matching session ID.
-	 * @memberof Connection
 	 */
 	public async sendFrameAsync(frame: GW_REBOOT_REQ, timeout?: number): Promise<GW_REBOOT_CFM>;
 	public async sendFrameAsync(
@@ -693,7 +679,6 @@ export class Connection implements IConnection {
 	 * @param {Listener<IGW_FRAME_RCV>} handler Callback functions that is called for an event
 	 * @param {GatewayCommand[]} [filter] Array of GatewayCommand entries you want to listen to. Optional.
 	 * @returns {Disposable} Returns a Disposable that you can call to remove the handler.
-	 * @memberof Connection
 	 */
 	public on(handler: Listener<IGW_FRAME_RCV>, filter?: GatewayCommand[]): Disposable {
 		if (typeof filter === "undefined") {
@@ -716,7 +701,6 @@ export class Connection implements IConnection {
 	 * @param {Listener<IGW_FRAME_REQ>} handler Callback functions that is called for an event
 	 * @param {GatewayCommand[]} [filter] Array of GatewayCommand entries you want to listen to. Optional.
 	 * @returns {Disposable} Returns a Disposable that you can call to remove the handler.
-	 * @memberof Connection
 	 */
 	public onFrameSent(handler: Listener<IGW_FRAME_REQ>, filter?: GatewayCommand[]): Disposable {
 		if (typeof filter === "undefined") {
@@ -744,7 +728,6 @@ export class Connection implements IConnection {
 	 * after 15 minutes of inactivity.
 	 *
 	 * @param {number} [interval=600000] Keep-alive interval in minutes. Defaults to 10 min.
-	 * @memberof Connection
 	 */
 	public startKeepAlive(interval: number = 10 * 60 * 1000): void {
 		this.keepAliveInterval = interval;
@@ -759,7 +742,6 @@ export class Connection implements IConnection {
 	 * Stops the keep-alive timer.
 	 * If not timer is set nothing happens.
 	 *
-	 * @memberof Connection
 	 */
 	public stopKeepAlive(): void {
 		if (this.keepAliveTimer) {
@@ -774,7 +756,6 @@ export class Connection implements IConnection {
 	 *
 	 * @private
 	 * @returns {Promise<void>} Resolves if successful, otherwise reject
-	 * @memberof Connection
 	 */
 	private async sendKeepAlive(): Promise<void> {
 		await this.sendFrameAsync(new GW_GET_STATE_REQ());
@@ -786,7 +767,6 @@ export class Connection implements IConnection {
 	 * If no keep-alive timer is active nothing happens.
 	 *
 	 * @private
-	 * @memberof Connection
 	 */
 	private shiftKeepAlive(): void {
 		if (this.keepAliveTimer) {

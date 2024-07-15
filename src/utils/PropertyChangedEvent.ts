@@ -14,7 +14,6 @@ export abstract class Component {
 	 * The event object contains a reference to the product, the name of the property
 	 * that has changed and the new value of that property.
 	 *
-	 * @memberof Component
 	 */
 	public readonly propertyChangedEvent = new TypedEvent<PropertyChangedEvent>();
 
@@ -23,7 +22,6 @@ export abstract class Component {
 	 *
 	 * @protected
 	 * @param {keyof Component} propertyName Name of the property that has changed.
-	 * @memberof Component
 	 */
 	protected async propertyChanged(propertyName: keyof this): Promise<void> {
 		await this.propertyChangedEvent.emit({

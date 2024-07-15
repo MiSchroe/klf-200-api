@@ -20,34 +20,26 @@ import {
 } from "./KLF200-API/GW_COMMAND.js";
 import { GW_COMMAND_REMAINING_TIME_NTF } from "./KLF200-API/GW_COMMAND_REMAINING_TIME_NTF.js";
 import { GW_COMMAND_RUN_STATUS_NTF } from "./KLF200-API/GW_COMMAND_RUN_STATUS_NTF.js";
-import { GW_COMMAND_SEND_CFM } from "./KLF200-API/GW_COMMAND_SEND_CFM.js";
 import { GW_COMMAND_SEND_REQ } from "./KLF200-API/GW_COMMAND_SEND_REQ.js";
 import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "./KLF200-API/GW_CS_SYSTEM_TABLE_UPDATE_NTF.js";
 import { GW_ERROR, GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF.js";
-import { GW_GET_ALL_NODES_INFORMATION_CFM } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_CFM.js";
 import { GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF.js";
 import { GW_GET_ALL_NODES_INFORMATION_NTF } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_NTF.js";
 import { GW_GET_ALL_NODES_INFORMATION_REQ } from "./KLF200-API/GW_GET_ALL_NODES_INFORMATION_REQ.js";
-import { GW_GET_LIMITATION_STATUS_CFM } from "./KLF200-API/GW_GET_LIMITATION_STATUS_CFM.js";
 import { GW_GET_LIMITATION_STATUS_REQ } from "./KLF200-API/GW_GET_LIMITATION_STATUS_REQ.js";
 import { GW_GET_NODE_INFORMATION_CFM } from "./KLF200-API/GW_GET_NODE_INFORMATION_CFM.js";
 import { GW_GET_NODE_INFORMATION_NTF } from "./KLF200-API/GW_GET_NODE_INFORMATION_NTF.js";
 import { GW_GET_NODE_INFORMATION_REQ } from "./KLF200-API/GW_GET_NODE_INFORMATION_REQ.js";
-import { GW_GET_STATE_CFM, GatewayState, GatewaySubState } from "./KLF200-API/GW_GET_STATE_CFM.js";
+import { GatewayState, GatewaySubState } from "./KLF200-API/GW_GET_STATE_CFM.js";
 import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ.js";
 import { GW_LIMITATION_STATUS_NTF } from "./KLF200-API/GW_LIMITATION_STATUS_NTF.js";
 import { GW_NODE_INFORMATION_CHANGED_NTF } from "./KLF200-API/GW_NODE_INFORMATION_CHANGED_NTF.js";
 import { GW_NODE_STATE_POSITION_CHANGED_NTF } from "./KLF200-API/GW_NODE_STATE_POSITION_CHANGED_NTF.js";
 import { GW_SESSION_FINISHED_NTF } from "./KLF200-API/GW_SESSION_FINISHED_NTF.js";
-import { GW_SET_LIMITATION_CFM } from "./KLF200-API/GW_SET_LIMITATION_CFM.js";
 import { GW_SET_LIMITATION_REQ } from "./KLF200-API/GW_SET_LIMITATION_REQ.js";
-import { GW_SET_NODE_NAME_CFM } from "./KLF200-API/GW_SET_NODE_NAME_CFM.js";
 import { GW_SET_NODE_NAME_REQ } from "./KLF200-API/GW_SET_NODE_NAME_REQ.js";
-import { GW_SET_NODE_ORDER_AND_PLACEMENT_CFM } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_CFM.js";
 import { GW_SET_NODE_ORDER_AND_PLACEMENT_REQ } from "./KLF200-API/GW_SET_NODE_ORDER_AND_PLACEMENT_REQ.js";
-import { GW_SET_NODE_VARIATION_CFM } from "./KLF200-API/GW_SET_NODE_VARIATION_CFM.js";
 import { GW_SET_NODE_VARIATION_REQ } from "./KLF200-API/GW_SET_NODE_VARIATION_REQ.js";
-import { GW_STATUS_REQUEST_CFM } from "./KLF200-API/GW_STATUS_REQUEST_CFM.js";
 import { GW_STATUS_REQUEST_NTF } from "./KLF200-API/GW_STATUS_REQUEST_NTF.js";
 import { GW_STATUS_REQUEST_REQ } from "./KLF200-API/GW_STATUS_REQUEST_REQ.js";
 import {
@@ -58,7 +50,6 @@ import {
 	PowerSaveMode,
 	Velocity,
 } from "./KLF200-API/GW_SYSTEMTABLE_DATA.js";
-import { GW_WINK_SEND_CFM } from "./KLF200-API/GW_WINK_SEND_CFM.js";
 import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ.js";
 import { GW_COMMON_STATUS, GW_INVERSE_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common.js";
 import { IConnection } from "./connection.js";
@@ -71,7 +62,6 @@ const debug = debugModule(`klf-200-api:products`);
  * Each product that is registered at the KLF-200 interface will be created
  * as an instance of the Product class.
  *
- * @export
  * @class Product
  */
 export class Product extends Component {
@@ -81,7 +71,6 @@ export class Product extends Component {
 	 * value from 0 to 199.
 	 *
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public readonly NodeID: number;
 	private _TypeID: ActuatorType;
@@ -90,7 +79,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {ActuatorType}
-	 * @memberof Product
 	 */
 	public get TypeID(): ActuatorType {
 		return this._TypeID;
@@ -101,7 +89,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get SubType(): number {
 		return this._SubType;
@@ -114,7 +101,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {Velocity}
-	 * @memberof Product
 	 */
 	public get Velocity(): Velocity {
 		return this._velocity;
@@ -126,7 +112,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {PowerSaveMode}
-	 * @memberof Product
 	 */
 	public get PowerSaveMode(): PowerSaveMode {
 		return this._PowerSaveMode;
@@ -137,7 +122,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {Buffer}
-	 * @memberof Product
 	 */
 	public get SerialNumber(): Buffer {
 		return this._SerialNumber;
@@ -148,7 +132,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get ProductType(): number {
 		return this._ProductType;
@@ -174,7 +157,6 @@ export class Product extends Component {
 	 * may return different raw positions.
 	 *
 	 * @type {ActuatorAlias[]}
-	 * @memberof Product
 	 */
 	public get ProductAlias(): ActuatorAlias[] {
 		return this._ProductAlias;
@@ -189,7 +171,6 @@ export class Product extends Component {
 	 *
 	 * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
 	 * @param {(GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF)} frame Notification frame that is used to set the properties of the Product class instance.
-	 * @memberof Product
 	 */
 	constructor(
 		readonly Connection: IConnection,
@@ -246,7 +227,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {string}
-	 * @memberof Product
 	 */
 	public get Name(): string {
 		return this._name;
@@ -256,12 +236,11 @@ export class Product extends Component {
 	 *
 	 * @param {string} newName New name of the product.
 	 * @returns {Promise<void>}
-	 * @memberof Product
 	 */
 	public async setNameAsync(newName: string): Promise<void> {
 		try {
-			const confirmationFrame = <GW_SET_NODE_NAME_CFM>(
-				await this.Connection.sendFrameAsync(new GW_SET_NODE_NAME_REQ(this.NodeID, newName))
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_SET_NODE_NAME_REQ(this.NodeID, newName),
 			);
 			if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
 				this._name = newName;
@@ -279,7 +258,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {string}
-	 * @memberof Product
 	 */
 	public get Category(): string {
 		switch (this.TypeID) {
@@ -386,7 +364,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {NodeVariation}
-	 * @memberof Product
 	 */
 	public get NodeVariation(): NodeVariation {
 		return this._nodeVariation;
@@ -396,12 +373,11 @@ export class Product extends Component {
 	 *
 	 * @param {NodeVariation} newNodeVariation New value for the variation of the product.
 	 * @returns {Promise<void>}
-	 * @memberof Product
 	 */
 	public async setNodeVariationAsync(newNodeVariation: NodeVariation): Promise<void> {
 		try {
-			const confirmationFrame = <GW_SET_NODE_VARIATION_CFM>(
-				await this.Connection.sendFrameAsync(new GW_SET_NODE_VARIATION_REQ(this.NodeID, newNodeVariation))
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_SET_NODE_VARIATION_REQ(this.NodeID, newNodeVariation),
 			);
 			if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
 				this._nodeVariation = newNodeVariation;
@@ -420,14 +396,11 @@ export class Product extends Component {
 	 * @param {number} newOrder The new order value of the product.
 	 * @param {number} newPlacement The new placement value of the product.
 	 * @returns {Promise<void>}
-	 * @memberof Product
 	 */
 	public async setOrderAndPlacementAsync(newOrder: number, newPlacement: number): Promise<void> {
 		try {
-			const confirmationFrame = <GW_SET_NODE_ORDER_AND_PLACEMENT_CFM>(
-				await this.Connection.sendFrameAsync(
-					new GW_SET_NODE_ORDER_AND_PLACEMENT_REQ(this.NodeID, newOrder, newPlacement),
-				)
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_SET_NODE_ORDER_AND_PLACEMENT_REQ(this.NodeID, newOrder, newPlacement),
 			);
 			if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
 				this._order = newOrder;
@@ -446,7 +419,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get Order(): number {
 		return this._order;
@@ -456,7 +428,6 @@ export class Product extends Component {
 	 *
 	 * @param {number} newOrder New value for the order property.
 	 * @returns {Promise<void>}
-	 * @memberof Product
 	 */
 	public async setOrderAsync(newOrder: number): Promise<void> {
 		return this.setOrderAndPlacementAsync(newOrder, this._placement);
@@ -467,7 +438,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get Placement(): number {
 		return this._placement;
@@ -477,7 +447,6 @@ export class Product extends Component {
 	 *
 	 * @param {number} newPlacement New value for the placement property.
 	 * @returns {Promise<void>}
-	 * @memberof Product
 	 */
 	public async setPlacementAsync(newPlacement: number): Promise<void> {
 		return this.setOrderAndPlacementAsync(this._order, newPlacement);
@@ -488,7 +457,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {NodeOperatingState}
-	 * @memberof Product
 	 */
 	public get State(): NodeOperatingState {
 		return this._state;
@@ -498,7 +466,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get CurrentPositionRaw(): number {
 		return this._currentPositionRaw;
@@ -508,7 +475,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get TargetPositionRaw(): number {
 		return this._targetPositionRaw;
@@ -518,7 +484,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get FP1CurrentPositionRaw(): number {
 		return this._fp1CurrentPositionRaw;
@@ -528,7 +493,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get FP2CurrentPositionRaw(): number {
 		return this._fp2CurrentPositionRaw;
@@ -538,7 +502,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get FP3CurrentPositionRaw(): number {
 		return this._fp3CurrentPositionRaw;
@@ -548,7 +511,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get FP4CurrentPositionRaw(): number {
 		return this._fp4CurrentPositionRaw;
@@ -558,7 +520,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get RemainingTime(): number {
 		return this._remainingTime;
@@ -568,7 +529,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {Date}
-	 * @memberof Product
 	 */
 	public get TimeStamp(): Date {
 		return this._timeStamp;
@@ -578,7 +538,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {RunStatus}
-	 * @memberof Product
 	 */
 	public get RunStatus(): RunStatus {
 		return this._runStatus;
@@ -588,7 +547,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {StatusReply}
-	 * @memberof Product
 	 */
 	public get StatusReply(): StatusReply {
 		return this._statusReply;
@@ -604,7 +562,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get CurrentPosition(): number {
 		return convertPositionRaw(this._currentPositionRaw, this.TypeID);
@@ -622,7 +579,6 @@ export class Product extends Component {
 	 * @param PriorityLevels Up to 8 priority levels.
 	 * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
 	 * @returns {Promise<number>}
-	 * @memberof Product
 	 */
 	public async setTargetPositionRawAsync(
 		newPosition: number,
@@ -646,7 +602,7 @@ export class Product extends Component {
 				PriorityLevels,
 				LockTime,
 			);
-			const confirmationFrame = <GW_COMMAND_SEND_CFM>await this.Connection.sendFrameAsync(req);
+			const confirmationFrame = await this.Connection.sendFrameAsync(req);
 			if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted) {
 				return confirmationFrame.SessionID;
 			} else {
@@ -669,7 +625,6 @@ export class Product extends Component {
 	 * @param PriorityLevels Up to 8 priority levels.
 	 * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
 	 * @returns {Promise<number>}
-	 * @memberof Product
 	 */
 	public async setTargetPositionAsync(
 		newPosition: number,
@@ -702,7 +657,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public get TargetPosition(): number {
 		return convertPositionRaw(this._targetPositionRaw, this.TypeID);
@@ -713,7 +667,6 @@ export class Product extends Component {
 	 * A read only array of the limitation originators.
 	 * @readonly
 	 * @type {CommandOriginator[]}
-	 * @memberof Product
 	 */
 	public get LimitationOriginator(): readonly CommandOriginator[] {
 		return Array.from(this._limitationOriginator);
@@ -735,7 +688,6 @@ export class Product extends Component {
 	 * A read only array of the limitation time raw values.
 	 * @readonly
 	 * @type {number[]}
-	 * @memberof Product
 	 */
 	public get LimitationTimeRaw(): readonly number[] {
 		return Array.from(this._limitationTimeRaw);
@@ -769,7 +721,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number[]}
-	 * @memberof Product
 	 */
 	public get LimitationMinRaw(): readonly number[] {
 		return Array.from(this._limitationMinRaw);
@@ -781,7 +732,6 @@ export class Product extends Component {
 	 * @readonly
 	 * @param functionalParameter Parameter for which the limitation should be returned.
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public getLimitationMinRaw(functionalParameter: ParameterActive): number {
 		return this._limitationMinRaw[functionalParameter];
@@ -793,7 +743,6 @@ export class Product extends Component {
 	 *
 	 * @readonly
 	 * @type {number[]}
-	 * @memberof Product
 	 */
 	public get LimitationMaxRaw(): readonly number[] {
 		return Array.from(this._limitationMaxRaw);
@@ -805,7 +754,6 @@ export class Product extends Component {
 	 * @readonly
 	 * @param functionalParameter Parameter for which the limitation should be returned.
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public getLimitationMaxRaw(functionalParameter: ParameterActive): number {
 		return this._limitationMaxRaw[functionalParameter];
@@ -832,7 +780,6 @@ export class Product extends Component {
 	 * @readonly
 	 * @param functionalParameter Parameter for which the limitation should be returned.
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public getLimitationMin(functionalParameter: ParameterActive): number {
 		return this.getLimitations(functionalParameter)[0];
@@ -844,7 +791,6 @@ export class Product extends Component {
 	 * @readonly
 	 * @param functionalParameter Parameter for which the limitation should be returned.
 	 * @type {number}
-	 * @memberof Product
 	 */
 	public getLimitationMax(functionalParameter: ParameterActive): number {
 		return this.getLimitations(functionalParameter)[1];
@@ -861,7 +807,6 @@ export class Product extends Component {
 	 * @param PriorityLevels Up to 8 priority levels.
 	 * @param LockTime Lock time for the priority levels in seconds (multiple of 30 or Infinity).
 	 * @returns {Promise<number>}
-	 * @memberof Product
 	 */
 	public async stopAsync(
 		PriorityLevel: PriorityLevel = 3,
@@ -873,20 +818,18 @@ export class Product extends Component {
 		LockTime: number = Infinity,
 	): Promise<number> {
 		try {
-			const confirmationFrame = <GW_COMMAND_SEND_CFM>(
-				await this.Connection.sendFrameAsync(
-					new GW_COMMAND_SEND_REQ(
-						this.NodeID,
-						0xd200,
-						PriorityLevel,
-						CommandOriginator,
-						ParameterActive,
-						FunctionalParameters,
-						PriorityLevelLock,
-						PriorityLevels,
-						LockTime,
-					),
-				)
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_COMMAND_SEND_REQ(
+					this.NodeID,
+					0xd200,
+					PriorityLevel,
+					CommandOriginator,
+					ParameterActive,
+					FunctionalParameters,
+					PriorityLevelLock,
+					PriorityLevels,
+					LockTime,
+				),
 			);
 			if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted) {
 				return confirmationFrame.SessionID;
@@ -909,7 +852,6 @@ export class Product extends Component {
 	 * @param PriorityLevel The priority level for the run command.
 	 * @param CommandOriginator The command originator for the run command.
 	 * @returns {Promise<number>}
-	 * @memberof Product
 	 */
 	public async winkAsync(
 		EnableWink: boolean = true,
@@ -918,10 +860,8 @@ export class Product extends Component {
 		CommandOriginator: CommandOriginator = 1,
 	): Promise<number> {
 		try {
-			const confirmationFrame = <GW_WINK_SEND_CFM>(
-				await this.Connection.sendFrameAsync(
-					new GW_WINK_SEND_REQ(this.NodeID, EnableWink, WinkTime, PriorityLevel, CommandOriginator),
-				)
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_WINK_SEND_REQ(this.NodeID, EnableWink, WinkTime, PriorityLevel, CommandOriginator),
 			);
 			if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
 				return confirmationFrame.SessionID;
@@ -937,15 +877,14 @@ export class Product extends Component {
 	 * Refresh the data of this product and read the attributes from the gateway.
 	 *
 	 * This method re-reads the data from the KLF-200. If the product hasn't sent
-	 * its recent data to the KLF-200, call [requestStatusAsync](Products.requestStatusAsync) first.
+	 * its recent data to the KLF-200, call {@link Products.requestStatusAsync} first.
 	 *
 	 * @returns {Promise<void>}
-	 * @memberof Product
 	 */
 	public async refreshAsync(): Promise<void> {
 		try {
-			const confirmationFrame = <GW_GET_NODE_INFORMATION_CFM>(
-				await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(this.NodeID))
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_GET_NODE_INFORMATION_REQ(this.NodeID),
 			);
 			if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
 				return Promise.resolve();
@@ -1050,7 +989,7 @@ export class Product extends Component {
 				reject!,
 			);
 
-			const confirmationFrame = <GW_GET_LIMITATION_STATUS_CFM>await this.Connection.sendFrameAsync(frameToSend);
+			const confirmationFrame = await this.Connection.sendFrameAsync(frameToSend);
 			if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
 				await waitForLimitationFinishedPromise;
 			} else {
@@ -1106,7 +1045,7 @@ export class Product extends Component {
 				reject!,
 			);
 
-			const confirmationFrame = <GW_SET_LIMITATION_CFM>await this.Connection.sendFrameAsync(frameToSend);
+			const confirmationFrame = await this.Connection.sendFrameAsync(frameToSend);
 			if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
 				await waitForLimitationFinishedPromise;
 			} else {
@@ -1548,7 +1487,6 @@ export class Product extends Component {
  * To create an instance of the Products class use the
  * static method {@link Products.createProductsAsync}.
  *
- * @export
  * @class Products
  */
 export class Products {
@@ -1561,14 +1499,12 @@ export class Products {
 	 * system table index. The range is [0-199].
 	 *
 	 * @type {Product[]}
-	 * @memberof Products
 	 */
 	public readonly Products: Product[] = [];
 
 	/**
 	 *Creates an instance of Products.
 	 * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
-	 * @memberof Products
 	 */
 	private constructor(readonly Connection: IConnection) {}
 
@@ -1622,9 +1558,7 @@ export class Products {
 				],
 			);
 
-			const getAllNodesInformation = <GW_GET_ALL_NODES_INFORMATION_CFM>(
-				await this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ())
-			);
+			const getAllNodesInformation = await this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ());
 			if (getAllNodesInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
 				if (dispose) {
 					dispose.dispose();
@@ -1668,7 +1602,6 @@ export class Products {
 	 *
 	 * @param {Listener<number>} handler Event handler that is called if a new product is added.
 	 * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
-	 * @memberof Products
 	 */
 	public onNewProduct(handler: Listener<number>): Disposable {
 		return this._onNewProduct.on(handler);
@@ -1679,7 +1612,6 @@ export class Products {
 	 *
 	 * @param {Listener<number>} handler Event handler that is called if a product is removed.
 	 * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
-	 * @memberof Products
 	 */
 	public onRemovedProduct(handler: Listener<number>): Disposable {
 		return this._onRemovedProduct.on(handler);
@@ -1707,9 +1639,7 @@ export class Products {
 				// Otherwise, we would receive a Busy error.
 				const checkForIdle = async (): Promise<boolean> => {
 					try {
-						const getStateCfm = <GW_GET_STATE_CFM>(
-							await this.Connection.sendFrameAsync(new GW_GET_STATE_REQ())
-						);
+						const getStateCfm = await this.Connection.sendFrameAsync(new GW_GET_STATE_REQ());
 						return (
 							getStateCfm.GatewayState === GatewayState.GatewayMode_WithActuatorNodes &&
 							getStateCfm.GatewaySubState === GatewaySubState.Idle
@@ -1779,8 +1709,8 @@ export class Products {
 					throw new Error("Can't read node information of added node after 60 seconds.");
 				}
 				try {
-					const getNodeInformation = <GW_GET_NODE_INFORMATION_CFM>(
-						await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID))
+					const getNodeInformation = await this.Connection.sendFrameAsync(
+						new GW_GET_NODE_INFORMATION_REQ(nodeID),
 					);
 					return getNodeInformation;
 				} catch (error) {
@@ -1823,10 +1753,8 @@ export class Products {
 	 * will be instantiated to watch for changes
 	 * to the products.
 	 *
-	 * @static
 	 * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
 	 * @returns {Promise<Products>} Resolves to a new instance of the Products class.
-	 * @memberof Products
 	 */
 	static async createProductsAsync(Connection: IConnection): Promise<Products> {
 		try {
@@ -1843,7 +1771,6 @@ export class Products {
 	 *
 	 * @param {string} productName Name of the product
 	 * @returns {(Product | undefined)} Returns a [[Product]] instance if found, otherwise undefined.
-	 * @memberof Products
 	 */
 	public findByName(productName: string): Product | undefined {
 		return this.Products.find((pr) => typeof pr !== "undefined" && pr.Name === productName);
@@ -1860,7 +1787,6 @@ export class Products {
 	 * @param StatusType The type of request, e.g. current position, target position
 	 * @param [FunctionalParameters=[]] Additional functional parameters (FP1-FP16) that should be requested. A maximum of 7 functional parameters can be requested with each call.
 	 * @returns {Promise<numer>} The fulfilled promise will return the SessionID.
-	 * @memberof Products
 	 */
 	public async requestStatusAsync(
 		Nodes: number[] | number,
@@ -1868,8 +1794,8 @@ export class Products {
 		FunctionalParameters: number[] = [],
 	): Promise<number> {
 		try {
-			const confirmationFrame = <GW_STATUS_REQUEST_CFM>(
-				await this.Connection.sendFrameAsync(new GW_STATUS_REQUEST_REQ(Nodes, StatusType, FunctionalParameters))
+			const confirmationFrame = await this.Connection.sendFrameAsync(
+				new GW_STATUS_REQUEST_REQ(Nodes, StatusType, FunctionalParameters),
 			);
 			if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted) {
 				return Promise.resolve(confirmationFrame.SessionID);
