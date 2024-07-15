@@ -4,8 +4,7 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
-
-## **WORK IN PROGRESS**
+## 5.0.0 (2024-07-15)
 
 -   [#145](https://github.com/MiSchroe/klf-200-api/issues/145) Make sendFrameAsync strongly typed. Remove obsolete type conversions.
 
