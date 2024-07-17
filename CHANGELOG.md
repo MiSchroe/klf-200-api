@@ -4,8 +4,7 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
-
-## **WORK IN PROGRESS**
+## 5.0.1 (2024-07-17)
 
 -   [#147](https://github.com/MiSchroe/klf-200-api/issues/147) refreshLimitationStatusAsync should wait for the session finished notification.
 
