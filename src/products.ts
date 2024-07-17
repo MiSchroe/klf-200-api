@@ -981,7 +981,7 @@ export class Product extends Component {
 			});
 
 			const frameToSend = new GW_GET_LIMITATION_STATUS_REQ(this.NodeID, limitationType, parameterActive);
-			this.setupWaitForLimitationFinished(
+			const dispose = this.setupWaitForLimitationFinished(
 				frameToSend.SessionID,
 				limitationType,
 				parameterActive,
@@ -989,11 +989,47 @@ export class Product extends Component {
 				reject!,
 			);
 
-			const confirmationFrame = await this.Connection.sendFrameAsync(frameToSend);
-			if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
-				await waitForLimitationFinishedPromise;
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
+			try {
+				let disposeSessionFinishedNtf: Disposable | undefined;
+				try {
+					const waitForSessionFinishedNtfPromise = new Promise<void>((res, rej) => {
+						try {
+							disposeSessionFinishedNtf = this.Connection.on(
+								(frame) => {
+									if (
+										frame instanceof GW_SESSION_FINISHED_NTF &&
+										frame.SessionID === frameToSend.SessionID
+									) {
+										disposeSessionFinishedNtf?.dispose();
+										disposeSessionFinishedNtf = undefined;
+										res();
+									}
+								},
+								[GatewayCommand.GW_SESSION_FINISHED_NTF],
+							);
+						} catch (error) {
+							disposeSessionFinishedNtf?.dispose();
+							disposeSessionFinishedNtf = undefined;
+							rej(error);
+						}
+					});
+
+					const confirmationFrame = await this.Connection.sendFrameAsync(frameToSend);
+					if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
+						try {
+							await waitForLimitationFinishedPromise;
+						} finally {
+							// Wait for the session to be finished
+							await waitForSessionFinishedNtfPromise;
+						}
+					} else {
+						return Promise.reject(new Error(confirmationFrame.getError()));
+					}
+				} finally {
+					disposeSessionFinishedNtf?.dispose();
+				}
+			} finally {
+				dispose?.dispose();
 			}
 		} catch (error) {
 			return Promise.reject(error);

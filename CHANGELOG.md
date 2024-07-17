@@ -4,13 +4,18 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
+
+## **WORK IN PROGRESS**
+
+-   [#147](https://github.com/MiSchroe/klf-200-api/issues/147) refreshLimitationStatusAsync should wait for the session finished notification.
+
 ## 5.0.0 (2024-07-15)
 
 -   [#145](https://github.com/MiSchroe/klf-200-api/issues/145) Make sendFrameAsync strongly typed. Remove obsolete type conversions.
 
 ## 4.1.3 (2024-07-04)
 
--   [#143](https://github.com/MiSchroe/klf-200-api/issues/143) Fix unconsistent min/max limitation values.
+-   [#143](https://github.com/MiSchroe/klf-200-api/issues/143) Fix inconsistent min/max limitation values.
 
 ## 4.1.2 (2024-06-28)
 

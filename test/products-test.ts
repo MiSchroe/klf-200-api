@@ -1358,6 +1358,358 @@ describe("products", function () {
 
 					await expect(result).to.be.rejectedWith(Error);
 				});
+
+				it("should wait until GW_SESSION_FINISHED_NTF", async function () {
+					await mockServerController.sendCommand({
+						command: "SetLimitation",
+						limitation: {
+							NodeID: 0,
+							ParameterID: 0,
+							LimitationOriginator: 2,
+							MinValue: 0x0100,
+							MaxValue: 0xc700,
+							LimitationTime: 1,
+						},
+					});
+					const sessionFinishedSpy = sinon.spy();
+					const waitPromise = new Promise<void>((resolve) => {
+						conn.on(() => {
+							sessionFinishedSpy();
+							resolve();
+						}, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+					});
+
+					try {
+						await product.refreshLimitationAsync(LimitationType.MaximumLimitation, ParameterActive.MP);
+
+						expect(sessionFinishedSpy).to.be.calledOnce;
+					} finally {
+						// Just fulfill the promise
+						await waitPromise;
+					}
+				});
+
+				it("should reject on inconsistent return values (wrong node ID)", async function () {
+					await mockServerController.sendCommand({
+						command: "SetFunction",
+						gatewayCommand: GatewayCommand.GW_GET_LIMITATION_STATUS_REQ,
+						func: `function addCommandAndLengthToBuffer(
+	command,
+	buffer,
+) {
+	const resultBuffer = Buffer.alloc(3 + buffer.length);
+	resultBuffer.set(buffer, 3);
+	resultBuffer.writeUInt16BE(command, 1);
+	resultBuffer.writeUInt8(resultBuffer.byteLength, 0);
+	return resultBuffer;
+}
+
+const sessionId = frameBuffer.readUInt16BE(3);
+const nodeCount = frameBuffer.readUInt8(4);
+const nodes = Array.from(frameBuffer.subarray(5, 5 + nodeCount));
+const parameterId = frameBuffer.readUInt8(25);
+// const limitationType = frameBuffer.readUInt8(26);
+
+const cfmBuffer = Buffer.alloc(3);
+cfmBuffer.writeUInt16BE(sessionId, 0);
+cfmBuffer.writeUInt8(1, 2);
+
+const ntfBuffer = Buffer.alloc(10);
+ntfBuffer.writeUInt16BE(sessionId, 0);
+ntfBuffer.writeUInt8(nodes[0] + 1, 2); // Wrong node ID
+ntfBuffer.writeUInt8(parameterId, 3);
+ntfBuffer.writeUInt16BE(0x0000, 4);
+ntfBuffer.writeUInt16BE(0xc800, 6);
+ntfBuffer.writeUInt8(255, 7);
+ntfBuffer.writeUInt8(255, 8);
+
+const runStatusBuffer = Buffer.alloc(13);
+runStatusBuffer.writeUInt16BE(sessionId, 0);
+runStatusBuffer.writeUInt8(1, 2);
+runStatusBuffer.writeUInt8(nodes[0] + 1, 3);
+runStatusBuffer.writeUInt8(parameterId, 4);
+runStatusBuffer.writeUInt16BE(0x0000, 5);
+runStatusBuffer.writeUInt8(1, 4);
+runStatusBuffer.writeUInt8(238, 4);
+runStatusBuffer.writeUInt32BE(2097152040, 4);
+
+const sessionFinishedNtfBuffer = Buffer.alloc(2);
+sessionFinishedNtfBuffer.writeUInt16BE(sessionId, 0);
+
+return Promise.resolve([
+	addCommandAndLengthToBuffer(
+		${GatewayCommand.GW_GET_LIMITATION_STATUS_CFM},
+		Array.from(cfmBuffer),
+	),
+	addCommandAndLengthToBuffer(${GatewayCommand.GW_LIMITATION_STATUS_NTF}, Array.from(ntfBuffer)),
+	addCommandAndLengthToBuffer(
+		${GatewayCommand.GW_COMMAND_RUN_STATUS_NTF},
+		Array.from(runStatusBuffer),
+	),
+	addCommandAndLengthToBuffer(
+		${GatewayCommand.GW_SESSION_FINISHED_NTF},
+		Array.from(sessionFinishedNtfBuffer),
+	),
+]);
+`,
+					});
+
+					const refreshLimitationPromise = product.refreshLimitationAsync(
+						LimitationType.MaximumLimitation,
+						ParameterActive.MP,
+					);
+
+					await expect(refreshLimitationPromise).to.be.rejectedWith(Error);
+				});
+
+				it("should reject on inconsistent return values (wrong node ID) and wait until GW_SESSION_FINISHED_NTF", async function () {
+					await mockServerController.sendCommand({
+						command: "SetFunction",
+						gatewayCommand: GatewayCommand.GW_GET_LIMITATION_STATUS_REQ,
+						func: `function addCommandAndLengthToBuffer(
+	command,
+	buffer,
+) {
+	const resultBuffer = Buffer.alloc(3 + buffer.length);
+	resultBuffer.set(buffer, 3);
+	resultBuffer.writeUInt16BE(command, 1);
+	resultBuffer.writeUInt8(resultBuffer.byteLength, 0);
+	return resultBuffer;
+}
+
+const sessionId = frameBuffer.readUInt16BE(3);
+const nodeCount = frameBuffer.readUInt8(4);
+const nodes = Array.from(frameBuffer.subarray(5, 5 + nodeCount));
+const parameterId = frameBuffer.readUInt8(25);
+// const limitationType = frameBuffer.readUInt8(26);
+
+const cfmBuffer = Buffer.alloc(3);
+cfmBuffer.writeUInt16BE(sessionId, 0);
+cfmBuffer.writeUInt8(1, 2);
+
+const ntfBuffer = Buffer.alloc(10);
+ntfBuffer.writeUInt16BE(sessionId, 0);
+ntfBuffer.writeUInt8(nodes[0] + 1, 2); // Wrong node ID
+ntfBuffer.writeUInt8(parameterId, 3);
+ntfBuffer.writeUInt16BE(0x0000, 4);
+ntfBuffer.writeUInt16BE(0xc800, 6);
+ntfBuffer.writeUInt8(255, 7);
+ntfBuffer.writeUInt8(255, 8);
+
+const runStatusBuffer = Buffer.alloc(13);
+runStatusBuffer.writeUInt16BE(sessionId, 0);
+runStatusBuffer.writeUInt8(1, 2);
+runStatusBuffer.writeUInt8(nodes[0] + 1, 3);
+runStatusBuffer.writeUInt8(parameterId, 4);
+runStatusBuffer.writeUInt16BE(0x0000, 5);
+runStatusBuffer.writeUInt8(1, 4);
+runStatusBuffer.writeUInt8(238, 4);
+runStatusBuffer.writeUInt32BE(2097152040, 4);
+
+const sessionFinishedNtfBuffer = Buffer.alloc(2);
+sessionFinishedNtfBuffer.writeUInt16BE(sessionId, 0);
+
+return Promise.resolve([
+	addCommandAndLengthToBuffer(
+		${GatewayCommand.GW_GET_LIMITATION_STATUS_CFM},
+		Array.from(cfmBuffer),
+	),
+	addCommandAndLengthToBuffer(${GatewayCommand.GW_LIMITATION_STATUS_NTF}, Array.from(ntfBuffer)),
+	addCommandAndLengthToBuffer(
+		${GatewayCommand.GW_COMMAND_RUN_STATUS_NTF},
+		Array.from(runStatusBuffer),
+	),
+	addCommandAndLengthToBuffer(
+		${GatewayCommand.GW_SESSION_FINISHED_NTF},
+		Array.from(sessionFinishedNtfBuffer),
+	),
+]);
+`,
+					});
+
+					const sessionFinishedSpy = sinon.spy();
+					const waitPromise = new Promise<void>((resolve) => {
+						conn.on(() => {
+							sessionFinishedSpy();
+							resolve();
+						}, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+					});
+
+					try {
+						const refreshLimitationPromise = product.refreshLimitationAsync(
+							LimitationType.MaximumLimitation,
+							ParameterActive.MP,
+						);
+
+						await expect(refreshLimitationPromise).to.be.rejectedWith(Error);
+
+						expect(sessionFinishedSpy).to.be.calledOnce;
+					} finally {
+						// Just fulfill the promise
+						await waitPromise;
+					}
+				});
+
+				it("should reject on inconsistent return values (wrong parameter ID)", async function () {
+					await mockServerController.sendCommand({
+						command: "SetFunction",
+						gatewayCommand: GatewayCommand.GW_GET_LIMITATION_STATUS_REQ,
+						func: `function addCommandAndLengthToBuffer(
+	command,
+	buffer,
+) {
+	const resultBuffer = Buffer.alloc(3 + buffer.length);
+	resultBuffer.set(buffer, 3);
+	resultBuffer.writeUInt16BE(command, 1);
+	resultBuffer.writeUInt8(resultBuffer.byteLength, 0);
+	return resultBuffer;
+}
+
+const sessionId = frameBuffer.readUInt16BE(3);
+const nodeCount = frameBuffer.readUInt8(4);
+const nodes = Array.from(frameBuffer.subarray(5, 5 + nodeCount));
+const parameterId = frameBuffer.readUInt8(25);
+// const limitationType = frameBuffer.readUInt8(26);
+
+const cfmBuffer = Buffer.alloc(3);
+cfmBuffer.writeUInt16BE(sessionId, 0);
+cfmBuffer.writeUInt8(1, 2);
+
+const ntfBuffer = Buffer.alloc(10);
+ntfBuffer.writeUInt16BE(sessionId, 0);
+ntfBuffer.writeUInt8(nodes[0], 2); // Wrong node ID
+ntfBuffer.writeUInt8(parameterId + 1, 3);
+ntfBuffer.writeUInt16BE(0x0000, 4);
+ntfBuffer.writeUInt16BE(0xc800, 6);
+ntfBuffer.writeUInt8(255, 7);
+ntfBuffer.writeUInt8(255, 8);
+
+const runStatusBuffer = Buffer.alloc(13);
+runStatusBuffer.writeUInt16BE(sessionId, 0);
+runStatusBuffer.writeUInt8(1, 2);
+runStatusBuffer.writeUInt8(nodes[0] + 1, 3);
+runStatusBuffer.writeUInt8(parameterId, 4);
+runStatusBuffer.writeUInt16BE(0x0000, 5);
+runStatusBuffer.writeUInt8(1, 4);
+runStatusBuffer.writeUInt8(238, 4);
+runStatusBuffer.writeUInt32BE(2097152040, 4);
+
+const sessionFinishedNtfBuffer = Buffer.alloc(2);
+sessionFinishedNtfBuffer.writeUInt16BE(sessionId, 0);
+
+return Promise.resolve([
+	addCommandAndLengthToBuffer(
+		${GatewayCommand.GW_GET_LIMITATION_STATUS_CFM},
+		Array.from(cfmBuffer),
+	),
+	addCommandAndLengthToBuffer(${GatewayCommand.GW_LIMITATION_STATUS_NTF}, Array.from(ntfBuffer)),
+	addCommandAndLengthToBuffer(
+		${GatewayCommand.GW_COMMAND_RUN_STATUS_NTF},
+		Array.from(runStatusBuffer),
+	),
+	addCommandAndLengthToBuffer(
+		${GatewayCommand.GW_SESSION_FINISHED_NTF},
+		Array.from(sessionFinishedNtfBuffer),
+	),
+]);
+`,
+					});
+
+					const refreshLimitationPromise = product.refreshLimitationAsync(
+						LimitationType.MaximumLimitation,
+						ParameterActive.MP,
+					);
+
+					await expect(refreshLimitationPromise).to.be.rejectedWith(Error);
+				});
+
+				it("should reject on inconsistent return values (wrong parameter ID) and wait until GW_SESSION_FINISHED_NTF", async function () {
+					await mockServerController.sendCommand({
+						command: "SetFunction",
+						gatewayCommand: GatewayCommand.GW_GET_LIMITATION_STATUS_REQ,
+						func: `function addCommandAndLengthToBuffer(
+	command,
+	buffer,
+) {
+	const resultBuffer = Buffer.alloc(3 + buffer.length);
+	resultBuffer.set(buffer, 3);
+	resultBuffer.writeUInt16BE(command, 1);
+	resultBuffer.writeUInt8(resultBuffer.byteLength, 0);
+	return resultBuffer;
+}
+
+const sessionId = frameBuffer.readUInt16BE(3);
+const nodeCount = frameBuffer.readUInt8(4);
+const nodes = Array.from(frameBuffer.subarray(5, 5 + nodeCount));
+const parameterId = frameBuffer.readUInt8(25);
+// const limitationType = frameBuffer.readUInt8(26);
+
+const cfmBuffer = Buffer.alloc(3);
+cfmBuffer.writeUInt16BE(sessionId, 0);
+cfmBuffer.writeUInt8(1, 2);
+
+const ntfBuffer = Buffer.alloc(10);
+ntfBuffer.writeUInt16BE(sessionId, 0);
+ntfBuffer.writeUInt8(nodes[0] + 1, 2); // Wrong node ID
+ntfBuffer.writeUInt8(parameterId, 3);
+ntfBuffer.writeUInt16BE(0x0000, 4);
+ntfBuffer.writeUInt16BE(0xc800, 6);
+ntfBuffer.writeUInt8(255, 7);
+ntfBuffer.writeUInt8(255, 8);
+
+const runStatusBuffer = Buffer.alloc(13);
+runStatusBuffer.writeUInt16BE(sessionId, 0);
+runStatusBuffer.writeUInt8(1, 2);
+runStatusBuffer.writeUInt8(nodes[0], 3);
+runStatusBuffer.writeUInt8(parameterId + 1, 4);
+runStatusBuffer.writeUInt16BE(0x0000, 5);
+runStatusBuffer.writeUInt8(1, 4);
+runStatusBuffer.writeUInt8(238, 4);
+runStatusBuffer.writeUInt32BE(2097152040, 4);
+
+const sessionFinishedNtfBuffer = Buffer.alloc(2);
+sessionFinishedNtfBuffer.writeUInt16BE(sessionId, 0);
+
+return Promise.resolve([
+	addCommandAndLengthToBuffer(
+		${GatewayCommand.GW_GET_LIMITATION_STATUS_CFM},
+		Array.from(cfmBuffer),
+	),
+	addCommandAndLengthToBuffer(${GatewayCommand.GW_LIMITATION_STATUS_NTF}, Array.from(ntfBuffer)),
+	addCommandAndLengthToBuffer(
+		${GatewayCommand.GW_COMMAND_RUN_STATUS_NTF},
+		Array.from(runStatusBuffer),
+	),
+	addCommandAndLengthToBuffer(
+		${GatewayCommand.GW_SESSION_FINISHED_NTF},
+		Array.from(sessionFinishedNtfBuffer),
+	),
+]);
+`,
+					});
+
+					const sessionFinishedSpy = sinon.spy();
+					const waitPromise = new Promise<void>((resolve) => {
+						conn.on(() => {
+							sessionFinishedSpy();
+							resolve();
+						}, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+					});
+
+					try {
+						const refreshLimitationPromise = product.refreshLimitationAsync(
+							LimitationType.MaximumLimitation,
+							ParameterActive.MP,
+						);
+
+						await expect(refreshLimitationPromise).to.be.rejectedWith(Error);
+
+						expect(sessionFinishedSpy).to.be.calledOnce;
+					} finally {
+						// Just fulfill the promise
+						await waitPromise;
+					}
+				});
 			});
 
 			describe("setLimitationRawAsync", function () {
