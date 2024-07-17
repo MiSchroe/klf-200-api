@@ -616,9 +616,9 @@ export class Connection implements IConnection {
 				});
 				cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((notificationFrame) => {
 					try {
-						debug(`sendFrameAsync frame recieved: ${stringifyFrame(notificationFrame)}.`);
+						debug(`sendFrameAsync frame received: ${stringifyFrame(notificationFrame)}.`);
 						if (notificationFrame instanceof GW_ERROR_NTF) {
-							debug(`sendFrameAsync GW_ERROR_NTF recieved: ${stringifyFrame(notificationFrame)}.`);
+							debug(`sendFrameAsync GW_ERROR_NTF received: ${stringifyFrame(notificationFrame)}.`);
 							errHandler?.dispose();
 							cfmHandler?.dispose();
 							reject(new Error(notificationFrame.getError(), { cause: notificationFrame }));
@@ -627,7 +627,7 @@ export class Connection implements IConnection {
 							(typeof sessionID === "undefined" ||
 								sessionID === (notificationFrame as IGW_FRAME_COMMAND).SessionID)
 						) {
-							debug(`sendFrameAsync expected frame recieved: ${stringifyFrame(notificationFrame)}.`);
+							debug(`sendFrameAsync expected frame received: ${stringifyFrame(notificationFrame)}.`);
 							errHandler?.dispose();
 							cfmHandler?.dispose();
 							resolve(notificationFrame);

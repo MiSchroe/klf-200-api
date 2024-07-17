@@ -103,7 +103,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 		data: string;
 	};
 	const confirmations: Map<GatewayCommand, confirmationData> = new Map();
-	type functionData = () => Promise<Buffer[]>;
+	type functionData = (frameBuffer: Buffer) => Promise<Buffer[]>;
 	const functions: Map<GatewayCommand, functionData> = new Map();
 
 	let tlsSocket: TLSSocket | undefined = undefined;
@@ -302,7 +302,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 					functions.set(
 						message.gatewayCommand,
 						// eslint-disable-next-line @typescript-eslint/no-implied-eval
-						Function("f", `"use strict";\n${message.func}`) as functionData,
+						Function("frameBuffer", `"use strict";\n${message.func}`) as functionData,
 					);
 					acknowledgeMessageACK(message);
 					break;
@@ -385,7 +385,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 		const functionData = functions.get(commandRequest);
 		if (functionData) {
 			functions.delete(commandRequest);
-			return await functionData();
+			return await functionData(frameBuffer);
 		}
 
 		// Now, we do the default handling
