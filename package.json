@@ -43,7 +43,7 @@
     "chai-bytes": "^0.1.2",
     "chai-datetime": "^1.8.0",
     "cross-env": "^7.0.3",
-    "debug": "^4.3.5",
+    "debug": "^4.3.6",
     "deep-eql": "^5.0.2",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
