@@ -780,11 +780,11 @@ export class Connection implements IConnection {
 			if (this.sckt === undefined) {
 				return new Promise<void>((resolve, reject) => {
 					try {
-						const loginErrorHandler = (error: unknown): void => {
-							console.error(`loginErrorHandler: ${JSON.stringify(error)}`);
-							this.sckt = undefined;
-							reject(error);
-						};
+						const loginErrorHandler = (error: Error): void => {
+							console.error(`Login error: ${error.message}`);
+							if (error.name === 'Error' && error.message.includes('self signed certificate')) {
+								console.error('Certificate verification failed. Check the fingerprint.');
+							}
 
 						this.sckt = connect(
 							KLF200_PORT,
