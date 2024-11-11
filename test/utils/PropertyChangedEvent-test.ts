@@ -1,8 +1,8 @@
+"use strict";
+
 import { expect } from "chai";
 import sinon from "sinon";
 import { Component } from "../../src/utils/PropertyChangedEvent";
-
-("use strict");
 
 class MockComponent extends Component {
 	TestProperty: number = 42;

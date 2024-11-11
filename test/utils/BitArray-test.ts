@@ -1,8 +1,8 @@
-import { bitArrayToArray, arrayToBitArray } from "../../src/utils/BitArray";
-import chaibytes from "chai-bytes";
-import { expect, use } from "chai";
+"use strict";
 
-("use strict");
+import { expect, use } from "chai";
+import chaibytes from "chai-bytes";
+import { arrayToBitArray, bitArrayToArray } from "../../src/utils/BitArray";
 
 use(chaibytes);
 

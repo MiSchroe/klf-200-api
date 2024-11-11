@@ -155,7 +155,7 @@ describe("KLF200-API", function () {
 						expect(dataReceived).to.be.equalBytes(expectedData);
 						resolve();
 					} catch (error) {
-						reject(error);
+						reject(error as Error);
 					}
 				});
 				result.onError((error) => {

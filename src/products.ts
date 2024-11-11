@@ -249,7 +249,7 @@ export class Product extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -386,7 +386,7 @@ export class Product extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -410,7 +410,7 @@ export class Product extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -609,7 +609,7 @@ export class Product extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -648,7 +648,7 @@ export class Product extends Component {
 				LockTime,
 			);
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -837,7 +837,7 @@ export class Product extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -869,7 +869,7 @@ export class Product extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -892,7 +892,7 @@ export class Product extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -1010,7 +1010,7 @@ export class Product extends Component {
 						} catch (error) {
 							disposeSessionFinishedNtf?.dispose();
 							disposeSessionFinishedNtf = undefined;
-							rej(error);
+							rej(error as Error);
 						}
 					});
 
@@ -1032,7 +1032,7 @@ export class Product extends Component {
 				dispose?.dispose();
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -1088,7 +1088,7 @@ export class Product extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -1141,7 +1141,7 @@ export class Product extends Component {
 				priorityLevel,
 			);
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -1629,7 +1629,7 @@ export class Products {
 			if (dispose) {
 				dispose.dispose();
 			}
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -1665,6 +1665,7 @@ export class Products {
 		if (frame instanceof GW_CS_SYSTEM_TABLE_UPDATE_NTF) {
 			// Remove nodes
 			for (const nodeID of frame.RemovedNodes) {
+				// eslint-disable-next-line @typescript-eslint/no-array-delete
 				delete this.Products[nodeID];
 				await this.notifiyRemovedProduct(nodeID);
 			}
@@ -1774,7 +1775,7 @@ export class Products {
 			if (dispose) {
 				dispose.dispose();
 			}
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -1798,7 +1799,7 @@ export class Products {
 			await result.initializeProductsAsync();
 			return result;
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -1839,7 +1840,7 @@ export class Products {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 }

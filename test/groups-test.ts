@@ -567,7 +567,7 @@ describe("groups", function () {
 						[2, 4],
 					);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should reject on error frame", async function () {
@@ -588,7 +588,7 @@ describe("groups", function () {
 						[2, 4],
 					);
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 
@@ -894,7 +894,7 @@ describe("groups", function () {
 				it("should send a command request", async function () {
 					const result = group.refreshAsync();
 
-					return expect(result).to.be.fulfilled;
+					await expect(result).to.be.fulfilled;
 				});
 
 				it("should reject on error status", async function () {
@@ -908,7 +908,7 @@ describe("groups", function () {
 
 					const result = group.refreshAsync();
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 
 				it("should reject on error frame", async function () {
@@ -922,7 +922,7 @@ describe("groups", function () {
 
 					const result = group.refreshAsync();
 
-					return expect(result).to.be.rejectedWith(Error);
+					await expect(result).to.be.rejectedWith(Error);
 				});
 			});
 

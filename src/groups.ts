@@ -262,7 +262,7 @@ export class Group extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -411,7 +411,7 @@ export class Group extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -487,7 +487,7 @@ export class Group extends Component {
 				if (dispose) {
 					dispose.dispose();
 				}
-				return Promise.reject(error);
+				return Promise.reject(error as Error);
 			}
 
 			return this.setTargetPositionRawAsync(
@@ -501,7 +501,7 @@ export class Group extends Component {
 				LockTime,
 			);
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -525,7 +525,7 @@ export class Group extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -680,7 +680,7 @@ export class Groups {
 			if (dispose) {
 				dispose.dispose();
 			}
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -717,6 +717,7 @@ export class Groups {
 			switch (frame.ChangeType) {
 				case ChangeType.Deleted:
 					// Remove group
+					// eslint-disable-next-line @typescript-eslint/no-array-delete
 					delete this.Groups[frame.GroupID];
 					await this.notifyRemovedGroup(frame.GroupID);
 					break;
@@ -767,7 +768,7 @@ export class Groups {
 			await result.initializeGroupsAsync();
 			return result;
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 

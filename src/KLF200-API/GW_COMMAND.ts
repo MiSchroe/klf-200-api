@@ -1,6 +1,6 @@
-import { ActuatorType } from "./GW_SYSTEMTABLE_DATA.js";
+"use strict";
 
-("use strict");
+import { ActuatorType } from "./GW_SYSTEMTABLE_DATA.js";
 
 export enum CommandOriginator {
 	User = 1,

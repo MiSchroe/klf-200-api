@@ -1,6 +1,6 @@
-import { TypedEvent } from "./TypedEvent.js";
+"use strict";
 
-("use strict");
+import { TypedEvent } from "./TypedEvent.js";
 
 export type PropertyChangedEvent = {
 	o: object;

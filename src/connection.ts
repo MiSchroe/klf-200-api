@@ -386,8 +386,8 @@ export class Connection implements IConnection {
 			} else {
 				return Promise.resolve();
 			}
-		} catch (error) {
-			return Promise.reject(error);
+		} catch (error: any) {
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -402,7 +402,7 @@ export class Connection implements IConnection {
 		try {
 			await this._loginAsync(password, timeout);
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -430,7 +430,7 @@ export class Connection implements IConnection {
 							});
 						} catch (error) {
 							debug("Error while closing socket:", error);
-							reject(error);
+							reject(error as Error);
 						}
 					}),
 					timeout * 1000,
@@ -441,7 +441,7 @@ export class Connection implements IConnection {
 			}
 		} catch (error) {
 			debug("Error while logging out:", error);
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -650,13 +650,13 @@ export class Connection implements IConnection {
 				errHandler?.dispose();
 				cfmHandler?.dispose();
 				reject!(error);
-				return Promise.reject(error);
+				return Promise.reject(error as Error);
 			}
 		} catch (error) {
 			debug(
 				`sendFrameAsync error occurred (outer): ${typeof error === "string" ? error : JSON.stringify(error)} with frame sent: ${stringifyFrame(frame)}.`,
 			);
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 
 		function stringifyFrame(frame: IGW_FRAME): string {
@@ -780,8 +780,8 @@ export class Connection implements IConnection {
 			if (this.sckt === undefined) {
 				return new Promise<void>((resolve, reject) => {
 					try {
-						const loginErrorHandler = (error: unknown): void => {
-							console.error(`loginErrorHandler: ${JSON.stringify(error)}`);
+						const loginErrorHandler = (error: Error): void => {
+							console.error(`loginErrorHandler: ${error.message}`);
 							this.sckt = undefined;
 							reject(error);
 						};
@@ -806,8 +806,8 @@ export class Connection implements IConnection {
 								} else {
 									const err = this.sckt?.authorizationError;
 									this.sckt = undefined;
-									console.error(`AuthorizationError: ${err!.toString()}`);
-									reject(err);
+									console.error(`AuthorizationError: ${err!.message}`);
+									reject(err!);
 								}
 							},
 						);
@@ -843,7 +843,7 @@ export class Connection implements IConnection {
 						});
 					} catch (error) {
 						console.error(`initSocketAsync inner catch: ${JSON.stringify(error)}`);
-						reject(error);
+						reject(error as Error);
 					}
 				});
 			} else {
@@ -851,7 +851,7 @@ export class Connection implements IConnection {
 			}
 		} catch (error) {
 			console.error(`initSocketAsync outer catch: ${JSON.stringify(error)}`);
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
