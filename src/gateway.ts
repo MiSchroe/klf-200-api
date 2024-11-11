@@ -1,3 +1,5 @@
+"use strict";
+
 import { GW_GET_NETWORK_SETUP_REQ } from "./KLF200-API/GW_GET_NETWORK_SETUP_REQ.js";
 import { GW_GET_PROTOCOL_VERSION_REQ } from "./KLF200-API/GW_GET_PROTOCOL_VERSION_REQ.js";
 import { GatewayState, GatewaySubState } from "./KLF200-API/GW_GET_STATE_CFM.js";
@@ -16,8 +18,6 @@ import { GW_SET_NETWORK_SETUP_REQ } from "./KLF200-API/GW_SET_NETWORK_SETUP_REQ.
 import { GW_SET_UTC_REQ } from "./KLF200-API/GW_SET_UTC_REQ.js";
 import { GW_COMMON_STATUS, GW_INVERSE_STATUS } from "./KLF200-API/common.js";
 import { IConnection } from "./connection.js";
-
-("use strict");
 
 /**
  * Provides basic functions to control general functions of the KLF interface.
@@ -45,7 +45,7 @@ export class Gateway {
 			);
 			return passwordChanged.Status === GW_COMMON_STATUS.SUCCESS;
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -70,7 +70,7 @@ export class Gateway {
 				ProductType: versionInformation.ProductType,
 			};
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -88,7 +88,7 @@ export class Gateway {
 				MinorVersion: versionInformation.MinorVersion,
 			};
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -106,7 +106,7 @@ export class Gateway {
 				SubState: state.GatewaySubState,
 			};
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -120,7 +120,7 @@ export class Gateway {
 		try {
 			await this.connection.sendFrameAsync(new GW_SET_UTC_REQ(utcTimestamp));
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -135,7 +135,7 @@ export class Gateway {
 			const timeZoneCFM = await this.connection.sendFrameAsync(new GW_RTC_SET_TIME_ZONE_REQ(timeZone));
 			if (timeZoneCFM.Status !== GW_INVERSE_STATUS.SUCCESS) throw new Error("Error setting time zone.");
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -148,7 +148,7 @@ export class Gateway {
 		try {
 			await this.connection.sendFrameAsync(new GW_REBOOT_REQ());
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -161,7 +161,7 @@ export class Gateway {
 		try {
 			await this.connection.sendFrameAsync(new GW_SET_FACTORY_DEFAULT_REQ());
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -175,7 +175,7 @@ export class Gateway {
 		try {
 			await this.connection.sendFrameAsync(new GW_LEAVE_LEARN_STATE_REQ());
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -200,7 +200,7 @@ export class Gateway {
 				DHCP: networkSettings.DHCP,
 			};
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -233,7 +233,7 @@ export class Gateway {
 			}
 			await this.connection.sendFrameAsync(new GW_SET_NETWORK_SETUP_REQ(DHCP, IPAddress, Mask, DefaultGateway));
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -249,7 +249,7 @@ export class Gateway {
 		try {
 			await this.connection.sendFrameAsync(new GW_HOUSE_STATUS_MONITOR_ENABLE_REQ());
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -265,7 +265,7 @@ export class Gateway {
 		try {
 			await this.connection.sendFrameAsync(new GW_HOUSE_STATUS_MONITOR_DISABLE_REQ());
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 }

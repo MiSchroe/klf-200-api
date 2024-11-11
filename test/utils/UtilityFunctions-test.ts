@@ -1,7 +1,7 @@
-import { isArrayEqual } from "../../src/utils/UtilityFunctions";
-import { expect } from "chai";
+"use strict";
 
-("use strict");
+import { expect } from "chai";
+import { isArrayEqual } from "../../src/utils/UtilityFunctions";
 
 describe("utils", function () {
 	describe("UtilityFunctions", function () {

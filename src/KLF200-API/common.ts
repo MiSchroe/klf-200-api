@@ -1,6 +1,6 @@
-import { getNextSessionID } from "./GW_COMMAND.js";
+"use strict";
 
-("use strict");
+import { getNextSessionID } from "./GW_COMMAND.js";
 
 export const KLF200_PORT = 51200;
 
@@ -343,13 +343,13 @@ export interface IGW_FRAME_REQ extends IGW_FRAME {
 	readonly Data: Buffer;
 }
 
-export interface IGW_FRAME_RCV extends IGW_FRAME {}
+export type IGW_FRAME_RCV = IGW_FRAME;
 export interface IGW_FRAME_RCV_CTOR {
 	new (Data: Buffer): IGW_FRAME_RCV;
 }
 
-export interface IGW_FRAME_CFM extends IGW_FRAME_RCV {}
-export interface IGW_FRAME_NTF extends IGW_FRAME_RCV {}
+export type IGW_FRAME_CFM = IGW_FRAME_RCV;
+export type IGW_FRAME_NTF = IGW_FRAME_RCV;
 
 export interface IGW_FRAME_COMMAND extends IGW_FRAME {
 	readonly SessionID: number;

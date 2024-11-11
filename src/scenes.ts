@@ -107,7 +107,7 @@ export class Scene extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -135,7 +135,7 @@ export class Scene extends Component {
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -213,7 +213,7 @@ export class Scene extends Component {
 			if (dispose) {
 				dispose.dispose();
 			}
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -265,7 +265,7 @@ export class Scenes {
 			await result.refreshScenesAsync();
 			return result;
 		} catch (error) {
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -357,7 +357,7 @@ export class Scenes {
 			if (dispose) {
 				dispose.dispose();
 			}
-			return Promise.reject(error);
+			return Promise.reject(error as Error);
 		}
 	}
 
@@ -365,6 +365,7 @@ export class Scenes {
 		if (frame instanceof GW_SCENE_INFORMATION_CHANGED_NTF) {
 			switch (frame.SceneChangeType) {
 				case SceneChangeType.Deleted:
+					// eslint-disable-next-line @typescript-eslint/no-array-delete
 					delete this.Scenes[frame.SceneID];
 					await this.notifyRemovedScene(frame.SceneID);
 					break;

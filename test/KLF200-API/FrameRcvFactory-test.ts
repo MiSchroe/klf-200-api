@@ -1,9 +1,9 @@
+"use strict";
+
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { FrameRcvFactory } from "../../src/KLF200-API/FrameRcvFactory";
 import { GW_REBOOT_CFM } from "../../src/KLF200-API/GW_REBOOT_CFM";
-
-("use strict");
 
 use(chaiAsPromised);
 

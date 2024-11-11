@@ -1,14 +1,14 @@
+"use strict";
+
+import { expect } from "chai";
 import {
+	ActuatorAlias,
 	ActuatorType,
+	Manufacturer,
+	PowerSaveMode,
 	splitActuatorType,
 	SystemTableDataEntry,
-	PowerSaveMode,
-	Manufacturer,
-	ActuatorAlias,
 } from "../../src";
-import { expect } from "chai";
-
-("use strict");
 
 describe("GW_SYSTEMTABLE", function () {
 	describe("splitActuatorType", function () {
