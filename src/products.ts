@@ -766,7 +766,7 @@ export class Product extends Component {
 	 * @returns The limitation time in seconds or Infinity.
 	 * @deprecated Use {@link getLimitationTimeMin} or {@link getLimitationTimeMax} instead.
 	 */
-	public getLimitationTime(functionalParameter: ParameterActive): number {
+	public getLimitationTime(functionalParameter: ParameterActive): number | undefined {
 		return LockTime.lockTimeValueToLockTimeForLimitation(this.getLimitationTimeRaw(functionalParameter));
 	}
 
