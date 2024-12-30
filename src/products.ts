@@ -202,7 +202,15 @@ export class Product extends Component {
 		this._limitationMinRaw = new Array<number>(17).fill(0);
 		this._limitationMaxRaw = new Array<number>(17).fill(0xc800);
 		this._limitationOriginator = new Array<CommandOriginator>(17).fill(CommandOriginator.User);
+		this._limitationOriginatorMin = new Array<CommandOriginator>(17).fill(CommandOriginator.User);
+		this._limitationOriginatorMax = new Array<CommandOriginator>(17).fill(CommandOriginator.User);
 		this._limitationTimeRaw = new Array<number>(17).fill(LockTime.lockTimeTolockTimeValueForLimitation(Infinity));
+		this._limitationTimeRawMin = new Array<number>(17).fill(
+			LockTime.lockTimeTolockTimeValueForLimitation(Infinity),
+		);
+		this._limitationTimeRawMax = new Array<number>(17).fill(
+			LockTime.lockTimeTolockTimeValueForLimitation(Infinity),
+		);
 
 		this.Connection.on(
 			async (frame) => {
@@ -667,6 +675,7 @@ export class Product extends Component {
 	 * A read only array of the limitation originators.
 	 * @readonly
 	 * @type {CommandOriginator[]}
+	 * @deprecated Use {@link LimitationOriginatorMin} or {@link LimitationOriginatorMax} instead.
 	 */
 	public get LimitationOriginator(): readonly CommandOriginator[] {
 		return Array.from(this._limitationOriginator);
@@ -678,9 +687,52 @@ export class Product extends Component {
 	 *
 	 * @param functionalParameter Paramter for which the limitation originator should be returned.
 	 * @returns The limitation originator.
+	 * @deprecated Use {@link getLimitationOriginatorMin} or {@link getLimitationOriginatorMax} instead.
 	 */
 	public getLimitationOriginator(functionalParameter: ParameterActive): CommandOriginator {
 		return this._limitationOriginator[functionalParameter];
+	}
+
+	private _limitationOriginatorMin: CommandOriginator[];
+	/**
+	 * A read only array of the limitation originators for the minimum values.
+	 * @readonly
+	 * @type {CommandOriginator[]}
+	 */
+	public get LimitationOriginatorMin(): readonly CommandOriginator[] {
+		return Array.from(this._limitationOriginatorMin);
+	}
+
+	/**
+	 * Returns the limitation originator for a functional parameter for the minimum value.
+	 * You have to call {@link refreshLimitationAsync} to get the latest values first.
+	 *
+	 * @param functionalParameter Paramter for which the limitation originator should be returned.
+	 * @returns The limitation originator.
+	 */
+	public getLimitationOriginatorMin(functionalParameter: ParameterActive): CommandOriginator {
+		return this._limitationOriginatorMin[functionalParameter];
+	}
+
+	private _limitationOriginatorMax: CommandOriginator[];
+	/**
+	 * A read only array of the limitation originators for the maximum values.
+	 * @readonly
+	 * @type {CommandOriginator[]}
+	 */
+	public get LimitationOriginatorMax(): readonly CommandOriginator[] {
+		return Array.from(this._limitationOriginatorMax);
+	}
+
+	/**
+	 * Returns the limitation originator for a functional parameter for the maximum value.
+	 * You have to call {@link refreshLimitationAsync} to get the latest values first.
+	 *
+	 * @param functionalParameter Paramter for which the limitation originator should be returned.
+	 * @returns The limitation originator.
+	 */
+	public getLimitationOriginatorMax(functionalParameter: ParameterActive): CommandOriginator {
+		return this._limitationOriginatorMax[functionalParameter];
 	}
 
 	private _limitationTimeRaw: number[];
@@ -688,6 +740,7 @@ export class Product extends Component {
 	 * A read only array of the limitation time raw values.
 	 * @readonly
 	 * @type {number[]}
+	 * @deprecated Use {@link LimitationTimeRawMin} or {@link LimitationTimeRawMax} instead.
 	 */
 	public get LimitationTimeRaw(): readonly number[] {
 		return Array.from(this._limitationTimeRaw);
@@ -699,6 +752,7 @@ export class Product extends Component {
 	 *
 	 * @param functionalParameter Parameter for which the limitation time raw value should be returned.
 	 * @returns The raw limitation time value.
+	 * @deprecated Use {@link getLimitationTimeRawMin} or {@link getLimitationTimeRawMax} instead.
 	 */
 	public getLimitationTimeRaw(functionalParameter: ParameterActive): number {
 		return this._limitationTimeRaw[functionalParameter];
@@ -710,9 +764,74 @@ export class Product extends Component {
 	 *
 	 * @param functionalParameter Parameter for which the limitation time should be returned.
 	 * @returns The limitation time in seconds or Infinity.
+	 * @deprecated Use {@link getLimitationTimeMin} or {@link getLimitationTimeMax} instead.
 	 */
-	public getLimitationTime(functionalParameter: ParameterActive): number {
+	public getLimitationTime(functionalParameter: ParameterActive): number | undefined {
 		return LockTime.lockTimeValueToLockTimeForLimitation(this.getLimitationTimeRaw(functionalParameter));
+	}
+
+	private _limitationTimeRawMin: number[];
+	/**
+	 * A read only array of the limitation time raw values for the minimum value.
+	 * @readonly
+	 * @type {number[]}
+	 */
+	public get LimitationTimeRawMin(): readonly number[] {
+		return Array.from(this._limitationTimeRawMin);
+	}
+
+	/**
+	 * Returns the raw value of the limitation time of the minimum value for a functional parameter.
+	 * You have to call {@link refreshLimitationAsync} to get the latest values first.
+	 *
+	 * @param functionalParameter Parameter for which the limitation time raw value should be returned.
+	 * @returns The raw limitation time value.
+	 */
+	public getLimitationTimeRawMin(functionalParameter: ParameterActive): number {
+		return this._limitationTimeRawMin[functionalParameter];
+	}
+
+	/**
+	 * Returns the limitation time of the minimum value in seconds for a functional parameter.
+	 * You have to call {@link refreshLimitationAsync} to get the latest values first.
+	 *
+	 * @param functionalParameter Parameter for which the limitation time should be returned.
+	 * @returns The limitation time in seconds or Infinity.
+	 */
+	public getLimitationTimeMin(functionalParameter: ParameterActive): number | undefined {
+		return LockTime.lockTimeValueToLockTimeForLimitation(this.getLimitationTimeRawMin(functionalParameter));
+	}
+
+	private _limitationTimeRawMax: number[];
+	/**
+	 * A read only array of the limitation time raw values for the maximum value.
+	 * @readonly
+	 * @type {number[]}
+	 */
+	public get LimitationTimeRawMax(): readonly number[] {
+		return Array.from(this._limitationTimeRawMax);
+	}
+
+	/**
+	 * Returns the raw value of the limitation time of the maximum value for a functional parameter.
+	 * You have to call {@link refreshLimitationAsync} to get the latest values first.
+	 *
+	 * @param functionalParameter Parameter for which the limitation time raw value should be returned.
+	 * @returns The raw limitation time value.
+	 */
+	public getLimitationTimeRawMax(functionalParameter: ParameterActive): number {
+		return this._limitationTimeRawMax[functionalParameter];
+	}
+
+	/**
+	 * Returns the limitation time ot the maximum value in seconds for a functional parameter.
+	 * You have to call {@link refreshLimitationAsync} to get the latest values first.
+	 *
+	 * @param functionalParameter Parameter for which the limitation time should be returned.
+	 * @returns The limitation time in seconds or Infinity.
+	 */
+	public getLimitationTimeMax(functionalParameter: ParameterActive): number | undefined {
+		return LockTime.lockTimeValueToLockTimeForLimitation(this.getLimitationTimeRawMax(functionalParameter));
 	}
 
 	private _limitationMinRaw: number[];
@@ -930,11 +1049,27 @@ export class Product extends Component {
 								this._limitationMinRaw[frame.ParameterID] = frame.LimitationValueMin;
 								await this.propertyChanged("LimitationMinRaw");
 							}
+							if (frame.LimitationOriginator !== this._limitationOriginatorMin[frame.ParameterID]) {
+								this._limitationOriginatorMin[frame.ParameterID] = frame.LimitationOriginator;
+								await this.propertyChanged("LimitationOriginatorMin");
+							}
+							if (frame.LimitationTime !== this._limitationTimeRawMin[frame.ParameterID]) {
+								this._limitationTimeRawMin[frame.ParameterID] = frame.LimitationTime;
+								await this.propertyChanged("LimitationTimeRawMin");
+							}
 						}
 						if (limitationTypes.indexOf(LimitationType.MaximumLimitation) !== -1) {
 							if (frame.LimitationValueMax !== this._limitationMaxRaw[frame.ParameterID]) {
 								this._limitationMaxRaw[frame.ParameterID] = frame.LimitationValueMax;
 								await this.propertyChanged("LimitationMaxRaw");
+							}
+							if (frame.LimitationOriginator !== this._limitationOriginatorMax[frame.ParameterID]) {
+								this._limitationOriginatorMax[frame.ParameterID] = frame.LimitationOriginator;
+								await this.propertyChanged("LimitationOriginatorMax");
+							}
+							if (frame.LimitationTime !== this._limitationTimeRawMax[frame.ParameterID]) {
+								this._limitationTimeRawMax[frame.ParameterID] = frame.LimitationTime;
+								await this.propertyChanged("LimitationTimeRawMax");
 							}
 						}
 						if (frame.LimitationOriginator !== this._limitationOriginator[frame.ParameterID]) {

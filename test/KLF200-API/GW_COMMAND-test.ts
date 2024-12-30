@@ -1,7 +1,7 @@
 "use strict";
 
 import { expect } from "chai";
-import { LockTime, convertPositionRaw, convertPosition } from "../../src/KLF200-API/GW_COMMAND";
+import { LockTime, convertPosition, convertPositionRaw } from "../../src/KLF200-API/GW_COMMAND";
 import { ActuatorType } from "../../src/KLF200-API/GW_SYSTEMTABLE_DATA";
 
 describe("GW_COMMAND", function () {
@@ -119,10 +119,17 @@ describe("GW_COMMAND", function () {
 				expect(() => LockTime.lockTimeValueToLockTimeForLimitation(inputValue)).to.throw();
 			});
 
-			it("should throw on an input value greater than 253", function () {
-				const inputValue = 254;
+			it("should throw on an input value greater than 255", function () {
+				const inputValue = 256;
 
 				expect(() => LockTime.lockTimeValueToLockTimeForLimitation(inputValue)).to.throw();
+			});
+
+			it("should return undefined for an input value greater than 253", function () {
+				const inputValue = 254;
+				const result = LockTime.lockTimeValueToLockTimeForLimitation(inputValue);
+
+				expect(result).to.be.undefined;
 			});
 		});
 
