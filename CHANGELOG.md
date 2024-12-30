@@ -4,8 +4,7 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
-
-## **WORK IN PROGRESS**
+## 6.0.0 (2024-12-30)
 
 -   [#171](https://github.com/MiSchroe/klf-200-api/issues/171) Split each of Limitation Originator and Limitation Time into two separate properties for Min and Max values.
 
