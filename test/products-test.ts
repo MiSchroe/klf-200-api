@@ -1261,6 +1261,70 @@ describe("products", function () {
 					}
 				});
 
+				it("should notify LimitationOriginatorMin change", async function () {
+					const notifyChange = sinon.stub();
+					const dispose = product.propertyChangedEvent.on((event) => {
+						notifyChange(event.propertyName);
+					});
+					try {
+						await mockServerController.sendCommand({
+							command: "SetLimitation",
+							limitation: {
+								NodeID: 0,
+								ParameterID: 0,
+								LimitationOriginator: 2,
+								MinValue: 0x0100,
+								MaxValue: 0xc700,
+								LimitationTime: 1,
+							},
+						});
+
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+						});
+
+						await product.refreshLimitationAsync(LimitationType.MinimumLimitation, ParameterActive.MP);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(notifyChange).to.be.calledWith("LimitationOriginatorMin");
+					} finally {
+						dispose?.dispose();
+					}
+				});
+
+				it("should notify LimitationOriginatorMax change", async function () {
+					const notifyChange = sinon.stub();
+					const dispose = product.propertyChangedEvent.on((event) => {
+						notifyChange(event.propertyName);
+					});
+					try {
+						await mockServerController.sendCommand({
+							command: "SetLimitation",
+							limitation: {
+								NodeID: 0,
+								ParameterID: 0,
+								LimitationOriginator: 2,
+								MinValue: 0x0100,
+								MaxValue: 0xc700,
+								LimitationTime: 1,
+							},
+						});
+
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+						});
+
+						await product.refreshLimitationAsync(LimitationType.MaximumLimitation, ParameterActive.MP);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(notifyChange).to.be.calledWith("LimitationOriginatorMax");
+					} finally {
+						dispose?.dispose();
+					}
+				});
+
 				it("should notify LimitationTimeRaw change", async function () {
 					const notifyChange = sinon.stub();
 					const dispose = product.propertyChangedEvent.on((event) => {
@@ -1293,6 +1357,70 @@ describe("products", function () {
 					}
 				});
 
+				it("should notify LimitationTimeRawMin change", async function () {
+					const notifyChange = sinon.stub();
+					const dispose = product.propertyChangedEvent.on((event) => {
+						notifyChange(event.propertyName);
+					});
+					try {
+						await mockServerController.sendCommand({
+							command: "SetLimitation",
+							limitation: {
+								NodeID: 0,
+								ParameterID: 0,
+								LimitationOriginator: 2,
+								MinValue: 0x0100,
+								MaxValue: 0xc700,
+								LimitationTime: 1,
+							},
+						});
+
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+						});
+
+						await product.refreshLimitationAsync(LimitationType.MinimumLimitation, ParameterActive.MP);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(notifyChange).to.be.calledWith("LimitationTimeRawMin");
+					} finally {
+						dispose?.dispose();
+					}
+				});
+
+				it("should notify LimitationTimeRawMax change", async function () {
+					const notifyChange = sinon.stub();
+					const dispose = product.propertyChangedEvent.on((event) => {
+						notifyChange(event.propertyName);
+					});
+					try {
+						await mockServerController.sendCommand({
+							command: "SetLimitation",
+							limitation: {
+								NodeID: 0,
+								ParameterID: 0,
+								LimitationOriginator: 2,
+								MinValue: 0x0100,
+								MaxValue: 0xc700,
+								LimitationTime: 1,
+							},
+						});
+
+						const waitPromise = new Promise((resolve) => {
+							conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+						});
+
+						await product.refreshLimitationAsync(LimitationType.MaximumLimitation, ParameterActive.MP);
+						// Just let the asynchronous stuff run before our checks
+						await waitPromise;
+
+						expect(notifyChange).to.be.calledWith("LimitationTimeRawMax");
+					} finally {
+						dispose?.dispose();
+					}
+				});
+
 				it("should set the limitation originator to rain sensor for MP", async function () {
 					await mockServerController.sendCommand({
 						command: "SetLimitation",
@@ -1317,6 +1445,54 @@ describe("products", function () {
 					expect(product.getLimitationOriginator(ParameterActive.MP)).to.be.equal(CommandOriginator.Rain);
 				});
 
+				it("should set the limitation originator min to rain sensor for MP", async function () {
+					await mockServerController.sendCommand({
+						command: "SetLimitation",
+						limitation: {
+							NodeID: 0,
+							ParameterID: 0,
+							LimitationOriginator: 2,
+							MinValue: 0x0100,
+							MaxValue: 0xc700,
+							LimitationTime: 1,
+						},
+					});
+
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+					});
+
+					await product.refreshLimitationAsync(LimitationType.MinimumLimitation, ParameterActive.MP);
+					// Just let the asynchronous stuff run before our checks
+					await waitPromise;
+
+					expect(product.getLimitationOriginatorMin(ParameterActive.MP)).to.be.equal(CommandOriginator.Rain);
+				});
+
+				it("should set the limitation originator max to rain sensor for MP", async function () {
+					await mockServerController.sendCommand({
+						command: "SetLimitation",
+						limitation: {
+							NodeID: 0,
+							ParameterID: 0,
+							LimitationOriginator: 2,
+							MinValue: 0x0100,
+							MaxValue: 0xc700,
+							LimitationTime: 1,
+						},
+					});
+
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+					});
+
+					await product.refreshLimitationAsync(LimitationType.MaximumLimitation, ParameterActive.MP);
+					// Just let the asynchronous stuff run before our checks
+					await waitPromise;
+
+					expect(product.getLimitationOriginatorMax(ParameterActive.MP)).to.be.equal(CommandOriginator.Rain);
+				});
+
 				it("should set the limitation time to 60 seconds", async function () {
 					await mockServerController.sendCommand({
 						command: "SetLimitation",
@@ -1339,6 +1515,54 @@ describe("products", function () {
 					await waitPromise;
 
 					expect(product.getLimitationTime(ParameterActive.MP)).to.be.equal(60);
+				});
+
+				it("should set the limitation time min to 60 seconds", async function () {
+					await mockServerController.sendCommand({
+						command: "SetLimitation",
+						limitation: {
+							NodeID: 0,
+							ParameterID: 0,
+							LimitationOriginator: 2,
+							MinValue: 0x0100,
+							MaxValue: 0xc700,
+							LimitationTime: 1,
+						},
+					});
+
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+					});
+
+					await product.refreshLimitationAsync(LimitationType.MinimumLimitation, ParameterActive.MP);
+					// Just let the asynchronous stuff run before our checks
+					await waitPromise;
+
+					expect(product.getLimitationTimeMin(ParameterActive.MP)).to.be.equal(60);
+				});
+
+				it("should set the limitation time max to 60 seconds", async function () {
+					await mockServerController.sendCommand({
+						command: "SetLimitation",
+						limitation: {
+							NodeID: 0,
+							ParameterID: 0,
+							LimitationOriginator: 2,
+							MinValue: 0x0100,
+							MaxValue: 0xc700,
+							LimitationTime: 1,
+						},
+					});
+
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_SESSION_FINISHED_NTF]);
+					});
+
+					await product.refreshLimitationAsync(LimitationType.MaximumLimitation, ParameterActive.MP);
+					// Just let the asynchronous stuff run before our checks
+					await waitPromise;
+
+					expect(product.getLimitationTimeMax(ParameterActive.MP)).to.be.equal(60);
 				});
 
 				it("should reject on error status", async function () {

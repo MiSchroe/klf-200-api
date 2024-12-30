@@ -76,9 +76,13 @@ export class LockTime {
 		return lockTime / 30 - 1;
 	}
 
-	static lockTimeValueToLockTimeForLimitation(lockTimeValue: number): number {
+	static lockTimeValueToLockTimeForLimitation(lockTimeValue: number): number | undefined {
 		// Check parameter range
-		if (lockTimeValue < 0 || lockTimeValue > 253) throw new Error("Lock time value out of range.");
+		if (lockTimeValue < 0 || lockTimeValue > 255) throw new Error("Lock time value out of range.");
+
+		if (lockTimeValue > 253) {
+			return undefined;
+		}
 
 		return lockTimeValue === 253 ? Infinity : lockTimeValue * 30 + 30;
 	}
