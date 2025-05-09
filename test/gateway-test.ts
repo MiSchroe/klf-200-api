@@ -59,7 +59,7 @@ describe("Gateway", function () {
 
 		it("should throw an error when Connection is null", function () {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-			expect(() => new Gateway(null as any)).to.throw(Error);
+			expect(() => new Gateway(null as any)).to.throw(Error, "No connection provided");
 		});
 
 		it("should throw an error when Connection is undefined", function () {
@@ -145,6 +145,24 @@ describe("Gateway", function () {
 				const gw = new Gateway(conn);
 				const longPassword = "a".repeat(33); // 33 characters
 				await expect(gw.changePasswordAsync("OldPassword", longPassword)).to.be.rejectedWith(Error);
+			} finally {
+				await conn.logoutAsync();
+			}
+		});
+
+		it("should accept a new password exactly 32 characters long", async function () {
+			const conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			try {
+				await conn.loginAsync("velux123");
+				const gw = new Gateway(conn);
+				const validPassword = "a".repeat(32); // 32 characters
+				await expect(gw.changePasswordAsync("OldPassword", validPassword)).to.be.fulfilled;
 			} finally {
 				await conn.logoutAsync();
 			}

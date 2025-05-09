@@ -72,11 +72,7 @@ describe("groups", function () {
 					await setupHouseMockup(mockServerController);
 					const result = await Groups.createGroupsAsync(conn);
 					expect(result).to.be.instanceOf(Groups);
-					expect(
-						result.Groups.reduce((accumulator, current) => {
-							return accumulator + (typeof current === "undefined" ? 0 : 1);
-						}, 0),
-					).to.be.equal(2);
+					expect(result.Groups.filter((group) => group !== undefined).length).to.be.equal(2);
 				} finally {
 					await conn.logoutAsync();
 				}
