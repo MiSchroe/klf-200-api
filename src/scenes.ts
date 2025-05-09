@@ -1,6 +1,8 @@
 ﻿"use strict";
 
 import debugModule from "debug";
+import "disposablestack/auto";
+import { timeout as promiseTimeout } from "promise-timeout";
 import { GW_ACTIVATE_SCENE_REQ } from "./KLF200-API/GW_ACTIVATE_SCENE_REQ.js";
 import { CommandOriginator, PriorityLevel } from "./KLF200-API/GW_COMMAND.js";
 import { GW_GET_SCENE_INFORMATION_NTF, SceneInformationEntry } from "./KLF200-API/GW_GET_SCENE_INFORMATION_NTF.js";
@@ -15,7 +17,7 @@ import { Velocity } from "./KLF200-API/GW_SYSTEMTABLE_DATA.js";
 import { GW_COMMON_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common.js";
 import { IConnection } from "./connection.js";
 import { Component } from "./utils/PropertyChangedEvent.js";
-import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
+import { Listener, TypedEvent } from "./utils/TypedEvent.js";
 
 const debug = debugModule(`klf-200-api:scenes`);
 
@@ -37,6 +39,8 @@ export class Scene extends Component {
 	 */
 	public readonly Products: SceneInformationEntry[] = [];
 
+	private _disposables = new DisposableStack();
+
 	/**
 	 * Creates an instance of Scene.
 	 * @param {IConnection} Connection The connection that will be used to send and receive commands.
@@ -52,13 +56,20 @@ export class Scene extends Component {
 
 		this._sceneName = SceneName;
 
-		this.Connection.on(
-			async (frame) => {
-				debug(`Calling onNotificationHandler for GW_SESSION_FINISHED_NTF added in Scene constructor.`);
-				await this.onNotificationHandler(frame);
-			},
-			[GatewayCommand.GW_SESSION_FINISHED_NTF],
+		this._disposables.use(
+			this.Connection.on(
+				async (frame) => {
+					debug(`Calling onNotificationHandler for GW_SESSION_FINISHED_NTF added in Scene constructor.`);
+					await this.onNotificationHandler(frame);
+				},
+				[GatewayCommand.GW_SESSION_FINISHED_NTF],
+			),
 		);
+	}
+
+	public [Symbol.dispose](): void {
+		this._disposables.dispose();
+		super[Symbol.dispose]();
 	}
 
 	/**
@@ -94,20 +105,16 @@ export class Scene extends Component {
 		PriorityLevel: PriorityLevel = 3,
 		CommandOriginator: CommandOriginator = 1,
 	): Promise<number> {
-		try {
-			const confirmationFrame = await this.Connection.sendFrameAsync(
-				new GW_ACTIVATE_SCENE_REQ(this.SceneID, PriorityLevel, CommandOriginator, Velocity),
-			);
-			if (confirmationFrame.Status === ActivateSceneStatus.OK) {
-				this._isRunning = true;
-				this._runningSession = confirmationFrame.SessionID;
-				await this.propertyChanged("IsRunning");
-				return confirmationFrame.SessionID;
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		const confirmationFrame = await this.Connection.sendFrameAsync(
+			new GW_ACTIVATE_SCENE_REQ(this.SceneID, PriorityLevel, CommandOriginator, Velocity),
+		);
+		if (confirmationFrame.Status === ActivateSceneStatus.OK) {
+			this._isRunning = true;
+			this._runningSession = confirmationFrame.SessionID;
+			await this.propertyChanged("IsRunning");
+			return confirmationFrame.SessionID;
+		} else {
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 
@@ -122,20 +129,16 @@ export class Scene extends Component {
 		PriorityLevel: PriorityLevel = 3,
 		CommandOriginator: CommandOriginator = 1,
 	): Promise<number> {
-		try {
-			const confirmationFrame = await this.Connection.sendFrameAsync(
-				new GW_STOP_SCENE_REQ(this.SceneID, PriorityLevel, CommandOriginator),
-			);
-			if (confirmationFrame.Status === ActivateSceneStatus.OK) {
-				this._isRunning = false;
-				this._runningSession = confirmationFrame.SessionID;
-				await this.propertyChanged("IsRunning");
-				return confirmationFrame.SessionID;
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		const confirmationFrame = await this.Connection.sendFrameAsync(
+			new GW_STOP_SCENE_REQ(this.SceneID, PriorityLevel, CommandOriginator),
+		);
+		if (confirmationFrame.Status === ActivateSceneStatus.OK) {
+			this._isRunning = false;
+			this._runningSession = confirmationFrame.SessionID;
+			await this.propertyChanged("IsRunning");
+			return confirmationFrame.SessionID;
+		} else {
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 
@@ -148,73 +151,53 @@ export class Scene extends Component {
 	 */
 	public async refreshAsync(): Promise<void> {
 		// Setup notification to receive notification with actuator type
-		let dispose: Disposable | undefined;
 
-		try {
-			const tempResult: SceneInformationEntry[] = []; // Store results temporary until finished without error.
-			// Setup the event handlers first to prevent a race condition
-			// where we don't see the events.
-			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
-			const notificationHandler = new Promise<void>((res, rej) => {
-				resolve = res;
-				reject = rej;
-			});
-			dispose = this.Connection.on(
-				async (frame) => {
-					try {
-						debug(`Calling handler for GW_GET_SCENE_INFORMATION_NTF in Scene.refreshAsync.`);
-						if (frame instanceof GW_GET_SCENE_INFORMATION_NTF) {
-							tempResult.push(...frame.Nodes);
-							// Check, if last notification message
-							if (frame.NumberOfRemainingNodes === 0) {
-								if (dispose) {
-									dispose.dispose();
-								}
+		const tempResult: SceneInformationEntry[] = []; // Store results temporary until finished without error.
+		// Setup the event handlers first to prevent a race condition
+		// where we don't see the events.
+		let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+		const notificationHandler = new Promise<void>((res, rej) => {
+			resolve = res;
+			reject = rej;
+		});
+		using dispose = this.Connection.on(
+			async (frame) => {
+				try {
+					debug(`Calling handler for GW_GET_SCENE_INFORMATION_NTF in Scene.refreshAsync.`);
+					if (frame instanceof GW_GET_SCENE_INFORMATION_NTF) {
+						tempResult.push(...frame.Nodes);
+						// Check, if last notification message
+						if (frame.NumberOfRemainingNodes === 0) {
+							// Finished without error -> update Products array
+							this.Products.length = 0; // Clear array of products
+							this.Products.push(...tempResult);
+							await this.propertyChanged("Products");
 
-								// Finished without error -> update Products array
-								this.Products.length = 0; // Clear array of products
-								this.Products.push(...tempResult);
-								await this.propertyChanged("Products");
-
-								// It seems that currently the notification frame doesn't return the scene name.
-								// Though we only change it if it's not empty and different.
-								if (frame.Name !== this._sceneName && frame.Name !== "") {
-									this._sceneName = frame.Name;
-									await this.propertyChanged("SceneName");
-								}
-								resolve();
+							// It seems that currently the notification frame doesn't return the scene name.
+							// Though we only change it if it's not empty and different.
+							if (frame.Name !== this._sceneName && frame.Name !== "") {
+								this._sceneName = frame.Name;
+								await this.propertyChanged("SceneName");
 							}
+							resolve();
 						}
-					} catch (error) {
-						if (dispose) {
-							dispose.dispose();
-						}
-						reject(error);
 					}
-				},
-				[GatewayCommand.GW_GET_SCENE_INFORMATION_NTF],
-			);
-
-			const confirmationFrame = await this.Connection.sendFrameAsync(
-				new GW_GET_SCENE_INFORMATION_REQ(this.SceneID),
-			);
-			if (confirmationFrame.SceneID === this.SceneID) {
-				if (confirmationFrame.Status !== GW_COMMON_STATUS.SUCCESS) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					return Promise.reject(new Error(confirmationFrame.getError()));
+				} catch (error) {
+					reject(error);
 				}
-			}
+			},
+			[GatewayCommand.GW_GET_SCENE_INFORMATION_NTF],
+		);
 
-			// The notifications will resolve the promise
-			await notificationHandler;
-		} catch (error) {
-			if (dispose) {
-				dispose.dispose();
+		const confirmationFrame = await this.Connection.sendFrameAsync(new GW_GET_SCENE_INFORMATION_REQ(this.SceneID));
+		if (confirmationFrame.SceneID === this.SceneID) {
+			if (confirmationFrame.Status !== GW_COMMON_STATUS.SUCCESS) {
+				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
-			return Promise.reject(error as Error);
 		}
+
+		// The notifications will resolve the promise
+		await notificationHandler;
 	}
 
 	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
@@ -237,7 +220,7 @@ export class Scene extends Component {
  *
  * @class Scenes
  */
-export class Scenes {
+export class Scenes implements Disposable {
 	private readonly _onChangedScenes = new TypedEvent<number>();
 	private readonly _onRemovedScenes = new TypedEvent<number>();
 	private readonly _onAddedScenes = new TypedEvent<number>();
@@ -251,7 +234,23 @@ export class Scenes {
 	 */
 	public readonly Scenes: Scene[] = [];
 
+	private _disposables = new DisposableStack();
+
 	private constructor(readonly Connection: IConnection) {}
+
+	public [Symbol.dispose](): void {
+		this.Scenes.forEach((scene) => {
+			if (scene) {
+				scene[Symbol.dispose]();
+			}
+		});
+		this.Scenes.length = 0;
+		this._disposables.dispose();
+		this._onChangedScenes.removeAllListeners();
+		this._onRemovedScenes.removeAllListeners();
+		this._onAddedScenes.removeAllListeners();
+		this._notificationHandler = undefined;
+	}
 
 	/**
 	 * Creates an instance of Scenes.
@@ -260,111 +259,91 @@ export class Scenes {
 	 * @returns {Promise<Scenes>} Returns a new Scenes object that is initialized, already.
 	 */
 	static async createScenesAsync(Connection: IConnection): Promise<Scenes> {
-		try {
-			const result = new Scenes(Connection);
-			await result.refreshScenesAsync();
-			return result;
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		const result = new Scenes(Connection);
+		await result.refreshScenesAsync();
+		return result;
 	}
 
 	private _notificationHandler: Disposable | undefined;
 
 	public async refreshScenesAsync(): Promise<void> {
 		// Setup notification to receive notification with actuator type
-		let dispose: Disposable | undefined;
 		const newScenes: Scene[] = [];
 
-		try {
-			// Setup the event handlers first to prevent a race condition
-			// where we don't see the events.
-			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
-			const notificationHandlerSceneList = new Promise((res, rej) => {
-				resolve = res;
-				reject = rej;
-			});
+		// Setup the event handlers first to prevent a race condition
+		// where we don't see the events.
+		let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+		const notificationHandlerSceneList = new Promise((res, rej) => {
+			resolve = res;
+			reject = rej;
+		});
 
-			dispose = this.Connection.on(
-				(frame) => {
-					try {
-						debug(`Calling handler for GW_GET_SCENE_LIST_NTF in Scenes.refreshScenesAsync.`);
-						if (frame instanceof GW_GET_SCENE_LIST_NTF) {
-							frame.Scenes.forEach((scene) => {
-								if (typeof this.Scenes[scene.SceneID] === "undefined") {
-									const newScene = new Scene(this.Connection, scene.SceneID, scene.Name);
-									this.Scenes[scene.SceneID] = newScene;
-									newScenes.push(newScene);
-								}
-							});
-							if (frame.NumberOfRemainingScenes === 0) {
-								if (dispose) {
-									dispose.dispose();
-								}
-
-								resolve();
+		using dispose = this.Connection.on(
+			(frame) => {
+				try {
+					debug(`Calling handler for GW_GET_SCENE_LIST_NTF in Scenes.refreshScenesAsync.`);
+					if (frame instanceof GW_GET_SCENE_LIST_NTF) {
+						frame.Scenes.forEach((scene) => {
+							if (typeof this.Scenes[scene.SceneID] === "undefined") {
+								const newScene = new Scene(this.Connection, scene.SceneID, scene.Name);
+								this.Scenes[scene.SceneID] = newScene;
+								newScenes.push(newScene);
 							}
+						});
+						if (frame.NumberOfRemainingScenes === 0) {
+							resolve();
 						}
-					} catch (error) {
-						if (dispose) {
-							dispose.dispose();
-						}
-						reject(error);
 					}
-				},
-				[GatewayCommand.GW_GET_SCENE_LIST_NTF],
-			);
-
-			const getSceneListConfirmation = await this.Connection.sendFrameAsync(new GW_GET_SCENE_LIST_REQ());
-
-			// Wait for GW_GET_SCENE_LIST_NTF, but only if there are scenes defined
-			if (getSceneListConfirmation.NumberOfScenes > 0) {
-				await notificationHandlerSceneList;
-			} else {
-				// Otherwise dispose the event handler, because there won't be any events
-				if (dispose) {
-					dispose.dispose();
+				} catch (error) {
+					reject(error);
 				}
-			}
+			},
+			[GatewayCommand.GW_GET_SCENE_LIST_NTF],
+		);
 
-			// Get more detailed information for each scene
-			for (const scene of this.Scenes) {
-				if (typeof scene !== "undefined") {
-					await scene.refreshAsync();
-				}
-			}
+		const getSceneListConfirmation = await this.Connection.sendFrameAsync(new GW_GET_SCENE_LIST_REQ());
 
-			// Notify about added scenes
-			for (const scene of newScenes) {
-				await this.notifyAddedScene(scene.SceneID);
-			}
-
-			// Setup notification handler
-			if (typeof this._notificationHandler === "undefined") {
-				this._notificationHandler = this.Connection.on(
-					async (frame) => {
-						debug(
-							`Calling onNotificationHandler for GW_SCENE_INFORMATION_CHANGED_NTF in Scenes.refreshSCenesAsync.`,
-						);
-						await this.onNotificationHandler(frame);
-					},
-					[GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF],
-				);
-			}
-
-			return Promise.resolve();
-		} catch (error) {
-			if (dispose) {
-				dispose.dispose();
-			}
-			return Promise.reject(error as Error);
+		// Wait for GW_GET_SCENE_LIST_NTF, but only if there are scenes defined
+		if (getSceneListConfirmation.NumberOfScenes > 0) {
+			await promiseTimeout(notificationHandlerSceneList, 600000); // 10 minutes
 		}
+
+		// Get more detailed information for each scene
+		for (const scene of this.Scenes) {
+			if (typeof scene !== "undefined") {
+				await scene.refreshAsync();
+			}
+		}
+
+		// Notify about added scenes
+		for (const scene of newScenes) {
+			await this.notifyAddedScene(scene.SceneID);
+		}
+
+		// Setup notification handler
+		if (typeof this._notificationHandler === "undefined") {
+			this._notificationHandler = this.Connection.on(
+				async (frame) => {
+					debug(
+						`Calling onNotificationHandler for GW_SCENE_INFORMATION_CHANGED_NTF in Scenes.refreshSCenesAsync.`,
+					);
+					await this.onNotificationHandler(frame);
+				},
+				[GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF],
+			);
+			this._disposables.use(this._notificationHandler);
+		}
+
+		return Promise.resolve();
 	}
 
 	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (frame instanceof GW_SCENE_INFORMATION_CHANGED_NTF) {
 			switch (frame.SceneChangeType) {
 				case SceneChangeType.Deleted:
+					if (this.Scenes[frame.SceneID]) {
+						this.Scenes[frame.SceneID][Symbol.dispose]();
+					}
 					// eslint-disable-next-line @typescript-eslint/no-array-delete
 					delete this.Scenes[frame.SceneID];
 					await this.notifyRemovedScene(frame.SceneID);

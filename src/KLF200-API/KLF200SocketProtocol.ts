@@ -2,7 +2,7 @@
 
 import debugModule from "debug";
 import { Socket } from "net";
-import { Disposable, Listener, TypedEvent } from "../utils/TypedEvent.js";
+import { Listener, TypedEvent } from "../utils/TypedEvent.js";
 import { FrameRcvFactory } from "./FrameRcvFactory.js";
 import { IGW_FRAME_RCV, KLF200Protocol, SLIPProtocol, SLIP_END } from "./common.js";
 
@@ -15,6 +15,8 @@ enum KLF200SocketProtocolState {
 	StartFound,
 }
 
+const MAX_QUEUE_SIZE = 1006;
+
 export class KLF200SocketProtocol {
 	private _onFrameReceived = new TypedEvent<IGW_FRAME_RCV>();
 	private _onDataSent = new TypedEvent<Buffer>();
@@ -26,9 +28,16 @@ export class KLF200SocketProtocol {
 
 	constructor(readonly socket: Socket) {
 		socket.on("data", (data) => {
-			this.processData(data).catch((err) => debug(`Error occurred during processing the data: ${err}`));
+			this.processData(data).catch((err) => {
+				debug(`Error occurred during processing the data: ${err}`);
+				this.queue = [];
+				this.state = KLF200SocketProtocolState.Invalid;
+			});
 		});
 		socket.on("close", (had_error) => this.onSocketClose(had_error));
+		socket.on("error", () => this.onSocketClose(true));
+		socket.on("end", () => this.onSocketClose(false));
+		socket.on("timeout", () => this.onSocketClose(true));
 	}
 
 	private async processData(data: Buffer): Promise<void> {
@@ -54,6 +63,11 @@ export class KLF200SocketProtocol {
 				if (positionEnd === -1) {
 					// No end found -> take complete buffer
 					this.queue.push(data);
+					if (this.queue.length > MAX_QUEUE_SIZE) {
+						debug("Queue size exceeded. Clearing queue.");
+						this.queue = [];
+						this.state = KLF200SocketProtocolState.Invalid;
+					}
 					return;
 				}
 
@@ -74,7 +88,15 @@ export class KLF200SocketProtocol {
 		}
 	}
 
-	private onSocketClose(_had_error: boolean): void {}
+	private onSocketClose(_had_error: boolean): void {
+		debug("Socket closed. Cleaning up resources.");
+		this.queue = [];
+		this.state = KLF200SocketProtocolState.Invalid;
+		this._onFrameReceived.removeAllListeners();
+		this._onDataSent.removeAllListeners();
+		this._onDataReceived.removeAllListeners();
+		this._onError.removeAllListeners();
+	}
 
 	on(handler: Listener<IGW_FRAME_RCV>): Disposable {
 		return this._onFrameReceived.on(handler);
@@ -124,16 +146,19 @@ export class KLF200SocketProtocol {
 			debug(
 				`Method send: after emitting on events for frame ${frame.constructor.name}: ${JSON.stringify(frame)}`,
 			);
-			return Promise.resolve();
 		} catch (e) {
 			await this._onError.emit(e as Error);
-			return Promise.resolve();
 		}
 	}
 
 	async write(data: Buffer): Promise<boolean> {
-		await this._onDataSent.emit(data);
-		const slipBuffer = SLIPProtocol.Encode(KLF200Protocol.Encode(data));
-		return this.socket.write(slipBuffer);
+		try {
+			await this._onDataSent.emit(data);
+			const slipBuffer = SLIPProtocol.Encode(KLF200Protocol.Encode(data));
+			return this.socket.write(slipBuffer);
+		} catch (error) {
+			await this._onError.emit(error as Error);
+			throw error;
+		}
 	}
 }

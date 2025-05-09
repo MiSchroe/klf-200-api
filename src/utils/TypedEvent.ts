@@ -18,20 +18,6 @@ export interface Listener<T> {
 	(event: T): any;
 }
 
-/**
- * You should call the method dispose if you don't need the listener anymore.
- *
- * @interface Disposable
- */
-export interface Disposable {
-	/**
-	 * When you call the dispose method the listener will be removed from the event emitter.
-	 *
-	 * @returns {void}
-	 */
-	dispose(): void;
-}
-
 /** passes through events as they happen. You will not get events from before you start listening */
 
 /**
@@ -39,9 +25,15 @@ export interface Disposable {
  *
  * @class TypedEvent<T>
  */
-export class TypedEvent<T> {
+export class TypedEvent<T> implements Disposable {
 	private listeners: Listener<T>[] = [];
 	private listenersOncer: Listener<T>[] = [];
+
+	public [Symbol.dispose](): void {
+		debug(`TypedEvent disposed.`);
+		this.listeners = [];
+		this.listenersOncer = [];
+	}
 
 	/**
 	 * Adds a listener function to an event emitter.
@@ -49,14 +41,14 @@ export class TypedEvent<T> {
 	 * @param listener Function that is called if the event is emitted.
 	 * @returns {Disposable} Returns a disposable object that should be disposed when not needed anymore.
 	 */
-	on = (listener: Listener<T>): Disposable => {
+	public on(listener: Listener<T>): Disposable {
 		debug(`TypedEvent on.`);
 		this.listeners.push(listener);
 		debug(`${this.listeners.length} listeners registered.`);
 		return {
-			dispose: () => this.off(listener),
+			[Symbol.dispose]: () => this.off(listener),
 		};
-	};
+	}
 
 	/**
 	 * Adds a listener function to an event emitter that is called only once.
@@ -64,11 +56,11 @@ export class TypedEvent<T> {
 	 * @param listener Function that is called only once if the event is emitted.
 	 * @returns {void}
 	 */
-	once = (listener: Listener<T>): void => {
+	public once(listener: Listener<T>): void {
 		debug(`TypedEvent once.`);
 		this.listenersOncer.push(listener);
 		debug(`${this.listenersOncer.length} listeners registered.`);
-	};
+	}
 
 	/**
 	 * Removes a listener function from an event emitter.
@@ -79,12 +71,12 @@ export class TypedEvent<T> {
 	 * @param listener Function that should be removed.
 	 * @returns {void}
 	 */
-	off = (listener: Listener<T>): void => {
+	public off(listener: Listener<T>): void {
 		debug(`TypedEvent off.`);
 		const callbackIndex = this.listeners.indexOf(listener);
 		if (callbackIndex > -1) this.listeners.splice(callbackIndex, 1);
 		debug(`${this.listeners.length} listeners registered.`);
-	};
+	}
 
 	/**
 	 * Calls the registered event handler listener functions on after the other.
@@ -93,7 +85,7 @@ export class TypedEvent<T> {
 	 * @param {T} event The typed event parameter that will be provided to each listener.
 	 * @returns {Promise<void>}
 	 */
-	emit = async (event: T): Promise<void> => {
+	public async emit(event: T): Promise<void> {
 		debug(
 			`TypedEvent emit. ${this.listeners.length} listeners and ${this.listenersOncer.length} once listeners to be called.`,
 		);
@@ -121,7 +113,7 @@ export class TypedEvent<T> {
 			debug(`Listener Once ${listener.toString()} called.`);
 		}
 		this.listenersOncer = [];
-	};
+	}
 
 	/**
 	 * Pipes another event emitter to this event emitter.
@@ -129,8 +121,19 @@ export class TypedEvent<T> {
 	 * @param te Event emitter that is called after this event emitter.
 	 * @returns {Disposable} Returns a disposable object that should be disposed when not needed anymore.
 	 */
-	pipe = (te: TypedEvent<T>): Disposable => {
+	public pipe(te: TypedEvent<T>): Disposable {
 		debug(`TypedEvent pipe.`);
 		return this.on(async (e) => await te.emit(e));
-	};
+	}
+
+	/**
+	 * Removes all listeners from an event emitter.
+	 *
+	 * @returns {void}
+	 */
+	public removeAllListeners(): void {
+		debug(`TypedEvent removeAllListeners.`);
+		this.listeners = [];
+		this.listenersOncer = [];
+	}
 }

@@ -1,6 +1,7 @@
 "use strict";
 
 import debugModule from "debug";
+import "disposablestack/auto";
 import { GW_ACTIVATE_PRODUCTGROUP_REQ } from "./KLF200-API/GW_ACTIVATE_PRODUCTGROUP_REQ.js";
 import {
 	ActivateProductGroupStatus,
@@ -29,7 +30,7 @@ import { ActuatorType, NodeVariation, Velocity } from "./KLF200-API/GW_SYSTEMTAB
 import { GW_COMMON_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common.js";
 import { IConnection } from "./connection.js";
 import { Component } from "./utils/PropertyChangedEvent.js";
-import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
+import { Listener, TypedEvent } from "./utils/TypedEvent.js";
 import { isArrayEqual } from "./utils/UtilityFunctions.js";
 
 const debug = debugModule(`klf-200-api:groups`);
@@ -70,6 +71,8 @@ export class Group extends Component {
 	}
 	private _revision: number;
 
+	private _disposables: DisposableStack;
+
 	/**
 	 * Creates an instance of Group based on the provided notification frame.
 	 * You shouldn't create groups by yourself but rather use the [[Groups]] class
@@ -86,6 +89,8 @@ export class Group extends Component {
 	) {
 		super();
 
+		this._disposables = new DisposableStack();
+
 		this.GroupID = frame.GroupID;
 		this._order = frame.Order;
 		this._placement = frame.Placement;
@@ -96,13 +101,20 @@ export class Group extends Component {
 		this.Nodes.push(...frame.Nodes);
 		this._revision = frame.Revision;
 
-		this.Connection.on(
-			async (frame) => {
-				debug(`Calling onNotificationHandler for GW_GET_GROUP_INFORMATION_NTF added in Group constructor.`);
-				await this.onNotificationHandler(frame);
-			},
-			[GatewayCommand.GW_GET_GROUP_INFORMATION_NTF],
+		this._disposables.use(
+			this.Connection.on(
+				async (frame) => {
+					debug(`Calling onNotificationHandler for GW_GET_GROUP_INFORMATION_NTF added in Group constructor.`);
+					await this.onNotificationHandler(frame);
+				},
+				[GatewayCommand.GW_GET_GROUP_INFORMATION_NTF],
+			),
 		);
+	}
+
+	public [Symbol.dispose](): void {
+		this._disposables.dispose();
+		super[Symbol.dispose]();
 	}
 
 	/**
@@ -438,71 +450,49 @@ export class Group extends Component {
 		PriorityLevels: PriorityLevelInformation[] = [],
 		LockTime: number = Infinity,
 	): Promise<number> {
-		try {
-			// Get product type from first node ID for conversion
-			const nodeID = this.Nodes[0];
+		// Get product type from first node ID for conversion
+		const nodeID = this.Nodes[0];
 
-			// Setup the event handlers first to prevent a race condition
-			// where we don't see the events.
-			let resolve: (value: ActuatorType | PromiseLike<ActuatorType>) => void, reject: (reason?: any) => void;
-			const nodeTypeIDPromise = new Promise<ActuatorType>((res, rej) => {
-				resolve = res;
-				reject = rej;
-			});
+		// Setup the event handlers first to prevent a race condition
+		// where we don't see the events.
+		let resolve: (value: ActuatorType | PromiseLike<ActuatorType>) => void, reject: (reason?: any) => void;
+		const nodeTypeIDPromise = new Promise<ActuatorType>((res, rej) => {
+			resolve = res;
+			reject = rej;
+		});
 
-			// Setup notification to receive notification with actuator type
-			// Register notification handler
-			const dispose = this.Connection.on(
-				(frame) => {
-					try {
-						debug(`Calling handler for GW_GET_NODE_INFORMATION_NTF in Group.setTargetPositionAsync.`);
-						if (frame instanceof GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
-							const nodeTypeID = frame.ActuatorType;
-							if (dispose) {
-								dispose.dispose();
-							}
-							resolve(nodeTypeID);
-						}
-					} catch (error) {
-						if (dispose) {
-							dispose.dispose();
-						}
-						reject(error);
+		// Setup notification to receive notification with actuator type
+		// Register notification handler
+		using dispose = this.Connection.on(
+			(frame) => {
+				try {
+					debug(`Calling handler for GW_GET_NODE_INFORMATION_NTF in Group.setTargetPositionAsync.`);
+					if (frame instanceof GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
+						const nodeTypeID = frame.ActuatorType;
+						resolve(nodeTypeID);
 					}
-				},
-				[GatewayCommand.GW_GET_NODE_INFORMATION_NTF],
-			);
-
-			try {
-				const productInformation = await this.Connection.sendFrameAsync(
-					new GW_GET_NODE_INFORMATION_REQ(nodeID),
-				);
-				if (productInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
-					if (dispose) {
-						dispose.dispose();
-					}
-					return Promise.reject(new Error(productInformation.getError()));
+				} catch (error) {
+					reject(error);
 				}
-			} catch (error) {
-				if (dispose) {
-					dispose.dispose();
-				}
-				return Promise.reject(error as Error);
-			}
+			},
+			[GatewayCommand.GW_GET_NODE_INFORMATION_NTF],
+		);
 
-			return this.setTargetPositionRawAsync(
-				convertPosition(newPosition, await nodeTypeIDPromise),
-				Velocity,
-				PriorityLevel,
-				CommandOriginator,
-				ParameterActive,
-				PriorityLevelLock,
-				PriorityLevels,
-				LockTime,
-			);
-		} catch (error) {
-			return Promise.reject(error as Error);
+		const productInformation = await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID));
+		if (productInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
+			return Promise.reject(new Error(productInformation.getError()));
 		}
+
+		return this.setTargetPositionRawAsync(
+			convertPosition(newPosition, await nodeTypeIDPromise),
+			Velocity,
+			PriorityLevel,
+			CommandOriginator,
+			ParameterActive,
+			PriorityLevelLock,
+			PriorityLevels,
+			LockTime,
+		);
 	}
 
 	/**
@@ -515,17 +505,11 @@ export class Group extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async refreshAsync(): Promise<void> {
-		try {
-			const confirmationFrame = await this.Connection.sendFrameAsync(
-				new GW_GET_GROUP_INFORMATION_REQ(this.GroupID),
-			);
-			if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
-				return Promise.resolve();
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		const confirmationFrame = await this.Connection.sendFrameAsync(new GW_GET_GROUP_INFORMATION_REQ(this.GroupID));
+		if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
+			return Promise.resolve();
+		} else {
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 
@@ -580,7 +564,7 @@ export class Group extends Component {
  *
  * @class Groups
  */
-export class Groups {
+export class Groups implements Disposable {
 	private _onChangedGroup = new TypedEvent<number>();
 	private _onRemovedGroup = new TypedEvent<number>();
 
@@ -593,80 +577,73 @@ export class Groups {
 	 */
 	public readonly Groups: Group[] = [];
 
+	private _disposables = new DisposableStack();
+
 	private constructor(
 		readonly Connection: IConnection,
 		readonly groupType: GroupType = GroupType.UserGroup,
 	) {}
 
+	public [Symbol.dispose](): void {
+		this._disposables.dispose();
+		this.Groups.forEach((group) => group[Symbol.dispose]());
+		this.Groups.length = 0;
+	}
+
 	private async initializeGroupsAsync(): Promise<void> {
 		// Setup notification to receive notification with actuator type
-		let dispose: Disposable | undefined;
+		// Setup the event handlers first to prevent a race condition
+		// where we don't see the events.
+		let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+		const notificationHandler = new Promise((res, rej) => {
+			resolve = res;
+			reject = rej;
+		});
 
-		try {
-			// Setup the event handlers first to prevent a race condition
-			// where we don't see the events.
-			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
-			const notificationHandler = new Promise((res, rej) => {
-				resolve = res;
-				reject = rej;
-			});
-
-			dispose = this.Connection.on(
-				(frame) => {
-					try {
-						debug(
-							`Calling handler for GW_GET_ALL_GROUPS_INFORMATION_NTF, GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, GW_GET_GROUP_INFORMATION_NTF in Groups.initializeGroupsAsync.`,
-						);
-						if (
-							frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF ||
-							frame instanceof GW_GET_GROUP_INFORMATION_NTF
-						) {
-							this.Groups[frame.GroupID] = new Group(this.Connection, frame);
-						} else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
-							if (dispose) {
-								dispose.dispose();
-							}
-							resolve();
-						}
-					} catch (error) {
-						if (dispose) {
-							dispose.dispose();
-						}
-						reject(error);
+		using dispose = this.Connection.on(
+			(frame) => {
+				try {
+					debug(
+						`Calling handler for GW_GET_ALL_GROUPS_INFORMATION_NTF, GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, GW_GET_GROUP_INFORMATION_NTF in Groups.initializeGroupsAsync.`,
+					);
+					if (
+						frame instanceof GW_GET_ALL_GROUPS_INFORMATION_NTF ||
+						frame instanceof GW_GET_GROUP_INFORMATION_NTF
+					) {
+						this.Groups[frame.GroupID] = new Group(this.Connection, frame);
+					} else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
+						resolve();
 					}
-				},
-				[
-					GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF,
-					GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF,
-					GatewayCommand.GW_GET_GROUP_INFORMATION_NTF,
-				],
-			);
+				} catch (error) {
+					reject(error);
+				}
+			},
+			[
+				GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_NTF,
+				GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF,
+				GatewayCommand.GW_GET_GROUP_INFORMATION_NTF,
+			],
+		);
 
-			const getAllGroupsInformation = await this.Connection.sendFrameAsync(
-				new GW_GET_ALL_GROUPS_INFORMATION_REQ(this.groupType),
-			);
-			if (getAllGroupsInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
-				if (dispose) {
-					dispose.dispose();
-				}
-				if (
-					getAllGroupsInformation.Status !==
-					GW_COMMON_STATUS.INVALID_NODE_ID /* No groups available -> not a real error */
-				) {
-					return Promise.reject(new Error(getAllGroupsInformation.getError()));
-				}
+		const getAllGroupsInformation = await this.Connection.sendFrameAsync(
+			new GW_GET_ALL_GROUPS_INFORMATION_REQ(this.groupType),
+		);
+		if (getAllGroupsInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
+			if (
+				getAllGroupsInformation.Status !==
+				GW_COMMON_STATUS.INVALID_NODE_ID /* No groups available -> not a real error */
+			) {
+				return Promise.reject(new Error(getAllGroupsInformation.getError()));
 			}
+		}
 
-			// Only wait for notifications if there are groups defined
-			if (getAllGroupsInformation.NumberOfGroups > 0) {
-				await notificationHandler;
-			} else {
-				if (dispose) {
-					dispose.dispose();
-				}
-			}
+		// Only wait for notifications if there are groups defined
+		if (getAllGroupsInformation.NumberOfGroups > 0) {
+			await notificationHandler;
+		}
 
-			// Finally, setup the event handler for notifications
+		// Finally, setup the event handler for notifications
+		this._disposables.use(
 			this.Connection.on(
 				async (frame) => {
 					debug(
@@ -675,13 +652,8 @@ export class Groups {
 					await this.onNotificationHandler(frame);
 				},
 				[GatewayCommand.GW_GROUP_INFORMATION_CHANGED_NTF],
-			);
-		} catch (error) {
-			if (dispose) {
-				dispose.dispose();
-			}
-			return Promise.reject(error as Error);
-		}
+			),
+		);
 	}
 
 	/**
@@ -717,6 +689,9 @@ export class Groups {
 			switch (frame.ChangeType) {
 				case ChangeType.Deleted:
 					// Remove group
+					if (this.Groups[frame.GroupID]) {
+						this.Groups[frame.GroupID][Symbol.dispose]();
+					}
 					// eslint-disable-next-line @typescript-eslint/no-array-delete
 					delete this.Groups[frame.GroupID];
 					await this.notifyRemovedGroup(frame.GroupID);

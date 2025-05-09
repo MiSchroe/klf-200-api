@@ -1,6 +1,7 @@
 ﻿"use strict";
 
 import debugModule from "debug";
+import "disposablestack/auto";
 import { timeout as promiseTimeout } from "promise-timeout";
 import {
 	ConnectionOptions,
@@ -138,7 +139,7 @@ import {
 	GW_WINK_SEND_CFM,
 	GW_WINK_SEND_REQ,
 } from "./index.js";
-import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
+import { Listener, TypedEvent } from "./utils/TypedEvent.js";
 
 const debug = debugModule(`klf-200-api:connection`);
 
@@ -317,7 +318,9 @@ const FINGERPRINT: string = "02:8C:23:A0:89:2B:62:98:C4:99:00:5B:D2:E7:2E:0A:70:
  *
  * @class Connection
  */
-export class Connection implements IConnection {
+export class Connection implements IConnection, AsyncDisposable {
+	private _disposableStack = new AsyncDisposableStack();
+
 	private sckt?: TLSSocket;
 	private klfProtocol?: KLF200SocketProtocol;
 
@@ -358,6 +361,16 @@ export class Connection implements IConnection {
 		}
 	}
 
+	public async [Symbol.asyncDispose](): Promise<void> {
+		this.stopKeepAlive();
+		await this._disposableStack.disposeAsync();
+		if (this.sckt) {
+			this.sckt.destroy();
+		}
+		this.sckt = undefined;
+		this.klfProtocol = undefined;
+	}
+
 	/**
 	 * Gets the [[KLF200SocketProtocol]] object used by this connection.
 	 * This property has a value after calling [[loginAsync]], only.
@@ -377,17 +390,18 @@ export class Connection implements IConnection {
 	 * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
 	 */
 	private async _loginAsync(password: string, timeout: number): Promise<void> {
-		try {
-			await this.initSocketAsync();
-			this.klfProtocol = new KLF200SocketProtocol(<TLSSocket>this.sckt);
-			const passwordCFM = await this.sendFrameAsync(new GW_PASSWORD_ENTER_REQ(password), timeout);
-			if (passwordCFM.Status !== GW_COMMON_STATUS.SUCCESS) {
-				return Promise.reject(new Error("Login failed."));
-			} else {
-				return Promise.resolve();
-			}
-		} catch (error: any) {
-			return Promise.reject(error as Error);
+		using stack = new DisposableStack();
+		await this.initSocketAsync();
+		this.klfProtocol = new KLF200SocketProtocol(<TLSSocket>this.sckt);
+		stack.defer(() => {
+			this.klfProtocol = undefined;
+		});
+		const passwordCFM = await this.sendFrameAsync(new GW_PASSWORD_ENTER_REQ(password), timeout);
+		if (passwordCFM.Status !== GW_COMMON_STATUS.SUCCESS) {
+			return Promise.reject(new Error("Login failed."));
+		} else {
+			this._disposableStack.use(stack.move());
+			return Promise.resolve();
 		}
 	}
 
@@ -399,11 +413,7 @@ export class Connection implements IConnection {
 	 * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
 	 */
 	public async loginAsync(password: string, timeout: number = 60): Promise<void> {
-		try {
-			await this._loginAsync(password, timeout);
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		await this._loginAsync(password, timeout);
 	}
 
 	/**
@@ -419,7 +429,7 @@ export class Connection implements IConnection {
 				if (this.klfProtocol) {
 					this.klfProtocol = undefined;
 				}
-				return promiseTimeout(
+				await promiseTimeout(
 					new Promise<void>((resolve, reject) => {
 						try {
 							// Close socket
@@ -435,6 +445,8 @@ export class Connection implements IConnection {
 					}),
 					timeout * 1000,
 				);
+				await this._disposableStack.disposeAsync();
+				this._disposableStack = new AsyncDisposableStack();
 			} else {
 				debug("No socket to close.");
 				return Promise.resolve();
@@ -605,22 +617,16 @@ export class Connection implements IConnection {
 				reject = rej;
 			});
 
-			let cfmHandler: Disposable | undefined = undefined;
-			let errHandler: Disposable | undefined = undefined;
 			try {
-				errHandler = (this.klfProtocol as KLF200SocketProtocol).onError((error) => {
+				using errHandler = (this.klfProtocol as KLF200SocketProtocol).onError((error) => {
 					debug(`sendFrameAsync protocol error handler: ${JSON.stringify(error)}.`);
-					errHandler?.dispose();
-					cfmHandler?.dispose();
 					reject(error);
 				});
-				cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((notificationFrame) => {
+				using cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((notificationFrame) => {
 					try {
 						debug(`sendFrameAsync frame received: ${stringifyFrame(notificationFrame)}.`);
 						if (notificationFrame instanceof GW_ERROR_NTF) {
 							debug(`sendFrameAsync GW_ERROR_NTF received: ${stringifyFrame(notificationFrame)}.`);
-							errHandler?.dispose();
-							cfmHandler?.dispose();
 							reject(new Error(notificationFrame.getError(), { cause: notificationFrame }));
 						} else if (
 							notificationFrame.Command === expectedConfirmationFrameCommand &&
@@ -628,13 +634,9 @@ export class Connection implements IConnection {
 								sessionID === (notificationFrame as IGW_FRAME_COMMAND).SessionID)
 						) {
 							debug(`sendFrameAsync expected frame received: ${stringifyFrame(notificationFrame)}.`);
-							errHandler?.dispose();
-							cfmHandler?.dispose();
 							resolve(notificationFrame);
 						}
 					} catch (error) {
-						errHandler?.dispose();
-						cfmHandler?.dispose();
 						reject(error);
 					}
 				});
@@ -647,8 +649,6 @@ export class Connection implements IConnection {
 				debug(
 					`sendFrameAsync error occurred: ${typeof error === "string" ? error : JSON.stringify(error)} with frame sent: ${stringifyFrame(frame)}.`,
 				);
-				errHandler?.dispose();
-				cfmHandler?.dispose();
 				reject!(error);
 				return Promise.reject(error as Error);
 			}
@@ -730,6 +730,9 @@ export class Connection implements IConnection {
 	 * @param {number} [interval=600000] Keep-alive interval in minutes. Defaults to 10 min.
 	 */
 	public startKeepAlive(interval: number = 10 * 60 * 1000): void {
+		// Clear any previous keep-alive timer
+		this.stopKeepAlive();
+
 		this.keepAliveInterval = interval;
 		this.keepAliveTimer = setInterval(() => {
 			this.sendKeepAlive().catch((error) =>
@@ -776,12 +779,14 @@ export class Connection implements IConnection {
 	}
 
 	private async initSocketAsync(): Promise<void> {
+		await using stack = new AsyncDisposableStack();
 		try {
 			if (this.sckt === undefined) {
-				return new Promise<void>((resolve, reject) => {
+				await new Promise<void>((resolve, reject) => {
 					try {
 						const loginErrorHandler = (error: Error): void => {
 							console.error(`loginErrorHandler: ${error.message}`);
+							this.sckt?.off("error", loginErrorHandler);
 							this.sckt = undefined;
 							reject(error);
 						};
@@ -802,6 +807,25 @@ export class Connection implements IConnection {
 								if (this.sckt?.authorized) {
 									// Remove login error handler
 									this.sckt?.off("error", loginErrorHandler);
+									stack.defer(async () => {
+										await promiseTimeout(
+											new Promise<void>((resolve, reject) => {
+												try {
+													// Close socket
+													debug("Closing socket...");
+													this.sckt?.end("", () => {
+														debug("Socket closed.");
+														resolve();
+													});
+												} catch (error) {
+													debug("Error while closing socket:", error);
+													reject(error as Error);
+												}
+											}),
+											10000,
+										);
+										this.sckt = undefined;
+									});
 									resolve();
 								} else {
 									const err = this.sckt?.authorizationError;
@@ -815,37 +839,50 @@ export class Connection implements IConnection {
 						// Add error handler to reject the promise on login problems
 						this.sckt?.on("error", loginErrorHandler);
 
-						this.sckt?.on("close", () => {
+						const closeEventHandler = (): void => {
 							// Socket has been closed -> clean up everything
 							this.socketClosedEventHandler();
+						};
+						this.sckt?.on("close", closeEventHandler);
+						stack.defer(() => {
+							this.sckt?.off("close", closeEventHandler);
 						});
 
 						// Add additional error handler for the lifetime of the socket
-						this.sckt?.on("error", () => {
-							// Socket has an error -> clean up everything
-							this.socketClosedEventHandler();
+						this.sckt?.on("error", closeEventHandler);
+						stack.defer(() => {
+							this.sckt?.off("error", closeEventHandler);
 						});
 
 						// React to end events:
-						this.sckt?.on("end", () => {
+						const endEventHandler = (): void => {
 							if (this.sckt?.allowHalfOpen) {
 								this.sckt?.end(() => {
 									this.socketClosedEventHandler();
 								});
 							}
+						};
+						this.sckt?.on("end", endEventHandler);
+						stack.defer(() => {
+							this.sckt?.off("end", endEventHandler);
 						});
 
 						// Timeout of socket:
-						this.sckt?.on("timeout", () => {
+						const timeoutEventHandler = (): void => {
 							this.sckt?.end(() => {
 								this.socketClosedEventHandler();
 							});
+						};
+						this.sckt?.on("timeout", timeoutEventHandler);
+						stack.defer(() => {
+							this.sckt?.off("timeout", timeoutEventHandler);
 						});
 					} catch (error) {
 						console.error(`initSocketAsync inner catch: ${JSON.stringify(error)}`);
 						reject(error as Error);
 					}
 				});
+				this._disposableStack.use(stack.move());
 			} else {
 				return Promise.resolve();
 			}
@@ -858,6 +895,8 @@ export class Connection implements IConnection {
 	private socketClosedEventHandler(): void {
 		// Socket has been closed -> clean up everything
 		this.stopKeepAlive();
+		// Remove all listeners
+		this.sckt?.removeAllListeners();
 		this.klfProtocol = undefined;
 		this.sckt = undefined;
 	}
