@@ -66,6 +66,8 @@ To use this module with the interface to run a product you have to do the follow
 3. Call `Product.setTargetPositionAsync` to set your product to the desired value.
 4. Close the connection using `logoutAsync`.
 
+This package supports [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management).
+
 ### Sample
 
 The following sample code shows how to open the window

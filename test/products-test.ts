@@ -233,7 +233,7 @@ describe("products", function () {
 
 		describe("onNotificationHandler", function () {
 			it("should add 1 product and remove 2 products.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -243,15 +243,15 @@ describe("products", function () {
 				try {
 					await conn.loginAsync("velux123");
 					await setupHouseMockup(mockServerController);
-					const products = await Products.createProductsAsync(conn);
+					using products = await Products.createProductsAsync(conn);
 
 					// Setups spies for counting notifications
 					const productAddedSpy = sinon.spy();
 					const productRemovedSpy = sinon.spy();
-					products.onNewProduct((productID) => {
+					using _onNewProduct = products.onNewProduct((productID) => {
 						productAddedSpy(productID);
 					});
-					products.onRemovedProduct((productID) => {
+					using _onRemovedProduct = products.onRemovedProduct((productID) => {
 						productRemovedSpy(productID);
 					});
 
@@ -320,9 +320,7 @@ describe("products", function () {
 					});
 
 					// Just let the asynchronous stuff run before our checks
-					await waitPromise;
-					await waitPromise2;
-					await new Promise((resolve) => setImmediate(resolve));
+					await Promise.all([waitPromise, waitPromise2, new Promise((resolve) => setImmediate(resolve))]);
 
 					expect(
 						productAddedSpy,
