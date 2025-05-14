@@ -179,7 +179,7 @@ export class Product extends Component {
 		readonly Connection: IConnection,
 		frame: GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF,
 	) {
-		debug(`Creating Product instance for node ID${frame.NodeID}`);
+		debug(`Creating Product instance for node ID: ${frame.NodeID}`);
 		super();
 
 		this.NodeID = frame.NodeID;
@@ -1835,18 +1835,18 @@ export class Products implements Disposable {
 
 				// Checking for Idle state and adding nodes will be done outside of this handler
 				const waitForIdle = async (): Promise<void> => {
-					if (await checkForIdle()) {
-						for (const nodeID of frame.AddedNodes) {
-							this.Products[nodeID] = await this.addNodeAsync(nodeID);
-							await this.notifyNewProduct(nodeID);
-						}
-					} else {
+					if (!(await checkForIdle())) {
 						await setImmediate(await waitForIdle());
 					}
 				};
 				debug("Waiting for the KLF-200 to leave configuration services handler");
 				await setImmediate(await waitForIdle());
 				debug("Done waiting for the KLF-200 to leave configuration services handler");
+
+				for (const nodeID of frame.AddedNodes) {
+					this.Products[nodeID] = await this.addNodeAsync(nodeID);
+					await this.notifyNewProduct(nodeID);
+				}
 			}
 		}
 	}
@@ -1905,7 +1905,7 @@ export class Products implements Disposable {
 		}
 
 		// The notifications will resolve the promise
-		return notificationHandler;
+		return await notificationHandler;
 	}
 
 	/**
