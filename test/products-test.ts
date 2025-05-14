@@ -232,8 +232,7 @@ describe("products", function () {
 		});
 
 		describe("onNotificationHandler", function () {
-			it.only("should add 1 product and remove 2 products.", async function () {
-				console.log(`Unit test started.`);
+			it("should add 1 product and remove 2 products.", async function () {
 				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
@@ -241,39 +240,29 @@ describe("products", function () {
 					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 				});
-				console.log(`Connection created.`);
 				try {
 					await conn.loginAsync("velux123");
-					console.log(`Logged in.`);
 					await setupHouseMockup(mockServerController);
-					console.log(`Household created.`);
 					using products = await Products.createProductsAsync(conn);
-					console.log(`Products read.`);
 
 					// Setups spies for counting notifications
 					const productAddedSpy = sinon.spy();
 					const productRemovedSpy = sinon.spy();
 					using _onNewProduct = products.onNewProduct((productID) => {
 						productAddedSpy(productID);
-						console.log(`ProductAddedSpy called with ${productID}.`);
 					});
-					console.log(`onNewProduct handler added.`);
 					using _onRemovedProduct = products.onRemovedProduct((productID) => {
 						productRemovedSpy(productID);
-						console.log(`ProductRemovedSpy called with ${productID}.`);
 					});
-					console.log(`onRemovedProduct handler added.`);
 
 					await mockServerController.sendCommand({
 						command: "DeleteProduct",
 						productId: 2,
 					});
-					console.log(`DeleteProduct for productId 2 sent.`);
 					await mockServerController.sendCommand({
 						command: "DeleteProduct",
 						productId: 3,
 					});
-					console.log(`DeleteProduct for productId 3 sent.`);
 					await mockServerController.sendCommand({
 						command: "SetProduct",
 						productId: 4,
@@ -308,24 +297,18 @@ describe("products", function () {
 							FP4TargetPositionRaw: 0xd400,
 						},
 					});
-					console.log(`SetProduct for productId 4 sent.`);
 					await mockServerController.sendCommand({
 						command: "SetConfirmation",
 						gatewayCommand: GatewayCommand.GW_GET_NODE_INFORMATION_REQ,
 						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 					});
-					console.log(`SetConfirmation sent.`);
 					const waitPromise = new Promise((resolve) => {
 						conn.on(resolve, [GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF]);
-						console.log(`Handler for GW_CS_SYSTEM_TABLE_UPDATE_NTF added.`);
 					});
-					console.log(`waitPromise created.`);
 					const waitPromise2 = new Promise((resolve) => {
 						conn.on(resolve, [GatewayCommand.GW_GET_NODE_INFORMATION_CFM]);
-						console.log(`Handler for GW_GET_NODE_INFORMATION_CFM added.`);
 					});
-					console.log(`waitPromise2 created.`);
 					await mockServerController.sendCommand({
 						command: "SendData",
 						gatewayCommand: GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF,
@@ -335,31 +318,23 @@ describe("products", function () {
 							.toBuffer()
 							.toString("base64"),
 					});
-					console.log(`SendData sent.`);
 
 					// Just let the asynchronous stuff run before our checks
 					await waitPromise;
-					console.log(`waitPromise awaited.`);
 					await waitPromise2;
-					console.log(`waitPromise2 awaited.`);
 					await new Promise((resolve) => setImmediate(resolve));
-					console.log(`setImmediate awaited.`);
 
 					expect(
 						productAddedSpy,
 						`onNewProduct should be called once. Instead it was called ${productAddedSpy.callCount} times.`,
 					).to.be.calledOnce;
-					console.log(`productAddedSpy checked.`);
 					expect(
 						productRemovedSpy,
 						`onRemovedProduct should be called twice. Instead it was called ${productRemovedSpy.callCount} times.`,
 					).to.be.calledTwice;
-					console.log(`productRemovedSpy checked.`);
 				} finally {
 					await conn.logoutAsync();
-					console.log(`Logged out.`);
 				}
-				console.log(`Unit test finished.`);
 			});
 		});
 
