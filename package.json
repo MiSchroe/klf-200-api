@@ -72,7 +72,7 @@
     "build:clean": "rm -rf ./dist",
     "build": "npm run build:clean && tsx ./deployment/prepare-cjs.ts && npm run compile && shx cp ./deployment/package.esm.json ./dist/esm/package.json && shx cp ./deployment/package.cjs.json ./dist/cjs/package.json && shx cp ./velux-cert.pem ./dist/velux-cert.pem",
     "watch": "tsc --watch",
-    "test": "cross-env DEBUG=-mockServer*,klf-200-api:products*,klf-200-api:-connection*,-connection-test c8 mocha",
+    "test": "cross-env DEBUG=-mockServer*,-klf-200-api:products*,-klf-200-api:connection*,-connection-test c8 mocha",
     "lint": "eslint --ext .ts src test",
     "release": "release-script",
     "document": "typedoc"
