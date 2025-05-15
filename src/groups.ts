@@ -87,6 +87,7 @@ export class Group extends Component {
 			| GW_GET_ALL_GROUPS_INFORMATION_NTF
 			| GW_GROUP_INFORMATION_CHANGED_NTF_Modified,
 	) {
+		debug(`Creating Group instance.`);
 		super();
 
 		this._disposables = new DisposableStack();
@@ -104,7 +105,9 @@ export class Group extends Component {
 		this._disposables.use(
 			this.Connection.on(
 				async (frame) => {
-					debug(`Calling onNotificationHandler for GW_GET_GROUP_INFORMATION_NTF added in Group constructor.`);
+					debug(
+						`Calling onNotificationHandler for GW_GET_GROUP_INFORMATION_NTF added in Group constructor for GroupID: ${this.GroupID}.`,
+					);
 					await this.onNotificationHandler(frame);
 				},
 				[GatewayCommand.GW_GET_GROUP_INFORMATION_NTF],
@@ -113,8 +116,10 @@ export class Group extends Component {
 	}
 
 	public [Symbol.dispose](): void {
+		debug(`Disposing Group instance.`);
 		this._disposables.dispose();
 		super[Symbol.dispose]();
+		debug(`Disposed Group instance.`);
 	}
 
 	/**
@@ -126,6 +131,7 @@ export class Group extends Component {
 	 * @param {GW_GROUP_INFORMATION_CHANGED_NTF_Modified} frame Change notification frame to calculate the changes.
 	 */
 	public async changeFromNotification(frame: GW_GROUP_INFORMATION_CHANGED_NTF_Modified): Promise<void> {
+		debug(`Calling changeFromNotification for GroupID: ${this.GroupID} with frame: ${JSON.stringify(frame)}.`);
 		if (this._order !== frame.Order) {
 			this._order = frame.Order;
 			await this.propertyChanged("Order");
@@ -243,6 +249,9 @@ export class Group extends Component {
 		nodeVariation: NodeVariation,
 		nodes: number[],
 	): Promise<void> {
+		debug(
+			`Calling changeGroupAsync for GroupID: ${this.GroupID} with order: ${order}, placement: ${placement}, name: ${name}, velocity: ${velocity}, nodeVariation: ${nodeVariation}, nodes: ${JSON.stringify(nodes)}.`,
+		);
 		try {
 			const changedProperties: (keyof this)[] = [];
 			if (order !== this._order) changedProperties.push("Order");
@@ -269,11 +278,14 @@ export class Group extends Component {
 				),
 			);
 			if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
+				debug(`GroupID: ${this.GroupID} changed successfully`);
 				return Promise.resolve();
 			} else {
+				debug(`Failed to change GroupID: ${this.GroupID}`);
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
+			debug(`Failed to change GroupID: ${this.GroupID}`);
 			return Promise.reject(error as Error);
 		}
 	}
@@ -285,6 +297,7 @@ export class Group extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async setOrderAsync(newOrder: number): Promise<void> {
+		debug(`Setting order for GroupID: ${this.GroupID} to "${newOrder}"`);
 		return this.changeGroupAsync(
 			newOrder,
 			this._placement,
@@ -302,6 +315,7 @@ export class Group extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async setPlacementAsync(newPlacement: number): Promise<void> {
+		debug(`Setting placement for GroupID: ${this.GroupID} to "${newPlacement}"`);
 		return this.changeGroupAsync(
 			this._order,
 			newPlacement,
@@ -319,6 +333,7 @@ export class Group extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async setNameAsync(newName: string): Promise<void> {
+		debug(`Setting name for GroupID: ${this.GroupID} to "${newName}"`);
 		return this.changeGroupAsync(
 			this._order,
 			this._placement,
@@ -336,6 +351,7 @@ export class Group extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async setVelocityAsync(newVelocity: Velocity): Promise<void> {
+		debug(`Setting velocity for GroupID: ${this.GroupID} to "${newVelocity}"`);
 		return this.changeGroupAsync(
 			this._order,
 			this._placement,
@@ -353,6 +369,7 @@ export class Group extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async setNodeVariationAsync(newNodeVariation: NodeVariation): Promise<void> {
+		debug(`Setting NodeVariation for GroupID: ${this.GroupID} to "${newNodeVariation}"`);
 		return this.changeGroupAsync(
 			this._order,
 			this._placement,
@@ -370,6 +387,7 @@ export class Group extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async setNodesAsync(newNodes: number[]): Promise<void> {
+		debug(`Setting nodes for GroupID: ${this.GroupID} to "${JSON.stringify(newNodes)}"`);
 		return this.changeGroupAsync(
 			this._order,
 			this._placement,
@@ -403,6 +421,7 @@ export class Group extends Component {
 		PriorityLevels: PriorityLevelInformation[] = [],
 		LockTime: number = Infinity,
 	): Promise<number> {
+		debug(`Setting TargetPositionRaw for GroupID: ${this.GroupID} to ${newPositionRaw}`);
 		try {
 			const confirmationFrame = await this.Connection.sendFrameAsync(
 				new GW_ACTIVATE_PRODUCTGROUP_REQ(
@@ -418,11 +437,14 @@ export class Group extends Component {
 				),
 			);
 			if (confirmationFrame.Status === ActivateProductGroupStatus.OK) {
+				debug(`TargetPositionRaw for GroupID: ${this.GroupID} set to ${newPositionRaw}`);
 				return confirmationFrame.SessionID;
 			} else {
+				debug(`Error setting TargetPositionRaw for GroupID: ${this.GroupID}`);
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		} catch (error) {
+			debug(`Error setting TargetPositionRaw for GroupID: ${this.GroupID}`);
 			return Promise.reject(error as Error);
 		}
 	}
@@ -450,6 +472,7 @@ export class Group extends Component {
 		PriorityLevels: PriorityLevelInformation[] = [],
 		LockTime: number = Infinity,
 	): Promise<number> {
+		debug(`Setting TargetPosition for GroupID: ${this.GroupID} to ${newPosition}`);
 		// Get product type from first node ID for conversion
 		const nodeID = this.Nodes[0];
 
@@ -466,12 +489,17 @@ export class Group extends Component {
 		using dispose = this.Connection.on(
 			(frame) => {
 				try {
-					debug(`Calling handler for GW_GET_NODE_INFORMATION_NTF in Group.setTargetPositionAsync.`);
+					debug(
+						`Calling handler for GW_GET_NODE_INFORMATION_NTF in Group.setTargetPositionAsync for GroupID: ${this.GroupID}.`,
+					);
 					if (frame instanceof GW_GET_NODE_INFORMATION_NTF && frame.NodeID === nodeID) {
 						const nodeTypeID = frame.ActuatorType;
 						resolve(nodeTypeID);
 					}
 				} catch (error) {
+					debug(
+						`Error calling handler for GW_GET_NODE_INFORMATION_NTF in Group.setTargetPositionAsync for GroupID: ${this.GroupID}.`,
+					);
 					reject(error);
 				}
 			},
@@ -480,6 +508,7 @@ export class Group extends Component {
 
 		const productInformation = await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID));
 		if (productInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
+			debug(`Error getting node information for GroupID: ${this.GroupID} for nodeID: ${nodeID}`);
 			return Promise.reject(new Error(productInformation.getError()));
 		}
 
@@ -505,10 +534,13 @@ export class Group extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async refreshAsync(): Promise<void> {
+		debug(`Refreshing GroupID: ${this.GroupID}`);
 		const confirmationFrame = await this.Connection.sendFrameAsync(new GW_GET_GROUP_INFORMATION_REQ(this.GroupID));
 		if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
+			debug(`GroupID: ${this.GroupID} refreshed successfully`);
 			return Promise.resolve();
 		} else {
+			debug(`Failed to refresh GroupID: ${this.GroupID}`);
 			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
@@ -516,12 +548,14 @@ export class Group extends Component {
 	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
 		if (typeof this === "undefined") return;
 
+		debug(`Handling notification for GroupID: ${this.GroupID} with frame: ${JSON.stringify(frame)}`);
 		if (frame instanceof GW_GET_GROUP_INFORMATION_NTF) {
 			await this.onGetGroupInformation(frame);
 		}
 	}
 
 	private async onGetGroupInformation(frame: GW_GET_GROUP_INFORMATION_NTF): Promise<void> {
+		debug(`Handling notification for GroupID: ${this.GroupID} with frame: ${JSON.stringify(frame)}`);
 		if (frame.GroupID === this.GroupID) {
 			if (frame.Order !== this._order) {
 				this._order = frame.Order;
@@ -585,12 +619,15 @@ export class Groups implements Disposable {
 	) {}
 
 	public [Symbol.dispose](): void {
+		debug("Disposing Groups.");
 		this._disposables.dispose();
 		this.Groups.forEach((group) => group[Symbol.dispose]());
 		this.Groups.length = 0;
+		debug("Disposed Groups.");
 	}
 
 	private async initializeGroupsAsync(): Promise<void> {
+		debug("Initializing Groups.");
 		// Setup notification to receive notification with actuator type
 		// Setup the event handlers first to prevent a race condition
 		// where we don't see the events.
@@ -612,9 +649,13 @@ export class Groups implements Disposable {
 					) {
 						this.Groups[frame.GroupID] = new Group(this.Connection, frame);
 					} else if (frame instanceof GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF) {
+						debug("Received GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF.");
 						resolve();
 					}
 				} catch (error) {
+					debug(
+						`Error in handler for GW_GET_ALL_GROUPS_INFORMATION_NTF, GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF, GW_GET_GROUP_INFORMATION_NTF in Groups.initializeGroupsAsync: ${error as Error}`,
+					);
 					reject(error);
 				}
 			},
@@ -633,12 +674,14 @@ export class Groups implements Disposable {
 				getAllGroupsInformation.Status !==
 				GW_COMMON_STATUS.INVALID_NODE_ID /* No groups available -> not a real error */
 			) {
+				debug("Failed to get all groups information.");
 				return Promise.reject(new Error(getAllGroupsInformation.getError()));
 			}
 		}
 
 		// Only wait for notifications if there are groups defined
 		if (getAllGroupsInformation.NumberOfGroups > 0) {
+			debug(`Waiting for notifications for ${getAllGroupsInformation.NumberOfGroups} groups.`);
 			await notificationHandler;
 		}
 
@@ -663,6 +706,7 @@ export class Groups implements Disposable {
 	 * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
 	 */
 	public onChangedGroup(handler: Listener<number>): Disposable {
+		debug("Adding handler for onChangedGroup.");
 		return this._onChangedGroup.on(handler);
 	}
 
@@ -673,22 +717,29 @@ export class Groups implements Disposable {
 	 * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
 	 */
 	public onRemovedGroup(handler: Listener<number>): Disposable {
+		debug("Adding handler for onRemovedGroup.");
 		return this._onRemovedGroup.on(handler);
 	}
 
 	private async notifyChangedGroup(groupId: number): Promise<void> {
+		debug("Notifying changed group.");
 		await this._onChangedGroup.emit(groupId);
 	}
 
 	private async notifyRemovedGroup(groupId: number): Promise<void> {
+		debug("Notifying removed group.");
 		await this._onRemovedGroup.emit(groupId);
 	}
 
 	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
+		debug(
+			`Calling handler for GW_GROUP_INFORMATION_CHANGED_NTF in Groups.onNotificationHandler with frame: ${JSON.stringify(frame)}.`,
+		);
 		if (frame instanceof GW_GROUP_INFORMATION_CHANGED_NTF) {
 			switch (frame.ChangeType) {
 				case ChangeType.Deleted:
 					// Remove group
+					debug(`Removing GroupID: ${frame.GroupID}`);
 					if (this.Groups[frame.GroupID]) {
 						this.Groups[frame.GroupID][Symbol.dispose]();
 					}
@@ -699,6 +750,7 @@ export class Groups implements Disposable {
 
 				case ChangeType.Modified:
 					// Add or change group
+					debug(`Modifying GroupID: ${frame.GroupID}`);
 					if (typeof this.Groups[frame.GroupID] === "undefined") {
 						// Add node
 						this.Groups[frame.GroupID] = new Group(
@@ -738,11 +790,14 @@ export class Groups implements Disposable {
 		Connection: IConnection,
 		groupType: GroupType = GroupType.UserGroup,
 	): Promise<Groups> {
+		debug("Creating new instance of Groups.");
 		try {
 			const result = new Groups(Connection, groupType);
 			await result.initializeGroupsAsync();
+			debug("Successfully created new instance of Groups.");
 			return result;
 		} catch (error) {
+			debug(`Error while creating new instance of Groups: ${error as Error}`);
 			return Promise.reject(error as Error);
 		}
 	}
@@ -754,6 +809,7 @@ export class Groups implements Disposable {
 	 * @returns {(Group | undefined)} Returns the group object if found, otherwise undefined.
 	 */
 	public findByName(groupName: string): Group | undefined {
+		debug(`Calling findByName with groupName: ${groupName}.`);
 		return this.Groups.find((grp) => typeof grp !== "undefined" && grp.Name === groupName);
 	}
 }

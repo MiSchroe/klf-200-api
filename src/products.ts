@@ -1766,6 +1766,7 @@ export class Products implements Disposable {
 	 * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
 	 */
 	public onNewProduct(handler: Listener<number>): Disposable {
+		debug("Adding handler for onNewProduct.");
 		return this._onNewProduct.on(handler);
 	}
 
@@ -1776,14 +1777,17 @@ export class Products implements Disposable {
 	 * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
 	 */
 	public onRemovedProduct(handler: Listener<number>): Disposable {
+		debug("Adding handler for onRemovedProduct.");
 		return this._onRemovedProduct.on(handler);
 	}
 
 	private async notifyNewProduct(nodeId: number): Promise<void> {
+		debug(`Notifying new product ${nodeId}`);
 		await this._onNewProduct.emit(nodeId);
 	}
 
 	private async notifyRemovedProduct(nodeId: number): Promise<void> {
+		debug(`Notifying removed product ${nodeId}`);
 		await this._onRemovedProduct.emit(nodeId);
 	}
 

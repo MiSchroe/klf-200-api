@@ -393,6 +393,7 @@ export class Scenes implements Disposable {
 	 * @returns {Disposable} Call the dispose method of the returned object to remove the handler.
 	 */
 	public onChangedScene(handler: Listener<number>): Disposable {
+		debug("Adding handler for onChangedScene.");
 		return this._onChangedScenes.on(handler);
 	}
 
@@ -403,6 +404,7 @@ export class Scenes implements Disposable {
 	 * @returns {Disposable} Call the dispose method of the returned object to remove the handler.
 	 */
 	public onRemovedScene(handler: Listener<number>): Disposable {
+		debug("Adding handler for onRemovedScene.");
 		return this._onRemovedScenes.on(handler);
 	}
 
@@ -413,6 +415,7 @@ export class Scenes implements Disposable {
 	 * @returns {Disposable} Call the dispose method of the returned object to remove the handler.
 	 */
 	public onAddedScene(handler: Listener<number>): Disposable {
+		debug("Adding handler for onAddedScene.");
 		return this._onAddedScenes.on(handler);
 	}
 

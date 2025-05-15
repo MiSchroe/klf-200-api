@@ -17,7 +17,6 @@ import {
 	GW_COMMON_STATUS,
 	GW_FRAME_COMMAND_REQ,
 	GatewayCommand,
-	IGW_FRAME,
 	IGW_FRAME_COMMAND,
 	IGW_FRAME_RCV,
 	IGW_FRAME_REQ,
@@ -140,6 +139,7 @@ import {
 	GW_WINK_SEND_REQ,
 } from "./index.js";
 import { Listener, TypedEvent } from "./utils/TypedEvent.js";
+import { stringifyFrame } from "./utils/UtilityFunctions.js";
 
 const debug = debugModule(`klf-200-api:connection`);
 
@@ -606,7 +606,7 @@ export class Connection implements IConnection, AsyncDisposable {
 	public async sendFrameAsync(frame: GW_PASSWORD_CHANGE_REQ, timeout?: number): Promise<GW_PASSWORD_CHANGE_CFM>;
 	public async sendFrameAsync(frame: IGW_FRAME_REQ, timeout: number = 10): Promise<IGW_FRAME_RCV> {
 		try {
-			debug(`sendFrameAsync called with frame: ${this.stringifyFrame(frame)}, timeout: ${timeout}.`);
+			debug(`sendFrameAsync called with frame: ${stringifyFrame(frame)}, timeout: ${timeout}.`);
 			const frameName = GatewayCommand[frame.Command];
 			const expectedConfirmationFrameName: keyof typeof GatewayCommand = (frameName.slice(0, -3) +
 				"CFM") as keyof typeof GatewayCommand;
@@ -632,16 +632,16 @@ export class Connection implements IConnection, AsyncDisposable {
 				});
 				using cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((notificationFrame) => {
 					try {
-						debug(`sendFrameAsync frame received: ${this.stringifyFrame(notificationFrame)}.`);
+						debug(`sendFrameAsync frame received: ${stringifyFrame(notificationFrame)}.`);
 						if (notificationFrame instanceof GW_ERROR_NTF) {
-							debug(`sendFrameAsync GW_ERROR_NTF received: ${this.stringifyFrame(notificationFrame)}.`);
+							debug(`sendFrameAsync GW_ERROR_NTF received: ${stringifyFrame(notificationFrame)}.`);
 							reject(new Error(notificationFrame.getError(), { cause: notificationFrame }));
 						} else if (
 							notificationFrame.Command === expectedConfirmationFrameCommand &&
 							(typeof sessionID === "undefined" ||
 								sessionID === (notificationFrame as IGW_FRAME_COMMAND).SessionID)
 						) {
-							debug(`sendFrameAsync expected frame received: ${this.stringifyFrame(notificationFrame)}.`);
+							debug(`sendFrameAsync expected frame received: ${stringifyFrame(notificationFrame)}.`);
 							resolve(notificationFrame);
 						}
 					} catch (error) {
@@ -658,14 +658,14 @@ export class Connection implements IConnection, AsyncDisposable {
 				return await promiseTimeout(notificationHandler, timeout * 1000);
 			} catch (error) {
 				debug(
-					`sendFrameAsync error occurred: ${typeof error === "string" ? error : JSON.stringify(error)} with frame sent: ${this.stringifyFrame(frame)}.`,
+					`sendFrameAsync error occurred: ${typeof error === "string" ? error : JSON.stringify(error)} with frame sent: ${stringifyFrame(frame)}.`,
 				);
 				reject!(error);
 				return Promise.reject(error as Error);
 			}
 		} catch (error) {
 			debug(
-				`sendFrameAsync error occurred (outer): ${typeof error === "string" ? error : JSON.stringify(error)} with frame sent: ${this.stringifyFrame(frame)}.`,
+				`sendFrameAsync error occurred (outer): ${typeof error === "string" ? error : JSON.stringify(error)} with frame sent: ${stringifyFrame(frame)}.`,
 			);
 			return Promise.reject(error as Error);
 		}
@@ -676,17 +676,6 @@ export class Connection implements IConnection, AsyncDisposable {
 	 * @param frame The frame to be stringified.
 	 * @returns A stringified representation of the given frame.
 	 */
-	public stringifyFrame(frame: IGW_FRAME): string {
-		return JSON.stringify(frame, (key: string, value: any) => {
-			if (key.match(/password/i)) {
-				return "**********";
-			} else {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-				return value;
-			}
-		});
-	}
-
 	/**
 	 * Add a handler to listen for confirmations and notification.
 	 * You can provide an optional filter to listen only to
@@ -733,7 +722,7 @@ export class Connection implements IConnection, AsyncDisposable {
 	}
 
 	private async notifyFrameSent(frame: IGW_FRAME_REQ): Promise<void> {
-		debug(`notifyFrameSent called with frame: ${this.stringifyFrame(frame)}.`);
+		debug(`notifyFrameSent called with frame: ${stringifyFrame(frame)}.`);
 		await this._onFrameSent.emit(frame);
 	}
 
@@ -942,4 +931,3 @@ export class Connection implements IConnection, AsyncDisposable {
 		else return checkServerIdentityOriginal(host, cert);
 	}
 }
-

@@ -150,11 +150,12 @@ The package support [debug](https://github.com/debug-js/debug#readme) logging.
 The following namespaces are defined:
 
 - `klf-200-api:connection`
-- `klf-200-api:connection`
-- `klf-200-api:connection`
-- `klf-200-api:connection`
-- `klf-200-api:connection`
-- `klf-200-api:connection`
+- `klf-200-api:gateway`
+- `klf-200-api:groups`
+- `klf-200-api:products`
+- `klf-200-api:scenes`
+- `klf-200-api:TypedEvents`
+- `klf-200-api:KLF200SocketProtocol` **CAUTION: This log may reveal sensitive data!**
 
 ## Status of implemented messages
 
