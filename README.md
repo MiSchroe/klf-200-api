@@ -144,6 +144,18 @@ Depending on the request, it can be finished when the confirmation frame
 is received. With other request, like opening a window, you will receive
 additional notifications, which will be provided by event handlers to you.
 
+## Debug logs
+
+The package support [debug](https://github.com/debug-js/debug#readme) logging.
+The following namespaces are defined:
+
+- `klf-200-api:connection`
+- `klf-200-api:connection`
+- `klf-200-api:connection`
+- `klf-200-api:connection`
+- `klf-200-api:connection`
+- `klf-200-api:connection`
+
 ## Status of implemented messages
 
 The following list shows the implemented messages that can be used:

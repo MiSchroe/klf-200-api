@@ -52,6 +52,7 @@ export class Scene extends Component {
 		readonly SceneID: number,
 		SceneName: string,
 	) {
+		debug(`Creating Scene with SceneID: ${SceneID} and SceneName: ${SceneName}`);
 		super();
 
 		this._sceneName = SceneName;
@@ -59,7 +60,9 @@ export class Scene extends Component {
 		this._disposables.use(
 			this.Connection.on(
 				async (frame) => {
-					debug(`Calling onNotificationHandler for GW_SESSION_FINISHED_NTF added in Scene constructor.`);
+					debug(
+						`Calling onNotificationHandler for GW_SESSION_FINISHED_NTF added in Scene constructor for SceneID: ${this.SceneID}.`,
+					);
 					await this.onNotificationHandler(frame);
 				},
 				[GatewayCommand.GW_SESSION_FINISHED_NTF],
@@ -68,8 +71,10 @@ export class Scene extends Component {
 	}
 
 	public [Symbol.dispose](): void {
+		debug(`Disposing Scene with SceneID: ${this.SceneID}`);
 		this._disposables.dispose();
 		super[Symbol.dispose]();
+		debug(`Disposed Scene with SceneID: ${this.SceneID}`);
 	}
 
 	/**
@@ -105,6 +110,7 @@ export class Scene extends Component {
 		PriorityLevel: PriorityLevel = 3,
 		CommandOriginator: CommandOriginator = 1,
 	): Promise<number> {
+		debug(`Running scene with SceneID: ${this.SceneID}`);
 		const confirmationFrame = await this.Connection.sendFrameAsync(
 			new GW_ACTIVATE_SCENE_REQ(this.SceneID, PriorityLevel, CommandOriginator, Velocity),
 		);
@@ -114,6 +120,7 @@ export class Scene extends Component {
 			await this.propertyChanged("IsRunning");
 			return confirmationFrame.SessionID;
 		} else {
+			debug(`Error running scene with SceneID: ${this.SceneID}`);
 			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
@@ -129,6 +136,7 @@ export class Scene extends Component {
 		PriorityLevel: PriorityLevel = 3,
 		CommandOriginator: CommandOriginator = 1,
 	): Promise<number> {
+		debug(`Stopping scene with SceneID: ${this.SceneID}`);
 		const confirmationFrame = await this.Connection.sendFrameAsync(
 			new GW_STOP_SCENE_REQ(this.SceneID, PriorityLevel, CommandOriginator),
 		);
@@ -138,6 +146,7 @@ export class Scene extends Component {
 			await this.propertyChanged("IsRunning");
 			return confirmationFrame.SessionID;
 		} else {
+			debug(`Error stopping scene with SceneID: ${this.SceneID}`);
 			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
@@ -150,6 +159,7 @@ export class Scene extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async refreshAsync(): Promise<void> {
+		debug(`Refreshing scene with SceneID: ${this.SceneID}`);
 		// Setup notification to receive notification with actuator type
 
 		const tempResult: SceneInformationEntry[] = []; // Store results temporary until finished without error.
@@ -183,6 +193,7 @@ export class Scene extends Component {
 						}
 					}
 				} catch (error) {
+					debug(`Error refreshing scene with SceneID: ${this.SceneID}`);
 					reject(error);
 				}
 			},
@@ -192,6 +203,7 @@ export class Scene extends Component {
 		const confirmationFrame = await this.Connection.sendFrameAsync(new GW_GET_SCENE_INFORMATION_REQ(this.SceneID));
 		if (confirmationFrame.SceneID === this.SceneID) {
 			if (confirmationFrame.Status !== GW_COMMON_STATUS.SUCCESS) {
+				debug(`Error refreshing scene with SceneID: ${this.SceneID}`);
 				return Promise.reject(new Error(confirmationFrame.getError()));
 			}
 		}
@@ -201,12 +213,18 @@ export class Scene extends Component {
 	}
 
 	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
+		debug(
+			`Calling handler for GW_SESSION_FINISHED_NTF in Scene.onNotificationHandler with frame: ${JSON.stringify(frame)}.`,
+		);
 		if (frame instanceof GW_SESSION_FINISHED_NTF) {
 			await this.onSessionFinished(frame);
 		}
 	}
 
 	private async onSessionFinished(frame: GW_SESSION_FINISHED_NTF): Promise<void> {
+		debug(
+			`Calling handler for GW_SESSION_FINISHED_NTF in Scene.onSessionFinished with frame: ${JSON.stringify(frame)}.`,
+		);
 		if (frame.SessionID === this._runningSession) {
 			this._isRunning = false;
 			this._runningSession = -1;
@@ -239,6 +257,7 @@ export class Scenes implements Disposable {
 	private constructor(readonly Connection: IConnection) {}
 
 	public [Symbol.dispose](): void {
+		debug("Disposing Scenes.");
 		this.Scenes.forEach((scene) => {
 			if (scene) {
 				scene[Symbol.dispose]();
@@ -250,6 +269,7 @@ export class Scenes implements Disposable {
 		this._onRemovedScenes.removeAllListeners();
 		this._onAddedScenes.removeAllListeners();
 		this._notificationHandler = undefined;
+		debug("Disposed Scenes.");
 	}
 
 	/**
@@ -259,6 +279,7 @@ export class Scenes implements Disposable {
 	 * @returns {Promise<Scenes>} Returns a new Scenes object that is initialized, already.
 	 */
 	static async createScenesAsync(Connection: IConnection): Promise<Scenes> {
+		debug("Creating Scenes.");
 		const result = new Scenes(Connection);
 		await result.refreshScenesAsync();
 		return result;
@@ -267,6 +288,7 @@ export class Scenes implements Disposable {
 	private _notificationHandler: Disposable | undefined;
 
 	public async refreshScenesAsync(): Promise<void> {
+		debug("Refreshing scenes.");
 		// Setup notification to receive notification with actuator type
 		const newScenes: Scene[] = [];
 
@@ -295,6 +317,7 @@ export class Scenes implements Disposable {
 						}
 					}
 				} catch (error) {
+					debug("Error refreshing scenes.");
 					reject(error);
 				}
 			},
@@ -305,6 +328,7 @@ export class Scenes implements Disposable {
 
 		// Wait for GW_GET_SCENE_LIST_NTF, but only if there are scenes defined
 		if (getSceneListConfirmation.NumberOfScenes > 0) {
+			debug("Waiting for scenes.");
 			await promiseTimeout(notificationHandlerSceneList, 600000); // 10 minutes
 		}
 
@@ -338,6 +362,9 @@ export class Scenes implements Disposable {
 	}
 
 	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
+		debug(
+			`Calling handler for GW_SCENE_INFORMATION_CHANGED_NTF in onNotificationHandler with frame: ${JSON.stringify(frame)}.`,
+		);
 		if (frame instanceof GW_SCENE_INFORMATION_CHANGED_NTF) {
 			switch (frame.SceneChangeType) {
 				case SceneChangeType.Deleted:
@@ -390,14 +417,17 @@ export class Scenes implements Disposable {
 	}
 
 	private async notifyChangedScene(sceneId: number): Promise<void> {
+		debug(`Calling handler for onChangedScene with sceneId: ${sceneId}.`);
 		await this._onChangedScenes.emit(sceneId);
 	}
 
 	private async notifyRemovedScene(sceneId: number): Promise<void> {
+		debug(`Calling handler for onRemovedScene with sceneId: ${sceneId}.`);
 		await this._onRemovedScenes.emit(sceneId);
 	}
 
 	private async notifyAddedScene(sceneId: number): Promise<void> {
+		debug(`Calling handler for onAddedScene with sceneId: ${sceneId}.`);
 		await this._onAddedScenes.emit(sceneId);
 	}
 
@@ -408,6 +438,7 @@ export class Scenes implements Disposable {
 	 * @returns {(Scene | undefined)} Returns the scene object if found, otherwise undefined.
 	 */
 	public findByName(sceneName: string): Scene | undefined {
+		debug(`Calling findByName with sceneName: ${sceneName}.`);
 		return this.Scenes.find((sc) => typeof sc !== "undefined" && sc.SceneName === sceneName);
 	}
 }
