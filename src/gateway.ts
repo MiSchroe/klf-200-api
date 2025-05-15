@@ -240,4 +240,3 @@ export class Gateway {
 		await this.connection.sendFrameAsync(new GW_HOUSE_STATUS_MONITOR_DISABLE_REQ());
 	}
 }
-

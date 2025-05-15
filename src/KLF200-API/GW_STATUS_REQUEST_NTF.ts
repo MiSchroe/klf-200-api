@@ -46,7 +46,7 @@ export class GW_STATUS_REQUEST_NTF extends GW_FRAME_NTF {
 
 			case StatusType.RequestTargetPosition:
 			case StatusType.RequestCurrentPosition:
-			case StatusType.RequestRemainingTime:
+			case StatusType.RequestRemainingTime: {
 				const statusCount = this.Data.readUInt8(7);
 				this.ParameterData = [];
 				for (let statusIndex = 0; statusIndex < statusCount; statusIndex++) {
@@ -56,6 +56,7 @@ export class GW_STATUS_REQUEST_NTF extends GW_FRAME_NTF {
 					});
 				}
 				break;
+			}
 
 			default:
 				throw new Error("Unknown StatusType.");

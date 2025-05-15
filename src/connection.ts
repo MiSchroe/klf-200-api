@@ -626,10 +626,12 @@ export class Connection implements IConnection, AsyncDisposable {
 			});
 
 			try {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				using errHandler = (this.klfProtocol as KLF200SocketProtocol).onError((error) => {
 					debug(`sendFrameAsync protocol error handler: ${JSON.stringify(error)}.`);
 					reject(error);
 				});
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				using cfmHandler = (this.klfProtocol as KLF200SocketProtocol).on((notificationFrame) => {
 					try {
 						debug(`sendFrameAsync frame received: ${stringifyFrame(notificationFrame)}.`);

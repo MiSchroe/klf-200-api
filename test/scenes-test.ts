@@ -165,6 +165,7 @@ describe("scenes", function () {
 					const sc = await Scenes.createScenesAsync(conn);
 
 					const onChangedSceneSpy = sinon.spy();
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					using disposable = sc.onChangedScene(onChangedSceneSpy);
 					const waitPromise = new Promise((resolve) => {
 						conn.on(resolve, [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
@@ -201,6 +202,7 @@ describe("scenes", function () {
 					await setupHouseMockup(mockServerController);
 					const sc = await Scenes.createScenesAsync(conn);
 					const onRemovedSceneSpy = sinon.spy();
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					using disposable = sc.onRemovedScene(onRemovedSceneSpy);
 					const waitPromise = new Promise((resolve) => {
 						conn.on(resolve, [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
@@ -237,6 +239,7 @@ describe("scenes", function () {
 					await setupHouseMockup(mockServerController);
 					const sc = await Scenes.createScenesAsync(conn);
 					const onAddedSceneSpy = sinon.spy();
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					using disposable = sc.onAddedScene(onAddedSceneSpy);
 					await mockServerController.sendCommand({
 						command: "SetScene",
@@ -271,6 +274,7 @@ describe("scenes", function () {
 						const sc = await Scenes.createScenesAsync(conn);
 						const scene = sc.Scenes[1];
 						const propertyChangedEventSpy = sinon.spy();
+						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						using disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
 						const expectedSessionId = getNextSessionID() + 1;
 						const sessionID = await scene.runAsync();
@@ -385,6 +389,7 @@ describe("scenes", function () {
 						const sc = await Scenes.createScenesAsync(conn);
 						const scene = sc.Scenes[1];
 						const propertyChangedEventSpy = sinon.spy();
+						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						using disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
 						const expectedSessionId = getNextSessionID() + 1;
 						const sessionID = await scene.stopAsync();
@@ -463,6 +468,7 @@ describe("scenes", function () {
 						const sc = await Scenes.createScenesAsync(conn);
 						const scene = sc.Scenes[1];
 						const propertyChangedEventSpy = sinon.spy();
+						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						using disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
 						await mockServerController.sendCommand({
 							command: "SetScene",

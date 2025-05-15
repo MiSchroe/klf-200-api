@@ -248,9 +248,11 @@ describe("products", function () {
 					// Setups spies for counting notifications
 					const productAddedSpy = sinon.spy();
 					const productRemovedSpy = sinon.spy();
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					using _onNewProduct = products.onNewProduct((productID) => {
 						productAddedSpy(productID);
 					});
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					using _onRemovedProduct = products.onRemovedProduct((productID) => {
 						productRemovedSpy(productID);
 					});
@@ -1181,6 +1183,7 @@ describe("products", function () {
 		describe("refreshLimitation", function () {
 			it("should notify LimitationMinRaw change", async function () {
 				const notifyChange = sinon.stub();
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				using dispose = product.propertyChangedEvent.on((event) => {
 					notifyChange(event.propertyName);
 				});
@@ -1209,6 +1212,7 @@ describe("products", function () {
 
 			it("should notify LimitationMaxRaw change", async function () {
 				const notifyChange = sinon.stub();
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				using dispose = product.propertyChangedEvent.on((event) => {
 					notifyChange(event.propertyName);
 				});
@@ -1237,6 +1241,7 @@ describe("products", function () {
 
 			it("should notify LimitationOriginator change", async function () {
 				const notifyChange = sinon.stub();
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				using dispose = product.propertyChangedEvent.on((event) => {
 					notifyChange(event.propertyName);
 				});
@@ -1265,6 +1270,7 @@ describe("products", function () {
 
 			it("should notify LimitationOriginatorMin change", async function () {
 				const notifyChange = sinon.stub();
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				using dispose = product.propertyChangedEvent.on((event) => {
 					notifyChange(event.propertyName);
 				});
@@ -1293,6 +1299,7 @@ describe("products", function () {
 
 			it("should notify LimitationOriginatorMax change", async function () {
 				const notifyChange = sinon.stub();
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				using dispose = product.propertyChangedEvent.on((event) => {
 					notifyChange(event.propertyName);
 				});
@@ -1321,6 +1328,7 @@ describe("products", function () {
 
 			it("should notify LimitationTimeRaw change", async function () {
 				const notifyChange = sinon.stub();
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				using dispose = product.propertyChangedEvent.on((event) => {
 					notifyChange(event.propertyName);
 				});
@@ -1349,6 +1357,7 @@ describe("products", function () {
 
 			it("should notify LimitationTimeRawMin change", async function () {
 				const notifyChange = sinon.stub();
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				using dispose = product.propertyChangedEvent.on((event) => {
 					notifyChange(event.propertyName);
 				});
@@ -1377,6 +1386,7 @@ describe("products", function () {
 
 			it("should notify LimitationTimeRawMax change", async function () {
 				const notifyChange = sinon.stub();
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				using dispose = product.propertyChangedEvent.on((event) => {
 					notifyChange(event.propertyName);
 				});

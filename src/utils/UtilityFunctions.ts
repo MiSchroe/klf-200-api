@@ -23,7 +23,6 @@ export function stringifyFrame(frame: IGW_FRAME): string {
 		if (key.match(/password/i)) {
 			return "**********";
 		} else {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 			return value;
 		}
 	});

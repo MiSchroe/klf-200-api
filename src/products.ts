@@ -1705,6 +1705,7 @@ export class Products implements Disposable {
 			reject = rej;
 		});
 
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		using dispose = this.Connection.on(
 			(frame) => {
 				try {
@@ -1800,7 +1801,6 @@ export class Products implements Disposable {
 				if (this.Products[nodeID]) {
 					this.Products[nodeID][Symbol.dispose]();
 				}
-				// eslint-disable-next-line @typescript-eslint/no-array-delete
 				delete this.Products[nodeID];
 				await this.notifyRemovedProduct(nodeID);
 			}
@@ -1867,6 +1867,7 @@ export class Products implements Disposable {
 			reject = rej;
 		});
 
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		using dispose = this.Connection.on(
 			(frame) => {
 				try {

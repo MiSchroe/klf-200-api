@@ -170,6 +170,7 @@ export class Scene extends Component {
 			resolve = res;
 			reject = rej;
 		});
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		using dispose = this.Connection.on(
 			async (frame) => {
 				try {
@@ -300,6 +301,7 @@ export class Scenes implements Disposable {
 			reject = rej;
 		});
 
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		using dispose = this.Connection.on(
 			(frame) => {
 				try {
@@ -371,7 +373,6 @@ export class Scenes implements Disposable {
 					if (this.Scenes[frame.SceneID]) {
 						this.Scenes[frame.SceneID][Symbol.dispose]();
 					}
-					// eslint-disable-next-line @typescript-eslint/no-array-delete
 					delete this.Scenes[frame.SceneID];
 					await this.notifyRemovedScene(frame.SceneID);
 					break;
@@ -379,6 +380,7 @@ export class Scenes implements Disposable {
 				case SceneChangeType.Modified:
 					await this.Scenes[frame.SceneID].refreshAsync();
 					await this.notifyChangedScene(frame.SceneID);
+					break;
 
 				default:
 					break;
