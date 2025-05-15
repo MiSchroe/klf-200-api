@@ -251,7 +251,9 @@ describe("connection", function () {
 				debug("Login...");
 				await conn.loginAsync("velux123");
 				debug("Send command...");
-				const clock = sinon.useFakeTimers();
+				const clock = sinon.useFakeTimers({
+					toFake: ["setTimeout", "clearTimeout"],
+				});
 				try {
 					await mockServerController?.sendCommand({
 						command: "SetFunction",
