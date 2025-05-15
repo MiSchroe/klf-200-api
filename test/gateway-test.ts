@@ -56,6 +56,16 @@ describe("Gateway", function () {
 				await conn.logoutAsync();
 			}
 		});
+
+		it("should throw an error when Connection is null", function () {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+			expect(() => new Gateway(null as any)).to.throw(Error, "No connection provided");
+		});
+
+		it("should throw an error when Connection is undefined", function () {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+			expect(() => new Gateway(undefined as any)).to.throw(Error);
+		});
 	});
 
 	describe("changePasswordAsync", function () {
@@ -117,6 +127,88 @@ describe("Gateway", function () {
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
 				await expect(gw.changePasswordAsync("OldPassword", "NewPassword")).to.be.rejectedWith(Error);
+			} finally {
+				await conn.logoutAsync();
+			}
+		});
+
+		it("should throw an error when the new password exceeds 32 characters", async function () {
+			const conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			try {
+				await conn.loginAsync("velux123");
+				const gw = new Gateway(conn);
+				const longPassword = "a".repeat(33); // 33 characters
+				await expect(gw.changePasswordAsync("OldPassword", longPassword)).to.be.rejectedWith(Error);
+			} finally {
+				await conn.logoutAsync();
+			}
+		});
+
+		it("should accept a new password exactly 32 characters long", async function () {
+			const conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			try {
+				await conn.loginAsync("velux123");
+				const gw = new Gateway(conn);
+				const validPassword = "a".repeat(32); // 32 characters
+				await expect(gw.changePasswordAsync("OldPassword", validPassword)).to.be.fulfilled;
+			} finally {
+				await conn.logoutAsync();
+			}
+		});
+
+		it("should throw an error when the old password is empty", async function () {
+			const conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			try {
+				await conn.loginAsync("velux123");
+				const gw = new Gateway(conn);
+				await (this.mockServerController as MockServerController).sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_PASSWORD_CHANGE_REQ,
+					gatewayConfirmation: GatewayCommand.GW_PASSWORD_CHANGE_CFM,
+					data: Buffer.from([GW_COMMON_STATUS.ERROR]).toString("base64"),
+				});
+				await expect(gw.changePasswordAsync("", "NewPassword")).to.be.eventually.false;
+			} finally {
+				await conn.logoutAsync();
+			}
+		});
+
+		it("should throw an error when the new password is empty", async function () {
+			const conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			try {
+				await conn.loginAsync("velux123");
+				const gw = new Gateway(conn);
+				await (this.mockServerController as MockServerController).sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_PASSWORD_CHANGE_REQ,
+					gatewayConfirmation: GatewayCommand.GW_PASSWORD_CHANGE_CFM,
+					data: Buffer.from([GW_COMMON_STATUS.ERROR]).toString("base64"),
+				});
+				await expect(gw.changePasswordAsync("velux123", "")).to.be.eventually.false;
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -680,6 +772,51 @@ describe("Gateway", function () {
 				await conn.logoutAsync();
 			}
 		});
+
+		it("should throw an error when invalid IP addresses are provided", async function () {
+			const conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			try {
+				await conn.loginAsync("velux123");
+				const gw = new Gateway(conn);
+				await expect(
+					gw.setNetworkSettingsAsync(false, "invalidIP", "255.255.255.0", "192.168.1.1"),
+				).to.be.rejectedWith(Error);
+			} finally {
+				await conn.logoutAsync();
+			}
+		});
+
+		it("should throw an error when DHCP is true but additional parameters are provided", async function () {
+			const conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			try {
+				await conn.loginAsync("velux123");
+				const gw = new Gateway(conn);
+				await (this.mockServerController as MockServerController).sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_NETWORK_SETUP_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+					data: Buffer.from([GW_ERROR.InvalidFrameStructure]).toString("base64"),
+				});
+				await expect(
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+					gw.setNetworkSettingsAsync(true as any, "192.168.1.2", "255.255.255.0", "192.168.1.1"),
+				).to.be.rejectedWith(Error);
+			} finally {
+				await conn.logoutAsync();
+			}
+		});
 	});
 
 	describe("enableHouseStatusMonitorAsync", function () {
@@ -722,6 +859,24 @@ describe("Gateway", function () {
 				await conn.logoutAsync();
 			}
 		});
+
+		it("should handle multiple calls to enableHouseStatusMonitorAsync gracefully", async function () {
+			const conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			try {
+				await conn.loginAsync("velux123");
+				const gw = new Gateway(conn);
+				await gw.enableHouseStatusMonitorAsync();
+				await expect(gw.enableHouseStatusMonitorAsync()).to.be.fulfilled;
+			} finally {
+				await conn.logoutAsync();
+			}
+		});
 	});
 
 	describe("disableHouseStatusMonitorAsync", function () {
@@ -759,6 +914,24 @@ describe("Gateway", function () {
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
+				await expect(gw.disableHouseStatusMonitorAsync()).to.be.fulfilled;
+			} finally {
+				await conn.logoutAsync();
+			}
+		});
+
+		it("should handle multiple calls to disableHouseStatusMonitorAsync gracefully", async function () {
+			const conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			try {
+				await conn.loginAsync("velux123");
+				const gw = new Gateway(conn);
+				await gw.disableHouseStatusMonitorAsync();
 				await expect(gw.disableHouseStatusMonitorAsync()).to.be.fulfilled;
 			} finally {
 				await conn.logoutAsync();

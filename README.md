@@ -66,6 +66,8 @@ To use this module with the interface to run a product you have to do the follow
 3. Call `Product.setTargetPositionAsync` to set your product to the desired value.
 4. Close the connection using `logoutAsync`.
 
+This package supports [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management).
+
 ### Sample
 
 The following sample code shows how to open the window
@@ -78,7 +80,7 @@ import { Connection, Products, Product } from "klf-200-api";
     Use either the IP address or the name of *your* interface
     'velux-klf-12ab' is just a placeholder in this example.
 */
-const conn = new Connection('velux-klf-12ab');
+await using conn = new Connection('velux-klf-12ab');
 
 /*
     Login with *your* password.
@@ -92,7 +94,7 @@ const conn = new Connection('velux-klf-12ab');
 await conn.loginAsync('velux123');
 try {
     // Read the product's data:
-    const myProducts = await Products.createProductsAsync(conn);
+    using myProducts = await Products.createProductsAsync(conn);
 
     // Find the window by it's name:
     const myKitchenWindow = myProducts.findByName("Window kitchen");
@@ -116,21 +118,21 @@ const myFingerprint = "12:34:56:78:9a:bc:de:f0:12:34:56:78:9a:bc:de:f0:12:34:56:
 const myCA = readFileSync("velux-cert.pem");
 
 // Connect using your own certificate data:
-const conn = new Connection('velux-klf-12ab', myCA, myFingerprint);
+using conn = new Connection('velux-klf-12ab', myCA, myFingerprint);
 ...
 ```
 
 For some basic usage scenarios you can use the following classes:
 
--   `Gateway`: Represents the KLF-200. E.g. you can enable the
-    house status monitor, change the password or
-    query the current state.
--   `Products` and `Product`: Get a list of the products and control
-    a product, e.g. open a window.
--   `Groups` and `Group`: Get a list of groups and control them,
-    e.g. open all windows of a group together.
--   `Scenes` and `Scene`: Get a list of defined scenes and run a scene.
-    E.g. you can open different windows at different positions.
+- `Gateway`: Represents the KLF-200. E.g. you can enable the
+  house status monitor, change the password or
+  query the current state.
+- `Products` and `Product`: Get a list of the products and control
+  a product, e.g. open a window.
+- `Groups` and `Group`: Get a list of groups and control them,
+  e.g. open all windows of a group together.
+- `Scenes` and `Scene`: Get a list of defined scenes and run a scene.
+  E.g. you can open different windows at different positions.
 
 For other scenarios you may want to send a command directly to the KLF-200.
 You can do so by using the method `Connection.sendFrameAsync`.
@@ -142,160 +144,173 @@ Depending on the request, it can be finished when the confirmation frame
 is received. With other request, like opening a window, you will receive
 additional notifications, which will be provided by event handlers to you.
 
+## Debug logs
+
+The package support [debug](https://github.com/debug-js/debug#readme) logging.
+The following namespaces are defined:
+
+- `klf-200-api:connection`
+- `klf-200-api:gateway`
+- `klf-200-api:groups`
+- `klf-200-api:products`
+- `klf-200-api:scenes`
+- `klf-200-api:TypedEvents`
+- `klf-200-api:KLF200SocketProtocol` **CAUTION: This log may reveal sensitive data!**
+
 ## Status of implemented messages
 
 The following list shows the implemented messages that can be used:
 
--   [x] GW_ERROR_NTF
--   [x] GW_REBOOT_REQ
--   [x] GW_REBOOT_CFM
--   [x] GW_SET_FACTORY_DEFAULT_REQ
--   [x] GW_SET_FACTORY_DEFAULT_CFM
--   [x] GW_GET_VERSION_REQ
--   [x] GW_GET_VERSION_CFM
--   [x] GW_GET_PROTOCOL_VERSION_REQ
--   [x] GW_GET_PROTOCOL_VERSION_CFM
--   [x] GW_GET_STATE_REQ
--   [x] GW_GET_STATE_CFM
--   [x] GW_LEAVE_LEARN_STATE_REQ
--   [x] GW_LEAVE_LEARN_STATE_CFM
--   [x] GW_GET_NETWORK_SETUP_REQ
--   [x] GW_GET_NETWORK_SETUP_CFM
--   [x] GW_SET_NETWORK_SETUP_REQ
--   [x] GW_SET_NETWORK_SETUP_CFM
--   [x] GW_CS_GET_SYSTEMTABLE_DATA_REQ
--   [x] GW_CS_GET_SYSTEMTABLE_DATA_CFM
--   [x] GW_CS_GET_SYSTEMTABLE_DATA_NTF
--   [x] GW_CS_DISCOVER_NODES_REQ
--   [x] GW_CS_DISCOVER_NODES_CFM
--   [x] GW_CS_DISCOVER_NODES_NTF
--   [x] GW_CS_REMOVE_NODES_REQ
--   [x] GW_CS_REMOVE_NODES_CFM
--   [x] GW_CS_VIRGIN_STATE_REQ
--   [x] GW_CS_VIRGIN_STATE_CFM
--   [x] GW_CS_CONTROLLER_COPY_REQ
--   [x] GW_CS_CONTROLLER_COPY_CFM
--   [x] GW_CS_CONTROLLER_COPY_NTF
--   [x] GW_CS_CONTROLLER_COPY_CANCEL_NTF
--   [x] GW_CS_RECEIVE_KEY_REQ
--   [x] GW_CS_RECEIVE_KEY_CFM
--   [x] GW_CS_RECEIVE_KEY_NTF
--   [x] GW_CS_PGC_JOB_NTF
--   [x] GW_CS_SYSTEM_TABLE_UPDATE_NTF
--   [x] GW_CS_GENERATE_NEW_KEY_REQ
--   [x] GW_CS_GENERATE_NEW_KEY_CFM
--   [x] GW_CS_GENERATE_NEW_KEY_NTF
--   [x] GW_CS_REPAIR_KEY_REQ
--   [x] GW_CS_REPAIR_KEY_CFM
--   [x] GW_CS_REPAIR_KEY_NTF
--   [x] GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ
--   [x] GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM
--   [x] GW_GET_NODE_INFORMATION_REQ
--   [x] GW_GET_NODE_INFORMATION_CFM
--   [x] GW_GET_NODE_INFORMATION_NTF
--   [x] GW_GET_ALL_NODES_INFORMATION_REQ
--   [x] GW_GET_ALL_NODES_INFORMATION_CFM
--   [x] GW_GET_ALL_NODES_INFORMATION_NTF
--   [x] GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF
--   [x] GW_SET_NODE_VARIATION_REQ
--   [x] GW_SET_NODE_VARIATION_CFM
--   [x] GW_SET_NODE_NAME_REQ
--   [x] GW_SET_NODE_NAME_CFM
--   [x] GW_NODE_INFORMATION_CHANGED_NTF
--   [x] GW_NODE_STATE_POSITION_CHANGED_NTF
--   [x] GW_SET_NODE_ORDER_AND_PLACEMENT_REQ
--   [x] GW_SET_NODE_ORDER_AND_PLACEMENT_CFM
--   [x] GW_GET_GROUP_INFORMATION_REQ
--   [x] GW_GET_GROUP_INFORMATION_CFM
--   [x] GW_GET_GROUP_INFORMATION_NTF
--   [x] GW_SET_GROUP_INFORMATION_REQ
--   [x] GW_SET_GROUP_INFORMATION_CFM
--   [x] GW_GROUP_INFORMATION_CHANGED_NTF
--   [x] GW_DELETE_GROUP_REQ
--   [x] GW_DELETE_GROUP_CFM
--   [x] GW_NEW_GROUP_REQ
--   [x] GW_NEW_GROUP_CFM
--   [x] GW_GET_ALL_GROUPS_INFORMATION_REQ
--   [x] GW_GET_ALL_GROUPS_INFORMATION_CFM
--   [x] GW_GET_ALL_GROUPS_INFORMATION_NTF
--   [x] GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF
--   [x] GW_GROUP_DELETED_NTF
--   [x] GW_HOUSE_STATUS_MONITOR_ENABLE_REQ
--   [x] GW_HOUSE_STATUS_MONITOR_ENABLE_CFM
--   [x] GW_HOUSE_STATUS_MONITOR_DISABLE_REQ
--   [x] GW_HOUSE_STATUS_MONITOR_DISABLE_CFM
--   [x] GW_COMMAND_SEND_REQ
--   [x] GW_COMMAND_SEND_CFM
--   [x] GW_COMMAND_RUN_STATUS_NTF
--   [x] GW_COMMAND_REMAINING_TIME_NTF
--   [x] GW_SESSION_FINISHED_NTF
--   [x] GW_STATUS_REQUEST_REQ
--   [x] GW_STATUS_REQUEST_CFM
--   [x] GW_STATUS_REQUEST_NTF
--   [x] GW_WINK_SEND_REQ
--   [x] GW_WINK_SEND_CFM
--   [x] GW_WINK_SEND_NTF
--   [x] GW_SET_LIMITATION_REQ
--   [x] GW_SET_LIMITATION_CFM
--   [x] GW_GET_LIMITATION_STATUS_REQ
--   [x] GW_GET_LIMITATION_STATUS_CFM
--   [x] GW_LIMITATION_STATUS_NTF
--   [x] GW_MODE_SEND_REQ
--   [x] GW_MODE_SEND_CFM
--   [ ] ~~GW_MODE_SEND_NTF~~ \(not documented and not received\)
--   [x] GW_INITIALIZE_SCENE_REQ
--   [x] GW_INITIALIZE_SCENE_CFM
--   [x] GW_INITIALIZE_SCENE_NTF
--   [x] GW_INITIALIZE_SCENE_CANCEL_REQ
--   [x] GW_INITIALIZE_SCENE_CANCEL_CFM
--   [x] GW_RECORD_SCENE_REQ
--   [x] GW_RECORD_SCENE_CFM
--   [x] GW_RECORD_SCENE_NTF
--   [x] GW_DELETE_SCENE_REQ
--   [x] GW_DELETE_SCENE_CFM
--   [x] GW_RENAME_SCENE_REQ
--   [x] GW_RENAME_SCENE_CFM
--   [x] GW_GET_SCENE_LIST_REQ
--   [x] GW_GET_SCENE_LIST_CFM
--   [x] GW_GET_SCENE_LIST_NTF
--   [x] GW_GET_SCENE_INFOAMATION_REQ
--   [x] GW_GET_SCENE_INFOAMATION_CFM
--   [x] GW_GET_SCENE_INFOAMATION_NTF
--   [x] GW_ACTIVATE_SCENE_REQ
--   [x] GW_ACTIVATE_SCENE_CFM
--   [x] GW_STOP_SCENE_REQ
--   [x] GW_STOP_SCENE_CFM
--   [x] GW_SCENE_INFORMATION_CHANGED_NTF
--   [x] GW_ACTIVATE_PRODUCTGROUP_REQ
--   [x] GW_ACTIVATE_PRODUCTGROUP_CFM
--   [ ] ~~GW_ACTIVATE_PRODUCTGROUP_NTF~~ \(not documented and not received\)
--   [x] GW_GET_CONTACT_INPUT_LINK_LIST_REQ
--   [x] GW_GET_CONTACT_INPUT_LINK_LIST_CFM
--   [x] GW_SET_CONTACT_INPUT_LINK_REQ
--   [x] GW_SET_CONTACT_INPUT_LINK_CFM
--   [x] GW_REMOVE_CONTACT_INPUT_LINK_REQ
--   [x] GW_REMOVE_CONTACT_INPUT_LINK_CFM
--   [x] GW_GET_ACTIVATION_LOG_HEADER_REQ
--   [x] GW_GET_ACTIVATION_LOG_HEADER_CFM
--   [x] GW_CLEAR_ACTIVATION_LOG_REQ
--   [x] GW_CLEAR_ACTIVATION_LOG_CFM
--   [x] GW_GET_ACTIVATION_LOG_LINE_REQ
--   [x] GW_GET_ACTIVATION_LOG_LINE_CFM
--   [x] GW_ACTIVATION_LOG_UPDATED_NTF
--   [x] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ
--   [x] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF
--   [x] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM
--   [x] GW_SET_UTC_REQ
--   [x] GW_SET_UTC_CFM
--   [x] GW_RTC_SET_TIME_ZONE_REQ
--   [x] GW_RTC_SET_TIME_ZONE_CFM
--   [x] GW_GET_LOCAL_TIME_REQ
--   [x] GW_GET_LOCAL_TIME_CFM
--   [x] GW_PASSWORD_ENTER_REQ
--   [x] GW_PASSWORD_ENTER_CFM
--   [x] GW_PASSWORD_CHANGE_REQ
--   [x] GW_PASSWORD_CHANGE_CFM
--   [x] GW_PASSWORD_CHANGE_NTF
+- [x] GW_ERROR_NTF
+- [x] GW_REBOOT_REQ
+- [x] GW_REBOOT_CFM
+- [x] GW_SET_FACTORY_DEFAULT_REQ
+- [x] GW_SET_FACTORY_DEFAULT_CFM
+- [x] GW_GET_VERSION_REQ
+- [x] GW_GET_VERSION_CFM
+- [x] GW_GET_PROTOCOL_VERSION_REQ
+- [x] GW_GET_PROTOCOL_VERSION_CFM
+- [x] GW_GET_STATE_REQ
+- [x] GW_GET_STATE_CFM
+- [x] GW_LEAVE_LEARN_STATE_REQ
+- [x] GW_LEAVE_LEARN_STATE_CFM
+- [x] GW_GET_NETWORK_SETUP_REQ
+- [x] GW_GET_NETWORK_SETUP_CFM
+- [x] GW_SET_NETWORK_SETUP_REQ
+- [x] GW_SET_NETWORK_SETUP_CFM
+- [x] GW_CS_GET_SYSTEMTABLE_DATA_REQ
+- [x] GW_CS_GET_SYSTEMTABLE_DATA_CFM
+- [x] GW_CS_GET_SYSTEMTABLE_DATA_NTF
+- [x] GW_CS_DISCOVER_NODES_REQ
+- [x] GW_CS_DISCOVER_NODES_CFM
+- [x] GW_CS_DISCOVER_NODES_NTF
+- [x] GW_CS_REMOVE_NODES_REQ
+- [x] GW_CS_REMOVE_NODES_CFM
+- [x] GW_CS_VIRGIN_STATE_REQ
+- [x] GW_CS_VIRGIN_STATE_CFM
+- [x] GW_CS_CONTROLLER_COPY_REQ
+- [x] GW_CS_CONTROLLER_COPY_CFM
+- [x] GW_CS_CONTROLLER_COPY_NTF
+- [x] GW_CS_CONTROLLER_COPY_CANCEL_NTF
+- [x] GW_CS_RECEIVE_KEY_REQ
+- [x] GW_CS_RECEIVE_KEY_CFM
+- [x] GW_CS_RECEIVE_KEY_NTF
+- [x] GW_CS_PGC_JOB_NTF
+- [x] GW_CS_SYSTEM_TABLE_UPDATE_NTF
+- [x] GW_CS_GENERATE_NEW_KEY_REQ
+- [x] GW_CS_GENERATE_NEW_KEY_CFM
+- [x] GW_CS_GENERATE_NEW_KEY_NTF
+- [x] GW_CS_REPAIR_KEY_REQ
+- [x] GW_CS_REPAIR_KEY_CFM
+- [x] GW_CS_REPAIR_KEY_NTF
+- [x] GW_CS_ACTIVATE_CONFIGURATION_MODE_REQ
+- [x] GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM
+- [x] GW_GET_NODE_INFORMATION_REQ
+- [x] GW_GET_NODE_INFORMATION_CFM
+- [x] GW_GET_NODE_INFORMATION_NTF
+- [x] GW_GET_ALL_NODES_INFORMATION_REQ
+- [x] GW_GET_ALL_NODES_INFORMATION_CFM
+- [x] GW_GET_ALL_NODES_INFORMATION_NTF
+- [x] GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF
+- [x] GW_SET_NODE_VARIATION_REQ
+- [x] GW_SET_NODE_VARIATION_CFM
+- [x] GW_SET_NODE_NAME_REQ
+- [x] GW_SET_NODE_NAME_CFM
+- [x] GW_NODE_INFORMATION_CHANGED_NTF
+- [x] GW_NODE_STATE_POSITION_CHANGED_NTF
+- [x] GW_SET_NODE_ORDER_AND_PLACEMENT_REQ
+- [x] GW_SET_NODE_ORDER_AND_PLACEMENT_CFM
+- [x] GW_GET_GROUP_INFORMATION_REQ
+- [x] GW_GET_GROUP_INFORMATION_CFM
+- [x] GW_GET_GROUP_INFORMATION_NTF
+- [x] GW_SET_GROUP_INFORMATION_REQ
+- [x] GW_SET_GROUP_INFORMATION_CFM
+- [x] GW_GROUP_INFORMATION_CHANGED_NTF
+- [x] GW_DELETE_GROUP_REQ
+- [x] GW_DELETE_GROUP_CFM
+- [x] GW_NEW_GROUP_REQ
+- [x] GW_NEW_GROUP_CFM
+- [x] GW_GET_ALL_GROUPS_INFORMATION_REQ
+- [x] GW_GET_ALL_GROUPS_INFORMATION_CFM
+- [x] GW_GET_ALL_GROUPS_INFORMATION_NTF
+- [x] GW_GET_ALL_GROUPS_INFORMATION_FINISHED_NTF
+- [x] GW_GROUP_DELETED_NTF
+- [x] GW_HOUSE_STATUS_MONITOR_ENABLE_REQ
+- [x] GW_HOUSE_STATUS_MONITOR_ENABLE_CFM
+- [x] GW_HOUSE_STATUS_MONITOR_DISABLE_REQ
+- [x] GW_HOUSE_STATUS_MONITOR_DISABLE_CFM
+- [x] GW_COMMAND_SEND_REQ
+- [x] GW_COMMAND_SEND_CFM
+- [x] GW_COMMAND_RUN_STATUS_NTF
+- [x] GW_COMMAND_REMAINING_TIME_NTF
+- [x] GW_SESSION_FINISHED_NTF
+- [x] GW_STATUS_REQUEST_REQ
+- [x] GW_STATUS_REQUEST_CFM
+- [x] GW_STATUS_REQUEST_NTF
+- [x] GW_WINK_SEND_REQ
+- [x] GW_WINK_SEND_CFM
+- [x] GW_WINK_SEND_NTF
+- [x] GW_SET_LIMITATION_REQ
+- [x] GW_SET_LIMITATION_CFM
+- [x] GW_GET_LIMITATION_STATUS_REQ
+- [x] GW_GET_LIMITATION_STATUS_CFM
+- [x] GW_LIMITATION_STATUS_NTF
+- [x] GW_MODE_SEND_REQ
+- [x] GW_MODE_SEND_CFM
+- [ ] ~~GW_MODE_SEND_NTF~~ \(not documented and not received\)
+- [x] GW_INITIALIZE_SCENE_REQ
+- [x] GW_INITIALIZE_SCENE_CFM
+- [x] GW_INITIALIZE_SCENE_NTF
+- [x] GW_INITIALIZE_SCENE_CANCEL_REQ
+- [x] GW_INITIALIZE_SCENE_CANCEL_CFM
+- [x] GW_RECORD_SCENE_REQ
+- [x] GW_RECORD_SCENE_CFM
+- [x] GW_RECORD_SCENE_NTF
+- [x] GW_DELETE_SCENE_REQ
+- [x] GW_DELETE_SCENE_CFM
+- [x] GW_RENAME_SCENE_REQ
+- [x] GW_RENAME_SCENE_CFM
+- [x] GW_GET_SCENE_LIST_REQ
+- [x] GW_GET_SCENE_LIST_CFM
+- [x] GW_GET_SCENE_LIST_NTF
+- [x] GW_GET_SCENE_INFOAMATION_REQ
+- [x] GW_GET_SCENE_INFOAMATION_CFM
+- [x] GW_GET_SCENE_INFOAMATION_NTF
+- [x] GW_ACTIVATE_SCENE_REQ
+- [x] GW_ACTIVATE_SCENE_CFM
+- [x] GW_STOP_SCENE_REQ
+- [x] GW_STOP_SCENE_CFM
+- [x] GW_SCENE_INFORMATION_CHANGED_NTF
+- [x] GW_ACTIVATE_PRODUCTGROUP_REQ
+- [x] GW_ACTIVATE_PRODUCTGROUP_CFM
+- [ ] ~~GW_ACTIVATE_PRODUCTGROUP_NTF~~ \(not documented and not received\)
+- [x] GW_GET_CONTACT_INPUT_LINK_LIST_REQ
+- [x] GW_GET_CONTACT_INPUT_LINK_LIST_CFM
+- [x] GW_SET_CONTACT_INPUT_LINK_REQ
+- [x] GW_SET_CONTACT_INPUT_LINK_CFM
+- [x] GW_REMOVE_CONTACT_INPUT_LINK_REQ
+- [x] GW_REMOVE_CONTACT_INPUT_LINK_CFM
+- [x] GW_GET_ACTIVATION_LOG_HEADER_REQ
+- [x] GW_GET_ACTIVATION_LOG_HEADER_CFM
+- [x] GW_CLEAR_ACTIVATION_LOG_REQ
+- [x] GW_CLEAR_ACTIVATION_LOG_CFM
+- [x] GW_GET_ACTIVATION_LOG_LINE_REQ
+- [x] GW_GET_ACTIVATION_LOG_LINE_CFM
+- [x] GW_ACTIVATION_LOG_UPDATED_NTF
+- [x] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_REQ
+- [x] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF
+- [x] GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_CFM
+- [x] GW_SET_UTC_REQ
+- [x] GW_SET_UTC_CFM
+- [x] GW_RTC_SET_TIME_ZONE_REQ
+- [x] GW_RTC_SET_TIME_ZONE_CFM
+- [x] GW_GET_LOCAL_TIME_REQ
+- [x] GW_GET_LOCAL_TIME_CFM
+- [x] GW_PASSWORD_ENTER_REQ
+- [x] GW_PASSWORD_ENTER_CFM
+- [x] GW_PASSWORD_CHANGE_REQ
+- [x] GW_PASSWORD_CHANGE_CFM
+- [x] GW_PASSWORD_CHANGE_NTF
 
 ## Changelog
 

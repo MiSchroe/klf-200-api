@@ -4,6 +4,7 @@ import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import debugModule from "debug";
 import { readFileSync } from "fs";
+import net from "net";
 import { dirname, join } from "path";
 import { TimeoutError } from "promise-timeout";
 import sinon from "sinon";
@@ -57,22 +58,18 @@ describe("connection", function () {
 
 	describe("loginAsync", function () {
 		it("should succeed with correct passowrd.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
-			try {
-				await expect(conn.loginAsync("velux123")).to.be.fulfilled;
-			} finally {
-				await conn.logoutAsync();
-			}
+			await expect(conn.loginAsync("velux123")).to.be.fulfilled;
 		});
 
 		it("should throw an error with incorrect passowrd.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -85,15 +82,11 @@ describe("connection", function () {
 				gatewayConfirmation: GatewayCommand.GW_PASSWORD_ENTER_CFM,
 				data: Buffer.from([GW_COMMON_STATUS.ERROR]).toString("base64"),
 			});
-			try {
-				await expect(conn.loginAsync("velux123")).to.be.rejectedWith(Error);
-			} finally {
-				await conn.logoutAsync();
-			}
+			await expect(conn.loginAsync("velux123")).to.be.rejectedWith(Error);
 		});
 
 		it("should throw an error on GW_ERROR_NTF.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -106,17 +99,13 @@ describe("connection", function () {
 				gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 				data: Buffer.from([GW_ERROR.NotAuthenticated]).toString("base64"),
 			});
-			try {
-				await expect(conn.loginAsync("velux123")).to.be.rejectedWith(Error);
-			} finally {
-				await conn.logoutAsync();
-			}
+			await expect(conn.loginAsync("velux123")).to.be.rejectedWith(Error);
 		});
 
 		it("should throw an error after timeout.", async function () {
 			const clock = sinon.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
 			try {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -164,7 +153,7 @@ describe("connection", function () {
 		});
 
 		it(`should reconnect without error after the connection is lost.`, async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -188,6 +177,8 @@ describe("connection", function () {
 				expect(conn.KLF200SocketProtocol).to.be.undefined;
 
 				await expect(conn.loginAsync("velux123")).to.be.fulfilled;
+				expect(conn.KLF200SocketProtocol).to.be.instanceOf(KLF200SocketProtocol);
+				expect(conn.KLF200SocketProtocol?.socket.readyState).to.equal("open");
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -196,7 +187,7 @@ describe("connection", function () {
 
 	describe("logoutAsync", function () {
 		it("should fulfill if not logged in.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -207,7 +198,7 @@ describe("connection", function () {
 		});
 
 		it("should fulfill if logged in.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -218,28 +209,37 @@ describe("connection", function () {
 
 			await expect(conn.logoutAsync()).to.be.fulfilled;
 		});
-	});
 
-	describe("sendFrameAsync", function () {
-		it("should return the corresponding confirmation.", async function () {
-			const conn = new Connection(testHOST, {
+		it("should handle multiple calls to logoutAsync gracefully", async function () {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
-			try {
-				await conn.loginAsync("velux123");
-				const p = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"));
-				await expect(p).to.be.fulfilled;
-			} finally {
-				await conn.logoutAsync();
-			}
+			await conn.loginAsync("velux123");
+			await conn.logoutAsync();
+			await expect(conn.logoutAsync()).to.be.fulfilled; // Call again
+		});
+	});
+
+	describe("sendFrameAsync", function () {
+		it("should return the corresponding confirmation.", async function () {
+			await using conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			await conn.loginAsync("velux123");
+			const p = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"));
+			await expect(p).to.be.fulfilled;
 		});
 
 		it("should timeout on missing confirmation.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -321,42 +321,50 @@ describe("connection", function () {
 		});
 
 		it("should reject on error frame.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
-			try {
-				await conn.loginAsync("velux123");
-				await mockServerController?.sendCommand({
-					command: "SetConfirmation",
-					gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_REQ,
-					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
-					data: Buffer.from([GW_ERROR.NotAuthenticated]).toString("base64"),
-				});
-				const sendFramePromise = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1000);
-				await expect(sendFramePromise).to.be.rejectedWith(Error);
-			} finally {
-				await conn.logoutAsync();
-			}
+			await conn.loginAsync("velux123");
+			await mockServerController?.sendCommand({
+				command: "SetConfirmation",
+				gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_REQ,
+				gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+				data: Buffer.from([GW_ERROR.NotAuthenticated]).toString("base64"),
+			});
+			const sendFramePromise = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1000);
+			await expect(sendFramePromise).to.be.rejectedWith(Error);
+		});
+
+		it("should throw an error when called with null", async function () {
+			await using conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			await conn.loginAsync("velux123");
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+			await expect(conn.sendFrameAsync(null as any)).to.be.rejectedWith(Error);
 		});
 
 		it("should ignore wrong confirmation.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
-			try {
-				await conn.loginAsync("velux123");
-				await mockServerController?.sendCommand({
-					command: "SetFunction",
-					gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_REQ,
-					func: `function addCommandAndLengthToBuffer(command, buffer) {
+			await conn.loginAsync("velux123");
+			await mockServerController?.sendCommand({
+				command: "SetFunction",
+				gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_REQ,
+				func: `function addCommandAndLengthToBuffer(command, buffer) {
 		const resultBuffer = Buffer.alloc(3 + buffer.length);
 		resultBuffer.set(buffer, 3);
 		resultBuffer.writeUInt16BE(command, 1);
@@ -370,16 +378,13 @@ return new Promise((resolve) => {
 		addCommandAndLengthToBuffer(${GatewayCommand.GW_PASSWORD_ENTER_CFM}, [${GW_COMMON_STATUS.SUCCESS}])
 	]);
 });`,
-				});
-				const sendFramePromise = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1000);
-				await expect(sendFramePromise).to.be.fulfilled;
-			} finally {
-				await conn.logoutAsync();
-			}
+			});
+			const sendFramePromise = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 1000);
+			await expect(sendFramePromise).to.be.fulfilled;
 		});
 
 		it("should call the notification handler.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -387,39 +392,74 @@ return new Promise((resolve) => {
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
 			await conn.loginAsync("velux123");
-			try {
-				const notificationHandlerSpy = sinon.spy();
-				conn.onFrameSent(notificationHandlerSpy);
-				const resultSendFrameAsync = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"));
-				await expect(resultSendFrameAsync).to.be.fulfilled;
-				expect(notificationHandlerSpy).to.be.calledOnce;
-			} finally {
-				await conn.logoutAsync();
-			}
+			const notificationHandlerSpy = sinon.spy();
+			conn.onFrameSent(notificationHandlerSpy);
+			const resultSendFrameAsync = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"));
+			await expect(resultSendFrameAsync).to.be.fulfilled;
+			expect(notificationHandlerSpy).to.be.calledOnce;
 		});
 	});
 
 	describe("KLF200SocketProtocol", function () {
 		it("should get the protocol after login.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
-			try {
-				await conn.loginAsync("velux123");
-				expect(conn.KLF200SocketProtocol).to.be.instanceOf(KLF200SocketProtocol);
-			} finally {
-				await conn.logoutAsync();
+			await conn.loginAsync("velux123");
+			expect(conn.KLF200SocketProtocol).to.be.instanceOf(KLF200SocketProtocol);
+		});
+
+		it("should handle unexpected protocol closure gracefully", async function () {
+			await using conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			await conn.loginAsync("velux123");
+			expect(conn.KLF200SocketProtocol).to.be.instanceOf(KLF200SocketProtocol);
+			expect(conn.KLF200SocketProtocol?.socket).to.be.instanceOf(net.Socket);
+			conn.KLF200SocketProtocol?.socket?.destroy(); // Simulate unexpected closure
+			// Reset the mock server
+			if (mockServerController) {
+				await mockServerController.sendCommand(ResetCommand);
+				await mockServerController.sendCommand(CloseConnectionCommand);
 			}
+
+			expect(conn.KLF200SocketProtocol).to.be.undefined;
+		});
+
+		it("should reconnect after protocol is unavailable", async function () {
+			await using conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			await conn.loginAsync("velux123");
+			expect(conn.KLF200SocketProtocol).to.be.instanceOf(KLF200SocketProtocol);
+			expect(conn.KLF200SocketProtocol?.socket).to.be.instanceOf(net.Socket);
+			conn.KLF200SocketProtocol?.socket?.destroy(); // Simulate unexpected closure
+			// Reset the mock server
+			if (mockServerController) {
+				await mockServerController.sendCommand(ResetCommand);
+				await mockServerController.sendCommand(CloseConnectionCommand);
+			}
+			await expect(conn.loginAsync("velux123")).to.be.fulfilled; // Reconnect
+			expect(conn.KLF200SocketProtocol).to.be.instanceOf(KLF200SocketProtocol);
+			expect(conn.KLF200SocketProtocol?.socket.readyState).to.equal("open");
 		});
 	});
 
 	describe("on", function () {
 		it("should receive a frame in the registered event handler", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -427,30 +467,26 @@ return new Promise((resolve) => {
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
 			await conn.loginAsync("velux123");
-			try {
-				const handlerSpy = sinon.spy();
-				conn.on(handlerSpy);
-				// Send a frame
-				const waitPromise = new Promise((resolve) => {
-					conn.on(resolve, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
-				});
-				await mockServerController?.sendCommand({
-					command: "SendData",
-					gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_CFM,
-					data: Buffer.from([GW_COMMON_STATUS.SUCCESS]).toString("base64"),
-				});
+			const handlerSpy = sinon.spy();
+			conn.on(handlerSpy);
+			// Send a frame
+			const waitPromise = new Promise((resolve) => {
+				conn.on(resolve, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
+			});
+			await mockServerController?.sendCommand({
+				command: "SendData",
+				gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_CFM,
+				data: Buffer.from([GW_COMMON_STATUS.SUCCESS]).toString("base64"),
+			});
 
-				// Let the asynchronous stuff run and give the notification some time
-				await waitPromise;
+			// Let the asynchronous stuff run and give the notification some time
+			await waitPromise;
 
-				expect(handlerSpy).to.be.calledOnce;
-			} finally {
-				await conn.logoutAsync();
-			}
+			expect(handlerSpy).to.be.calledOnce;
 		});
 
 		it("should receive a frame in the filtered registered event handler on match", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -458,30 +494,26 @@ return new Promise((resolve) => {
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
 			await conn.loginAsync("velux123");
-			try {
-				const handlerSpy = sinon.spy();
-				conn.on(handlerSpy, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
-				// Send a frame
-				const waitPromise = new Promise((resolve) => {
-					conn.on(resolve, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
-				});
-				await mockServerController?.sendCommand({
-					command: "SendData",
-					gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_CFM,
-					data: Buffer.from([GW_COMMON_STATUS.SUCCESS]).toString("base64"),
-				});
+			const handlerSpy = sinon.spy();
+			conn.on(handlerSpy, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
+			// Send a frame
+			const waitPromise = new Promise((resolve) => {
+				conn.on(resolve, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
+			});
+			await mockServerController?.sendCommand({
+				command: "SendData",
+				gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_CFM,
+				data: Buffer.from([GW_COMMON_STATUS.SUCCESS]).toString("base64"),
+			});
 
-				// Let the asynchronous stuff run and give the notification some time
-				await waitPromise;
+			// Let the asynchronous stuff run and give the notification some time
+			await waitPromise;
 
-				expect(handlerSpy).to.be.calledOnce;
-			} finally {
-				await conn.logoutAsync();
-			}
+			expect(handlerSpy).to.be.calledOnce;
 		});
 
 		it("shouldn't receive a frame in the filtered registered event handler on no match", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -489,26 +521,42 @@ return new Promise((resolve) => {
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
 			await conn.loginAsync("velux123");
-			try {
-				const handlerSpy = sinon.spy();
-				conn.on(handlerSpy, [GatewayCommand.GW_PASSWORD_CHANGE_CFM]);
-				// Send a frame
-				const waitPromise = new Promise((resolve) => {
-					conn.on(resolve, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
-				});
-				await mockServerController?.sendCommand({
-					command: "SendData",
-					gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_CFM,
-					data: Buffer.from([GW_COMMON_STATUS.SUCCESS]).toString("base64"),
-				});
+			const handlerSpy = sinon.spy();
+			conn.on(handlerSpy, [GatewayCommand.GW_PASSWORD_CHANGE_CFM]);
+			// Send a frame
+			const waitPromise = new Promise((resolve) => {
+				conn.on(resolve, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
+			});
+			await mockServerController?.sendCommand({
+				command: "SendData",
+				gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_CFM,
+				data: Buffer.from([GW_COMMON_STATUS.SUCCESS]).toString("base64"),
+			});
 
-				// Let the asynchronous stuff run and give the notification some time
-				await waitPromise;
+			// Let the asynchronous stuff run and give the notification some time
+			await waitPromise;
 
-				expect(handlerSpy).not.to.be.called;
-			} finally {
-				await conn.logoutAsync();
-			}
+			expect(handlerSpy).not.to.be.called;
+		});
+
+		it("should successfully remove a registered handler when disposed", async function () {
+			await using conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			await conn.loginAsync("velux123");
+			const handler = sinon.spy();
+			const dispose = conn.on(handler, [GatewayCommand.GW_PASSWORD_ENTER_CFM]);
+			dispose[Symbol.dispose](); // Remove the handler
+			await mockServerController?.sendCommand({
+				command: "SendData",
+				gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_CFM,
+				data: Buffer.from([GW_COMMON_STATUS.SUCCESS]).toString("base64"),
+			});
+			expect(handler).not.to.be.called;
 		});
 	});
 
@@ -516,7 +564,7 @@ return new Promise((resolve) => {
 		it("should send a GW_GET_STATE_REQ after 10 minutes", async function () {
 			const expectedRequest = new GW_GET_STATE_REQ();
 
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -524,27 +572,53 @@ return new Promise((resolve) => {
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
 			await conn.loginAsync("velux123");
+			const sentDataSpy = sinon.spy(conn, "sendFrameAsync");
+			const clock = sinon.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+
 			try {
-				const sentDataSpy = sinon.spy(conn, "sendFrameAsync");
-				const clock = sinon.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+				conn.startKeepAlive();
 
-				try {
-					conn.startKeepAlive();
-
-					await clock.tickAsync("10:00");
-				} finally {
-					clock.restore();
-				}
-				expect(sentDataSpy).to.be.calledOnceWith(expectedRequest);
+				await clock.tickAsync("10:00");
 			} finally {
-				await conn.logoutAsync();
+				clock.restore();
 			}
+			expect(sentDataSpy).to.be.calledOnceWith(expectedRequest);
 		});
 
 		it("should postpone the GW_GET_STATE_REQ if other data is sent before 10 minutes", async function () {
 			const expectedRequest = new GW_GET_STATE_REQ();
 
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			await conn.loginAsync("velux123");
+			const sentDataSpy = sinon.spy(conn, "sendFrameAsync");
+			const clock = sinon.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+
+			try {
+				conn.startKeepAlive();
+
+				// Wait 5 minutes
+				await clock.tickAsync("05:00");
+
+				// Send a message in between
+				await conn.sendFrameAsync(new GW_SET_UTC_REQ());
+
+				// Wait another 5 minutes
+				await clock.tickAsync("05:00");
+			} finally {
+				clock.restore();
+			}
+			expect(sentDataSpy).to.be.calledOnce;
+			expect(sentDataSpy).not.to.be.calledWith(expectedRequest);
+		});
+
+		it("should handle multiple calls to startKeepAlive without errors", async function () {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -555,32 +629,27 @@ return new Promise((resolve) => {
 			try {
 				const sentDataSpy = sinon.spy(conn, "sendFrameAsync");
 				const clock = sinon.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
-
 				try {
 					conn.startKeepAlive();
+					conn.startKeepAlive(); // Call again
 
-					// Wait 5 minutes
-					await clock.tickAsync("05:00");
+					// Wait 16 minutes
+					await clock.tickAsync("16:00");
 
-					// Send a message in between
-					await conn.sendFrameAsync(new GW_SET_UTC_REQ());
-
-					// Wait another 5 minutes
-					await clock.tickAsync("05:00");
+					// sendFrameAsync should be called only once
+					expect(sentDataSpy).to.be.calledOnce;
 				} finally {
 					clock.restore();
 				}
-				expect(sentDataSpy).to.be.calledOnce;
-				expect(sentDataSpy).not.to.be.calledWith(expectedRequest);
 			} finally {
-				await conn.logoutAsync();
+				conn.stopKeepAlive();
 			}
 		});
 	});
 
 	describe("stopKeepAlive", function () {
 		it("shouldn't send a GW_GET_STATE_REQ after 10 minutes after stopping the keep-alive", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -588,25 +657,33 @@ return new Promise((resolve) => {
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
 			await conn.loginAsync("velux123");
+			const sentDataSpy = sinon.spy(conn, "sendFrameAsync");
+			const clock = sinon.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+
 			try {
-				const sentDataSpy = sinon.spy(conn, "sendFrameAsync");
-				const clock = sinon.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+				conn.startKeepAlive();
 
-				try {
-					conn.startKeepAlive();
+				await clock.tickAsync("05:00");
 
-					await clock.tickAsync("05:00");
+				conn.stopKeepAlive();
 
-					conn.stopKeepAlive();
-
-					await clock.tickAsync("05:00");
-				} finally {
-					clock.restore();
-				}
-				expect(sentDataSpy).not.to.be.called;
+				await clock.tickAsync("05:00");
 			} finally {
-				await conn.logoutAsync();
+				clock.restore();
 			}
+			expect(sentDataSpy).not.to.be.called;
+		});
+
+		it("should handle stopKeepAlive without startKeepAlive", async function () {
+			await using conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			await conn.loginAsync("velux123");
+			expect(conn.stopKeepAlive).not.to.throw;
 		});
 	});
 });

@@ -1,5 +1,6 @@
 "use strict";
 
+import debugModule from "debug";
 import { GW_GET_NETWORK_SETUP_REQ } from "./KLF200-API/GW_GET_NETWORK_SETUP_REQ.js";
 import { GW_GET_PROTOCOL_VERSION_REQ } from "./KLF200-API/GW_GET_PROTOCOL_VERSION_REQ.js";
 import { GatewayState, GatewaySubState } from "./KLF200-API/GW_GET_STATE_CFM.js";
@@ -19,6 +20,8 @@ import { GW_SET_UTC_REQ } from "./KLF200-API/GW_SET_UTC_REQ.js";
 import { GW_COMMON_STATUS, GW_INVERSE_STATUS } from "./KLF200-API/common.js";
 import { IConnection } from "./connection.js";
 
+const debug = debugModule(`klf-200-api:gateway`);
+
 /**
  * Provides basic functions to control general functions of the KLF interface.
  *
@@ -29,7 +32,12 @@ export class Gateway {
 	 *Creates an instance of Gateway.
 	 * @param {IConnection} connection The connection that will be used to send and receive commands.
 	 */
-	constructor(readonly connection: IConnection) {}
+	constructor(readonly connection: IConnection) {
+		debug("Creating Gateway.");
+		if (!connection) {
+			throw new Error("No connection provided");
+		}
+	}
 
 	/**
 	 * Changes the password of the KLF interface.
@@ -39,14 +47,11 @@ export class Gateway {
 	 * @returns {Promise<boolean>} Returns a promise that fulfills to true if the password has been changed successfully.
 	 */
 	async changePasswordAsync(oldPassword: string, newPassword: string): Promise<boolean> {
-		try {
-			const passwordChanged: GW_PASSWORD_CHANGE_CFM = await this.connection.sendFrameAsync(
-				new GW_PASSWORD_CHANGE_REQ(oldPassword, newPassword),
-			);
-			return passwordChanged.Status === GW_COMMON_STATUS.SUCCESS;
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Changing password.`);
+		const passwordChanged: GW_PASSWORD_CHANGE_CFM = await this.connection.sendFrameAsync(
+			new GW_PASSWORD_CHANGE_REQ(oldPassword, newPassword),
+		);
+		return passwordChanged.Status === GW_COMMON_STATUS.SUCCESS;
 	}
 
 	/**
@@ -61,17 +66,14 @@ export class Gateway {
 		ProductGroup: number;
 		ProductType: number;
 	}> {
-		try {
-			const versionInformation = await this.connection.sendFrameAsync(new GW_GET_VERSION_REQ());
-			return {
-				SoftwareVersion: versionInformation.SoftwareVersion,
-				HardwareVersion: versionInformation.HardwareVersion,
-				ProductGroup: versionInformation.ProductGroup,
-				ProductType: versionInformation.ProductType,
-			};
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Reading version information.`);
+		const versionInformation = await this.connection.sendFrameAsync(new GW_GET_VERSION_REQ());
+		return {
+			SoftwareVersion: versionInformation.SoftwareVersion,
+			HardwareVersion: versionInformation.HardwareVersion,
+			ProductGroup: versionInformation.ProductGroup,
+			ProductType: versionInformation.ProductType,
+		};
 	}
 
 	/**
@@ -81,15 +83,12 @@ export class Gateway {
 	 *          Returns an object with major and minor version number of the protocol.
 	 */
 	async getProtocolVersionAsync(): Promise<{ MajorVersion: number; MinorVersion: number }> {
-		try {
-			const versionInformation = await this.connection.sendFrameAsync(new GW_GET_PROTOCOL_VERSION_REQ());
-			return {
-				MajorVersion: versionInformation.MajorVersion,
-				MinorVersion: versionInformation.MinorVersion,
-			};
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Reading protocol version information.`);
+		const versionInformation = await this.connection.sendFrameAsync(new GW_GET_PROTOCOL_VERSION_REQ());
+		return {
+			MajorVersion: versionInformation.MajorVersion,
+			MinorVersion: versionInformation.MinorVersion,
+		};
 	}
 
 	/**
@@ -99,15 +98,12 @@ export class Gateway {
 	 *          Returns the current state and sub-state of the gateway.
 	 */
 	async getStateAsync(): Promise<{ GatewayState: GatewayState; SubState: GatewaySubState }> {
-		try {
-			const state = await this.connection.sendFrameAsync(new GW_GET_STATE_REQ());
-			return {
-				GatewayState: state.GatewayState,
-				SubState: state.GatewaySubState,
-			};
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Reading state information.`);
+		const state = await this.connection.sendFrameAsync(new GW_GET_STATE_REQ());
+		return {
+			GatewayState: state.GatewayState,
+			SubState: state.GatewaySubState,
+		};
 	}
 
 	/**
@@ -117,11 +113,8 @@ export class Gateway {
 	 * @returns {Promise<void>}
 	 */
 	async setUTCDateTimeAsync(utcTimestamp: Date = new Date()): Promise<void> {
-		try {
-			await this.connection.sendFrameAsync(new GW_SET_UTC_REQ(utcTimestamp));
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Setting UTC date/time to ${utcTimestamp.toISOString()}.`);
+		await this.connection.sendFrameAsync(new GW_SET_UTC_REQ(utcTimestamp));
 	}
 
 	/**
@@ -131,12 +124,9 @@ export class Gateway {
 	 * @returns {Promise<void>}
 	 */
 	async setTimeZoneAsync(timeZone: string): Promise<void> {
-		try {
-			const timeZoneCFM = await this.connection.sendFrameAsync(new GW_RTC_SET_TIME_ZONE_REQ(timeZone));
-			if (timeZoneCFM.Status !== GW_INVERSE_STATUS.SUCCESS) throw new Error("Error setting time zone.");
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Setting time zone to ${timeZone}.`);
+		const timeZoneCFM = await this.connection.sendFrameAsync(new GW_RTC_SET_TIME_ZONE_REQ(timeZone));
+		if (timeZoneCFM.Status !== GW_INVERSE_STATUS.SUCCESS) throw new Error("Error setting time zone.");
 	}
 
 	/**
@@ -145,11 +135,8 @@ export class Gateway {
 	 * @returns {Promise<void>}
 	 */
 	async rebootAsync(): Promise<void> {
-		try {
-			await this.connection.sendFrameAsync(new GW_REBOOT_REQ());
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Rebooting KLF interface.`);
+		await this.connection.sendFrameAsync(new GW_REBOOT_REQ());
 	}
 
 	/**
@@ -158,11 +145,8 @@ export class Gateway {
 	 * @returns {Promise<void>}
 	 */
 	async factoryResetAsync(): Promise<void> {
-		try {
-			await this.connection.sendFrameAsync(new GW_SET_FACTORY_DEFAULT_REQ());
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Factory resetting KLF interface.`);
+		await this.connection.sendFrameAsync(new GW_SET_FACTORY_DEFAULT_REQ());
 	}
 
 	/**
@@ -172,11 +156,8 @@ export class Gateway {
 	 * @returns {Promise<void>}
 	 */
 	async leaveLearnStateAsync(): Promise<void> {
-		try {
-			await this.connection.sendFrameAsync(new GW_LEAVE_LEARN_STATE_REQ());
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Leaving learn state.`);
+		await this.connection.sendFrameAsync(new GW_LEAVE_LEARN_STATE_REQ());
 	}
 
 	/**
@@ -191,17 +172,14 @@ export class Gateway {
 		DefaultGateway: string;
 		DHCP: boolean;
 	}> {
-		try {
-			const networkSettings = await this.connection.sendFrameAsync(new GW_GET_NETWORK_SETUP_REQ());
-			return {
-				IPAddress: networkSettings.IPAddress,
-				Mask: networkSettings.Mask,
-				DefaultGateway: networkSettings.DefaultGateway,
-				DHCP: networkSettings.DHCP,
-			};
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Reading network settings.`);
+		const networkSettings = await this.connection.sendFrameAsync(new GW_GET_NETWORK_SETUP_REQ());
+		return {
+			IPAddress: networkSettings.IPAddress,
+			Mask: networkSettings.Mask,
+			DefaultGateway: networkSettings.DefaultGateway,
+			DHCP: networkSettings.DHCP,
+		};
 	}
 
 	/**
@@ -227,14 +205,13 @@ export class Gateway {
 		Mask?: string,
 		DefaultGateway?: string,
 	): Promise<void> {
-		try {
-			if (DHCP) {
-				IPAddress = Mask = DefaultGateway = "0.0.0.0";
-			}
-			await this.connection.sendFrameAsync(new GW_SET_NETWORK_SETUP_REQ(DHCP, IPAddress, Mask, DefaultGateway));
-		} catch (error) {
-			return Promise.reject(error as Error);
+		debug(
+			`Setting network settings to DHCP=${DHCP}, IPAddress=${IPAddress}, Mask=${Mask}, DefaultGateway=${DefaultGateway}.`,
+		);
+		if (DHCP) {
+			IPAddress = Mask = DefaultGateway = "0.0.0.0";
 		}
+		await this.connection.sendFrameAsync(new GW_SET_NETWORK_SETUP_REQ(DHCP, IPAddress, Mask, DefaultGateway));
 	}
 
 	/**
@@ -246,11 +223,8 @@ export class Gateway {
 	 * @returns {Promise<void>}
 	 */
 	async enableHouseStatusMonitorAsync(): Promise<void> {
-		try {
-			await this.connection.sendFrameAsync(new GW_HOUSE_STATUS_MONITOR_ENABLE_REQ());
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Enabling house status monitor.`);
+		await this.connection.sendFrameAsync(new GW_HOUSE_STATUS_MONITOR_ENABLE_REQ());
 	}
 
 	/**
@@ -262,10 +236,8 @@ export class Gateway {
 	 * @returns {Promise<void>}
 	 */
 	async disableHouseStatusMonitorAsync(): Promise<void> {
-		try {
-			await this.connection.sendFrameAsync(new GW_HOUSE_STATUS_MONITOR_DISABLE_REQ());
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Disabling house status monitor.`);
+		await this.connection.sendFrameAsync(new GW_HOUSE_STATUS_MONITOR_DISABLE_REQ());
 	}
 }
+

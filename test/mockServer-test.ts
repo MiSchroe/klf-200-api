@@ -43,4 +43,37 @@ describe("mockServer", function () {
 		expect(serverProcess).to.be.not.undefined;
 		expect(serverProcess.connected).to.be.false;
 	});
+
+	it("should handle errors during server disposal gracefully", async function () {
+		this.timeout(20000);
+		this.slow(7000);
+		const mockServer = await MockServerController.createMockServer();
+		const stub = sandbox.stub(mockServer.serverProcess, "kill").throws(new Error("Failed to kill process"));
+		try {
+			await expect(mockServer[Symbol.asyncDispose]()).to.be.rejectedWith("Failed to kill process");
+		} finally {
+			stub.restore();
+			await mockServer[Symbol.asyncDispose]();
+		}
+	});
+
+	it("should handle multiple disposals gracefully", async function () {
+		this.timeout(20000);
+		this.slow(7000);
+		const mockServer = await MockServerController.createMockServer();
+		await mockServer[Symbol.asyncDispose]();
+		await expect(mockServer[Symbol.asyncDispose]()).to.be.fulfilled; // Call dispose again
+	});
+
+	it("should handle commands sent to the mock server", async function () {
+		this.timeout(20000);
+		this.slow(7000);
+		await using mockServer = await MockServerController.createMockServer();
+		const response = mockServer.sendCommand({
+			command: "SendData",
+			gatewayCommand: 0x01, // Example command
+			data: Buffer.from([0x00, 0x01]).toString("base64"),
+		});
+		await expect(response).to.be.fulfilled;
+	});
 });

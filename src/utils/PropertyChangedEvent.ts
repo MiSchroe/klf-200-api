@@ -8,7 +8,12 @@ export type PropertyChangedEvent = {
 	propertyValue: any;
 };
 
-export abstract class Component {
+export abstract class Component implements Disposable {
+	public [Symbol.dispose](): void {
+		// Clean up resources or perform any necessary teardown logic
+		this.propertyChangedEvent[Symbol.dispose]();
+	}
+
 	/**
 	 * The event will be emitted when any of the public properties has changed.
 	 * The event object contains a reference to the product, the name of the property

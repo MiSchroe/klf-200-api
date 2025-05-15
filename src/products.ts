@@ -1,6 +1,7 @@
 ﻿"use strict";
 
 import debugModule from "debug";
+import "disposablestack/auto";
 import { setImmediate } from "timers/promises";
 import {
 	CommandOriginator,
@@ -54,7 +55,7 @@ import { GW_WINK_SEND_REQ } from "./KLF200-API/GW_WINK_SEND_REQ.js";
 import { GW_COMMON_STATUS, GW_INVERSE_STATUS, GatewayCommand, IGW_FRAME_RCV } from "./KLF200-API/common.js";
 import { IConnection } from "./connection.js";
 import { Component } from "./utils/PropertyChangedEvent.js";
-import { Disposable, Listener, TypedEvent } from "./utils/TypedEvent.js";
+import { Listener, TypedEvent } from "./utils/TypedEvent.js";
 
 const debug = debugModule(`klf-200-api:products`);
 
@@ -164,6 +165,8 @@ export class Product extends Component {
 	private _runStatus: RunStatus = RunStatus.ExecutionCompleted;
 	private _statusReply: StatusReply = StatusReply.Unknown;
 
+	private _disposables = new DisposableStack();
+
 	/**
 	 * Creates an instance of Product. You shouldn't create instances
 	 * of the [[Product]] class by yourself. Instead, use the [[Products]] class
@@ -176,6 +179,7 @@ export class Product extends Component {
 		readonly Connection: IConnection,
 		frame: GW_GET_NODE_INFORMATION_NTF | GW_GET_ALL_NODES_INFORMATION_NTF,
 	) {
+		debug(`Creating Product instance for node ID: ${frame.NodeID}`);
 		super();
 
 		this.NodeID = frame.NodeID;
@@ -212,22 +216,28 @@ export class Product extends Component {
 			LockTime.lockTimeTolockTimeValueForLimitation(Infinity),
 		);
 
-		this.Connection.on(
-			async (frame) => {
-				debug(
-					`Calling onNotificationHandler for GW_NODE_INFORMATION_CHANGED_NTF, GW_NODE_STATE_POSITION_CHANGED_NTF, GW_COMMAND_RUN_STATUS_NTF, GW_COMMAND_REMAINING_TIME_NTF, GW_GET_NODE_INFORMATION_NTF, GW_STATUS_REQUEST_NTF added in Product constructor.`,
-				);
-				await this.onNotificationHandler(frame);
-			},
-			[
-				GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
-				GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
-				GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
-				GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF,
-				GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
-				GatewayCommand.GW_STATUS_REQUEST_NTF,
-			],
+		this._disposables.use(
+			this.Connection.on(
+				async (frame) => {
+					debug(`Handling notification for Product NodeID: ${this.NodeID}`);
+					await this.onNotificationHandler(frame);
+				},
+				[
+					GatewayCommand.GW_NODE_INFORMATION_CHANGED_NTF,
+					GatewayCommand.GW_NODE_STATE_POSITION_CHANGED_NTF,
+					GatewayCommand.GW_COMMAND_RUN_STATUS_NTF,
+					GatewayCommand.GW_COMMAND_REMAINING_TIME_NTF,
+					GatewayCommand.GW_GET_NODE_INFORMATION_NTF,
+					GatewayCommand.GW_STATUS_REQUEST_NTF,
+				],
+			),
 		);
+	}
+
+	public [Symbol.dispose](): void {
+		debug(`Disposing Product instance for NodeID: ${this.NodeID}`);
+		this._disposables.dispose();
+		super[Symbol.dispose]();
 	}
 
 	/**
@@ -246,18 +256,14 @@ export class Product extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async setNameAsync(newName: string): Promise<void> {
-		try {
-			const confirmationFrame = await this.Connection.sendFrameAsync(
-				new GW_SET_NODE_NAME_REQ(this.NodeID, newName),
-			);
-			if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
-				this._name = newName;
-				return Promise.resolve();
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		debug(`Setting name for Product NodeID: ${this.NodeID} to "${newName}"`);
+		const confirmationFrame = await this.Connection.sendFrameAsync(new GW_SET_NODE_NAME_REQ(this.NodeID, newName));
+		if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
+			this._name = newName;
+			debug(`Name set successfully for Product NodeID: ${this.NodeID}`);
+		} else {
+			debug(`Failed to set name for Product NodeID: ${this.NodeID}`);
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 
@@ -383,18 +389,16 @@ export class Product extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async setNodeVariationAsync(newNodeVariation: NodeVariation): Promise<void> {
-		try {
-			const confirmationFrame = await this.Connection.sendFrameAsync(
-				new GW_SET_NODE_VARIATION_REQ(this.NodeID, newNodeVariation),
-			);
-			if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
-				this._nodeVariation = newNodeVariation;
-				return Promise.resolve();
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		debug(`Setting NodeVariation for Product NodeID: ${this.NodeID} to "${newNodeVariation}"`);
+		const confirmationFrame = await this.Connection.sendFrameAsync(
+			new GW_SET_NODE_VARIATION_REQ(this.NodeID, newNodeVariation),
+		);
+		if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
+			this._nodeVariation = newNodeVariation;
+			debug(`NodeVariation set successfully for Product NodeID: ${this.NodeID}`);
+		} else {
+			debug(`Failed to set NodeVariation for Product NodeID: ${this.NodeID}`);
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 
@@ -406,19 +410,19 @@ export class Product extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async setOrderAndPlacementAsync(newOrder: number, newPlacement: number): Promise<void> {
-		try {
-			const confirmationFrame = await this.Connection.sendFrameAsync(
-				new GW_SET_NODE_ORDER_AND_PLACEMENT_REQ(this.NodeID, newOrder, newPlacement),
+		debug(`Setting order and placement for Product NodeID: ${this.NodeID} to "${newOrder}" and "${newPlacement}"`);
+		const confirmationFrame = await this.Connection.sendFrameAsync(
+			new GW_SET_NODE_ORDER_AND_PLACEMENT_REQ(this.NodeID, newOrder, newPlacement),
+		);
+		if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
+			this._order = newOrder;
+			this._placement = newPlacement;
+			debug(
+				`Order and placement set successfully for Product NodeID: ${this.NodeID} to "${newOrder}" and "${newPlacement}"`,
 			);
-			if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
-				this._order = newOrder;
-				this._placement = newPlacement;
-				return Promise.resolve();
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		} else {
+			debug(`Failed to set order and placement for Product NodeID: ${this.NodeID}`);
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 
@@ -598,26 +602,25 @@ export class Product extends Component {
 		PriorityLevels: PriorityLevelInformation[] = [],
 		LockTime: number = Infinity,
 	): Promise<number> {
-		try {
-			const req = new GW_COMMAND_SEND_REQ(
-				this.NodeID,
-				newPosition,
-				PriorityLevel,
-				CommandOriginator,
-				ParameterActive,
-				FunctionalParameters,
-				PriorityLevelLock,
-				PriorityLevels,
-				LockTime,
-			);
-			const confirmationFrame = await this.Connection.sendFrameAsync(req);
-			if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted) {
-				return confirmationFrame.SessionID;
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		debug(`Setting TargetPositionRaw for Product NodeID: ${this.NodeID} to ${newPosition}`);
+		const req = new GW_COMMAND_SEND_REQ(
+			this.NodeID,
+			newPosition,
+			PriorityLevel,
+			CommandOriginator,
+			ParameterActive,
+			FunctionalParameters,
+			PriorityLevelLock,
+			PriorityLevels,
+			LockTime,
+		);
+		const confirmationFrame = await this.Connection.sendFrameAsync(req);
+		if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted) {
+			debug(`TargetPositionRaw set successfully for Product NodeID: ${this.NodeID}`);
+			return confirmationFrame.SessionID;
+		} else {
+			debug(`Failed to set TargetPositionRaw for Product NodeID: ${this.NodeID}`);
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 
@@ -644,20 +647,17 @@ export class Product extends Component {
 		PriorityLevels: PriorityLevelInformation[] = [],
 		LockTime: number = Infinity,
 	): Promise<number> {
-		try {
-			return await this.setTargetPositionRawAsync(
-				convertPosition(newPosition, this.TypeID),
-				PriorityLevel,
-				CommandOriginator,
-				ParameterActive,
-				FunctionalParameters,
-				PriorityLevelLock,
-				PriorityLevels,
-				LockTime,
-			);
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug(`Setting TargetPosition for Product NodeID: ${this.NodeID} to ${newPosition}`);
+		return await this.setTargetPositionRawAsync(
+			convertPosition(newPosition, this.TypeID),
+			PriorityLevel,
+			CommandOriginator,
+			ParameterActive,
+			FunctionalParameters,
+			PriorityLevelLock,
+			PriorityLevels,
+			LockTime,
+		);
 	}
 
 	/**
@@ -936,27 +936,26 @@ export class Product extends Component {
 		PriorityLevels: PriorityLevelInformation[] = [],
 		LockTime: number = Infinity,
 	): Promise<number> {
-		try {
-			const confirmationFrame = await this.Connection.sendFrameAsync(
-				new GW_COMMAND_SEND_REQ(
-					this.NodeID,
-					0xd200,
-					PriorityLevel,
-					CommandOriginator,
-					ParameterActive,
-					FunctionalParameters,
-					PriorityLevelLock,
-					PriorityLevels,
-					LockTime,
-				),
-			);
-			if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted) {
-				return confirmationFrame.SessionID;
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		debug(`Calling Stop for Product NodeID: ${this.NodeID}`);
+		const confirmationFrame = await this.Connection.sendFrameAsync(
+			new GW_COMMAND_SEND_REQ(
+				this.NodeID,
+				0xd200,
+				PriorityLevel,
+				CommandOriginator,
+				ParameterActive,
+				FunctionalParameters,
+				PriorityLevelLock,
+				PriorityLevels,
+				LockTime,
+			),
+		);
+		if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted) {
+			debug(`Stopped successfully for Product NodeID: ${this.NodeID}`);
+			return confirmationFrame.SessionID;
+		} else {
+			debug(`Failed to stop for Product NodeID: ${this.NodeID}`);
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 
@@ -978,17 +977,16 @@ export class Product extends Component {
 		PriorityLevel: PriorityLevel = 3,
 		CommandOriginator: CommandOriginator = 1,
 	): Promise<number> {
-		try {
-			const confirmationFrame = await this.Connection.sendFrameAsync(
-				new GW_WINK_SEND_REQ(this.NodeID, EnableWink, WinkTime, PriorityLevel, CommandOriginator),
-			);
-			if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
-				return confirmationFrame.SessionID;
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		debug(`Calling Wink for Product NodeID: ${this.NodeID}`);
+		const confirmationFrame = await this.Connection.sendFrameAsync(
+			new GW_WINK_SEND_REQ(this.NodeID, EnableWink, WinkTime, PriorityLevel, CommandOriginator),
+		);
+		if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
+			debug(`Called Wink successfully for Product NodeID: ${this.NodeID}`);
+			return confirmationFrame.SessionID;
+		} else {
+			debug(`Failed to call Wink for Product NodeID: ${this.NodeID}`);
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 
@@ -1001,17 +999,13 @@ export class Product extends Component {
 	 * @returns {Promise<void>}
 	 */
 	public async refreshAsync(): Promise<void> {
-		try {
-			const confirmationFrame = await this.Connection.sendFrameAsync(
-				new GW_GET_NODE_INFORMATION_REQ(this.NodeID),
-			);
-			if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
-				return Promise.resolve();
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		debug(`Refreshing Product NodeID: ${this.NodeID}`);
+		const confirmationFrame = await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(this.NodeID));
+		if (confirmationFrame.Status === GW_COMMON_STATUS.SUCCESS) {
+			debug(`Product NodeID: ${this.NodeID} refreshed successfully`);
+		} else {
+			debug(`Failed to refresh Product NodeID: ${this.NodeID}`);
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 
@@ -1022,6 +1016,9 @@ export class Product extends Component {
 		resolve: (value: void | PromiseLike<void>) => void,
 		reject: (reason?: any) => void,
 	): Disposable {
+		debug(
+			`Calling setupWaitForLimitationFinished for Product NodeID: ${this.NodeID} for session ID: ${sessionID} and limitation type(s): ${JSON.stringify(limitationType)}`,
+		);
 		const limitationTypes: LimitationType[] = [];
 
 		if (Array.isArray(limitationType)) {
@@ -1035,7 +1032,7 @@ export class Product extends Component {
 			async (frame) => {
 				try {
 					debug(
-						`Calling handler for GW_LIMITATION_STATUS_NTF, GW_SESSION_FINISHED_NTF in Product.setupWaitForLimitationFinished.`,
+						`Calling handler for GW_LIMITATION_STATUS_NTF, GW_SESSION_FINISHED_NTF in Product.setupWaitForLimitationFinished for Product NodeID: ${this.NodeID} with frame: ${JSON.stringify(frame)}.`,
 					);
 					if (frame instanceof GW_LIMITATION_STATUS_NTF && frame.SessionID === sessionID) {
 						if (frame.NodeID !== this.NodeID) {
@@ -1081,11 +1078,11 @@ export class Product extends Component {
 							await this.propertyChanged("LimitationTimeRaw");
 						}
 					} else if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === sessionID) {
-						dispose?.dispose();
+						dispose[Symbol.dispose]();
 						resolve();
 					}
 				} catch (error) {
-					dispose?.dispose();
+					dispose[Symbol.dispose]();
 					reject(error);
 				}
 			},
@@ -1106,68 +1103,67 @@ export class Product extends Component {
 		limitationType: LimitationType,
 		parameterActive: ParameterActive = ParameterActive.MP,
 	): Promise<void> {
-		try {
-			// Setup the event handlers first to prevent a race condition
-			// where we don't see the events.
-			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
-			const waitForLimitationFinishedPromise = new Promise((res, rej) => {
-				resolve = res;
-				reject = rej;
-			});
+		// Setup the event handlers first to prevent a race condition
+		// where we don't see the events.
+		debug(
+			`Calling refreshLimitationAsync for Product NodeID: ${this.NodeID} for limitation type: ${limitationType}.`,
+		);
+		let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+		const waitForLimitationFinishedPromise = new Promise((res, rej) => {
+			resolve = res;
+			reject = rej;
+		});
 
-			const frameToSend = new GW_GET_LIMITATION_STATUS_REQ(this.NodeID, limitationType, parameterActive);
-			const dispose = this.setupWaitForLimitationFinished(
+		using stack = new DisposableStack();
+
+		const frameToSend = new GW_GET_LIMITATION_STATUS_REQ(this.NodeID, limitationType, parameterActive);
+		stack.use(
+			this.setupWaitForLimitationFinished(
 				frameToSend.SessionID,
 				limitationType,
 				parameterActive,
 				resolve!,
 				reject!,
-			);
+			),
+		);
 
+		const waitForSessionFinishedNtfPromise = new Promise<void>((res, rej) => {
 			try {
-				let disposeSessionFinishedNtf: Disposable | undefined;
-				try {
-					const waitForSessionFinishedNtfPromise = new Promise<void>((res, rej) => {
-						try {
-							disposeSessionFinishedNtf = this.Connection.on(
-								(frame) => {
-									if (
-										frame instanceof GW_SESSION_FINISHED_NTF &&
-										frame.SessionID === frameToSend.SessionID
-									) {
-										disposeSessionFinishedNtf?.dispose();
-										disposeSessionFinishedNtf = undefined;
-										res();
-									}
-								},
-								[GatewayCommand.GW_SESSION_FINISHED_NTF],
+				stack.use(
+					this.Connection.on(
+						(frame) => {
+							debug(
+								`Calling handler for GW_SESSION_FINISHED_NTF in refreshLimitationAsync for Product NodeID: ${this.NodeID} with frame ${JSON.stringify(frame)}.`,
 							);
-						} catch (error) {
-							disposeSessionFinishedNtf?.dispose();
-							disposeSessionFinishedNtf = undefined;
-							rej(error as Error);
-						}
-					});
-
-					const confirmationFrame = await this.Connection.sendFrameAsync(frameToSend);
-					if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
-						try {
-							await waitForLimitationFinishedPromise;
-						} finally {
-							// Wait for the session to be finished
-							await waitForSessionFinishedNtfPromise;
-						}
-					} else {
-						return Promise.reject(new Error(confirmationFrame.getError()));
-					}
-				} finally {
-					disposeSessionFinishedNtf?.dispose();
-				}
-			} finally {
-				dispose?.dispose();
+							if (frame instanceof GW_SESSION_FINISHED_NTF && frame.SessionID === frameToSend.SessionID) {
+								debug(
+									`GW_SESSION_FINISHED_NTF received for Product NodeID: ${this.NodeID} and session ID: ${frame.SessionID}.`,
+								);
+								res();
+							}
+						},
+						[GatewayCommand.GW_SESSION_FINISHED_NTF],
+					),
+				);
+			} catch (error) {
+				debug(
+					`Error in setupWaitForSessionFinishedNtfPromise in refreshLimitationAsync for Product NodeID: ${this.NodeID}.`,
+				);
+				rej(error as Error);
 			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		});
+
+		const confirmationFrame = await this.Connection.sendFrameAsync(frameToSend);
+		if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
+			try {
+				await waitForLimitationFinishedPromise;
+			} finally {
+				// Wait for the session to be finished
+				await waitForSessionFinishedNtfPromise;
+			}
+		} else {
+			debug(`Error in refreshLimitationAsync for Product NodeID: ${this.NodeID}.`);
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 
@@ -1190,40 +1186,39 @@ export class Product extends Component {
 		commandOriginator: CommandOriginator = CommandOriginator.SAAC,
 		priorityLevel: PriorityLevel = PriorityLevel.ComfortLevel2,
 	): Promise<void> {
-		try {
-			// Setup the event handlers first to prevent a race condition
-			// where we don't see the events.
-			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
-			const waitForLimitationFinishedPromise = new Promise((res, rej) => {
-				resolve = res;
-				reject = rej;
-			});
+		debug(`Setting LimitationRaw for Product NodeID: ${this.NodeID} to min: ${minValue}, max: ${maxValue}.`);
+		// Setup the event handlers first to prevent a race condition
+		// where we don't see the events.
+		let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+		const waitForLimitationFinishedPromise = new Promise((res, rej) => {
+			resolve = res;
+			reject = rej;
+		});
 
-			const frameToSend = new GW_SET_LIMITATION_REQ(
-				this.NodeID,
-				minValue,
-				maxValue,
-				limitationTime,
-				priorityLevel,
-				commandOriginator,
-				parameterActive,
-			);
-			this.setupWaitForLimitationFinished(
-				frameToSend.SessionID,
-				[LimitationType.MinimumLimitation, LimitationType.MaximumLimitation],
-				parameterActive,
-				resolve!,
-				reject!,
-			);
+		const frameToSend = new GW_SET_LIMITATION_REQ(
+			this.NodeID,
+			minValue,
+			maxValue,
+			limitationTime,
+			priorityLevel,
+			commandOriginator,
+			parameterActive,
+		);
+		this.setupWaitForLimitationFinished(
+			frameToSend.SessionID,
+			[LimitationType.MinimumLimitation, LimitationType.MaximumLimitation],
+			parameterActive,
+			resolve!,
+			reject!,
+		);
 
-			const confirmationFrame = await this.Connection.sendFrameAsync(frameToSend);
-			if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
-				await waitForLimitationFinishedPromise;
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		const confirmationFrame = await this.Connection.sendFrameAsync(frameToSend);
+		if (confirmationFrame.Status === GW_INVERSE_STATUS.SUCCESS) {
+			await waitForLimitationFinishedPromise;
+			debug(`LimitationRaw set successfully for Product NodeID: ${this.NodeID}.`);
+		} else {
+			debug(`Failed to setLimitationRaw for Product NodeID: ${this.NodeID}.`);
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 
@@ -1246,38 +1241,35 @@ export class Product extends Component {
 		commandOriginator: CommandOriginator = CommandOriginator.SAAC,
 		priorityLevel: PriorityLevel = PriorityLevel.ComfortLevel2,
 	): Promise<void> {
-		try {
-			if (minValue > maxValue) {
-				throw new Error(
-					`Parameter minValue (${minValue}) must be less than or equal to parameter maxValue (${maxValue}).`,
-				);
-			}
-			if (minValue < 0 || minValue > 1) {
-				throw new Error("Parameter minValue must be between 0 and 1.");
-			}
-			if (maxValue < 0 || maxValue > 1) {
-				throw new Error("Parameter maxValue must be between 0 and 1.");
-			}
-			let rawMinValue = convertPosition(minValue, this.TypeID);
-			let rawMaxValue = convertPosition(maxValue, this.TypeID);
-			const rawLimitationTime = LockTime.lockTimeTolockTimeValueForLimitation(limitationTime);
-
-			if (rawMinValue > rawMaxValue) {
-				// Based on the actuator type the min/max values have to be swapped
-				[rawMinValue, rawMaxValue] = [rawMaxValue, rawMinValue];
-			}
-
-			return this.setLimitationRawAsync(
-				rawMinValue,
-				rawMaxValue,
-				parameterActive,
-				rawLimitationTime,
-				commandOriginator,
-				priorityLevel,
+		debug(`Setting Limitation for Product NodeID: ${this.NodeID} to min: ${minValue}, max: ${maxValue}.`);
+		if (minValue > maxValue) {
+			throw new Error(
+				`Parameter minValue (${minValue}) must be less than or equal to parameter maxValue (${maxValue}).`,
 			);
-		} catch (error) {
-			return Promise.reject(error as Error);
 		}
+		if (minValue < 0 || minValue > 1) {
+			throw new Error("Parameter minValue must be between 0 and 1.");
+		}
+		if (maxValue < 0 || maxValue > 1) {
+			throw new Error("Parameter maxValue must be between 0 and 1.");
+		}
+		let rawMinValue = convertPosition(minValue, this.TypeID);
+		let rawMaxValue = convertPosition(maxValue, this.TypeID);
+		const rawLimitationTime = LockTime.lockTimeTolockTimeValueForLimitation(limitationTime);
+
+		if (rawMinValue > rawMaxValue) {
+			// Based on the actuator type the min/max values have to be swapped
+			[rawMinValue, rawMaxValue] = [rawMaxValue, rawMinValue];
+		}
+
+		return this.setLimitationRawAsync(
+			rawMinValue,
+			rawMaxValue,
+			parameterActive,
+			rawLimitationTime,
+			commandOriginator,
+			priorityLevel,
+		);
 	}
 
 	/**
@@ -1293,10 +1285,12 @@ export class Product extends Component {
 		commandOriginator: CommandOriginator = CommandOriginator.SAAC,
 		priorityLevel: PriorityLevel = PriorityLevel.ComfortLevel2,
 	): Promise<void> {
+		debug(`Clearing Limitation for Product NodeID: ${this.NodeID}.`);
 		return this.setLimitationRawAsync(0xd400, 0xd400, parameterActive, 255, commandOriginator, priorityLevel);
 	}
 
 	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
+		debug(`Received notification for Product NodeID: ${this.NodeID} frame: ${JSON.stringify(frame)}.`);
 		if (typeof this === "undefined") return;
 
 		if (frame instanceof GW_NODE_INFORMATION_CHANGED_NTF) {
@@ -1315,6 +1309,7 @@ export class Product extends Component {
 	}
 
 	private async onNodeInformationChanged(frame: GW_NODE_INFORMATION_CHANGED_NTF): Promise<void> {
+		debug(`Received node information changed for Product NodeID: ${this.NodeID} frame: ${JSON.stringify(frame)}.`);
 		if (frame.NodeID === this.NodeID) {
 			if (frame.Name !== this._name) {
 				this._name = frame.Name;
@@ -1336,6 +1331,9 @@ export class Product extends Component {
 	}
 
 	private async onNodeStatePositionChanged(frame: GW_NODE_STATE_POSITION_CHANGED_NTF): Promise<void> {
+		debug(
+			`Received node state position changed for Product NodeID: ${this.NodeID} frame: ${JSON.stringify(frame)}.`,
+		);
 		if (frame.NodeID === this.NodeID) {
 			if (frame.OperatingState !== this._state) {
 				this._state = frame.OperatingState;
@@ -1379,6 +1377,7 @@ export class Product extends Component {
 	}
 
 	private async onRunStatus(frame: GW_COMMAND_RUN_STATUS_NTF): Promise<void> {
+		debug(`Received run status for Product NodeID: ${this.NodeID} frame: ${JSON.stringify(frame)}.`);
 		if (frame.NodeID === this.NodeID) {
 			switch (frame.NodeParameter) {
 				case ParameterActive.MP:
@@ -1434,6 +1433,7 @@ export class Product extends Component {
 	}
 
 	private async onRemainingTime(frame: GW_COMMAND_REMAINING_TIME_NTF): Promise<void> {
+		debug(`Received remaining time for Product NodeID: ${this.NodeID} frame: ${JSON.stringify(frame)}.`);
 		if (
 			frame.NodeID === this.NodeID &&
 			frame.NodeParameter === ParameterActive.MP &&
@@ -1445,6 +1445,7 @@ export class Product extends Component {
 	}
 
 	private async onGetNodeInformation(frame: GW_GET_NODE_INFORMATION_NTF): Promise<void> {
+		debug(`Received node information for Product NodeID: ${this.NodeID} frame: ${JSON.stringify(frame)}.`);
 		if (frame.NodeID === this.NodeID) {
 			if (frame.Order !== this._order) {
 				this._order = frame.Order;
@@ -1549,6 +1550,7 @@ export class Product extends Component {
 	}
 
 	private async onStatusRequest(frame: GW_STATUS_REQUEST_NTF): Promise<void> {
+		debug(`Received status request for Product NodeID: ${this.NodeID} frame: ${JSON.stringify(frame)}.`);
 		if (frame.NodeID === this.NodeID) {
 			if (this._runStatus !== frame.RunStatus) {
 				this._runStatus = frame.RunStatus;
@@ -1660,7 +1662,7 @@ export class Product extends Component {
  *
  * @class Products
  */
-export class Products {
+export class Products implements Disposable {
 	private _onNewProduct = new TypedEvent<number>();
 	private _onRemovedProduct = new TypedEvent<number>();
 
@@ -1673,99 +1675,88 @@ export class Products {
 	 */
 	public readonly Products: Product[] = [];
 
+	private _disposables = new DisposableStack();
+
 	/**
 	 *Creates an instance of Products.
 	 * @param {IConnection} Connection The connection object that handles the communication to the KLF interface.
 	 */
 	private constructor(readonly Connection: IConnection) {}
 
+	public [Symbol.dispose](): void {
+		debug(`Disposing Products`);
+		this._disposables.dispose();
+		this._onNewProduct.removeAllListeners();
+		this._onRemovedProduct.removeAllListeners();
+		this.Products.forEach((product) => product[Symbol.dispose]());
+		this.Products.length = 0;
+		debug(`Products disposed`);
+	}
+
 	private async initializeProductsAsync(): Promise<void> {
+		debug(`Initializing Products`);
 		// Setup notification to receive notification with actuator type
-		let dispose: Disposable | undefined;
 
-		try {
-			// Setup the event handlers first to prevent a race condition
-			// where we don't see the events.
-			let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
-			const onNotificationHandler = new Promise((res, rej) => {
-				resolve = res;
-				reject = rej;
-			});
+		// Setup the event handlers first to prevent a race condition
+		// where we don't see the events.
+		let resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void;
+		const onNotificationHandler = new Promise((res, rej) => {
+			resolve = res;
+			reject = rej;
+		});
 
-			dispose = this.Connection.on(
-				(frame) => {
-					try {
-						debug(
-							`Calling handler for GW_GET_ALL_NODES_INFORMATION_NTF, GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF in Products.initializeProductsAsync.`,
-						);
-						if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF) {
-							const newProduct = new Product(this.Connection, frame);
-							this.Products[frame.NodeID] = newProduct;
-						} else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
-							if (dispose) {
-								dispose.dispose();
-							}
+		using dispose = this.Connection.on(
+			(frame) => {
+				try {
+					debug(
+						`Calling handler for GW_GET_ALL_NODES_INFORMATION_NTF, GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF in Products.initializeProductsAsync with frame ${JSON.stringify(frame)}.`,
+					);
+					if (frame instanceof GW_GET_ALL_NODES_INFORMATION_NTF) {
+						const newProduct = new Product(this.Connection, frame);
+						this.Products[frame.NodeID] = newProduct;
+					} else if (frame instanceof GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF) {
+						this._disposables.use(
 							this.Connection.on(
 								async (frame) => {
 									debug(
-										`Calling handler for GW_CS_SYTEM_TABLE_UPDATE_NTF in Products.initializeProductsAsync.`,
+										`Calling handler for GW_CS_SYTEM_TABLE_UPDATE_NTF in Products.initializeProductsAsync with frame ${JSON.stringify(frame)}.`,
 									);
 									await this.onNotificationHandler(frame);
 								},
 								[GatewayCommand.GW_CS_SYSTEM_TABLE_UPDATE_NTF],
-							);
-							resolve();
-						}
-					} catch (error) {
-						if (dispose) {
-							dispose.dispose();
-						}
-						reject(error);
+							),
+						);
+						resolve();
 					}
-				},
-				[
-					GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF,
-					GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF,
-				],
-			);
+				} catch (error) {
+					debug(`Error in onNotificationHandler in Products.initializeProductsAsync`);
+					reject(error);
+				}
+			},
+			[GatewayCommand.GW_GET_ALL_NODES_INFORMATION_NTF, GatewayCommand.GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF],
+		);
 
-			const getAllNodesInformation = await this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ());
-			if (getAllNodesInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
-				if (dispose) {
-					dispose.dispose();
-				}
-				if (
-					getAllNodesInformation.Status !==
-					GW_COMMON_STATUS.ERROR /* No nodes available -> not a real error */
-				) {
-					return Promise.reject(new Error(getAllNodesInformation.getError()));
-				}
+		const getAllNodesInformation = await this.Connection.sendFrameAsync(new GW_GET_ALL_NODES_INFORMATION_REQ());
+		if (getAllNodesInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
+			if (getAllNodesInformation.Status !== GW_COMMON_STATUS.ERROR /* No nodes available -> not a real error */) {
+				return Promise.reject(new Error(getAllNodesInformation.getError()));
 			}
-
-			// Wait for nodes information notifications, but only, if there are nodes
-			if (getAllNodesInformation.NumberOfNode > 0) {
-				await onNotificationHandler;
-
-				// After reading all the products we would read the limitations once:
-				for (const product of this.Products) {
-					if (product) {
-						// Read the limitations for at least the main parameter (MP)
-						await product.refreshLimitationAsync(LimitationType.MinimumLimitation);
-						await product.refreshLimitationAsync(LimitationType.MaximumLimitation);
-					}
-				}
-			} else {
-				// Otherwise, dispose the notification handler
-				if (dispose) {
-					dispose.dispose();
-				}
-			}
-		} catch (error) {
-			if (dispose) {
-				dispose.dispose();
-			}
-			return Promise.reject(error as Error);
 		}
+
+		// Wait for nodes information notifications, but only, if there are nodes
+		if (getAllNodesInformation.NumberOfNode > 0) {
+			await onNotificationHandler;
+
+			// After reading all the products we would read the limitations once:
+			for (const product of this.Products) {
+				if (product) {
+					// Read the limitations for at least the main parameter (MP)
+					await product.refreshLimitationAsync(LimitationType.MinimumLimitation);
+					await product.refreshLimitationAsync(LimitationType.MaximumLimitation);
+				}
+			}
+		}
+		debug(`Products initialized successfully`);
 	}
 
 	/**
@@ -1775,6 +1766,7 @@ export class Products {
 	 * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
 	 */
 	public onNewProduct(handler: Listener<number>): Disposable {
+		debug("Adding handler for onNewProduct.");
 		return this._onNewProduct.on(handler);
 	}
 
@@ -1785,31 +1777,46 @@ export class Products {
 	 * @returns {Disposable} The event handler can be removed by using the dispose method of the returned object.
 	 */
 	public onRemovedProduct(handler: Listener<number>): Disposable {
+		debug("Adding handler for onRemovedProduct.");
 		return this._onRemovedProduct.on(handler);
 	}
 
 	private async notifyNewProduct(nodeId: number): Promise<void> {
+		debug(`Notifying new product ${nodeId}`);
 		await this._onNewProduct.emit(nodeId);
 	}
 
-	private async notifiyRemovedProduct(nodeId: number): Promise<void> {
+	private async notifyRemovedProduct(nodeId: number): Promise<void> {
+		debug(`Notifying removed product ${nodeId}`);
 		await this._onRemovedProduct.emit(nodeId);
 	}
 
 	private async onNotificationHandler(frame: IGW_FRAME_RCV): Promise<void> {
+		debug(`Notification received in Products with frame ${JSON.stringify(frame)}.`);
 		if (frame instanceof GW_CS_SYSTEM_TABLE_UPDATE_NTF) {
 			// Remove nodes
+			debug(`Removing ${frame.RemovedNodes.length} nodes`);
 			for (const nodeID of frame.RemovedNodes) {
+				if (this.Products[nodeID]) {
+					this.Products[nodeID][Symbol.dispose]();
+				}
 				// eslint-disable-next-line @typescript-eslint/no-array-delete
 				delete this.Products[nodeID];
-				await this.notifiyRemovedProduct(nodeID);
+				await this.notifyRemovedProduct(nodeID);
 			}
 
 			// Add nodes
+			debug(`Adding ${frame.AddedNodes.length} nodes`);
 			if (frame.AddedNodes.length > 0) {
 				// Wait until the KLF-200 leaves configuration services handler.
 				// Otherwise, we would receive a Busy error.
+				const maxRetryTimestamp = Date.now() + 60_000; // Wait max. 60 seconds.
 				const checkForIdle = async (): Promise<boolean> => {
+					// Check if the KLF-200 is in Idle state
+					debug("Checking if the KLF-200 is in Idle state");
+					if (Date.now() > maxRetryTimestamp) {
+						throw new Error("Can't read node information of added node after 60 seconds.");
+					}
 					try {
 						const getStateCfm = await this.Connection.sendFrameAsync(new GW_GET_STATE_REQ());
 						return (
@@ -1822,96 +1829,87 @@ export class Products {
 							error.cause instanceof GW_ERROR_NTF &&
 							error.cause.ErrorNumber === GW_ERROR.Busy
 						) {
+							debug("KLF-200 is not in Idle state yet");
 							return false;
 						}
+						debug(`Error checking if the KLF-200 is in Idle state: ${error as Error}`);
 						throw error;
 					}
 				};
 
 				// Checking for Idle state and adding nodes will be done outside of this handler
 				const waitForIdle = async (): Promise<void> => {
-					if (await checkForIdle()) {
-						for (const nodeID of frame.AddedNodes) {
-							this.Products[nodeID] = await this.addNodeAsync(nodeID);
-							await this.notifyNewProduct(nodeID);
-						}
-					} else {
+					if (!(await checkForIdle())) {
 						await setImmediate(await waitForIdle());
 					}
 				};
+				debug("Waiting for the KLF-200 to leave configuration services handler");
 				await setImmediate(await waitForIdle());
+				debug("Done waiting for the KLF-200 to leave configuration services handler");
+
+				for (const nodeID of frame.AddedNodes) {
+					this.Products[nodeID] = await this.addNodeAsync(nodeID);
+					await this.notifyNewProduct(nodeID);
+				}
 			}
 		}
 	}
 
 	private async addNodeAsync(nodeID: number): Promise<Product> {
+		debug(`Adding node ${nodeID} to Products`);
 		// Setup notification to receive notification with actuator type
-		let dispose: Disposable | undefined;
 
-		try {
-			// Setup the event handlers first to prevent a race condition
-			// where we don't see the events.
-			let resolve: (value: Product | PromiseLike<Product>) => void, reject: (reason?: any) => void;
-			const notificationHandler = new Promise<Product>((res, rej) => {
-				resolve = res;
-				reject = rej;
-			});
+		// Setup the event handlers first to prevent a race condition
+		// where we don't see the events.
+		let resolve: (value: Product | PromiseLike<Product>) => void, reject: (reason?: any) => void;
+		const notificationHandler = new Promise<Product>((res, rej) => {
+			resolve = res;
+			reject = rej;
+		});
 
-			dispose = this.Connection.on(
-				(frame) => {
-					try {
-						debug(`Calling handler for GW_GET_NODE_INFORMATION_NTF in Products.addNodeAsync.`);
-						if (dispose) {
-							dispose.dispose();
-						}
-						resolve(new Product(this.Connection, frame as GW_GET_NODE_INFORMATION_NTF));
-					} catch (error) {
-						if (dispose) {
-							dispose.dispose();
-						}
-						reject(error);
-					}
-				},
-				[GatewayCommand.GW_GET_NODE_INFORMATION_NTF],
-			);
-
-			const maxRetryTimestamp = Date.now() + 60_000; // Wait max. 60 seconds.
-			const retryIfNotBusy = async (): Promise<GW_GET_NODE_INFORMATION_CFM> => {
-				if (Date.now() > maxRetryTimestamp) {
-					throw new Error("Can't read node information of added node after 60 seconds.");
-				}
+		using dispose = this.Connection.on(
+			(frame) => {
 				try {
-					const getNodeInformation = await this.Connection.sendFrameAsync(
-						new GW_GET_NODE_INFORMATION_REQ(nodeID),
+					debug(
+						`Calling handler for GW_GET_NODE_INFORMATION_NTF in Products.addNodeAsync with frame ${JSON.stringify(frame)}.`,
 					);
-					return getNodeInformation;
+					resolve(new Product(this.Connection, frame as GW_GET_NODE_INFORMATION_NTF));
 				} catch (error) {
-					if (
-						error instanceof Error &&
-						error.cause instanceof GW_ERROR_NTF &&
-						error.cause.ErrorNumber === GW_ERROR.Busy
-					) {
-						return await setImmediate(await retryIfNotBusy());
-					}
-					throw error;
+					reject(error);
 				}
-			};
-			const getNodeInformation = await setImmediate(await retryIfNotBusy());
-			if (getNodeInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
-				if (dispose) {
-					dispose.dispose();
-				}
-				return Promise.reject(new Error(getNodeInformation.getError()));
-			}
+			},
+			[GatewayCommand.GW_GET_NODE_INFORMATION_NTF],
+		);
 
-			// The notifications will resolve the promise
-			return notificationHandler;
-		} catch (error) {
-			if (dispose) {
-				dispose.dispose();
+		const maxRetryTimestamp = Date.now() + 60_000; // Wait max. 60 seconds.
+		const retryIfNotBusy = async (): Promise<GW_GET_NODE_INFORMATION_CFM> => {
+			if (Date.now() > maxRetryTimestamp) {
+				throw new Error("Can't read node information of added node after 60 seconds.");
 			}
-			return Promise.reject(error as Error);
+			try {
+				const getNodeInformation = await this.Connection.sendFrameAsync(
+					new GW_GET_NODE_INFORMATION_REQ(nodeID),
+				);
+				return getNodeInformation;
+			} catch (error) {
+				if (
+					error instanceof Error &&
+					error.cause instanceof GW_ERROR_NTF &&
+					error.cause.ErrorNumber === GW_ERROR.Busy
+				) {
+					return await setImmediate(await retryIfNotBusy());
+				}
+				debug(`Error reading node information of added node: ${error as Error}`);
+				throw error;
+			}
+		};
+		const getNodeInformation = await setImmediate(await retryIfNotBusy());
+		if (getNodeInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
+			return Promise.reject(new Error(getNodeInformation.getError()));
 		}
+
+		// The notifications will resolve the promise
+		return await notificationHandler;
 	}
 
 	/**
@@ -1929,13 +1927,10 @@ export class Products {
 	 * @returns {Promise<Products>} Resolves to a new instance of the Products class.
 	 */
 	static async createProductsAsync(Connection: IConnection): Promise<Products> {
-		try {
-			const result = new Products(Connection);
-			await result.initializeProductsAsync();
-			return result;
-		} catch (error) {
-			return Promise.reject(error as Error);
-		}
+		debug("Creating new instance of Products");
+		const result = new Products(Connection);
+		await result.initializeProductsAsync();
+		return result;
 	}
 
 	/**
@@ -1945,6 +1940,7 @@ export class Products {
 	 * @returns {(Product | undefined)} Returns a [[Product]] instance if found, otherwise undefined.
 	 */
 	public findByName(productName: string): Product | undefined {
+		debug(`Finding product with name ${productName}`);
 		return this.Products.find((pr) => typeof pr !== "undefined" && pr.Name === productName);
 	}
 
@@ -1965,17 +1961,14 @@ export class Products {
 		StatusType: StatusType,
 		FunctionalParameters: number[] = [],
 	): Promise<number> {
-		try {
-			const confirmationFrame = await this.Connection.sendFrameAsync(
-				new GW_STATUS_REQUEST_REQ(Nodes, StatusType, FunctionalParameters),
-			);
-			if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted) {
-				return Promise.resolve(confirmationFrame.SessionID);
-			} else {
-				return Promise.reject(new Error(confirmationFrame.getError()));
-			}
-		} catch (error) {
-			return Promise.reject(error as Error);
+		debug(`Requesting status for Nodes ${JSON.stringify(Nodes)} with StatusType ${StatusType}`);
+		const confirmationFrame = await this.Connection.sendFrameAsync(
+			new GW_STATUS_REQUEST_REQ(Nodes, StatusType, FunctionalParameters),
+		);
+		if (confirmationFrame.CommandStatus === CommandStatus.CommandAccepted) {
+			return Promise.resolve(confirmationFrame.SessionID);
+		} else {
+			return Promise.reject(new Error(confirmationFrame.getError()));
 		}
 	}
 }
