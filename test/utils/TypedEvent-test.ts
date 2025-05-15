@@ -63,7 +63,7 @@ describe("utils", () => {
 
 		it("should remove all listeners", async () => {
 			let eventReceived = false;
-			const listener = (event: string) => {
+			const listener = (event: string): void => {
 				eventReceived = event === "testEvent";
 			};
 

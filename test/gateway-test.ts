@@ -58,12 +58,10 @@ describe("Gateway", function () {
 		});
 
 		it("should throw an error when Connection is null", function () {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			expect(() => new Gateway(null as any)).to.throw(Error, "No connection provided");
 		});
 
 		it("should throw an error when Connection is undefined", function () {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			expect(() => new Gateway(undefined as any)).to.throw(Error);
 		});
 	});
@@ -810,7 +808,6 @@ describe("Gateway", function () {
 					data: Buffer.from([GW_ERROR.InvalidFrameStructure]).toString("base64"),
 				});
 				await expect(
-					// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 					gw.setNetworkSettingsAsync(true as any, "192.168.1.2", "255.255.255.0", "192.168.1.1"),
 				).to.be.rejectedWith(Error);
 			} finally {

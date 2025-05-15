@@ -45,7 +45,7 @@ export class KLF200SocketProtocol {
 	private async processData(data: Buffer): Promise<void> {
 		debug(`Processing data: ${data.toString("hex")}. Current state: ${this.state}`);
 		switch (this.state) {
-			case KLF200SocketProtocolState.Invalid:
+			case KLF200SocketProtocolState.Invalid: {
 				// Find first END mark
 				const positionStart = data.indexOf(SLIP_END);
 				if (positionStart === -1) {
@@ -64,36 +64,38 @@ export class KLF200SocketProtocol {
 				}
 
 				break;
+			}
 
 			case KLF200SocketProtocolState.StartFound:
-				// Find END mark
-				const positionEnd = data.indexOf(SLIP_END);
-				if (positionEnd === -1) {
-					// No end found -> take complete buffer
-					debug("No end mark found. Adding to queue.");
-					this.queue.push(data);
-					if (this.queue.length > MAX_QUEUE_SIZE) {
-						debug("Queue size exceeded. Clearing queue.");
-						this.queue = [];
-						this.state = KLF200SocketProtocolState.Invalid;
+				{
+					// Find END mark
+					const positionEnd = data.indexOf(SLIP_END);
+					if (positionEnd === -1) {
+						// No end found -> take complete buffer
+						debug("No end mark found. Adding to queue.");
+						this.queue.push(data);
+						if (this.queue.length > MAX_QUEUE_SIZE) {
+							debug("Queue size exceeded. Clearing queue.");
+							this.queue = [];
+							this.state = KLF200SocketProtocolState.Invalid;
+						}
+						return;
 					}
-					return;
+
+					this.state = KLF200SocketProtocolState.Invalid;
+					this.queue.push(data.subarray(0, positionEnd + 1));
+					const frameBuffer = Buffer.concat(this.queue);
+
+					// Clear queue and process remaining data, if any
+					this.queue = [];
+					await this.send(frameBuffer);
+
+					if (positionEnd + 1 < data.byteLength) {
+						// Process remaining data
+						debug("Processing remaining data.");
+						await this.processData(data.subarray(positionEnd + 1));
+					}
 				}
-
-				this.state = KLF200SocketProtocolState.Invalid;
-				this.queue.push(data.subarray(0, positionEnd + 1));
-				const frameBuffer = Buffer.concat(this.queue);
-
-				// Clear queue and process remaining data, if any
-				this.queue = [];
-				await this.send(frameBuffer);
-
-				if (positionEnd + 1 < data.byteLength) {
-					// Process remaining data
-					debug("Processing remaining data.");
-					await this.processData(data.subarray(positionEnd + 1));
-				}
-
 				break;
 
 			default:

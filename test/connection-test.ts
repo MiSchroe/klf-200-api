@@ -348,7 +348,6 @@ describe("connection", function () {
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
 			await conn.loginAsync("velux123");
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			await expect(conn.sendFrameAsync(null as any)).to.be.rejectedWith(Error);
 		});
 

@@ -547,7 +547,7 @@ export class SLIPProtocol {
 			const dataByte = data[i];
 
 			switch (dataByte) {
-				case SLIP_ESC:
+				case SLIP_ESC: {
 					const nextDataByte = data[++i];
 					switch (nextDataByte) {
 						case SLIP_ESC_ESC:
@@ -562,6 +562,7 @@ export class SLIPProtocol {
 							throw new Error("Invalid SLIP special character.");
 					}
 					break;
+				}
 
 				default:
 					resultBuffer.writeUInt8(dataByte, resultLength++);

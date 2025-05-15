@@ -486,6 +486,7 @@ export class Group extends Component {
 
 		// Setup notification to receive notification with actuator type
 		// Register notification handler
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		using dispose = this.Connection.on(
 			(frame) => {
 				try {
@@ -637,6 +638,7 @@ export class Groups implements Disposable {
 			reject = rej;
 		});
 
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		using dispose = this.Connection.on(
 			(frame) => {
 				try {
@@ -743,7 +745,6 @@ export class Groups implements Disposable {
 					if (this.Groups[frame.GroupID]) {
 						this.Groups[frame.GroupID][Symbol.dispose]();
 					}
-					// eslint-disable-next-line @typescript-eslint/no-array-delete
 					delete this.Groups[frame.GroupID];
 					await this.notifyRemovedGroup(frame.GroupID);
 					break;
@@ -764,6 +765,7 @@ export class Groups implements Disposable {
 						);
 					}
 					await this.notifyChangedGroup(frame.GroupID);
+					break;
 
 				default:
 					break;
