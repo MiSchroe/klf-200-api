@@ -48,6 +48,13 @@ jobs:
             - run: npm ci
             - run: npm run build --if-present
             - run: npm test
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v5
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  slug: MiSchroe/klf-200-api
+                  disable_search: true
+                  files: ./coverage/cobertura-coverage.xml
 
     # Deploys the final package to NPM and Github Actions
     deploy:
