@@ -66,6 +66,8 @@ To use this module with the interface to run a product you have to do the follow
 3. Call `Product.setTargetPositionAsync` to set your product to the desired value.
 4. Close the connection using `logoutAsync`.
 
+This package supports [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management).
+
 ### Sample
 
 The following sample code shows how to open the window
@@ -78,7 +80,7 @@ import { Connection, Products, Product } from "klf-200-api";
     Use either the IP address or the name of *your* interface
     'velux-klf-12ab' is just a placeholder in this example.
 */
-const conn = new Connection('velux-klf-12ab');
+await using conn = new Connection('velux-klf-12ab');
 
 /*
     Login with *your* password.
@@ -92,7 +94,7 @@ const conn = new Connection('velux-klf-12ab');
 await conn.loginAsync('velux123');
 try {
     // Read the product's data:
-    const myProducts = await Products.createProductsAsync(conn);
+    using myProducts = await Products.createProductsAsync(conn);
 
     // Find the window by it's name:
     const myKitchenWindow = myProducts.findByName("Window kitchen");
@@ -116,7 +118,7 @@ const myFingerprint = "12:34:56:78:9a:bc:de:f0:12:34:56:78:9a:bc:de:f0:12:34:56:
 const myCA = readFileSync("velux-cert.pem");
 
 // Connect using your own certificate data:
-const conn = new Connection('velux-klf-12ab', myCA, myFingerprint);
+using conn = new Connection('velux-klf-12ab', myCA, myFingerprint);
 ...
 ```
 
@@ -141,6 +143,19 @@ confirmation frame is received.
 Depending on the request, it can be finished when the confirmation frame
 is received. With other request, like opening a window, you will receive
 additional notifications, which will be provided by event handlers to you.
+
+## Debug logs
+
+The package support [debug](https://github.com/debug-js/debug#readme) logging.
+The following namespaces are defined:
+
+- `klf-200-api:connection`
+- `klf-200-api:gateway`
+- `klf-200-api:groups`
+- `klf-200-api:products`
+- `klf-200-api:scenes`
+- `klf-200-api:TypedEvents`
+- `klf-200-api:KLF200SocketProtocol` **CAUTION: This log may reveal sensitive data!**
 
 ## Status of implemented messages
 

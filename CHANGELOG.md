@@ -4,6 +4,14 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
+
+## **WORK IN PROGRESS**
+
+- [#187](https://github.com/MiSchroe/klf-200-api/issues/187) Fix potential memory leaks.
+- **BREAKING CHANGE:** Changed internal Disposable interface to use [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management).
+- chore: Add [debug](https://github.com/debug-js/debug#readme) instrumentation to the code.
+- chore: Upgrade dependencies.
+
 ## 6.0.1 (2025-09-01)
 
 - [#211](https://github.com/MiSchroe/klf-200-api/issues/211) Fix: Moved the debug library to the dependencies.

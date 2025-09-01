@@ -241,7 +241,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 					acknowledgeMessageACK(message);
 					break;
 
-				case "SendData":
+				case "SendData": {
 					const data_SendData = Buffer.from(message.data, "base64");
 					tlsSocket?.write(
 						SLIPProtocol.Encode(
@@ -250,6 +250,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 					);
 					acknowledgeMessageACK(message);
 					break;
+				}
 
 				case "Reset":
 					gateway = structuredClone(DefaultGateway);
@@ -301,7 +302,6 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 				case "SetFunction":
 					functions.set(
 						message.gatewayCommand,
-						// eslint-disable-next-line @typescript-eslint/no-implied-eval
 						Function("frameBuffer", `"use strict";\n${message.func}`) as functionData,
 					);
 					acknowledgeMessageACK(message);
@@ -1104,7 +1104,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 			}
 
 			// Groups
-			case GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_REQ:
+			case GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_REQ: {
 				const returnBuffers_GW_GET_ALL_GROUPS_INFORMATION_REQ: Buffer[] = [
 					addCommandAndLengthToBuffer(GatewayCommand.GW_GET_ALL_GROUPS_INFORMATION_CFM, [
 						groups.size === 0 ? GW_COMMON_STATUS.INVALID_NODE_ID : GW_COMMON_STATUS.SUCCESS,
@@ -1173,6 +1173,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 					);
 				}
 				return returnBuffers_GW_GET_ALL_GROUPS_INFORMATION_REQ;
+			}
 
 			case GatewayCommand.GW_SET_GROUP_INFORMATION_REQ: {
 				const groupId = frameBuffer.readUInt8(3);

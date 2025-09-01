@@ -72,11 +72,7 @@ describe("groups", function () {
 					await setupHouseMockup(mockServerController);
 					const result = await Groups.createGroupsAsync(conn);
 					expect(result).to.be.instanceOf(Groups);
-					expect(
-						result.Groups.reduce((accumulator, current) => {
-							return accumulator + (typeof current === "undefined" ? 0 : 1);
-						}, 0),
-					).to.be.equal(2);
+					expect(result.Groups.filter((group) => group !== undefined).length).to.be.equal(2);
 				} finally {
 					await conn.logoutAsync();
 				}
@@ -151,6 +147,32 @@ describe("groups", function () {
 				} finally {
 					await conn.logoutAsync();
 				}
+			});
+
+			it("should throw an error when the connection is unavailable", async function () {
+				const conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				await conn.logoutAsync(); // Simulate unavailable connection
+				await expect(Groups.createGroupsAsync(conn)).to.be.rejectedWith(Error);
+			});
+
+			it("should handle no groups returned by the gateway", async function () {
+				const conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				await conn.loginAsync("velux123");
+				await mockServerController.sendCommand(ResetCommand);
+				const result = await Groups.createGroupsAsync(conn);
+				expect(result.Groups.length).to.equal(0);
 			});
 		});
 
@@ -439,14 +461,9 @@ describe("groups", function () {
 			});
 		});
 
-		describe("group class", function () {
-			/* Setup is the same for all test cases */
-			let conn: Connection;
-			let groups: Groups;
-			let group: Group;
-
-			this.beforeEach(async () => {
-				conn = new Connection(testHOST, {
+		describe("[Symbol.dispose]", function () {
+			it("should clean up resources", async function () {
+				const conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -454,518 +471,524 @@ describe("groups", function () {
 					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 				});
 				await conn.loginAsync("velux123");
-				await setupHouseMockup(mockServerController);
-				groups = await Groups.createGroupsAsync(conn);
-				group = groups.Groups[51]; // Use the group 51 for all tests
+				const groups = await Groups.createGroupsAsync(conn);
+				groups[Symbol.dispose]();
+				expect(groups.Groups.length).to.equal(0);
+			});
+		});
+	});
+
+	describe("group class", function () {
+		/* Setup is the same for all test cases */
+		let conn: Connection;
+		let groups: Groups;
+		let group: Group;
+
+		this.beforeEach(async () => {
+			conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			await conn.loginAsync("velux123");
+			await setupHouseMockup(mockServerController);
+			groups = await Groups.createGroupsAsync(conn);
+			group = groups.Groups[51]; // Use the group 51 for all tests
+		});
+
+		describe("Name", function () {
+			it("should return the group name", function () {
+				const expectedResult = "Group 1";
+				const result = group.Name;
+
+				expect(result).to.be.equal(expectedResult);
+			});
+		});
+
+		describe("Order", function () {
+			it("should return the group's order", function () {
+				const expectedResult = 1;
+				const result = group.Order;
+
+				expect(result).to.be.equal(expectedResult);
+			});
+		});
+
+		describe("Placement", function () {
+			it("should return the group's placement", function () {
+				const expectedResult = 0;
+				const result = group.Placement;
+
+				expect(result).to.be.equal(expectedResult);
+			});
+		});
+
+		describe("Velocity", function () {
+			it("should return the group's Velocity", function () {
+				const expectedResult = Velocity.Default;
+				const result = group.Velocity;
+
+				expect(result).to.be.equal(expectedResult);
+			});
+		});
+
+		describe("NodeVariation", function () {
+			it("should return the group's NodeVariation", function () {
+				const expectedResult = NodeVariation.NotSet;
+				const result = group.NodeVariation;
+
+				expect(result).to.be.equal(expectedResult);
+			});
+		});
+
+		describe("GroupType", function () {
+			it("should return the group's GroupType", function () {
+				const expectedResult = GroupType.UserGroup;
+				const result = group.GroupType;
+
+				expect(result).to.be.equal(expectedResult);
+			});
+		});
+
+		describe("Nodes", function () {
+			it("should return the group's Nodes", function () {
+				const expectedResult = [0, 1];
+				const result = group.Nodes;
+
+				expect(result).to.have.members(expectedResult);
+			});
+		});
+
+		describe("changeGroupAsync", function () {
+			it("should fulfill if all properties are set to different values", async function () {
+				const result = group.changeGroupAsync(4, 7, "Some windows", Velocity.Silent, NodeVariation.Kip, [2, 4]);
+
+				await expect(result).to.be.fulfilled;
 			});
 
-			describe("Name", function () {
-				it("should return the group name", function () {
-					const expectedResult = "Group 1";
-					const result = group.Name;
+			it("should fulfill if all properties are set to same values", async function () {
+				const result = group.changeGroupAsync(
+					group.Order,
+					group.Placement,
+					group.Name,
+					group.Velocity,
+					group.NodeVariation,
+					[...group.Nodes],
+				);
 
-					expect(result).to.be.equal(expectedResult);
+				await expect(result).to.be.fulfilled;
+			});
+
+			it("should reject on error status", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
+					data: Buffer.from([1, 51]).toString("base64"),
+				});
+
+				const result = group.changeGroupAsync(4, 7, "Some windows", Velocity.Silent, NodeVariation.Kip, [2, 4]);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+
+			it("should reject on error frame", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+					data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
+				});
+
+				const result = group.changeGroupAsync(4, 7, "Some windows", Velocity.Silent, NodeVariation.Kip, [2, 4]);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+		});
+
+		describe("setNameAsync", function () {
+			it("should send a set group information request with changed name", async function () {
+				const result = group.setNameAsync("New name");
+
+				await expect(result).to.be.fulfilled;
+			});
+
+			it("should reject on error status", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
+					data: Buffer.from([1, 51]).toString("base64"),
+				});
+
+				const result = group.setNameAsync("New name");
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+
+			it("should reject on error frame", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+					data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
+				});
+
+				const result = group.setNameAsync("New name");
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+		});
+
+		describe("setOrderAsync", function () {
+			it("should send a set group information request with changed order", async function () {
+				const result = group.setOrderAsync(42);
+
+				await expect(result).to.be.fulfilled;
+			});
+
+			it("should reject on error status", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
+					data: Buffer.from([1, 51]).toString("base64"),
+				});
+
+				const result = group.setOrderAsync(42);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+
+			it("should reject on error frame", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+					data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
+				});
+
+				const result = group.setOrderAsync(42);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+		});
+
+		describe("setPlacementAsync", function () {
+			it("should send a set group information request with changed placement", async function () {
+				const result = group.setPlacementAsync(42);
+
+				await expect(result).to.be.fulfilled;
+			});
+
+			it("should reject on error status", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
+					data: Buffer.from([1, 51]).toString("base64"),
+				});
+
+				const result = group.setPlacementAsync(42);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+
+			it("should reject on error frame", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+					data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
+				});
+
+				const result = group.setPlacementAsync(42);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+		});
+
+		describe("setVelocityAsync", function () {
+			it("should send a set group information request with changed velocity", async function () {
+				const result = group.setVelocityAsync(Velocity.Fast);
+
+				await expect(result).to.be.fulfilled;
+			});
+
+			it("should reject on error status", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
+					data: Buffer.from([1, 51]).toString("base64"),
+				});
+
+				const result = group.setVelocityAsync(Velocity.Fast);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+
+			it("should reject on error frame", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+					data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
+				});
+
+				const result = group.setVelocityAsync(Velocity.Fast);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+		});
+
+		describe("setNodeVariationAsync", function () {
+			it("should send a set group information request with changed node variation", async function () {
+				const result = group.setNodeVariationAsync(NodeVariation.Kip);
+
+				await expect(result).to.be.fulfilled;
+			});
+
+			it("should reject on error status", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
+					data: Buffer.from([1, 51]).toString("base64"),
+				});
+
+				const result = group.setNodeVariationAsync(NodeVariation.Kip);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+
+			it("should reject on error frame", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+					data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
+				});
+
+				const result = group.setNodeVariationAsync(NodeVariation.Kip);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+		});
+
+		describe("setNodesAsync", function () {
+			it("should send a set group information request with changed node variation", async function () {
+				const result = group.setNodesAsync([0, 4]);
+
+				await expect(result).to.be.fulfilled;
+			});
+
+			it("should reject on error status", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
+					data: Buffer.from([1, 51]).toString("base64"),
+				});
+
+				const result = group.setNodesAsync([0, 4]);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+
+			it("should reject on error frame", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+					data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
+				});
+
+				const result = group.setNodesAsync([0, 4]);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+		});
+
+		describe("setTargetPositionRawAsync", function () {
+			it("should send an activate group request without error", async function () {
+				const result = group.setTargetPositionRawAsync(0xc000);
+
+				await expect(result).to.be.fulfilled;
+			});
+
+			it("should reject on error status", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_CFM,
+					data: Buffer.from(
+						new ArrayBuilder()
+							.addInts((getNextSessionID() + 1) & 0xffff) // Get the value of the next session
+							.addBytes(1, 51)
+							.toBuffer(),
+					).toString("base64"),
+				});
+
+				const result = group.setTargetPositionRawAsync(0xc000);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+
+			it("should reject on error frame", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+					data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
+				});
+
+				const result = group.setTargetPositionRawAsync(0xc000);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+		});
+
+		describe("setTargetPositionAsync", function () {
+			it("should send a set group information request with changed node variation", async function () {
+				const result = group.setTargetPositionAsync(0.5);
+
+				await expect(result).to.be.fulfilled;
+			});
+
+			it("should reject on error status", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_CFM,
+					data: Buffer.from(
+						new ArrayBuilder()
+							.addInts((getNextSessionID() + 1) & 0xffff) // Get the value of the next session
+							.addBytes(1, 51)
+							.toBuffer(),
+					).toString("base64"),
+				});
+
+				const result = group.setTargetPositionAsync(0.5);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+
+			it("should reject on error frame", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+					data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
+				});
+
+				const result = group.setTargetPositionAsync(0.5);
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+		});
+
+		describe("refreshAsync", function () {
+			it("should send a command request", async function () {
+				const result = group.refreshAsync();
+
+				await expect(result).to.be.fulfilled;
+			});
+
+			it("should reject on error status", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_GET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_GET_GROUP_INFORMATION_CFM,
+					data: Buffer.from(new ArrayBuilder().addBytes(2, 51).toBuffer()).toString("base64"),
+				});
+
+				const result = group.refreshAsync();
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+
+			it("should reject on error frame", async function () {
+				// Mock request
+				await mockServerController.sendCommand({
+					command: "SetConfirmation",
+					gatewayCommand: GatewayCommand.GW_GET_GROUP_INFORMATION_REQ,
+					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
+					data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
+				});
+
+				const result = group.refreshAsync();
+
+				await expect(result).to.be.rejectedWith(Error);
+			});
+		});
+
+		describe("onNotificationHandler", function () {
+			let propertyChangedSpy: SinonSpy<PropertyChangedEvent[]>;
+
+			this.beforeEach(function () {
+				propertyChangedSpy = sandbox.spy() as SinonSpy<PropertyChangedEvent[]>;
+				group.propertyChangedEvent.on((event) => {
+					propertyChangedSpy(event);
 				});
 			});
 
-			describe("Order", function () {
-				it("should return the group's order", function () {
-					const expectedResult = 1;
-					const result = group.Order;
+			describe("GW_GET_GROUP_INFORMATION_NTF", function () {
+				it("should send notifications for Name", async function () {
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
+					});
+					await mockServerController.sendCommand({
+						command: "SendData",
+						gatewayCommand: GatewayCommand.GW_GET_GROUP_INFORMATION_NTF,
+						data: new ArrayBuilder()
+							.addBytes(group.GroupID)
+							.addInts(group.Order)
+							.addBytes(group.Placement)
+							.addString("Group 1 changed", 64)
+							.addBytes(group.Velocity, group.NodeVariation, group.GroupType, group.Nodes.length)
+							.addBitArray(25, group.Nodes)
+							.addInts(1234)
+							.toBuffer()
+							.toString("base64"),
+					});
 
-					expect(result).to.be.equal(expectedResult);
+					// Let the asynchronous stuff run and give the notification some time
+					await waitPromise;
+
+					expect(propertyChangedSpy, "Name").to.be.calledWith({
+						o: group,
+						propertyName: "Name",
+						propertyValue: "Group 1 changed",
+					});
 				});
 			});
-
-			describe("Placement", function () {
-				it("should return the group's placement", function () {
-					const expectedResult = 0;
-					const result = group.Placement;
-
-					expect(result).to.be.equal(expectedResult);
-				});
-			});
-
-			describe("Velocity", function () {
-				it("should return the group's Velocity", function () {
-					const expectedResult = Velocity.Default;
-					const result = group.Velocity;
-
-					expect(result).to.be.equal(expectedResult);
-				});
-			});
-
-			describe("NodeVariation", function () {
-				it("should return the group's NodeVariation", function () {
-					const expectedResult = NodeVariation.NotSet;
-					const result = group.NodeVariation;
-
-					expect(result).to.be.equal(expectedResult);
-				});
-			});
-
-			describe("GroupType", function () {
-				it("should return the group's GroupType", function () {
-					const expectedResult = GroupType.UserGroup;
-					const result = group.GroupType;
-
-					expect(result).to.be.equal(expectedResult);
-				});
-			});
-
-			describe("Nodes", function () {
-				it("should return the group's Nodes", function () {
-					const expectedResult = [0, 1];
-					const result = group.Nodes;
-
-					expect(result).to.have.members(expectedResult);
-				});
-			});
-
-			describe("changeGroupAsync", function () {
-				it("should fulfill if all properties are set to different values", async function () {
-					const result = group.changeGroupAsync(
-						4,
-						7,
-						"Some windows",
-						Velocity.Silent,
-						NodeVariation.Kip,
-						[2, 4],
-					);
-
-					await expect(result).to.be.fulfilled;
-				});
-
-				it("should fulfill if all properties are set to same values", async function () {
-					const result = group.changeGroupAsync(
-						group.Order,
-						group.Placement,
-						group.Name,
-						group.Velocity,
-						group.NodeVariation,
-						[...group.Nodes],
-					);
-
-					await expect(result).to.be.fulfilled;
-				});
-
-				it("should reject on error status", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
-						data: Buffer.from([1, 51]).toString("base64"),
-					});
-
-					const result = group.changeGroupAsync(
-						4,
-						7,
-						"Some windows",
-						Velocity.Silent,
-						NodeVariation.Kip,
-						[2, 4],
-					);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-
-				it("should reject on error frame", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
-						data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
-					});
-
-					const result = group.changeGroupAsync(
-						4,
-						7,
-						"Some windows",
-						Velocity.Silent,
-						NodeVariation.Kip,
-						[2, 4],
-					);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-			});
-
-			describe("setNameAsync", function () {
-				it("should send a set group information request with changed name", async function () {
-					const result = group.setNameAsync("New name");
-
-					await expect(result).to.be.fulfilled;
-				});
-
-				it("should reject on error status", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
-						data: Buffer.from([1, 51]).toString("base64"),
-					});
-
-					const result = group.setNameAsync("New name");
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-
-				it("should reject on error frame", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
-						data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
-					});
-
-					const result = group.setNameAsync("New name");
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-			});
-
-			describe("setOrderAsync", function () {
-				it("should send a set group information request with changed order", async function () {
-					const result = group.setOrderAsync(42);
-
-					await expect(result).to.be.fulfilled;
-				});
-
-				it("should reject on error status", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
-						data: Buffer.from([1, 51]).toString("base64"),
-					});
-
-					const result = group.setOrderAsync(42);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-
-				it("should reject on error frame", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
-						data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
-					});
-
-					const result = group.setOrderAsync(42);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-			});
-
-			describe("setPlacementAsync", function () {
-				it("should send a set group information request with changed placement", async function () {
-					const result = group.setPlacementAsync(42);
-
-					await expect(result).to.be.fulfilled;
-				});
-
-				it("should reject on error status", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
-						data: Buffer.from([1, 51]).toString("base64"),
-					});
-
-					const result = group.setPlacementAsync(42);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-
-				it("should reject on error frame", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
-						data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
-					});
-
-					const result = group.setPlacementAsync(42);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-			});
-
-			describe("setVelocityAsync", function () {
-				it("should send a set group information request with changed velocity", async function () {
-					const result = group.setVelocityAsync(Velocity.Fast);
-
-					await expect(result).to.be.fulfilled;
-				});
-
-				it("should reject on error status", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
-						data: Buffer.from([1, 51]).toString("base64"),
-					});
-
-					const result = group.setVelocityAsync(Velocity.Fast);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-
-				it("should reject on error frame", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
-						data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
-					});
-
-					const result = group.setVelocityAsync(Velocity.Fast);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-			});
-
-			describe("setNodeVariationAsync", function () {
-				it("should send a set group information request with changed node variation", async function () {
-					const result = group.setNodeVariationAsync(NodeVariation.Kip);
-
-					await expect(result).to.be.fulfilled;
-				});
-
-				it("should reject on error status", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
-						data: Buffer.from([1, 51]).toString("base64"),
-					});
-
-					const result = group.setNodeVariationAsync(NodeVariation.Kip);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-
-				it("should reject on error frame", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
-						data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
-					});
-
-					const result = group.setNodeVariationAsync(NodeVariation.Kip);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-			});
-
-			describe("setNodesAsync", function () {
-				it("should send a set group information request with changed node variation", async function () {
-					const result = group.setNodesAsync([0, 4]);
-
-					await expect(result).to.be.fulfilled;
-				});
-
-				it("should reject on error status", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_SET_GROUP_INFORMATION_CFM,
-						data: Buffer.from([1, 51]).toString("base64"),
-					});
-
-					const result = group.setNodesAsync([0, 4]);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-
-				it("should reject on error frame", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_SET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
-						data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
-					});
-
-					const result = group.setNodesAsync([0, 4]);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-			});
-
-			describe("setTargetPositionRawAsync", function () {
-				it("should send an activate group request without error", async function () {
-					const result = group.setTargetPositionRawAsync(0xc000);
-
-					await expect(result).to.be.fulfilled;
-				});
-
-				it("should reject on error status", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_CFM,
-						data: Buffer.from(
-							new ArrayBuilder()
-								.addInts((getNextSessionID() + 1) & 0xffff) // Get the value of the next session
-								.addBytes(1, 51)
-								.toBuffer(),
-						).toString("base64"),
-					});
-
-					const result = group.setTargetPositionRawAsync(0xc000);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-
-				it("should reject on error frame", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
-						data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
-					});
-
-					const result = group.setTargetPositionRawAsync(0xc000);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-			});
-
-			describe("setTargetPositionAsync", function () {
-				it("should send a set group information request with changed node variation", async function () {
-					const result = group.setTargetPositionAsync(0.5);
-
-					await expect(result).to.be.fulfilled;
-				});
-
-				it("should reject on error status", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_CFM,
-						data: Buffer.from(
-							new ArrayBuilder()
-								.addInts((getNextSessionID() + 1) & 0xffff) // Get the value of the next session
-								.addBytes(1, 51)
-								.toBuffer(),
-						).toString("base64"),
-					});
-
-					const result = group.setTargetPositionAsync(0.5);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-
-				it("should reject on error frame", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_ACTIVATE_PRODUCTGROUP_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
-						data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
-					});
-
-					const result = group.setTargetPositionAsync(0.5);
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-			});
-
-			describe("refreshAsync", function () {
-				it("should send a command request", async function () {
-					const result = group.refreshAsync();
-
-					await expect(result).to.be.fulfilled;
-				});
-
-				it("should reject on error status", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_GET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_GET_GROUP_INFORMATION_CFM,
-						data: Buffer.from(new ArrayBuilder().addBytes(2, 51).toBuffer()).toString("base64"),
-					});
-
-					const result = group.refreshAsync();
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-
-				it("should reject on error frame", async function () {
-					// Mock request
-					await mockServerController.sendCommand({
-						command: "SetConfirmation",
-						gatewayCommand: GatewayCommand.GW_GET_GROUP_INFORMATION_REQ,
-						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
-						data: Buffer.from([GW_ERROR.InvalidSystemTableIndex]).toString("base64"),
-					});
-
-					const result = group.refreshAsync();
-
-					await expect(result).to.be.rejectedWith(Error);
-				});
-			});
-
-			describe("onNotificationHandler", function () {
-				let propertyChangedSpy: SinonSpy<PropertyChangedEvent[]>;
-
-				this.beforeEach(function () {
-					propertyChangedSpy = sandbox.spy() as SinonSpy<PropertyChangedEvent[]>;
-					group.propertyChangedEvent.on((event) => {
-						propertyChangedSpy(event);
-					});
-				});
-
-				describe("GW_GET_GROUP_INFORMATION_NTF", function () {
-					it("should send notifications for Name", async function () {
-						const waitPromise = new Promise((resolve) => {
-							conn.on(resolve, [GatewayCommand.GW_GET_GROUP_INFORMATION_NTF]);
-						});
-						await mockServerController.sendCommand({
-							command: "SendData",
-							gatewayCommand: GatewayCommand.GW_GET_GROUP_INFORMATION_NTF,
-							data: new ArrayBuilder()
-								.addBytes(group.GroupID)
-								.addInts(group.Order)
-								.addBytes(group.Placement)
-								.addString("Group 1 changed", 64)
-								.addBytes(group.Velocity, group.NodeVariation, group.GroupType, group.Nodes.length)
-								.addBitArray(25, group.Nodes)
-								.addInts(1234)
-								.toBuffer()
-								.toString("base64"),
-						});
-
-						// Let the asynchronous stuff run and give the notification some time
-						await waitPromise;
-
-						expect(propertyChangedSpy, "Name").to.be.calledWith({
-							o: group,
-							propertyName: "Name",
-							propertyValue: "Group 1 changed",
-						});
-					});
-				});
+		});
+
+		describe("dispose", function () {
+			it("shouldn't throw an error", function () {
+				expect(group.dispose).not.to.throw;
 			});
 		});
 	});

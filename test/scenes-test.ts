@@ -2,6 +2,7 @@
 
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
+import "disposablestack/auto";
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import sinon, { SinonSandbox } from "sinon";
@@ -164,26 +165,23 @@ describe("scenes", function () {
 					const sc = await Scenes.createScenesAsync(conn);
 
 					const onChangedSceneSpy = sinon.spy();
-					const disposable = sc.onChangedScene(onChangedSceneSpy);
-					try {
-						const waitPromise = new Promise((resolve) => {
-							conn.on(resolve, [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
-						});
-						await mockServerController.sendCommand({
-							command: "SendData",
-							gatewayCommand: GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF,
-							data: Buffer.from([1, 1]).toString("base64"),
-						});
-						await waitPromise;
-						// Wait for outstanding promises to finish
-						await new Promise((resolve) => {
-							setImmediate(resolve);
-						});
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					using disposable = sc.onChangedScene(onChangedSceneSpy);
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
+					});
+					await mockServerController.sendCommand({
+						command: "SendData",
+						gatewayCommand: GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF,
+						data: Buffer.from([1, 1]).toString("base64"),
+					});
+					await waitPromise;
+					// Wait for outstanding promises to finish
+					await new Promise((resolve) => {
+						setImmediate(resolve);
+					});
 
-						expect(onChangedSceneSpy).to.be.calledOnceWithExactly(1);
-					} finally {
-						disposable?.dispose();
-					}
+					expect(onChangedSceneSpy).to.be.calledOnceWithExactly(1);
 				} finally {
 					await conn.logoutAsync();
 				}
@@ -204,26 +202,23 @@ describe("scenes", function () {
 					await setupHouseMockup(mockServerController);
 					const sc = await Scenes.createScenesAsync(conn);
 					const onRemovedSceneSpy = sinon.spy();
-					const disposable = sc.onRemovedScene(onRemovedSceneSpy);
-					try {
-						const waitPromise = new Promise((resolve) => {
-							conn.on(resolve, [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
-						});
-						await mockServerController.sendCommand({
-							command: "SendData",
-							gatewayCommand: GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF,
-							data: Buffer.from([0, 1]).toString("base64"),
-						});
-						await waitPromise;
-						// Wait for outstanding promises to finish
-						await new Promise((resolve) => {
-							setImmediate(resolve);
-						});
-						expect(onRemovedSceneSpy).to.be.calledOnceWithExactly(1);
-						expect(sc.findByName("Scene 2")).to.be.undefined;
-					} finally {
-						disposable?.dispose();
-					}
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					using disposable = sc.onRemovedScene(onRemovedSceneSpy);
+					const waitPromise = new Promise((resolve) => {
+						conn.on(resolve, [GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF]);
+					});
+					await mockServerController.sendCommand({
+						command: "SendData",
+						gatewayCommand: GatewayCommand.GW_SCENE_INFORMATION_CHANGED_NTF,
+						data: Buffer.from([0, 1]).toString("base64"),
+					});
+					await waitPromise;
+					// Wait for outstanding promises to finish
+					await new Promise((resolve) => {
+						setImmediate(resolve);
+					});
+					expect(onRemovedSceneSpy).to.be.calledOnceWithExactly(1);
+					expect(sc.findByName("Scene 2")).to.be.undefined;
 				} finally {
 					await conn.logoutAsync();
 				}
@@ -244,22 +239,19 @@ describe("scenes", function () {
 					await setupHouseMockup(mockServerController);
 					const sc = await Scenes.createScenesAsync(conn);
 					const onAddedSceneSpy = sinon.spy();
-					const disposable = sc.onAddedScene(onAddedSceneSpy);
-					try {
-						await mockServerController.sendCommand({
-							command: "SetScene",
-							sceneId: 2,
-							scene: {
-								SceneID: 2,
-								Name: "Scene 3",
-								Nodes: [{ NodeID: 0, ParameterID: 0, ParameterValue: 0x0000 }],
-							},
-						});
-						await sc.refreshScenesAsync();
-						expect(onAddedSceneSpy).to.be.calledOnceWithExactly(2);
-					} finally {
-						disposable?.dispose();
-					}
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					using disposable = sc.onAddedScene(onAddedSceneSpy);
+					await mockServerController.sendCommand({
+						command: "SetScene",
+						sceneId: 2,
+						scene: {
+							SceneID: 2,
+							Name: "Scene 3",
+							Nodes: [{ NodeID: 0, ParameterID: 0, ParameterValue: 0x0000 }],
+						},
+					});
+					await sc.refreshScenesAsync();
+					expect(onAddedSceneSpy).to.be.calledOnceWithExactly(2);
 				} finally {
 					await conn.logoutAsync();
 				}
@@ -282,16 +274,13 @@ describe("scenes", function () {
 						const sc = await Scenes.createScenesAsync(conn);
 						const scene = sc.Scenes[1];
 						const propertyChangedEventSpy = sinon.spy();
-						const disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
-						try {
-							const expectedSessionId = getNextSessionID() + 1;
-							const sessionID = await scene.runAsync();
-							expect(sessionID).to.be.equal(expectedSessionId, "Wrong Session ID");
-							expect(scene.IsRunning).to.be.true;
-							expect(propertyChangedEventSpy).to.be.calledOnce;
-						} finally {
-							disposable?.dispose();
-						}
+						// eslint-disable-next-line @typescript-eslint/no-unused-vars
+						using disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
+						const expectedSessionId = getNextSessionID() + 1;
+						const sessionID = await scene.runAsync();
+						expect(sessionID).to.be.equal(expectedSessionId, "Wrong Session ID");
+						expect(scene.IsRunning).to.be.true;
+						expect(propertyChangedEventSpy).to.be.calledOnce;
 					} finally {
 						await conn.logoutAsync();
 					}
@@ -311,25 +300,23 @@ describe("scenes", function () {
 						const sc = await Scenes.createScenesAsync(conn);
 						const scene = sc.Scenes[1];
 						const propertyChangedEventSpy = sinon.spy();
-						const disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
-						try {
-							const expectedSessionId = getNextSessionID() + 1;
-							const sessionID = await scene.runAsync();
-							const waitForSessionFinishedNtf = new Promise<void>((resolve) => {
-								const disposable = conn.KLF200SocketProtocol?.on((event) => {
+						using stack = new DisposableStack();
+						stack.use(scene.propertyChangedEvent.on(propertyChangedEventSpy));
+						const expectedSessionId = getNextSessionID() + 1;
+						const sessionID = await scene.runAsync();
+						const waitForSessionFinishedNtf = new Promise<void>((resolve) => {
+							stack.use(
+								conn.KLF200SocketProtocol?.on((event) => {
 									if (event instanceof GW_SESSION_FINISHED_NTF && event.SessionID === sessionID) {
-										disposable?.dispose();
 										resolve();
 									}
-								});
-							});
-							await waitForSessionFinishedNtf;
-							expect(sessionID, "SessionId").to.be.equal(expectedSessionId, "Wrong Session ID");
-							expect(scene.IsRunning, "IsRunning").to.be.false;
-							expect(propertyChangedEventSpy, "PropertyChangedEvent spy").to.be.calledTwice;
-						} finally {
-							disposable?.dispose();
-						}
+								}),
+							);
+						});
+						await waitForSessionFinishedNtf;
+						expect(sessionID, "SessionId").to.be.equal(expectedSessionId, "Wrong Session ID");
+						expect(scene.IsRunning, "IsRunning").to.be.false;
+						expect(propertyChangedEventSpy, "PropertyChangedEvent spy").to.be.calledTwice;
 					} finally {
 						await conn.logoutAsync();
 					}
@@ -402,16 +389,13 @@ describe("scenes", function () {
 						const sc = await Scenes.createScenesAsync(conn);
 						const scene = sc.Scenes[1];
 						const propertyChangedEventSpy = sinon.spy();
-						const disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
-						try {
-							const expectedSessionId = getNextSessionID() + 1;
-							const sessionID = await scene.stopAsync();
-							expect(sessionID).to.be.equal(expectedSessionId, "Wrong Session ID");
-							expect(scene.IsRunning).to.be.false;
-							expect(propertyChangedEventSpy).to.be.calledOnce;
-						} finally {
-							disposable?.dispose();
-						}
+						// eslint-disable-next-line @typescript-eslint/no-unused-vars
+						using disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
+						const expectedSessionId = getNextSessionID() + 1;
+						const sessionID = await scene.stopAsync();
+						expect(sessionID).to.be.equal(expectedSessionId, "Wrong Session ID");
+						expect(scene.IsRunning).to.be.false;
+						expect(propertyChangedEventSpy).to.be.calledOnce;
 					} finally {
 						await conn.logoutAsync();
 					}
@@ -484,23 +468,20 @@ describe("scenes", function () {
 						const sc = await Scenes.createScenesAsync(conn);
 						const scene = sc.Scenes[1];
 						const propertyChangedEventSpy = sinon.spy();
-						const disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
-						try {
-							await mockServerController.sendCommand({
-								command: "SetScene",
-								sceneId: 1,
-								scene: {
-									SceneID: 1,
-									Name: "Scene 2 changed",
-									Nodes: [{ NodeID: 0, ParameterID: 0, ParameterValue: 0xc800 }],
-								},
-							});
-							const refreshPromise = scene.refreshAsync();
-							await expect(refreshPromise).to.be.fulfilled;
-							expect(scene.SceneName, "Scene name").to.be.equal("Scene 2 changed");
-						} finally {
-							disposable?.dispose();
-						}
+						// eslint-disable-next-line @typescript-eslint/no-unused-vars
+						using disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
+						await mockServerController.sendCommand({
+							command: "SetScene",
+							sceneId: 1,
+							scene: {
+								SceneID: 1,
+								Name: "Scene 2 changed",
+								Nodes: [{ NodeID: 0, ParameterID: 0, ParameterValue: 0xc800 }],
+							},
+						});
+						const refreshPromise = scene.refreshAsync();
+						await expect(refreshPromise).to.be.fulfilled;
+						expect(scene.SceneName, "Scene name").to.be.equal("Scene 2 changed");
 					} finally {
 						await conn.logoutAsync();
 					}
