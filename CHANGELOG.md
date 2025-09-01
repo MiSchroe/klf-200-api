@@ -8,6 +8,7 @@
 ## **WORK IN PROGRESS**
 
 - [#187](https://github.com/MiSchroe/klf-200-api/issues/187) Fix potential memory leaks.
+- [#195](https://github.com/MiSchroe/klf-200-api/issues/195) Remove unnecessary files from distribution.
 - **BREAKING CHANGE:** Changed internal Disposable interface to use [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management).
 - chore: Add [debug](https://github.com/debug-js/debug#readme) instrumentation to the code.
 - chore: Upgrade dependencies.
