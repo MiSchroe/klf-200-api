@@ -46,7 +46,7 @@
     "chai-datetime": "^1.8.1",
     "cross-env": "^7.0.3",
     "deep-eql": "^5.0.2",
-    "eslint": "^9.30.0",
+    "eslint": "^9.39.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.1",
     "mocha": "^10.4.0",
