@@ -41,7 +41,7 @@
     "@types/sinon-chai": "^3.2.12",
     "c8": "^10.1.2",
     "chai": "^4.5.0",
-    "chai-as-promised": "^8.0.1",
+    "chai-as-promised": "^8.0.2",
     "chai-bytes": "^0.1.2",
     "chai-datetime": "^1.8.1",
     "cross-env": "^7.0.3",
