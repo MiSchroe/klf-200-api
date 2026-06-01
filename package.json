@@ -61,7 +61,7 @@
     "source-map-support": "^0.5.21",
     "tsx": "^4.20.5",
     "typedoc": "^0.28.7",
-    "typescript": "^5.4.5",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.32.1"
   },
   "scripts": {
