@@ -816,15 +816,36 @@ export class Connection implements IConnection, AsyncDisposable {
 							this.connectionOptions
 								? this.connectionOptions
 								: {
-										rejectUnauthorized: true,
+										// The KLF-200 ships with a hard-coded, shared self-signed certificate
+										// that is validated by pinning its fingerprint. We must not let Node
+										// abort the handshake automatically (rejectUnauthorized: false) so that
+										// the secureConnect callback below can accept a certificate that is valid,
+										// or one whose only defect is that it has expired while its fingerprint
+										// still matches the pinned certificate. The shared VELUX certificate
+										// expired on 2026-07-12; every other authorization error is still rejected.
+										rejectUnauthorized: false,
 										ca: [this.CA],
 										checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert),
 									},
 							() => {
 								debug("Secure connection established.");
 								// Callback on event "secureConnect":
-								// Resolve promise if connection is authorized, otherwise reject it.
-								if (this.sckt?.authorized) {
+								// Accept the connection when it is authorized, or when the only problem is that
+								// the pinned KLF-200 certificate has expired (its fingerprint still matches).
+								// Any other authorization error is rejected.
+								// Note: `authorizationError` carries an OpenSSL error-code string (e.g.
+								// "CERT_HAS_EXPIRED") at runtime although @types/node types it as `Error`.
+								const authorizationError = this.sckt?.authorizationError as unknown as string | undefined;
+								const certificateExpiredButPinned =
+									this.sckt?.authorized !== true &&
+									authorizationError === "CERT_HAS_EXPIRED" &&
+									this.sckt?.getPeerCertificate()?.fingerprint === this.fingerprint;
+								if (certificateExpiredButPinned) {
+									console.warn(
+										"The KLF-200 certificate has expired. Accepting the connection because its fingerprint matches the pinned certificate.",
+									);
+								}
+								if (this.sckt?.authorized || certificateExpiredButPinned) {
 									// Remove login error handler
 									this.sckt?.off("error", loginErrorHandler);
 									stack.defer(async () => {
