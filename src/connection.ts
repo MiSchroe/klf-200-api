@@ -835,7 +835,9 @@ export class Connection implements IConnection, AsyncDisposable {
 								// Any other authorization error is rejected.
 								// Note: `authorizationError` carries an OpenSSL error-code string (e.g.
 								// "CERT_HAS_EXPIRED") at runtime although @types/node types it as `Error`.
-								const authorizationError = this.sckt?.authorizationError as unknown as string | undefined;
+								const authorizationError = this.sckt?.authorizationError as unknown as
+									| string
+									| undefined;
 								const certificateExpiredButPinned =
 									this.sckt?.authorized !== true &&
 									authorizationError === "CERT_HAS_EXPIRED" &&

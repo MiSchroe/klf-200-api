@@ -59,15 +59,20 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 	6. openssl genrsa -out client1-key.pem 4096
 	7. openssl req -new -key client1-key.pem -out client1-csr.pem
 	8. openssl x509 -req -days 36500 -in client1-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out client1-crt.pem
+	Outdated certificate:
+	9. openssl x509 -req -not_before 20180425093826Z -not_after 20260712093826Z -in server-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out server-crt-outdated.pem
 	*/
 
 	const HOST = "localhost";
 
+	const useExpiredCert = process.env.USE_EXPIRED_CERT === "true";
+	const certFileName = useExpiredCert ? "server-crt-outdated.pem" : "server-crt.pem";
+
 	const options: TlsOptions = {
 		key: readFileSync(path.join(__dirname, "server-key.pem")),
-		cert: readFileSync(path.join(__dirname, "server-crt.pem")),
+		cert: readFileSync(path.join(__dirname, certFileName)),
 		ca: readFileSync(path.join(__dirname, "ca-crt.pem")),
-		requestCert: true,
+		requestCert: false,
 		rejectUnauthorized: true,
 	};
 
