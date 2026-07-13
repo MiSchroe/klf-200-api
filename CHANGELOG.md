@@ -4,6 +4,11 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
+
+## **WORK IN PROGRESS**
+
+- [#256](https://github.com/MiSchroe/klf-200-api/issues/256) Fix outdated KLF-200 certificate. (Thanks [@s31teg](https://github.com/s31teg))
+
 ## 6.0.1 (2025-09-01)
 
 - [#211](https://github.com/MiSchroe/klf-200-api/issues/211) Fix: Moved the debug library to the dependencies.
