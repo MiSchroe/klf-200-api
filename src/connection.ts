@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 import debugModule from "debug";
 import "disposablestack/auto";
@@ -816,15 +816,28 @@ export class Connection implements IConnection, AsyncDisposable {
 							this.connectionOptions
 								? this.connectionOptions
 								: {
-										rejectUnauthorized: true,
+										// Node's built-in verification also rejects certificates that are
+										// only "invalid" because they are expired or not yet valid. The
+										// KLF-200 uses a fixed, factory-baked self-signed certificate whose
+										// validity period is unrelated to trustworthiness, so we disable the
+										// built-in check here and perform our own fingerprint-based
+										// verification in the secureConnect handler below.
+										rejectUnauthorized: false,
 										ca: [this.CA],
 										checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert),
 									},
 							() => {
 								debug("Secure connection established.");
 								// Callback on event "secureConnect":
-								// Resolve promise if connection is authorized, otherwise reject it.
-								if (this.sckt?.authorized) {
+								// Resolve promise if the connection is authorized. Since we set
+								// rejectUnauthorized to false above, `authorized` will be false for
+								// *any* verification failure, including a merely expired certificate.
+								// We therefore fall back to our own pinned-fingerprint check: if the
+								// peer's certificate fingerprint matches the expected one, we still
+								// trust the connection regardless of the reason `authorized` is false.
+								const isTrustedByFingerprint =
+									this.checkServerIdentity(this.host, this.sckt!.getPeerCertificate()) === undefined;
+								if (this.sckt?.authorized || isTrustedByFingerprint) {
 									// Remove login error handler
 									this.sckt?.off("error", loginErrorHandler);
 									stack.defer(async () => {
