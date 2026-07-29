@@ -626,6 +626,11 @@ export class Connection implements IConnection, AsyncDisposable {
 			});
 
 			try {
+
+				if ((this.klfProtocol as KLF200SocketProtocol) === undefined) {
+					throw new Error("KLF200SocketProtocol is not initialized. Please login first.");
+				}
+
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				using errHandler = (this.klfProtocol as KLF200SocketProtocol).onError((error) => {
 					debug(`sendFrameAsync protocol error handler: ${JSON.stringify(error)}.`);
