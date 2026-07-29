@@ -23,8 +23,8 @@ jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v5
-            - uses: actions/setup-node@v5
+            - uses: actions/checkout@v6
+            - uses: actions/setup-node@v6
               with:
                   node-version: 22.x
             - run: npm ci
@@ -40,16 +40,16 @@ jobs:
                 os: [ubuntu-latest, windows-latest, macos-latest]
 
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v6
             - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v5
+              uses: actions/setup-node@v6
               with:
                   node-version: ${{ matrix.node-version }}
             - run: npm ci
             - run: npm run build --if-present
             - run: npm test
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v6
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   slug: MiSchroe/klf-200-api
