@@ -108,5 +108,9 @@
   "bugs": {
     "url": "https://github.com/MiSchroe/klf-200-api/issues"
   },
-  "homepage": "https://mischroe.github.io/klf-200-api/"
+  "homepage": "https://mischroe.github.io/klf-200-api/",
+  "allowScripts": {
+    "esbuild@0.23.1": true,
+    "fsevents@2.3.3": true
+  }
 }

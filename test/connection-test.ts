@@ -645,7 +645,7 @@ describe("connection with expired certificate", function () {
 
 	describe("loginAsync", function () {
 		it("should fail when rejectUnauthorized is true", async function () {
-			await using conn = new Connection(testHOST, {
+			const conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -656,12 +656,12 @@ describe("connection with expired certificate", function () {
 		});
 
 		it("should fail when connecting to the mock server without the correct fingerprint", async function () {
-			await using conn = new Connection(testHOST);
+			const conn = new Connection(testHOST);
 			await expect(conn.loginAsync("velux123")).to.be.rejectedWith("CERT_HAS_EXPIRED");
 		});
 
 		it("should succeed when connecting to the mock server with the correct fingerprint", async function () {
-			await using conn = new Connection(
+			const conn = new Connection(
 				testHOST,
 				readFileSync(join(__dirname, "mocks/mockServer", "server-crt-outdated.pem")),
 				"78:0E:43:3D:ED:C7:59:17:0C:CF:14:9A:DB:D5:5C:1C:BC:7D:17:BB",
@@ -670,3 +670,4 @@ describe("connection with expired certificate", function () {
 		});
 	});
 });
+
