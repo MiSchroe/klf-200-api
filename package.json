@@ -1,6 +1,6 @@
 {
   "name": "klf-200-api",
-  "version": "6.0.1",
+  "version": "6.0.2",
   "description": "This module provides a wrapper to the socket API of a Velux KLF-200 interface. You will need at least firmware 0.2.0.0.71 on your KLF interface for this library to work.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -53,13 +53,13 @@
     "mocha-junit-reporter": "^2.2.1",
     "mocha-multi-reporters": "^1.5.1",
     "nock": "^13.5.6",
-    "nyc": "^17.1.0",
+    "nyc": "^18.0.0",
     "prettier": "^3.6.2",
     "shx": "^0.4.0",
     "sinon": "^21.0.0",
     "sinon-chai": "^3.7.0",
     "source-map-support": "^0.5.21",
-    "tsx": "^4.20.5",
+    "tsx": "^4.22.4",
     "typedoc": "^0.28.7",
     "typescript": "^5.4.5",
     "typescript-eslint": "^8.32.1"
@@ -72,7 +72,7 @@
     "build:clean": "rm -rf ./dist",
     "build": "npm run build:clean && tsx ./deployment/prepare-cjs.ts && npm run compile && shx cp ./deployment/package.esm.json ./dist/esm/package.json && shx cp ./deployment/package.cjs.json ./dist/cjs/package.json && shx cp ./velux-cert.pem ./dist/velux-cert.pem",
     "watch": "tsc --watch",
-    "test": "cross-env DEBUG=-mockServer*,-klf-200-api:products*,-klf-200-api:connection*,-klf-200-api:gateway*,-connection-test c8 mocha",
+    "test": "cross-env DEBUG=-mockServer*,-klf-200-api:products*,-klf-200-api:connection*,-klf-200-api:KLF200SocketProtocol,-klf-200-api:gateway*,-connection-test c8 mocha",
     "lint": "eslint --ext .ts src test",
     "release": "release-script",
     "document": "typedoc"

@@ -59,27 +59,25 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 	6. openssl genrsa -out client1-key.pem 4096
 	7. openssl req -new -key client1-key.pem -out client1-csr.pem
 	8. openssl x509 -req -days 36500 -in client1-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out client1-crt.pem
+	Outdated certificate:
+	9. openssl x509 -req -not_before 20180425093826Z -not_after 20260712093826Z -in server-csr.pem -CA ca-crt.pem -CAkey ca-key.pem -CAcreateserial -out server-crt-outdated.pem
 	*/
 
 	const HOST = "localhost";
 
+	const useExpiredCert = process.env.USE_EXPIRED_CERT === "true";
+	const certFileName = useExpiredCert ? "server-crt-outdated.pem" : "server-crt.pem";
+
 	const options: TlsOptions = {
 		key: readFileSync(path.join(__dirname, "server-key.pem")),
-		cert: readFileSync(path.join(__dirname, "server-crt.pem")),
+		cert: readFileSync(path.join(__dirname, certFileName)),
 		ca: readFileSync(path.join(__dirname, "ca-crt.pem")),
-		requestCert: true,
+		requestCert: false,
 		rejectUnauthorized: true,
 	};
 
 	const DefaultGateway: Gateway = {
-		SoftwareVersion: {
-			CommandVersion: 2,
-			MainVersion: 0,
-			SubVersion: 0,
-			BranchID: 71,
-			Build: 0,
-			MicroBuild: 0,
-		},
+		SoftwareVersion: { CommandVersion: 2, MainVersion: 0, SubVersion: 0, BranchID: 71, Build: 0, MicroBuild: 0 },
 		HardwareVersion: 42,
 		ProductGroup: 14,
 		ProductType: 3,
@@ -98,10 +96,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 	const groups: Map<number, Group> = new Map();
 	const scenes: Map<number, Scene> = new Map();
 	const limitations: Map<string, Limitation> = new Map();
-	type confirmationData = {
-		gatewayConfirmation: GatewayCommand;
-		data: string;
-	};
+	type confirmationData = { gatewayConfirmation: GatewayCommand; data: string };
 	const confirmations: Map<GatewayCommand, confirmationData> = new Map();
 	type functionData = (frameBuffer: Buffer) => Promise<Buffer[]>;
 	const functions: Map<GatewayCommand, functionData> = new Map();
@@ -170,10 +165,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 
 	function acknowledgeMessageACK(message: CommandWithGuid): void {
 		if (process.send) {
-			const ackMsg: AcknowledgeMessage = {
-				messageType: "ACK",
-				originalCommandGuid: message.CommandGuid,
-			};
+			const ackMsg: AcknowledgeMessage = { messageType: "ACK", originalCommandGuid: message.CommandGuid };
 			process.send(ackMsg);
 		}
 	}
@@ -309,6 +301,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 
 				case "CloseConnection":
 					if (tlsSocket) {
+						debug("CloseConnection command received. Ending the socket.");
 						try {
 							await timeout(
 								// Try to end the "good" way:
@@ -1552,3 +1545,4 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 		return result;
 	}
 })();
+
