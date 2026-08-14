@@ -438,12 +438,11 @@ export class Connection implements IConnection, AsyncDisposable {
 					this.klfProtocol = undefined;
 				}
 				await promiseTimeout(
-					new Promise<void>(async (resolve, reject) => {
+					new Promise<void>((resolve, reject) => {
 						try {
 							// Close socket
 							debug("Closing socket...");
-							await this.finalizeSocket();
-							resolve();
+							this.finalizeSocket().then(resolve).catch(reject);
 						} catch (error) {
 							debug("Error while closing socket:", error);
 							reject(error as Error);
@@ -850,12 +849,11 @@ export class Connection implements IConnection, AsyncDisposable {
 									this.sckt?.off("error", loginErrorHandler);
 									stack.defer(async () => {
 										await promiseTimeout(
-											new Promise<void>(async (resolve, reject) => {
+											new Promise<void>((resolve, reject) => {
 												try {
 													// Close socket
 													debug("Closing socket...");
-													await this.finalizeSocket();
-													resolve();
+													this.finalizeSocket().then(resolve).catch(reject);
 												} catch (error) {
 													debug("Error while closing socket:", error);
 													reject(error as Error);

@@ -188,7 +188,7 @@ describe("connection", function () {
 		});
 
 		it("should succeed even when the connection is lost.", async function () {
-			const function_under_test = async () => {
+			const function_under_test = async (): Promise<void> => {
 				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
