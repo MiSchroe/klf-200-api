@@ -765,4 +765,3 @@ describe("connection with expired certificate", function () {
 		});
 	});
 });
-

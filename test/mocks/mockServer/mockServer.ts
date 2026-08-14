@@ -1545,4 +1545,3 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 		return result;
 	}
 })();
-

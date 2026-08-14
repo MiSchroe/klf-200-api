@@ -984,4 +984,3 @@ export class Connection implements IConnection, AsyncDisposable {
 		else return checkServerIdentityOriginal(host, cert);
 	}
 }
-
