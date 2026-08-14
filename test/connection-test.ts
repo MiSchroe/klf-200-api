@@ -179,18 +179,28 @@ describe("connection", function () {
 				// Reset the mock server
 				await mockServerController?.sendCommand(ResetCommand);
 
-				console.log(`KLF200SocketProtocol is undefined after connection lost. Reconnecting...`);
 				await expect(conn.loginAsync("velux123")).to.be.fulfilled;
-				console.log(`Reconnected successfully.`);
 				expect(conn.KLF200SocketProtocol).to.be.instanceOf(KLF200SocketProtocol);
-				console.log(`KLF200SocketProtocol is instance of KLF200SocketProtocol after reconnect.`);
 				expect(conn.KLF200SocketProtocol?.socket.readyState).to.equal("open");
-				console.log(`KLF200SocketProtocol socket is open after reconnect.`);
 			} finally {
-				console.log(`Logout...`);
 				await conn.logoutAsync();
-				console.log(`Done after logout.`);
 			}
+		});
+
+		it("should succeed even when the connection is lost.", async function () {
+			const function_under_test = async () => {
+				await using conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				await conn.loginAsync("velux123");
+				conn.KLF200SocketProtocol?.socket?.destroy(); // Simulate unexpected closure
+				await conn.logoutAsync();
+			};
+			await expect(function_under_test()).to.be.fulfilled;
 		});
 	});
 
