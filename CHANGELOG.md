@@ -9,10 +9,13 @@
 
 - [#187](https://github.com/MiSchroe/klf-200-api/issues/187) Fix potential memory leaks.
 - [#195](https://github.com/MiSchroe/klf-200-api/issues/195) Remove unnecessary files from distribution.
-- [#256](https://github.com/MiSchroe/klf-200-api/issues/256) Fix outdated KLF-200 certificate. (Thanks [@s31teg](https://github.com/s31teg))
 - **BREAKING CHANGE:** Changed internal Disposable interface to use [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management).
 - chore: Add [debug](https://github.com/debug-js/debug#readme) instrumentation to the code.
 - chore: Upgrade dependencies.
+
+## 6.0.2 (2026-08-14)
+
+- [#256](https://github.com/MiSchroe/klf-200-api/issues/256) Fix outdated KLF-200 certificate. (Thanks [@s31teg](https://github.com/s31teg))
 
 ## 6.0.1 (2025-09-01)
 
@@ -153,3 +156,4 @@
 ## 1.0.0 (2017-07-27)
 
 - Initial version
+
