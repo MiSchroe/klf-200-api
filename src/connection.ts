@@ -444,10 +444,6 @@ export class Connection implements IConnection, AsyncDisposable {
 							debug("Closing socket...");
 							await this.finalizeSocket();
 							resolve();
-							this.sckt?.end("", () => {
-								debug("Socket closed.");
-								resolve();
-							});
 						} catch (error) {
 							debug("Error while closing socket:", error);
 							reject(error as Error);
