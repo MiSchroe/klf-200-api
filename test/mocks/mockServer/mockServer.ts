@@ -77,14 +77,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 	};
 
 	const DefaultGateway: Gateway = {
-		SoftwareVersion: {
-			CommandVersion: 2,
-			MainVersion: 0,
-			SubVersion: 0,
-			BranchID: 71,
-			Build: 0,
-			MicroBuild: 0,
-		},
+		SoftwareVersion: { CommandVersion: 2, MainVersion: 0, SubVersion: 0, BranchID: 71, Build: 0, MicroBuild: 0 },
 		HardwareVersion: 42,
 		ProductGroup: 14,
 		ProductType: 3,
@@ -103,10 +96,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 	const groups: Map<number, Group> = new Map();
 	const scenes: Map<number, Scene> = new Map();
 	const limitations: Map<string, Limitation> = new Map();
-	type confirmationData = {
-		gatewayConfirmation: GatewayCommand;
-		data: string;
-	};
+	type confirmationData = { gatewayConfirmation: GatewayCommand; data: string };
 	const confirmations: Map<GatewayCommand, confirmationData> = new Map();
 	type functionData = (frameBuffer: Buffer) => Promise<Buffer[]>;
 	const functions: Map<GatewayCommand, functionData> = new Map();
@@ -175,10 +165,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 
 	function acknowledgeMessageACK(message: CommandWithGuid): void {
 		if (process.send) {
-			const ackMsg: AcknowledgeMessage = {
-				messageType: "ACK",
-				originalCommandGuid: message.CommandGuid,
-			};
+			const ackMsg: AcknowledgeMessage = { messageType: "ACK", originalCommandGuid: message.CommandGuid };
 			process.send(ackMsg);
 		}
 	}
@@ -314,6 +301,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 
 				case "CloseConnection":
 					if (tlsSocket) {
+						debug("CloseConnection command received. Ending the socket.");
 						try {
 							await timeout(
 								// Try to end the "good" way:
@@ -1557,3 +1545,4 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 		return result;
 	}
 })();
+
