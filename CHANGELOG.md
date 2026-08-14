@@ -4,8 +4,7 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
-
-## **WORK IN PROGRESS**
+## 6.0.2 (2026-08-14)
 
 - [#256](https://github.com/MiSchroe/klf-200-api/issues/256) Fix outdated KLF-200 certificate. (Thanks [@s31teg](https://github.com/s31teg))
 
