@@ -176,12 +176,31 @@ describe("connection", function () {
 				// Check, that KLF200Protocol is undefined
 				expect(conn.KLF200SocketProtocol).to.be.undefined;
 
+				// Reset the mock server
+				await mockServerController?.sendCommand(ResetCommand);
+
 				await expect(conn.loginAsync("velux123")).to.be.fulfilled;
 				expect(conn.KLF200SocketProtocol).to.be.instanceOf(KLF200SocketProtocol);
 				expect(conn.KLF200SocketProtocol?.socket.readyState).to.equal("open");
 			} finally {
 				await conn.logoutAsync();
 			}
+		});
+
+		it("should succeed even when the connection is lost.", async function () {
+			const function_under_test = async () => {
+				await using conn = new Connection(testHOST, {
+					rejectUnauthorized: true,
+					requestCert: true,
+					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				});
+				await conn.loginAsync("velux123");
+				conn.KLF200SocketProtocol?.socket?.destroy(); // Simulate unexpected closure
+				await conn.logoutAsync();
+			};
+			await expect(function_under_test()).to.be.fulfilled;
 		});
 	});
 
@@ -251,9 +270,7 @@ describe("connection", function () {
 				debug("Login...");
 				await conn.loginAsync("velux123");
 				debug("Send command...");
-				const clock = sinon.useFakeTimers({
-					toFake: ["setTimeout", "clearTimeout"],
-				});
+				const clock = sinon.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
 				try {
 					await mockServerController?.sendCommand({
 						command: "SetFunction",
@@ -688,3 +705,64 @@ return new Promise((resolve) => {
 		});
 	});
 });
+
+describe("connection with expired certificate", function () {
+	this.timeout(20000);
+
+	let mockServerController: MockServerController | undefined;
+
+	this.beforeAll(async function () {
+		debug("beforeAll - expired cert");
+		mockServerController = await MockServerController.createMockServer(true);
+		debug("beforeAll - expired cert after mockServerController created");
+	});
+
+	this.afterAll(async function () {
+		debug("afterAll - expired cert");
+		if (mockServerController) {
+			debug("afterAll - expired cert before mockServerController disposed");
+			await mockServerController[Symbol.asyncDispose]();
+			mockServerController = undefined;
+			debug("afterAll - expired cert after mockServerController disposed");
+		}
+	});
+
+	this.afterEach(async function () {
+		debug("afterEach - expired cert");
+		if (mockServerController) {
+			debug("afterEach - expired cert before mockServerController sendCommand ResetCommand");
+			await mockServerController.sendCommand(ResetCommand);
+			debug("afterEach - expired cert before mockServerController sendCommand CloseConnectionCommand");
+			await mockServerController.sendCommand(CloseConnectionCommand);
+			debug("afterEach - expired cert after mockServerController sendCommand CloseConnectionCommand");
+		}
+	});
+
+	describe("loginAsync", function () {
+		it("should fail when rejectUnauthorized is true", async function () {
+			await using conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			await expect(conn.loginAsync("velux123")).to.be.rejectedWith(Error);
+		});
+
+		it("should fail when connecting to the mock server without the correct fingerprint", async function () {
+			await using conn = new Connection(testHOST);
+			await expect(conn.loginAsync("velux123")).to.be.rejectedWith("CERT_HAS_EXPIRED");
+		});
+
+		it("should succeed when connecting to the mock server with the correct fingerprint", async function () {
+			await using conn = new Connection(
+				testHOST,
+				readFileSync(join(__dirname, "mocks/mockServer", "server-crt-outdated.pem")),
+				"78:0E:43:3D:ED:C7:59:17:0C:CF:14:9A:DB:D5:5C:1C:BC:7D:17:BB",
+			);
+			await expect(conn.loginAsync("velux123")).to.be.fulfilled;
+		});
+	});
+});
+

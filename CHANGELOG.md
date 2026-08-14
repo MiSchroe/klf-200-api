@@ -13,6 +13,10 @@
 - chore: Add [debug](https://github.com/debug-js/debug#readme) instrumentation to the code.
 - chore: Upgrade dependencies.
 
+## 6.0.2 (2026-08-14)
+
+- [#256](https://github.com/MiSchroe/klf-200-api/issues/256) Fix outdated KLF-200 certificate. (Thanks [@s31teg](https://github.com/s31teg))
+
 ## 6.0.1 (2025-09-01)
 
 - [#211](https://github.com/MiSchroe/klf-200-api/issues/211) Fix: Moved the debug library to the dependencies.
@@ -152,3 +156,4 @@
 ## 1.0.0 (2017-07-27)
 
 - Initial version
+

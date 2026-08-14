@@ -15,12 +15,14 @@ const debug = debugModule(`mockServerController:client`);
 export class MockServerController {
 	serverProcess: ChildProcess;
 
-	private constructor() {
-		this.serverProcess = fork(join(__dirname, "mockServer/mockServer")); //, { stdio: "ignore" });
+	private constructor(useExpiredCert: boolean = false) {
+		this.serverProcess = fork(join(__dirname, "mockServer/mockServer"), [], {
+			env: { ...process.env, USE_EXPIRED_CERT: useExpiredCert.toString() },
+		}); //, { stdio: "ignore" });
 	}
 
-	static async createMockServer(): Promise<MockServerController> {
-		const mockServer = new MockServerController();
+	static async createMockServer(useExpiredCert: boolean = false): Promise<MockServerController> {
+		const mockServer = new MockServerController(useExpiredCert);
 		await new Promise<void>((resolve) => {
 			const onMessage = function (message: string | number | bigint | boolean | object): void {
 				if (message === "ready") {
