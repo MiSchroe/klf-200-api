@@ -176,11 +176,20 @@ describe("connection", function () {
 				// Check, that KLF200Protocol is undefined
 				expect(conn.KLF200SocketProtocol).to.be.undefined;
 
+				// Reset the mock server
+				await mockServerController?.sendCommand(ResetCommand);
+
+				console.log(`KLF200SocketProtocol is undefined after connection lost. Reconnecting...`);
 				await expect(conn.loginAsync("velux123")).to.be.fulfilled;
+				console.log(`Reconnected successfully.`);
 				expect(conn.KLF200SocketProtocol).to.be.instanceOf(KLF200SocketProtocol);
+				console.log(`KLF200SocketProtocol is instance of KLF200SocketProtocol after reconnect.`);
 				expect(conn.KLF200SocketProtocol?.socket.readyState).to.equal("open");
+				console.log(`KLF200SocketProtocol socket is open after reconnect.`);
 			} finally {
+				console.log(`Logout...`);
 				await conn.logoutAsync();
+				console.log(`Done after logout.`);
 			}
 		});
 	});
@@ -251,9 +260,7 @@ describe("connection", function () {
 				debug("Login...");
 				await conn.loginAsync("velux123");
 				debug("Send command...");
-				const clock = sinon.useFakeTimers({
-					toFake: ["setTimeout", "clearTimeout"],
-				});
+				const clock = sinon.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
 				try {
 					await mockServerController?.sendCommand({
 						command: "SetFunction",
@@ -748,3 +755,4 @@ describe("connection with expired certificate", function () {
 		});
 	});
 });
+

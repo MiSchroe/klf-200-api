@@ -438,10 +438,12 @@ export class Connection implements IConnection, AsyncDisposable {
 					this.klfProtocol = undefined;
 				}
 				await promiseTimeout(
-					new Promise<void>((resolve, reject) => {
+					new Promise<void>(async (resolve, reject) => {
 						try {
 							// Close socket
 							debug("Closing socket...");
+							await this.finalizeSocket();
+							resolve();
 							this.sckt?.end("", () => {
 								debug("Socket closed.");
 								resolve();
@@ -852,14 +854,12 @@ export class Connection implements IConnection, AsyncDisposable {
 									this.sckt?.off("error", loginErrorHandler);
 									stack.defer(async () => {
 										await promiseTimeout(
-											new Promise<void>((resolve, reject) => {
+											new Promise<void>(async (resolve, reject) => {
 												try {
 													// Close socket
 													debug("Closing socket...");
-													this.sckt?.end("", () => {
-														debug("Socket closed.");
-														resolve();
-													});
+													await this.finalizeSocket();
+													resolve();
 												} catch (error) {
 													debug("Error while closing socket:", error);
 													reject(error as Error);
@@ -939,6 +939,38 @@ export class Connection implements IConnection, AsyncDisposable {
 		}
 	}
 
+	private async finalizeSocket(): Promise<void> {
+		debug("finalizeSocket called.");
+		if (this.sckt) {
+			if (this.sckt.destroyed) {
+				debug("Socket already destroyed.");
+				this.sckt = undefined;
+				return Promise.resolve();
+			}
+			await promiseTimeout(
+				new Promise<void>((resolve, reject) => {
+					try {
+						// Close socket
+						debug("Closing socket...");
+						this.sckt?.end("", () => {
+							debug("Socket closed.");
+							resolve();
+						});
+					} catch (error) {
+						debug("Error while closing socket:", error);
+						reject(error as Error);
+					}
+				}),
+				10000,
+			);
+			this.sckt = undefined;
+			debug("Socket finalized.");
+		} else {
+			debug("No socket to finalize.");
+			return Promise.resolve();
+		}
+	}
+
 	private socketClosedEventHandler(): void {
 		debug("socketClosedEventHandler called.");
 		// Socket has been closed -> clean up everything
@@ -956,3 +988,4 @@ export class Connection implements IConnection, AsyncDisposable {
 		else return checkServerIdentityOriginal(host, cert);
 	}
 }
+
