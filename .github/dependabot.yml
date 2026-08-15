@@ -8,7 +8,7 @@ updates:
           timezone: Europe/Berlin
       open-pull-requests-limit: 5
       assignees:
-          - Author
+          - MiSchroe
       versioning-strategy: increase
 
     - package-ecosystem: github-actions
@@ -19,4 +19,4 @@ updates:
           timezone: Europe/Berlin
       open-pull-requests-limit: 5
       assignees:
-          - Author
+          - MiSchroe
