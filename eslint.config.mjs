@@ -56,7 +56,7 @@ export default defineConfig([
 			"prettier/prettier": [
 				"error",
 				{
-					endOfLine: "auto",
+					endOfLine: "lf",
 				},
 			],
 		},
@@ -69,4 +69,3 @@ export default defineConfig([
 		},
 	},
 ]);
-
