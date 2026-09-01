@@ -370,6 +370,19 @@ describe("connection", function () {
 			await expect(conn.sendFrameAsync(null as any)).to.be.rejectedWith(Error);
 		});
 
+		it("should throw an error when called before login.", async function () {
+			await using conn = new Connection(testHOST, {
+				rejectUnauthorized: true,
+				requestCert: true,
+				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
+				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
+				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+			});
+			await expect(conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"))).to.be.rejectedWith(
+				"KLF200SocketProtocol is not initialized. Please login first.",
+			);
+		});
+
 		it("should ignore wrong confirmation.", async function () {
 			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
