@@ -12,6 +12,7 @@
 - **BREAKING CHANGE:** Changed internal Disposable interface to use [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management).
 - chore: Add [debug](https://github.com/debug-js/debug#readme) instrumentation to the code.
 - chore: Upgrade dependencies.
+- Prevent sendFrameAsync if not logged in (by @petero-dk)
 
 ## 6.0.2 (2026-08-14)
 
@@ -156,4 +157,3 @@
 ## 1.0.0 (2017-07-27)
 
 - Initial version
-
