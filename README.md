@@ -112,13 +112,13 @@ If you have to provide your own certificate data use the following code for logi
 
 ```Typescript
 import { Connection, Products, Product } from "klf-200-api";
-import { readFileSync } from "fs";
+import { readFileSync } from "node:fs";
 
 const myFingerprint = "12:34:56:78:9a:bc:de:f0:12:34:56:78:9a:bc:de:f0:12:34:56:78";
 const myCA = readFileSync("velux-cert.pem");
 
 // Connect using your own certificate data:
-using conn = new Connection('velux-klf-12ab', myCA, myFingerprint);
+await using conn = new Connection('velux-klf-12ab', myCA, myFingerprint);
 ...
 ```
 
@@ -339,4 +339,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
