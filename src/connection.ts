@@ -826,7 +826,8 @@ export class Connection implements IConnection, AsyncDisposable {
 										// expired on 2026-07-12; every other authorization error is still rejected.
 										rejectUnauthorized: false,
 										ca: [this.CA],
-										checkServerIdentity: (host, cert) => this.checkServerIdentity(host, cert),
+										checkServerIdentity: (host: string, cert: PeerCertificate) =>
+											this.checkServerIdentity(host, cert),
 									},
 							() => {
 								debug("Secure connection established.");

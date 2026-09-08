@@ -4,6 +4,11 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
+
+## **WORK IN PROGRESS**
+
+- [#194](https://github.com/MiSchroe/klf-200-api/issues/194) Remove support for CJS. This is a pure ESM module now.
+
 ## 7.0.0 (2026-09-05)
 
 - [#187](https://github.com/MiSchroe/klf-200-api/issues/187) Fix potential memory leaks.
