@@ -2,19 +2,16 @@
   "name": "klf-200-api",
   "version": "7.0.0",
   "description": "This module provides a wrapper to the socket API of a Velux KLF-200 interface. You will need at least firmware 0.2.0.0.71 on your KLF interface for this library to work.",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "types": "dist/types/index.d.ts",
+  "main": "dist/index.js",
   "author": {
     "name": "Michael Schroeder"
   },
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js",
-      "types": "./dist/types/index.d.ts",
-      "default": "./dist/esm/index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "engines": {
@@ -68,12 +65,9 @@
     "typescript-eslint": "^8.32.1"
   },
   "scripts": {
-    "compile:types": "tsc -b ./tsconfig.types.json",
-    "compile:cjs": "tsx ./deployment/prepare-cjs.ts && tsc -b ./tsconfig.cjs.json",
-    "compile:esm": "tsc -b ./tsconfig.esm.json",
-    "compile": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json",
+    "compile": "tsc -b ./tsconfig.json",
     "build:clean": "rm -rf ./dist",
-    "build": "npm run build:clean && tsx ./deployment/prepare-cjs.ts && npm run compile && shx cp ./deployment/package.esm.json ./dist/esm/package.json && shx cp ./deployment/package.cjs.json ./dist/cjs/package.json && shx cp ./velux-cert.pem ./dist/velux-cert.pem",
+    "build": "npm run build:clean && npm run compile && shx cp ./velux-cert.pem ./dist/velux-cert.pem",
     "watch": "tsc --watch",
     "test": "cross-env DEBUG=-mockServer*,-klf-200-api:products*,-klf-200-api:connection*,-klf-200-api:KLF200SocketProtocol,-klf-200-api:gateway*,-connection-test c8 mocha",
     "lint": "eslint --ext .ts src test",
