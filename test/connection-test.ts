@@ -372,7 +372,7 @@ describe("connection", { timeout: 20000 }, function () {
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
 			});
-			await assert.rejects(() => conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123")), {
+			await assert.rejects(async () => conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123")), {
 				message: "KLF200SocketProtocol is not initialized. Please login first.",
 			});
 		});

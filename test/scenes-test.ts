@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { after, afterEach, before, describe, it } from "node:test";
-import setImmediate from "node:timers";
+import { setImmediate } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { Connection, GW_ERROR, GW_SESSION_FINISHED_NTF, GatewayCommand, Scene, Scenes, getNextSessionID } from "../src";
 import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder.js";
@@ -164,9 +164,7 @@ describe("scenes", { timeout: 20000 }, function () {
 					});
 					await waitPromise;
 					// Wait for outstanding promises to finish
-					await new Promise((resolve) => {
-						setImmediate(resolve);
-					});
+					await setImmediate();
 
 					assert.strictEqual(onChangedSceneSpy.mock.callCount(), 1);
 					assert.deepStrictEqual(onChangedSceneSpy.mock.calls[0].arguments, [1]);
@@ -202,9 +200,7 @@ describe("scenes", { timeout: 20000 }, function () {
 					});
 					await waitPromise;
 					// Wait for outstanding promises to finish
-					await new Promise((resolve) => {
-						setImmediate(resolve);
-					});
+					await setImmediate();
 					assert.strictEqual(onRemovedSceneSpy.mock.callCount(), 1);
 					assert.deepStrictEqual(onRemovedSceneSpy.mock.calls[0].arguments, [1]);
 					assert.strictEqual(sc.findByName("Scene 2"), undefined);
