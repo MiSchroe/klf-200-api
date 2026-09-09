@@ -1,13 +1,12 @@
-﻿"use strict";
+"use strict";
 
-import { expect, use } from "chai";
-import chaiAsPromised from "chai-as-promised";
 import "disposablestack/auto";
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
-import sinon, { SinonSandbox } from "sinon";
-import sinonChai from "sinon-chai";
-import { fileURLToPath } from "url";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { after, afterEach, before, describe, it } from "node:test";
+import setImmediate from "node:timers";
+import { fileURLToPath } from "node:url";
 import { Connection, GW_ERROR, GW_SESSION_FINISHED_NTF, GatewayCommand, Scene, Scenes, getNextSessionID } from "../src";
 import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder.js";
 import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
@@ -19,31 +18,18 @@ const testHOST = "localhost";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-use(chaiAsPromised);
-use(sinonChai);
-
-describe("scenes", function () {
-	this.timeout(20000);
-
+describe("scenes", { timeout: 20000 }, function () {
 	let mockServerController: MockServerController;
 
-	this.beforeAll(async function () {
+	before(async function () {
 		mockServerController = await MockServerController.createMockServer();
 	});
 
-	this.afterAll(async function () {
+	after(async function () {
 		await mockServerController[Symbol.asyncDispose]();
 	});
 
-	// Setup sinon sandbox
-	let sandbox: SinonSandbox;
-
-	this.beforeEach(function () {
-		sandbox = sinon.createSandbox();
-	});
-
-	this.afterEach(async function () {
-		sandbox.restore();
+	afterEach(async function () {
 		await mockServerController.sendCommand(ResetCommand);
 		await mockServerController.sendCommand(CloseConnectionCommand);
 	});
@@ -63,20 +49,20 @@ describe("scenes", function () {
 					await setupHouseMockup(mockServerController);
 					const result = await Scenes.createScenesAsync(conn);
 					await waitForNotificationHandler(conn);
-					expect(result).to.be.instanceOf(Scenes);
-					expect(result.Scenes.length).to.be.equal(2, "Number of scenes wrong.");
+					assert.ok(result instanceof Scenes);
+					assert.strictEqual(result.Scenes.length, 2, "Number of scenes wrong.");
 					for (let sceneIndex = 0; sceneIndex < result.Scenes.length; sceneIndex++) {
 						const scene = result.Scenes[sceneIndex];
-						expect(scene.SceneID).to.be.equal(sceneIndex);
-						expect(scene.SceneName).to.be.equal(`Scene ${sceneIndex + 1}`);
-						expect(scene.IsRunning).to.be.false;
-						expect(scene.Products.length).to.be.equal(3);
-						expect(scene.Products[0]).to.be.deep.equal({
+						assert.strictEqual(scene.SceneID, sceneIndex);
+						assert.strictEqual(scene.SceneName, `Scene ${sceneIndex + 1}`);
+						assert.strictEqual(scene.IsRunning, false);
+						assert.strictEqual(scene.Products.length, 3);
+						assert.deepStrictEqual(scene.Products[0], {
 							NodeID: 0,
 							ParameterID: 0,
 							ParameterValue: 0xc800,
 						});
-						expect(scene.Products[1]).to.be.deep.equal({
+						assert.deepStrictEqual(scene.Products[1], {
 							NodeID: 1,
 							ParameterID: 0,
 							ParameterValue: 0xc800,
@@ -104,7 +90,7 @@ describe("scenes", function () {
 						gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 						data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 					});
-					await expect(Scenes.createScenesAsync(conn)).to.rejectedWith(Error);
+					await assert.rejects(Scenes.createScenesAsync(conn), Error);
 				} finally {
 					await conn.logoutAsync();
 				}
@@ -121,8 +107,8 @@ describe("scenes", function () {
 				try {
 					await conn.loginAsync("velux123");
 					const result = await Scenes.createScenesAsync(conn);
-					expect(result).to.be.instanceOf(Scenes);
-					expect(result.Scenes.length).to.be.equal(0, "Number of scenes wrong.");
+					assert.ok(result instanceof Scenes);
+					assert.strictEqual(result.Scenes.length, 0, "Number of scenes wrong.");
 				} finally {
 					await conn.logoutAsync();
 				}
@@ -143,7 +129,8 @@ describe("scenes", function () {
 					await setupHouseMockup(mockServerController);
 					const sc = await Scenes.createScenesAsync(conn);
 					const result = sc.findByName("Scene 1");
-					expect(result).to.be.instanceOf(Scene).with.property("SceneName", "Scene 1");
+					assert.ok(result instanceof Scene);
+					assert.strictEqual(result.SceneName, "Scene 1");
 				} finally {
 					await conn.logoutAsync();
 				}
@@ -151,7 +138,7 @@ describe("scenes", function () {
 		});
 
 		describe("onChangedScene", function () {
-			it("should change scene ID #1.", async function () {
+			it("should change scene ID #1.", async function (t) {
 				const conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
@@ -164,7 +151,7 @@ describe("scenes", function () {
 					await setupHouseMockup(mockServerController);
 					const sc = await Scenes.createScenesAsync(conn);
 
-					const onChangedSceneSpy = sinon.spy();
+					const onChangedSceneSpy = t.mock.fn();
 					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					using disposable = sc.onChangedScene(onChangedSceneSpy);
 					const waitPromise = new Promise((resolve) => {
@@ -181,7 +168,8 @@ describe("scenes", function () {
 						setImmediate(resolve);
 					});
 
-					expect(onChangedSceneSpy).to.be.calledOnceWithExactly(1);
+					assert.strictEqual(onChangedSceneSpy.mock.callCount(), 1);
+					assert.deepStrictEqual(onChangedSceneSpy.mock.calls[0].arguments, [1]);
 				} finally {
 					await conn.logoutAsync();
 				}
@@ -189,7 +177,7 @@ describe("scenes", function () {
 		});
 
 		describe("onRemovedScene", function () {
-			it("should remove scene ID #1.", async function () {
+			it("should remove scene ID #1.", async function (t) {
 				const conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
@@ -201,7 +189,7 @@ describe("scenes", function () {
 					await conn.loginAsync("velux123");
 					await setupHouseMockup(mockServerController);
 					const sc = await Scenes.createScenesAsync(conn);
-					const onRemovedSceneSpy = sinon.spy();
+					const onRemovedSceneSpy = t.mock.fn();
 					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					using disposable = sc.onRemovedScene(onRemovedSceneSpy);
 					const waitPromise = new Promise((resolve) => {
@@ -217,8 +205,9 @@ describe("scenes", function () {
 					await new Promise((resolve) => {
 						setImmediate(resolve);
 					});
-					expect(onRemovedSceneSpy).to.be.calledOnceWithExactly(1);
-					expect(sc.findByName("Scene 2")).to.be.undefined;
+					assert.strictEqual(onRemovedSceneSpy.mock.callCount(), 1);
+					assert.deepStrictEqual(onRemovedSceneSpy.mock.calls[0].arguments, [1]);
+					assert.strictEqual(sc.findByName("Scene 2"), undefined);
 				} finally {
 					await conn.logoutAsync();
 				}
@@ -226,7 +215,7 @@ describe("scenes", function () {
 		});
 
 		describe("onAddedScene", function () {
-			it("should call the notification in onAddedScene once.", async function () {
+			it("should call the notification in onAddedScene once.", async function (t) {
 				const conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
@@ -238,7 +227,7 @@ describe("scenes", function () {
 					await conn.loginAsync("velux123");
 					await setupHouseMockup(mockServerController);
 					const sc = await Scenes.createScenesAsync(conn);
-					const onAddedSceneSpy = sinon.spy();
+					const onAddedSceneSpy = t.mock.fn();
 					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					using disposable = sc.onAddedScene(onAddedSceneSpy);
 					await mockServerController.sendCommand({
@@ -251,7 +240,8 @@ describe("scenes", function () {
 						},
 					});
 					await sc.refreshScenesAsync();
-					expect(onAddedSceneSpy).to.be.calledOnceWithExactly(2);
+					assert.strictEqual(onAddedSceneSpy.mock.callCount(), 1);
+					assert.deepStrictEqual(onAddedSceneSpy.mock.calls[0].arguments, [2]);
 				} finally {
 					await conn.logoutAsync();
 				}
@@ -260,7 +250,7 @@ describe("scenes", function () {
 
 		describe("Scene class", function () {
 			describe("runAsync", function () {
-				it("should run scene ID #1.", async function () {
+				it("should run scene ID #1.", async function (t) {
 					const conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
@@ -273,20 +263,20 @@ describe("scenes", function () {
 						await setupHouseMockup(mockServerController);
 						const sc = await Scenes.createScenesAsync(conn);
 						const scene = sc.Scenes[1];
-						const propertyChangedEventSpy = sinon.spy();
+						const propertyChangedEventSpy = t.mock.fn();
 						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						using disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
 						const expectedSessionId = getNextSessionID() + 1;
 						const sessionID = await scene.runAsync();
-						expect(sessionID).to.be.equal(expectedSessionId, "Wrong Session ID");
-						expect(scene.IsRunning).to.be.true;
-						expect(propertyChangedEventSpy).to.be.calledOnce;
+						assert.strictEqual(sessionID, expectedSessionId, "Wrong Session ID");
+						assert.strictEqual(scene.IsRunning, true);
+						assert.strictEqual(propertyChangedEventSpy.mock.callCount(), 1);
 					} finally {
 						await conn.logoutAsync();
 					}
 				});
 
-				it("should run scene ID #1 and set to stop after notification.", async function () {
+				it("should run scene ID #1 and set to stop after notification.", async function (t) {
 					const conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
@@ -299,7 +289,7 @@ describe("scenes", function () {
 						await setupHouseMockup(mockServerController);
 						const sc = await Scenes.createScenesAsync(conn);
 						const scene = sc.Scenes[1];
-						const propertyChangedEventSpy = sinon.spy();
+						const propertyChangedEventSpy = t.mock.fn();
 						using stack = new DisposableStack();
 						stack.use(scene.propertyChangedEvent.on(propertyChangedEventSpy));
 						const expectedSessionId = getNextSessionID() + 1;
@@ -314,9 +304,9 @@ describe("scenes", function () {
 							);
 						});
 						await waitForSessionFinishedNtf;
-						expect(sessionID, "SessionId").to.be.equal(expectedSessionId, "Wrong Session ID");
-						expect(scene.IsRunning, "IsRunning").to.be.false;
-						expect(propertyChangedEventSpy, "PropertyChangedEvent spy").to.be.calledTwice;
+						assert.strictEqual(sessionID, expectedSessionId, "Wrong Session ID");
+						assert.strictEqual(scene.IsRunning, false, "IsRunning");
+						assert.strictEqual(propertyChangedEventSpy.mock.callCount(), 2);
 					} finally {
 						await conn.logoutAsync();
 					}
@@ -341,7 +331,7 @@ describe("scenes", function () {
 							gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 							data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 						});
-						await expect(scene.runAsync()).to.be.rejectedWith(Error);
+						await assert.rejects(scene.runAsync(), Error);
 					} finally {
 						await conn.logoutAsync();
 					}
@@ -367,7 +357,7 @@ describe("scenes", function () {
 							gatewayConfirmation: GatewayCommand.GW_ACTIVATE_SCENE_CFM,
 							data: new ArrayBuilder().addBytes(1).addInts(sessionId).toBuffer().toString("base64"),
 						});
-						await expect(scene.runAsync()).to.be.rejectedWith(Error);
+						await assert.rejects(scene.runAsync(), Error);
 					} finally {
 						await conn.logoutAsync();
 					}
@@ -375,7 +365,7 @@ describe("scenes", function () {
 			});
 
 			describe("stopAsync", function () {
-				it("should stop scene ID #1.", async function () {
+				it("should stop scene ID #1.", async function (t) {
 					const conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
@@ -388,14 +378,14 @@ describe("scenes", function () {
 						await setupHouseMockup(mockServerController);
 						const sc = await Scenes.createScenesAsync(conn);
 						const scene = sc.Scenes[1];
-						const propertyChangedEventSpy = sinon.spy();
+						const propertyChangedEventSpy = t.mock.fn();
 						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						using disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
 						const expectedSessionId = getNextSessionID() + 1;
 						const sessionID = await scene.stopAsync();
-						expect(sessionID).to.be.equal(expectedSessionId, "Wrong Session ID");
-						expect(scene.IsRunning).to.be.false;
-						expect(propertyChangedEventSpy).to.be.calledOnce;
+						assert.strictEqual(sessionID, expectedSessionId, "Wrong Session ID");
+						assert.strictEqual(scene.IsRunning, false);
+						assert.strictEqual(propertyChangedEventSpy.mock.callCount(), 1);
 					} finally {
 						await conn.logoutAsync();
 					}
@@ -420,7 +410,7 @@ describe("scenes", function () {
 							gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 							data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 						});
-						await expect(scene.stopAsync()).to.be.rejectedWith(Error);
+						await assert.rejects(scene.stopAsync(), Error);
 					} finally {
 						await conn.logoutAsync();
 					}
@@ -446,7 +436,7 @@ describe("scenes", function () {
 							gatewayConfirmation: GatewayCommand.GW_STOP_SCENE_CFM,
 							data: new ArrayBuilder().addBytes(1).addInts(sessionId).toBuffer().toString("base64"),
 						});
-						await expect(scene.stopAsync()).to.be.rejectedWith(Error);
+						await assert.rejects(scene.stopAsync(), Error);
 					} finally {
 						await conn.logoutAsync();
 					}
@@ -454,7 +444,7 @@ describe("scenes", function () {
 			});
 
 			describe("refreshAsync", function () {
-				it("should refresh scene ID #1.", async function () {
+				it("should refresh scene ID #1.", async function (t) {
 					const conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
@@ -467,7 +457,7 @@ describe("scenes", function () {
 						await setupHouseMockup(mockServerController);
 						const sc = await Scenes.createScenesAsync(conn);
 						const scene = sc.Scenes[1];
-						const propertyChangedEventSpy = sinon.spy();
+						const propertyChangedEventSpy = t.mock.fn();
 						// eslint-disable-next-line @typescript-eslint/no-unused-vars
 						using disposable = scene.propertyChangedEvent.on(propertyChangedEventSpy);
 						await mockServerController.sendCommand({
@@ -480,8 +470,8 @@ describe("scenes", function () {
 							},
 						});
 						const refreshPromise = scene.refreshAsync();
-						await expect(refreshPromise).to.be.fulfilled;
-						expect(scene.SceneName, "Scene name").to.be.equal("Scene 2 changed");
+						await refreshPromise;
+						assert.strictEqual(scene.SceneName, "Scene 2 changed", "Scene name");
 					} finally {
 						await conn.logoutAsync();
 					}
@@ -506,7 +496,7 @@ describe("scenes", function () {
 							gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 							data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 						});
-						await expect(scene.refreshAsync()).to.be.rejectedWith(Error);
+						await assert.rejects(scene.refreshAsync(), Error);
 					} finally {
 						await conn.logoutAsync();
 					}
@@ -531,7 +521,7 @@ describe("scenes", function () {
 							gatewayConfirmation: GatewayCommand.GW_GET_SCENE_INFORMATION_CFM,
 							data: new ArrayBuilder().addBytes(1, scene.SceneID).toBuffer().toString("base64"),
 						});
-						await expect(scene.refreshAsync()).to.be.rejectedWith(Error);
+						await assert.rejects(scene.refreshAsync(), Error);
 					} finally {
 						await conn.logoutAsync();
 					}

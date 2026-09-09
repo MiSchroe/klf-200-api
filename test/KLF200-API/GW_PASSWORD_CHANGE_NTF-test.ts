@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_PASSWORD_CHANGE_NTF } from "../../src";
 
 describe("KLF200-API", function () {
@@ -17,12 +17,12 @@ describe("KLF200-API", function () {
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
             ]);
 			it("should create without error", function () {
-				expect(() => new GW_PASSWORD_CHANGE_NTF(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_PASSWORD_CHANGE_NTF(data));
 			});
 
 			it("should return the number of scenes", function () {
 				const result = new GW_PASSWORD_CHANGE_NTF(data);
-				expect(result.NewPassword).to.equal("12345678");
+				assert.strictEqual(result.NewPassword, "12345678");
 			});
 		});
 	});

@@ -54,7 +54,7 @@ jobs:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   slug: MiSchroe/klf-200-api
                   disable_search: true
-                  files: ./coverage/cobertura-coverage.xml
+                  files: ./coverage/lcov.info
 
     # Deploys the final package to NPM and Github Actions
     deploy:

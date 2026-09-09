@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_GET_SCENE_LIST_NTF } from "../../src";
 
 describe("KLF200-API", function () {
@@ -41,33 +41,32 @@ describe("KLF200-API", function () {
             ]);
 
 			it("should create without error", function () {
-				expect(() => new GW_GET_SCENE_LIST_NTF(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_GET_SCENE_LIST_NTF(data));
 			});
 
 			it("should return the number of scenes", function () {
 				const result = new GW_GET_SCENE_LIST_NTF(data);
-				expect(result.NumberOfScenes).to.equal(2);
+				assert.strictEqual(result.NumberOfScenes, 2);
 			});
 
 			it("should return the number of remaining scenes", function () {
 				const result = new GW_GET_SCENE_LIST_NTF(data);
-				expect(result.NumberOfRemainingScenes).to.equal(5);
+				assert.strictEqual(result.NumberOfRemainingScenes, 5);
 			});
 
 			it("should return the scenes", function () {
 				const result = new GW_GET_SCENE_LIST_NTF(data);
-				expect(result.Scenes)
-					.to.be.instanceOf(Array)
-					.with.deep.members([
-						{
-							SceneID: 0,
-							Name: "Dummy 1",
-						},
-						{
-							SceneID: 1,
-							Name: "Dummy 2",
-						},
-					]);
+				assert.ok(result.Scenes instanceof Array);
+				assert.deepStrictEqual(result.Scenes, [
+					{
+						SceneID: 0,
+						Name: "Dummy 1",
+					},
+					{
+						SceneID: 1,
+						Name: "Dummy 2",
+					},
+				]);
 			});
 		});
 	});

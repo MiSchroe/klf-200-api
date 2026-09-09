@@ -1,79 +1,54 @@
 "use strict";
 
-import { expect, use } from "chai";
-import chaiAsPromised from "chai-as-promised";
+import assert from "node:assert/strict";
 import { ChildProcess } from "node:child_process";
-import sinon, { SinonSandbox } from "sinon";
-import sinonChai from "sinon-chai";
+import { describe, it } from "node:test";
 import { MockServerController } from "./mocks/mockServerController.js";
 
-use(chaiAsPromised);
-use(sinonChai);
-
 describe("mockServer", function () {
-	// Setup sinon sandbox
-	let sandbox: SinonSandbox;
-
-	this.beforeEach(function () {
-		sandbox = sinon.createSandbox();
-	});
-
-	this.afterEach(function () {
-		sandbox.restore();
-	});
-
-	it("should start the mock server", async function () {
-		this.timeout(20000);
-		this.slow(7000);
+	it("should start the mock server", { timeout: 20000 }, async function () {
 		const fn = async function (): Promise<boolean> {
 			await using mockServerController = await MockServerController.createMockServer();
 			return await Promise.resolve(mockServerController.serverProcess.connected);
 		};
-		await expect(fn()).to.be.eventually.true;
+		assert.strictEqual(await fn(), true);
 	});
 
-	it("should stop the mock server", async function () {
-		this.timeout(20000);
-		this.slow(7000);
+	it("should stop the mock server", { timeout: 20000 }, async function () {
 		let serverProcess: ChildProcess | undefined;
 		{
 			await using mockServer = await MockServerController.createMockServer();
 			serverProcess = mockServer.serverProcess;
 		}
-		expect(serverProcess).to.be.not.undefined;
-		expect(serverProcess.connected).to.be.false;
+		assert.notStrictEqual(serverProcess, undefined);
+		assert.strictEqual(serverProcess.connected, false);
 	});
 
-	it("should handle errors during server disposal gracefully", async function () {
-		this.timeout(20000);
-		this.slow(7000);
+	it("should handle errors during server disposal gracefully", { timeout: 20000 }, async function (t) {
 		const mockServer = await MockServerController.createMockServer();
-		const stub = sandbox.stub(mockServer.serverProcess, "kill").throws(new Error("Failed to kill process"));
+		t.mock.method(mockServer.serverProcess, "kill", () => {
+			throw new Error("Failed to kill process");
+		});
 		try {
-			await expect(mockServer[Symbol.asyncDispose]()).to.be.rejectedWith("Failed to kill process");
+			await assert.rejects(mockServer[Symbol.asyncDispose](), { message: "Failed to kill process" });
 		} finally {
-			stub.restore();
+			t.mock.reset();
 			await mockServer[Symbol.asyncDispose]();
 		}
 	});
 
-	it("should handle multiple disposals gracefully", async function () {
-		this.timeout(20000);
-		this.slow(7000);
+	it("should handle multiple disposals gracefully", { timeout: 20000 }, async function () {
 		const mockServer = await MockServerController.createMockServer();
 		await mockServer[Symbol.asyncDispose]();
-		await expect(mockServer[Symbol.asyncDispose]()).to.be.fulfilled; // Call dispose again
+		await mockServer[Symbol.asyncDispose](); // Call dispose again
 	});
 
-	it("should handle commands sent to the mock server", async function () {
-		this.timeout(20000);
-		this.slow(7000);
+	it("should handle commands sent to the mock server", { timeout: 20000 }, async function () {
 		await using mockServer = await MockServerController.createMockServer();
-		const response = mockServer.sendCommand({
+		await mockServer.sendCommand({
 			command: "SendData",
 			gatewayCommand: 0x01, // Example command
 			data: Buffer.from([0x00, 0x01]).toString("base64"),
 		});
-		await expect(response).to.be.fulfilled;
 	});
 });

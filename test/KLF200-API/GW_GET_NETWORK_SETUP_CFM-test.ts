@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_GET_NETWORK_SETUP_CFM } from "../../src";
 
 describe("KLF200-API", function () {
@@ -21,27 +21,27 @@ describe("KLF200-API", function () {
             ]);
 
 			it("should create without error", function () {
-				expect(() => new GW_GET_NETWORK_SETUP_CFM(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_GET_NETWORK_SETUP_CFM(data));
 			});
 
 			it("should return the IP address", function () {
 				const result = new GW_GET_NETWORK_SETUP_CFM(data);
-				expect(result.IPAddress).to.equal("1.2.3.4");
+				assert.strictEqual(result.IPAddress, "1.2.3.4");
 			});
 
 			it("should return the mask", function () {
 				const result = new GW_GET_NETWORK_SETUP_CFM(data);
-				expect(result.Mask).to.equal("5.6.7.8");
+				assert.strictEqual(result.Mask, "5.6.7.8");
 			});
 
 			it("should return the gateway", function () {
 				const result = new GW_GET_NETWORK_SETUP_CFM(data);
-				expect(result.DefaultGateway).to.equal("9.10.11.12");
+				assert.strictEqual(result.DefaultGateway, "9.10.11.12");
 			});
 
 			it("should return the DHCP flag", function () {
 				const result = new GW_GET_NETWORK_SETUP_CFM(data);
-				expect(result.DHCP).to.be.true;
+				assert.strictEqual(result.DHCP, true);
 			});
 		});
 	});
