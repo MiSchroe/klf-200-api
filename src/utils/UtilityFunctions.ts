@@ -1,6 +1,6 @@
 "use strict";
 
-import { IGW_FRAME } from "../KLF200-API/common";
+import { IGW_FRAME } from "../KLF200-API/common.js";
 
 export function isArrayEqual<T>(first: Array<T>, second: Array<T>): boolean {
 	if (first.length !== second.length) {

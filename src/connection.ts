@@ -2,14 +2,14 @@
 
 import debugModule from "debug";
 import "disposablestack/auto";
-import { timeout as promiseTimeout } from "promise-timeout";
 import {
 	ConnectionOptions,
 	PeerCertificate,
 	TLSSocket,
 	checkServerIdentity as checkServerIdentityOriginal,
 	connect,
-} from "tls";
+} from "node:tls";
+import { timeout as promiseTimeout } from "promise-timeout";
 import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF.js";
 import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ.js";
 import { KLF200SocketProtocol } from "./KLF200-API/KLF200SocketProtocol.js";
@@ -838,8 +838,7 @@ export class Connection implements IConnection, AsyncDisposable {
 								// Note: `authorizationError` carries an OpenSSL error-code string (e.g.
 								// "CERT_HAS_EXPIRED") at runtime although @types/node types it as `Error`.
 								const authorizationError = this.sckt?.authorizationError as unknown as
-									| string
-									| undefined;
+									string | undefined;
 								const certificateExpiredButPinned =
 									this.sckt?.authorized !== true &&
 									authorizationError === "CERT_HAS_EXPIRED" &&

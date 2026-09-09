@@ -7,7 +7,10 @@
 
 ## **WORK IN PROGRESS**
 
+### **BREAKING CHANGES:**
+
 - [#194](https://github.com/MiSchroe/klf-200-api/issues/194) Remove support for CJS. This is a pure ESM module now.
+- [#276](https://github.com/MiSchroe/klf-200-api/issues/276) Drop Support for NodeJS 20.x. Minimum version is now NodeJS 22.x.
 
 ## 7.0.0 (2026-09-05)
 
