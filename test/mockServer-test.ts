@@ -2,7 +2,7 @@
 
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ChildProcess } from "child_process";
+import { ChildProcess } from "node:child_process";
 import sinon, { SinonSandbox } from "sinon";
 import sinonChai from "sinon-chai";
 import { MockServerController } from "./mocks/mockServerController.js";
@@ -35,7 +35,7 @@ describe("mockServer", function () {
 	it("should stop the mock server", async function () {
 		this.timeout(20000);
 		this.slow(7000);
-		let serverProcess: ChildProcess | undefined = undefined;
+		let serverProcess: ChildProcess | undefined;
 		{
 			await using mockServer = await MockServerController.createMockServer();
 			serverProcess = mockServer.serverProcess;
