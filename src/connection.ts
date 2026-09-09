@@ -347,6 +347,13 @@ export class Connection implements IConnection, AsyncDisposable {
 	 * @param connectionOptions Options that will be provided to the connect method of the TLS socket.
 	 */
 	constructor(host: string, connectionOptions: ConnectionOptions);
+	/**
+	 * Creates a new connection object that connect to the given host.
+	 * @param host Host name or IP address of the KLF-200 interface.
+	 * @param connectionOptions Options that will be provided to the connect method of the TLS socket.
+	 * @param fingerprint The fingerprint of the certificate. This parameter is optional.
+	 */
+	constructor(host: string, connectionOptions: ConnectionOptions, fingerprint?: string);
 	constructor(host: string, CAorConnectionOptions?: Buffer | ConnectionOptions, fingerprint?: string) {
 		debug(`Creating Connection instance for host: ${host}`);
 		this.host = host;

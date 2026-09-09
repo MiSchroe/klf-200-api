@@ -7,7 +7,16 @@ import { dirname, join } from "node:path";
 import { after, afterEach, before, describe, it } from "node:test";
 import { setImmediate } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import { Connection, GW_ERROR, GW_SESSION_FINISHED_NTF, GatewayCommand, Scene, Scenes, getNextSessionID } from "../src";
+import {
+	Connection,
+	GW_ERROR,
+	GW_SESSION_FINISHED_NTF,
+	GatewayCommand,
+	KLF200_PORT,
+	Scene,
+	Scenes,
+	getNextSessionID,
+} from "../src";
 import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder.js";
 import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
 import { MockServerController } from "./mocks/mockServerController.js";
@@ -43,6 +52,8 @@ describe("scenes", { timeout: 20000 }, function () {
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+					// Overwrite port for parallel unit tests
+					port: mockServerController?.port ?? KLF200_PORT,
 				});
 				try {
 					await conn.loginAsync("velux123");
@@ -80,6 +91,8 @@ describe("scenes", { timeout: 20000 }, function () {
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+					// Overwrite port for parallel unit tests
+					port: mockServerController?.port ?? KLF200_PORT,
 				});
 				try {
 					await conn.loginAsync("velux123");
@@ -103,6 +116,8 @@ describe("scenes", { timeout: 20000 }, function () {
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+					// Overwrite port for parallel unit tests
+					port: mockServerController?.port ?? KLF200_PORT,
 				});
 				try {
 					await conn.loginAsync("velux123");
@@ -123,6 +138,8 @@ describe("scenes", { timeout: 20000 }, function () {
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+					// Overwrite port for parallel unit tests
+					port: mockServerController?.port ?? KLF200_PORT,
 				});
 				try {
 					await conn.loginAsync("velux123");
@@ -145,6 +162,8 @@ describe("scenes", { timeout: 20000 }, function () {
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+					// Overwrite port for parallel unit tests
+					port: mockServerController?.port ?? KLF200_PORT,
 				});
 				try {
 					await conn.loginAsync("velux123");
@@ -182,6 +201,8 @@ describe("scenes", { timeout: 20000 }, function () {
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+					// Overwrite port for parallel unit tests
+					port: mockServerController?.port ?? KLF200_PORT,
 				});
 				try {
 					await conn.loginAsync("velux123");
@@ -218,6 +239,8 @@ describe("scenes", { timeout: 20000 }, function () {
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 					key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 					cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+					// Overwrite port for parallel unit tests
+					port: mockServerController?.port ?? KLF200_PORT,
 				});
 				try {
 					await conn.loginAsync("velux123");
@@ -253,6 +276,8 @@ describe("scenes", { timeout: 20000 }, function () {
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 						key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 						cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+						// Overwrite port for parallel unit tests
+						port: mockServerController?.port ?? KLF200_PORT,
 					});
 					try {
 						await conn.loginAsync("velux123");
@@ -279,6 +304,8 @@ describe("scenes", { timeout: 20000 }, function () {
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 						key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 						cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+						// Overwrite port for parallel unit tests
+						port: mockServerController?.port ?? KLF200_PORT,
 					});
 					try {
 						await conn.loginAsync("velux123");
@@ -315,6 +342,8 @@ describe("scenes", { timeout: 20000 }, function () {
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 						key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 						cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+						// Overwrite port for parallel unit tests
+						port: mockServerController?.port ?? KLF200_PORT,
 					});
 					try {
 						await conn.loginAsync("velux123");
@@ -340,6 +369,8 @@ describe("scenes", { timeout: 20000 }, function () {
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 						key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 						cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+						// Overwrite port for parallel unit tests
+						port: mockServerController?.port ?? KLF200_PORT,
 					});
 					try {
 						await conn.loginAsync("velux123");
@@ -368,6 +399,8 @@ describe("scenes", { timeout: 20000 }, function () {
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 						key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 						cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+						// Overwrite port for parallel unit tests
+						port: mockServerController?.port ?? KLF200_PORT,
 					});
 					try {
 						await conn.loginAsync("velux123");
@@ -394,6 +427,8 @@ describe("scenes", { timeout: 20000 }, function () {
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 						key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 						cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+						// Overwrite port for parallel unit tests
+						port: mockServerController?.port ?? KLF200_PORT,
 					});
 					try {
 						await conn.loginAsync("velux123");
@@ -419,6 +454,8 @@ describe("scenes", { timeout: 20000 }, function () {
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 						key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 						cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+						// Overwrite port for parallel unit tests
+						port: mockServerController?.port ?? KLF200_PORT,
 					});
 					try {
 						await conn.loginAsync("velux123");
@@ -447,6 +484,8 @@ describe("scenes", { timeout: 20000 }, function () {
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 						key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 						cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+						// Overwrite port for parallel unit tests
+						port: mockServerController?.port ?? KLF200_PORT,
 					});
 					try {
 						await conn.loginAsync("velux123");
@@ -480,6 +519,8 @@ describe("scenes", { timeout: 20000 }, function () {
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 						key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 						cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+						// Overwrite port for parallel unit tests
+						port: mockServerController?.port ?? KLF200_PORT,
 					});
 					try {
 						await conn.loginAsync("velux123");
@@ -505,6 +546,8 @@ describe("scenes", { timeout: 20000 }, function () {
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 						key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 						cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+						// Overwrite port for parallel unit tests
+						port: mockServerController?.port ?? KLF200_PORT,
 					});
 					try {
 						await conn.loginAsync("velux123");
