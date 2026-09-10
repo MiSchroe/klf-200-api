@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_CS_RECEIVE_KEY_NTF } from "../../src";
 
 describe("KLF200-API", function () {
@@ -17,7 +17,7 @@ describe("KLF200-API", function () {
 					// Key not changed
 					4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				]);
-				expect(() => new GW_CS_RECEIVE_KEY_NTF(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_CS_RECEIVE_KEY_NTF(data));
 			});
 
 			it("should return the ChangeKeyStatus", function () {
@@ -31,7 +31,7 @@ describe("KLF200-API", function () {
 					4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				]);
 				const result = new GW_CS_RECEIVE_KEY_NTF(data);
-				expect(result.ChangeKeyStatus).to.equal(0);
+				assert.strictEqual(result.ChangeKeyStatus, 0);
 			});
 
 			it("should return the changed nodes", function () {
@@ -45,7 +45,8 @@ describe("KLF200-API", function () {
 					4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				]);
 				const result = new GW_CS_RECEIVE_KEY_NTF(data);
-				expect(result.KeyChangedNodes).to.be.an.instanceOf(Array).and.have.members([0, 9]);
+				assert.ok(result.KeyChangedNodes instanceof Array);
+				assert.deepStrictEqual([...result.KeyChangedNodes].sort(), [...[0, 9]].sort());
 			});
 
 			it("should return the unchanged nodes", function () {
@@ -59,7 +60,8 @@ describe("KLF200-API", function () {
 					4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				]);
 				const result = new GW_CS_RECEIVE_KEY_NTF(data);
-				expect(result.KeyNotChangedNodes).to.be.an.instanceOf(Array).and.have.members([2, 11]);
+				assert.ok(result.KeyNotChangedNodes instanceof Array);
+				assert.deepStrictEqual([...result.KeyNotChangedNodes].sort(), [...[2, 11]].sort());
 			});
 		});
 	});

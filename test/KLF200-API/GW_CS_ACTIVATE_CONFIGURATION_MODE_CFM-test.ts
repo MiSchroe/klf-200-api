@@ -1,8 +1,8 @@
 "use strict";
 
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM } from "../../src";
-import { expect } from "chai";
-import "mocha";
 
 describe("KLF200-API", function () {
 	describe("GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM", function () {
@@ -19,7 +19,7 @@ describe("KLF200-API", function () {
 					// Status
 					1,
 				]);
-				expect(() => new GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM(data));
 			});
 
 			it("should return the status", function () {
@@ -35,7 +35,7 @@ describe("KLF200-API", function () {
 					1,
 				]);
 				const result = new GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM(data);
-				expect(result.Status).to.equal(1);
+				assert.strictEqual(result.Status, 1);
 			});
 
 			it("should return the activated nodes", function () {
@@ -51,7 +51,8 @@ describe("KLF200-API", function () {
 					1,
 				]);
 				const result = new GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM(data);
-				expect(result.ActivatedNodes).to.be.an.instanceOf(Array).and.have.members([0, 1, 2, 3]);
+				assert.ok(result.ActivatedNodes instanceof Array);
+				assert.deepStrictEqual([...result.ActivatedNodes].sort(), [...[0, 1, 2, 3]].sort());
 			});
 
 			it("should return the no contact nodes", function () {
@@ -67,7 +68,8 @@ describe("KLF200-API", function () {
 					1,
 				]);
 				const result = new GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM(data);
-				expect(result.NoContactNodes).to.be.an.instanceOf(Array).and.have.members([8, 9, 10, 11]);
+				assert.ok(result.NoContactNodes instanceof Array);
+				assert.deepStrictEqual([...result.NoContactNodes].sort(), [...[8, 9, 10, 11]].sort());
 			});
 
 			it("should return the other error nodes", function () {
@@ -83,7 +85,8 @@ describe("KLF200-API", function () {
 					1,
 				]);
 				const result = new GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM(data);
-				expect(result.OtherErrorNodes).to.be.an.instanceOf(Array).and.have.members([16, 17, 18, 19]);
+				assert.ok(result.OtherErrorNodes instanceof Array);
+				assert.deepStrictEqual([...result.OtherErrorNodes].sort(), [...[16, 17, 18, 19]].sort());
 			});
 		});
 
@@ -101,7 +104,7 @@ describe("KLF200-API", function () {
 					1,
 				]);
 				const result = new GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM(data);
-				expect(result.getError()).to.equal("Error code 1.");
+				assert.strictEqual(result.getError(), "Error code 1.");
 			});
 
 			it("should throw if no error", function () {
@@ -117,7 +120,7 @@ describe("KLF200-API", function () {
 					0,
 				]);
 				const result = new GW_CS_ACTIVATE_CONFIGURATION_MODE_CFM(data);
-				expect(() => result.getError()).to.throw();
+				assert.throws(() => result.getError());
 			});
 		});
 	});

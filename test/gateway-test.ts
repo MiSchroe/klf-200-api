@@ -1,10 +1,12 @@
-﻿"use strict";
+"use strict";
 
-import { expect, use } from "chai";
-import chaiAsPromised from "chai-as-promised";
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { after, afterEach, before } from "node:test";
+import { fileURLToPath } from "node:url";
 import {
 	Connection,
 	GW_COMMON_STATUS,
@@ -14,30 +16,30 @@ import {
 	GatewayCommand,
 	GatewayState,
 	GatewaySubState,
+	KLF200_PORT,
+	SoftwareVersion,
 } from "../src";
 import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
 import { MockServerController } from "./mocks/mockServerController.js";
-
-use(chaiAsPromised);
 
 const testHOST = "localhost";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-describe("Gateway", function () {
-	this.timeout(20000);
+describe("Gateway", { timeout: 20000 }, function () {
+	let mockServerController: MockServerController;
 
-	this.beforeAll(async function () {
-		this.mockServerController = await MockServerController.createMockServer();
+	before(async function () {
+		mockServerController = await MockServerController.createMockServer();
 	});
 
-	this.afterAll(async function () {
-		await (this.mockServerController as MockServerController)[Symbol.asyncDispose]();
+	after(async function () {
+		await mockServerController[Symbol.asyncDispose]();
 	});
 
-	this.afterEach(async function () {
-		await (this.mockServerController as MockServerController).sendCommand(ResetCommand);
-		await (this.mockServerController as MockServerController).sendCommand(CloseConnectionCommand);
+	afterEach(async function () {
+		await mockServerController.sendCommand(ResetCommand);
+		await mockServerController.sendCommand(CloseConnectionCommand);
 	});
 
 	describe("constructor", function () {
@@ -48,21 +50,23 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
-				expect(() => new Gateway(conn)).not.to.throw();
+				assert.doesNotThrow(() => new Gateway(conn));
 			} finally {
 				await conn.logoutAsync();
 			}
 		});
 
 		it("should throw an error when Connection is null", function () {
-			expect(() => new Gateway(null as any)).to.throw(Error, "No connection provided");
+			assert.throws(() => new Gateway(null as any), { name: Error.name, message: "No connection provided" });
 		});
 
 		it("should throw an error when Connection is undefined", function () {
-			expect(() => new Gateway(undefined as any)).to.throw(Error);
+			assert.throws(() => new Gateway(undefined as any), Error);
 		});
 	});
 
@@ -74,11 +78,13 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await expect(gw.changePasswordAsync("OldPassword", "NewPassword")).to.be.eventually.true;
+				assert.strictEqual(await gw.changePasswordAsync("OldPassword", "NewPassword"), true);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -91,17 +97,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_PASSWORD_CHANGE_REQ,
 					gatewayConfirmation: GatewayCommand.GW_PASSWORD_CHANGE_CFM,
 					data: Buffer.from([GW_COMMON_STATUS.ERROR]).toString("base64"),
 				});
-				await expect(gw.changePasswordAsync("OldPassword", "NewPassword")).to.be.eventually.false;
+				assert.strictEqual(await gw.changePasswordAsync("OldPassword", "NewPassword"), false);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -114,17 +122,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_PASSWORD_CHANGE_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.changePasswordAsync("OldPassword", "NewPassword")).to.be.rejectedWith(Error);
+				await assert.rejects(gw.changePasswordAsync("OldPassword", "NewPassword"), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -137,12 +147,14 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
 				const longPassword = "a".repeat(33); // 33 characters
-				await expect(gw.changePasswordAsync("OldPassword", longPassword)).to.be.rejectedWith(Error);
+				await assert.rejects(gw.changePasswordAsync("OldPassword", longPassword), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -155,12 +167,14 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
 				const validPassword = "a".repeat(32); // 32 characters
-				await expect(gw.changePasswordAsync("OldPassword", validPassword)).to.be.fulfilled;
+				await gw.changePasswordAsync("OldPassword", validPassword);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -173,17 +187,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_PASSWORD_CHANGE_REQ,
 					gatewayConfirmation: GatewayCommand.GW_PASSWORD_CHANGE_CFM,
 					data: Buffer.from([GW_COMMON_STATUS.ERROR]).toString("base64"),
 				});
-				await expect(gw.changePasswordAsync("", "NewPassword")).to.be.eventually.false;
+				assert.strictEqual(await gw.changePasswordAsync("", "NewPassword"), false);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -196,17 +212,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_PASSWORD_CHANGE_REQ,
 					gatewayConfirmation: GatewayCommand.GW_PASSWORD_CHANGE_CFM,
 					data: Buffer.from([GW_COMMON_STATUS.ERROR]).toString("base64"),
 				});
-				await expect(gw.changePasswordAsync("velux123", "")).to.be.eventually.false;
+				assert.strictEqual(await gw.changePasswordAsync("velux123", ""), false);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -221,17 +239,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_GET_VERSION_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.getVersionAsync()).to.be.rejectedWith(Error);
+				await assert.rejects(gw.getVersionAsync(), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -239,14 +259,7 @@ describe("Gateway", function () {
 
 		it("should return the version information.", async function () {
 			const expectedResult = {
-				SoftwareVersion: {
-					CommandVersion: 2,
-					MainVersion: 3,
-					SubVersion: 4,
-					BranchID: 71,
-					Build: 5,
-					MicroBuild: 6,
-				},
+				SoftwareVersion: new SoftwareVersion(2, 3, 4, 71, 5, 6),
 				HardwareVersion: 1,
 				ProductGroup: 14,
 				ProductType: 3,
@@ -257,15 +270,17 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetGateway",
 					gateway: expectedResult,
 				});
-				await expect(gw.getVersionAsync()).to.be.eventually.deep.equal(expectedResult);
+				assert.deepStrictEqual(await gw.getVersionAsync(), expectedResult);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -280,17 +295,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_GET_PROTOCOL_VERSION_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.getProtocolVersionAsync()).to.be.rejectedWith(Error);
+				await assert.rejects(gw.getProtocolVersionAsync(), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -307,18 +324,20 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetGateway",
 					gateway: {
 						ProtocolMajorVersion: 0x1234,
 						ProtocolMinorVersion: 0x5678,
 					},
 				});
-				await expect(gw.getProtocolVersionAsync()).to.be.eventually.deep.equal(expectedResult);
+				assert.deepStrictEqual(await gw.getProtocolVersionAsync(), expectedResult);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -333,17 +352,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_GET_STATE_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.getStateAsync()).to.be.rejectedWith(Error);
+				await assert.rejects(gw.getStateAsync(), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -360,18 +381,20 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetGateway",
 					gateway: {
 						GatewayState: GatewayState.GatewayMode_WithActuatorNodes,
 						GatewaySubState: GatewaySubState.RunningCommand,
 					},
 				});
-				await expect(gw.getStateAsync()).to.be.eventually.deep.equal(expectedResult);
+				assert.deepStrictEqual(await gw.getStateAsync(), expectedResult);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -386,17 +409,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_SET_UTC_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.setUTCDateTimeAsync()).to.be.rejectedWith(Error);
+				await assert.rejects(gw.setUTCDateTimeAsync(), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -409,11 +434,13 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await expect(gw.setUTCDateTimeAsync()).to.be.fulfilled;
+				await gw.setUTCDateTimeAsync();
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -429,17 +456,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_RTC_SET_TIME_ZONE_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.setTimeZoneAsync(tz)).to.be.rejectedWith(Error);
+				await assert.rejects(gw.setTimeZoneAsync(tz), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -452,11 +481,13 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await expect(gw.setTimeZoneAsync(tz)).to.be.fulfilled;
+				await gw.setTimeZoneAsync(tz);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -469,17 +500,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_RTC_SET_TIME_ZONE_REQ,
 					gatewayConfirmation: GatewayCommand.GW_RTC_SET_TIME_ZONE_CFM,
 					data: Buffer.from([GW_INVERSE_STATUS.ERROR]).toString("base64"),
 				});
-				await expect(gw.setTimeZoneAsync(tz)).to.be.rejectedWith(Error);
+				await assert.rejects(gw.setTimeZoneAsync(tz), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -494,17 +527,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_REBOOT_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.rebootAsync()).to.be.rejectedWith(Error);
+				await assert.rejects(gw.rebootAsync(), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -517,11 +552,13 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await expect(gw.rebootAsync()).to.be.fulfilled;
+				await gw.rebootAsync();
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -536,17 +573,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_SET_FACTORY_DEFAULT_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.factoryResetAsync()).to.be.rejectedWith(Error);
+				await assert.rejects(gw.factoryResetAsync(), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -559,11 +598,13 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await expect(gw.factoryResetAsync()).to.be.fulfilled;
+				await gw.factoryResetAsync();
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -578,17 +619,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_LEAVE_LEARN_STATE_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.leaveLearnStateAsync()).to.be.rejectedWith(Error);
+				await assert.rejects(gw.leaveLearnStateAsync(), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -601,11 +644,13 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await expect(gw.leaveLearnStateAsync()).to.be.fulfilled;
+				await gw.leaveLearnStateAsync();
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -620,17 +665,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_GET_NETWORK_SETUP_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.getNetworkSettingsAsync()).to.be.rejectedWith(Error);
+				await assert.rejects(gw.getNetworkSettingsAsync(), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -649,11 +696,13 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetGateway",
 					gateway: {
 						IPAddress: "1.2.3.4",
@@ -662,7 +711,7 @@ describe("Gateway", function () {
 						DHCP: false,
 					},
 				});
-				await expect(gw.getNetworkSettingsAsync()).to.be.eventually.deep.equal(expectedResult);
+				assert.deepStrictEqual(await gw.getNetworkSettingsAsync(), expectedResult);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -681,11 +730,13 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetGateway",
 					gateway: {
 						IPAddress: "0.0.0.0",
@@ -694,7 +745,7 @@ describe("Gateway", function () {
 						DHCP: true,
 					},
 				});
-				await expect(gw.getNetworkSettingsAsync()).to.be.eventually.deep.equal(expectedResult);
+				assert.deepStrictEqual(await gw.getNetworkSettingsAsync(), expectedResult);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -709,17 +760,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_SET_NETWORK_SETUP_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.setNetworkSettingsAsync(true)).to.be.rejectedWith(Error);
+				await assert.rejects(gw.setNetworkSettingsAsync(true), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -732,17 +785,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_SET_NETWORK_SETUP_REQ,
 					gatewayConfirmation: GatewayCommand.GW_SET_NETWORK_SETUP_CFM,
 					data: Buffer.from([]).toString("base64"),
 				});
-				await expect(gw.setNetworkSettingsAsync(true)).to.be.fulfilled;
+				await gw.setNetworkSettingsAsync(true);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -755,17 +810,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_SET_NETWORK_SETUP_REQ,
 					gatewayConfirmation: GatewayCommand.GW_SET_NETWORK_SETUP_CFM,
 					data: Buffer.from([]).toString("base64"),
 				});
-				await expect(gw.setNetworkSettingsAsync(false, "1.2.3.4", "5.6.7.8", "9.10.11.12")).to.be.fulfilled;
+				await gw.setNetworkSettingsAsync(false, "1.2.3.4", "5.6.7.8", "9.10.11.12");
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -778,13 +835,16 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await expect(
+				await assert.rejects(
 					gw.setNetworkSettingsAsync(false, "invalidIP", "255.255.255.0", "192.168.1.1"),
-				).to.be.rejectedWith(Error);
+					Error,
+				);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -797,19 +857,22 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_SET_NETWORK_SETUP_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.InvalidFrameStructure]).toString("base64"),
 				});
-				await expect(
+				await assert.rejects(
 					gw.setNetworkSettingsAsync(true as any, "192.168.1.2", "255.255.255.0", "192.168.1.1"),
-				).to.be.rejectedWith(Error);
+					Error,
+				);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -824,17 +887,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_HOUSE_STATUS_MONITOR_ENABLE_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.enableHouseStatusMonitorAsync()).to.be.rejectedWith(Error);
+				await assert.rejects(gw.enableHouseStatusMonitorAsync(), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -847,11 +912,13 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await expect(gw.enableHouseStatusMonitorAsync()).to.be.fulfilled;
+				await gw.enableHouseStatusMonitorAsync();
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -864,12 +931,14 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
 				await gw.enableHouseStatusMonitorAsync();
-				await expect(gw.enableHouseStatusMonitorAsync()).to.be.fulfilled;
+				await gw.enableHouseStatusMonitorAsync();
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -884,17 +953,19 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await (this.mockServerController as MockServerController).sendCommand({
+				await mockServerController.sendCommand({
 					command: "SetConfirmation",
 					gatewayCommand: GatewayCommand.GW_HOUSE_STATUS_MONITOR_DISABLE_REQ,
 					gatewayConfirmation: GatewayCommand.GW_ERROR_NTF,
 					data: Buffer.from([GW_ERROR.Busy]).toString("base64"),
 				});
-				await expect(gw.disableHouseStatusMonitorAsync()).to.be.rejectedWith(Error);
+				await assert.rejects(gw.disableHouseStatusMonitorAsync(), Error);
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -907,11 +978,13 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
-				await expect(gw.disableHouseStatusMonitorAsync()).to.be.fulfilled;
+				await gw.disableHouseStatusMonitorAsync();
 			} finally {
 				await conn.logoutAsync();
 			}
@@ -924,12 +997,14 @@ describe("Gateway", function () {
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
 				key: readFileSync(join(__dirname, "mocks/mockServer", "client1-key.pem")),
 				cert: readFileSync(join(__dirname, "mocks/mockServer", "client1-crt.pem")),
+				// Overwrite port for parallel unit tests
+				port: mockServerController?.port ?? KLF200_PORT,
 			});
 			try {
 				await conn.loginAsync("velux123");
 				const gw = new Gateway(conn);
 				await gw.disableHouseStatusMonitorAsync();
-				await expect(gw.disableHouseStatusMonitorAsync()).to.be.fulfilled;
+				await gw.disableHouseStatusMonitorAsync();
 			} finally {
 				await conn.logoutAsync();
 			}

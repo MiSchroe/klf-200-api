@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_CS_SYSTEM_TABLE_UPDATE_NTF } from "../../src";
 
 describe("KLF200-API", function () {
@@ -15,7 +15,7 @@ describe("KLF200-API", function () {
 					// Removed nodes
 					4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				]);
-				expect(() => new GW_CS_SYSTEM_TABLE_UPDATE_NTF(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_CS_SYSTEM_TABLE_UPDATE_NTF(data));
 			});
 
 			it("should return the added and removed nodes", function () {
@@ -27,8 +27,10 @@ describe("KLF200-API", function () {
 					4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				]);
 				const result = new GW_CS_SYSTEM_TABLE_UPDATE_NTF(data);
-				expect(result.AddedNodes).to.be.an.instanceOf(Array).and.have.members([0, 9]);
-				expect(result.RemovedNodes).to.be.an.instanceOf(Array).and.have.members([2, 11]);
+				assert.ok(result.AddedNodes instanceof Array);
+				assert.deepStrictEqual([...result.AddedNodes].sort(), [...[0, 9]].sort());
+				assert.ok(result.RemovedNodes instanceof Array);
+				assert.deepStrictEqual([...result.RemovedNodes].sort(), [...[2, 11]].sort());
 			});
 		});
 	});

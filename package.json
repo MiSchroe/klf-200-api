@@ -28,37 +28,19 @@
     "@alcalzone/release-script-plugin-license": "^5.2.2",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^10.0.1",
-    "@sinonjs/fake-timers": "^14.0.0",
     "@tsconfig/node22": "^22.0.6",
-    "@types/chai": "^4.3.11",
-    "@types/chai-as-promised": "^8.0.2",
-    "@types/chai-datetime": "1.0.0",
     "@types/debug": "^4.1.12",
     "@types/deep-eql": "^4.0.2",
     "@types/mitm": "^1.3.8",
-    "@types/mocha": "^10.0.6",
     "@types/node": "^22.15.18",
-    "@types/sinon": "^17.0.4",
-    "@types/sinon-chai": "^3.2.12",
-    "c8": "^10.1.2",
-    "chai": "^4.5.0",
-    "chai-as-promised": "^8.0.2",
-    "chai-bytes": "^0.1.2",
-    "chai-datetime": "^1.8.1",
     "cross-env": "^7.0.3",
     "deep-eql": "^5.0.2",
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.1",
-    "mocha": "^10.4.0",
-    "mocha-junit-reporter": "^2.2.1",
-    "mocha-multi-reporters": "^1.5.1",
     "nock": "^13.5.6",
-    "nyc": "^18.0.0",
     "prettier": "^3.6.2",
     "shx": "^0.4.0",
-    "sinon": "^21.0.0",
-    "sinon-chai": "^3.7.0",
     "source-map-support": "^0.5.21",
     "tsx": "^4.22.4",
     "typedoc": "^0.28.7",
@@ -70,28 +52,11 @@
     "build:clean": "rm -rf ./dist",
     "build": "npm run build:clean && npm run compile && shx cp ./velux-cert.pem ./dist/velux-cert.pem",
     "watch": "tsc --watch",
-    "test": "cross-env DEBUG=-mockServer*,-klf-200-api:products*,-klf-200-api:connection*,-klf-200-api:KLF200SocketProtocol,-klf-200-api:gateway*,-connection-test c8 mocha",
+    "test": "cross-env DEBUG=-mockServer*,-klf-200-api:products*,-klf-200-api:connection*,-klf-200-api:KLF200SocketProtocol,-klf-200-api:gateway*,-connection-test node --enable-source-maps --import tsx --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info 'test/**/*.ts'",
+    "test:watch": "cross-env DEBUG=-mockServer*,-klf-200-api:products*,-klf-200-api:connection*,-klf-200-api:KLF200SocketProtocol,-klf-200-api:gateway*,-connection-test node --enable-source-maps --import tsx --test --watch --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info 'test/**/*.ts'",
     "lint": "eslint --ext .ts src test",
     "release": "release-script",
     "document": "typedoc"
-  },
-  "nyc": {
-    "include": [
-      "src/**/*.ts",
-      "src/**/*.tsx"
-    ],
-    "extension": [
-      ".ts",
-      ".tsx"
-    ],
-    "exclude": [
-      "**/*.d.ts"
-    ],
-    "reporter": [
-      "text-summary",
-      "html"
-    ],
-    "all": true
   },
   "repository": {
     "type": "git",

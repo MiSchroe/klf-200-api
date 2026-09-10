@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import {
 	CommandOriginator,
 	ContactInputAssignment,
@@ -17,10 +17,10 @@ describe("KLF200-API", function () {
 		describe("Constructor", function () {
 			// prettier-ignore
 			const data = Buffer.from([
-                174, 0x04, 0x61, 
+                174, 0x04, 0x61,
                 // # of objects
                 1,
-                
+
                 /* Contact input #1 */
                 // Contact input ID
                 0,
@@ -68,14 +68,14 @@ describe("KLF200-API", function () {
             ]);
 
 			it("should create without error", function () {
-				expect(() => new GW_GET_CONTACT_INPUT_LINK_LIST_CFM(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_GET_CONTACT_INPUT_LINK_LIST_CFM(data));
 			});
 
 			it("should return an array with one contact input object", function () {
 				const result = new GW_GET_CONTACT_INPUT_LINK_LIST_CFM(data);
-				expect(result.ContactInputObjects).to.be.instanceOf(Array);
-				expect(result.ContactInputObjects.length).to.equal(1);
-				expect(result.ContactInputObjects[0]).to.deep.equal({
+				assert.ok(result.ContactInputObjects instanceof Array);
+				assert.strictEqual(result.ContactInputObjects.length, 1);
+				assert.deepStrictEqual(result.ContactInputObjects[0], {
 					ContactInputID: 0,
 					ContactInputAssignment: ContactInputAssignment.Scene,
 					ActionID: 2,

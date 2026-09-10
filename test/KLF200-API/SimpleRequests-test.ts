@@ -1,8 +1,7 @@
 "use strict";
 
-import { expect, use } from "chai";
-import chaiBytes from "chai-bytes";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import {
 	GW_CLEAR_ACTIVATION_LOG_REQ,
 	GW_CS_CONTROLLER_COPY_CANCEL_NTF,
@@ -30,8 +29,6 @@ import {
 	GatewayCommand,
 	IGW_FRAME_REQ,
 } from "../../src";
-
-use(chaiBytes);
 
 type requestListEntryType = {
 	RequestClass: IGW_FRAME_REQ;
@@ -95,8 +92,8 @@ describe("KLF200-API", function () {
 				it("should have the right command and a length byte of 3", function () {
 					const expectedBuffer = Buffer.from([3, 0, 0]);
 					expectedBuffer.writeInt16BE(request.RequestCommand, 1);
-					expect(request.RequestClass.Command).to.be.equal(request.RequestCommand);
-					expect(request.RequestClass.Data).to.be.equalBytes(expectedBuffer);
+					assert.strictEqual(request.RequestClass.Command, request.RequestCommand);
+					assert.deepStrictEqual(request.RequestClass.Data, Buffer.from(expectedBuffer));
 				});
 			});
 		}

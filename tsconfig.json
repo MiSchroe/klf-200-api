@@ -13,11 +13,7 @@
 		"sourceMap": true /* Generates corresponding '.map' file. */,
 		"outDir": "./dist" /* Redirect output structure to the directory. */,
 		"rootDir": "./src", /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
-		"noImplicitAny": true /* Raise error on expressions and declarations with an implied 'any' type. */,
-		"typeRoots": [
-			"./node_modules/@types",
-			"./types"
-		] /* List of folders to include type definitions from. */
+		"noImplicitAny": true /* Raise error on expressions and declarations with an implied 'any' type. */
 	},
 	"include": [
 		"./src/**/*"

@@ -1,11 +1,8 @@
 "use strict";
 
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { KLF200Protocol } from "../../src/KLF200-API/common";
-import { expect, use } from "chai";
-import "mocha";
-
-import chaibytes from "chai-bytes";
-use(chaibytes);
 
 describe("KLF200-API", function () {
 	describe("KLF200Protocol", function () {
@@ -14,7 +11,7 @@ describe("KLF200-API", function () {
 			const expectedBuffer = Buffer.from([0, 4, 0, 0, 1, 5]);
 
 			const result = KLF200Protocol.Encode(inputBuffer);
-			expect(result).equalBytes(expectedBuffer);
+			assert.deepStrictEqual(result, Buffer.from(expectedBuffer));
 		});
 
 		it("should return the decoded buffer.", function () {
@@ -22,7 +19,7 @@ describe("KLF200-API", function () {
 			const expectedBuffer = Buffer.from([4, 0, 0, 1]);
 
 			const result = KLF200Protocol.Decode(inputBuffer);
-			expect(result).equalBytes(expectedBuffer);
+			assert.deepStrictEqual(result, Buffer.from(expectedBuffer));
 		});
 
 		it("should return the encoded buffer for an empty buffer.", function () {
@@ -30,7 +27,7 @@ describe("KLF200-API", function () {
 			const expectedBuffer = Buffer.from([0, 0]);
 
 			const result = KLF200Protocol.Encode(inputBuffer);
-			expect(result).equalBytes(expectedBuffer);
+			assert.deepStrictEqual(result, Buffer.from(expectedBuffer));
 		});
 
 		it("should return an empty buffer after decode.", function () {
@@ -38,19 +35,19 @@ describe("KLF200-API", function () {
 			const expectedBuffer = Buffer.alloc(0);
 
 			const result = KLF200Protocol.Decode(inputBuffer);
-			expect(result).equalBytes(expectedBuffer);
+			assert.deepStrictEqual(result, Buffer.from(expectedBuffer));
 		});
 
 		it("should throw an exception on wrong ProtocolID.", function () {
 			const inputBuffer = Buffer.from([42, 4, 0, 0, 1, 5]);
 
-			expect(() => KLF200Protocol.Decode(inputBuffer)).to.throw();
+			assert.throws(() => KLF200Protocol.Decode(inputBuffer));
 		});
 
 		it("should throw an exception on wrong CRC.", function () {
 			const inputBuffer = Buffer.from([0, 4, 0, 0, 1, 42]);
 
-			expect(() => KLF200Protocol.Decode(inputBuffer)).to.throw();
+			assert.throws(() => KLF200Protocol.Decode(inputBuffer));
 		});
 	});
 });

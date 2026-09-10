@@ -1,4 +1,4 @@
-import { ChildProcess, fork } from "child_process";
+import { ChildProcess, fork, Serializable } from "child_process";
 import { randomUUID } from "crypto";
 import debugModule from "debug";
 import deepEqual from "deep-eql";
@@ -6,6 +6,7 @@ import { dirname, join } from "path";
 import { timeout } from "promise-timeout";
 import { fileURLToPath } from "url";
 import { AcknowledgeMessage, Command, CommandWithGuid, KillCommand } from "./mockServer/commands.js";
+import { isMockServerReadyMessage } from "./mockServer/mockServerReadyMessage.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -14,6 +15,7 @@ const debug = debugModule(`mockServerController:client`);
 
 export class MockServerController {
 	serverProcess: ChildProcess;
+	port: number = 0;
 
 	private constructor(useExpiredCert: boolean = false) {
 		this.serverProcess = fork(join(__dirname, "mockServer/mockServer"), [], {
@@ -24,9 +26,10 @@ export class MockServerController {
 	static async createMockServer(useExpiredCert: boolean = false): Promise<MockServerController> {
 		const mockServer = new MockServerController(useExpiredCert);
 		await new Promise<void>((resolve) => {
-			const onMessage = function (message: string | number | bigint | boolean | object): void {
-				if (message === "ready") {
+			const onMessage = function (message: Serializable): void {
+				if (isMockServerReadyMessage(message)) {
 					debug("Ready message received from child process.");
+					mockServer.port = message.port;
 					mockServer.serverProcess.off("message", onMessage);
 					resolve();
 				}

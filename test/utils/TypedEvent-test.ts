@@ -1,4 +1,5 @@
-import { expect } from "chai";
+import assert from "node:assert/strict";
+import { beforeEach, describe, it } from "node:test";
 import { TypedEvent } from "../../src/utils/TypedEvent";
 
 describe("utils", () => {
@@ -18,7 +19,7 @@ describe("utils", () => {
 			typedEvent.on(listener);
 			await typedEvent.emit("testEvent");
 
-			expect(eventReceived).to.be.true;
+			assert.strictEqual(eventReceived, true);
 		});
 
 		it("should add a once listener and emit an event", async () => {
@@ -31,7 +32,7 @@ describe("utils", () => {
 			await typedEvent.emit("testEvent");
 			await typedEvent.emit("testEvent");
 
-			expect(eventReceived).to.be.true;
+			assert.strictEqual(eventReceived, true);
 		});
 
 		it("should remove a listener", async () => {
@@ -44,7 +45,7 @@ describe("utils", () => {
 			disposable[Symbol.dispose]();
 			await typedEvent.emit("testEvent");
 
-			expect(eventReceived).to.be.false;
+			assert.strictEqual(eventReceived, false);
 		});
 
 		it("should pipe events to another TypedEvent", async () => {
@@ -58,7 +59,7 @@ describe("utils", () => {
 			typedEvent.pipe(anotherTypedEvent);
 			await typedEvent.emit("testEvent");
 
-			expect(eventReceived).to.be.true;
+			assert.strictEqual(eventReceived, true);
 		});
 
 		it("should remove all listeners", async () => {
@@ -71,7 +72,7 @@ describe("utils", () => {
 			typedEvent.removeAllListeners();
 			await typedEvent.emit("testEvent");
 
-			expect(eventReceived).to.be.false;
+			assert.strictEqual(eventReceived, false);
 		});
 	});
 });

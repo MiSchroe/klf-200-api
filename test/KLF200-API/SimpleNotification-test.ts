@@ -1,15 +1,12 @@
 "use strict";
 
-import { expect, use } from "chai";
-import chaiBytes from "chai-bytes";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import {
 	GW_ACTIVATION_LOG_UPDATED_NTF,
 	GW_GET_ALL_NODES_INFORMATION_FINISHED_NTF,
 	IGW_FRAME_RCV_CTOR,
 } from "../../src";
-
-use(chaiBytes);
 
 type notificationListEntryType = {
 	NotificationClass: IGW_FRAME_RCV_CTOR;
@@ -26,12 +23,12 @@ describe("KLF200-API", function () {
 		for (const notificationTestCase of simpleNotifications) {
 			describe(notificationTestCase.NotificationClass.name, function () {
 				it("should create the class without error", function () {
-					expect(
+					assert.doesNotThrow(
 						() =>
 							new notificationTestCase.NotificationClass(
 								Buffer.from(notificationTestCase.NotificationBytes),
 							),
-					).not.to.throw();
+					);
 				});
 			});
 		}

@@ -1,8 +1,8 @@
 "use strict";
 
-import { GW_CS_DISCOVER_NODES_NTF, DiscoverStatus } from "../../src";
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import { DiscoverStatus, GW_CS_DISCOVER_NODES_NTF } from "../../src";
 
 describe("KLF200-API", function () {
 	describe("GW_CS_DISCOVER_NODES_NTF", function () {
@@ -23,7 +23,7 @@ describe("KLF200-API", function () {
 					// Status
 					0,
 				]);
-				expect(() => new GW_CS_DISCOVER_NODES_NTF(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_CS_DISCOVER_NODES_NTF(data));
 			});
 
 			it("should return the status", function () {
@@ -43,7 +43,7 @@ describe("KLF200-API", function () {
 					0,
 				]);
 				const result = new GW_CS_DISCOVER_NODES_NTF(data);
-				expect(result.DiscoverStatus).to.equal(DiscoverStatus.OK);
+				assert.strictEqual(result.DiscoverStatus, DiscoverStatus.OK);
 			});
 
 			it("should return the added nodes", function () {
@@ -63,7 +63,8 @@ describe("KLF200-API", function () {
 					0,
 				]);
 				const result = new GW_CS_DISCOVER_NODES_NTF(data);
-				expect(result.AddedNodes).to.be.an.instanceOf(Array).and.have.members([0, 1, 2, 3]);
+				assert.ok(result.AddedNodes instanceof Array);
+				assert.deepStrictEqual([...result.AddedNodes].sort(), [...[0, 1, 2, 3]].sort());
 			});
 
 			it("should return the RF connection error nodes", function () {
@@ -83,7 +84,8 @@ describe("KLF200-API", function () {
 					0,
 				]);
 				const result = new GW_CS_DISCOVER_NODES_NTF(data);
-				expect(result.RFConnectionErrorNodes).to.be.an.instanceOf(Array).and.have.members([8, 9, 10, 11]);
+				assert.ok(result.RFConnectionErrorNodes instanceof Array);
+				assert.deepStrictEqual([...result.RFConnectionErrorNodes].sort(), [...[8, 9, 10, 11]].sort());
 			});
 
 			it("should return the io-Key error nodes", function () {
@@ -103,7 +105,8 @@ describe("KLF200-API", function () {
 					0,
 				]);
 				const result = new GW_CS_DISCOVER_NODES_NTF(data);
-				expect(result.ioKeyErrorExistingNodes).to.be.an.instanceOf(Array).and.have.members([16, 17, 18, 19]);
+				assert.ok(result.ioKeyErrorExistingNodes instanceof Array);
+				assert.deepStrictEqual([...result.ioKeyErrorExistingNodes].sort(), [...[16, 17, 18, 19]].sort());
 			});
 
 			it("should return the removed nodes", function () {
@@ -123,7 +126,8 @@ describe("KLF200-API", function () {
 					0,
 				]);
 				const result = new GW_CS_DISCOVER_NODES_NTF(data);
-				expect(result.RemovedNodes).to.be.an.instanceOf(Array).and.have.members([24, 25, 26, 27]);
+				assert.ok(result.RemovedNodes instanceof Array);
+				assert.deepStrictEqual([...result.RemovedNodes].sort(), [...[24, 25, 26, 27]].sort());
 			});
 
 			it("should return the open nodes", function () {
@@ -143,7 +147,8 @@ describe("KLF200-API", function () {
 					0,
 				]);
 				const result = new GW_CS_DISCOVER_NODES_NTF(data);
-				expect(result.OpenNodes).to.be.an.instanceOf(Array).and.have.members([32, 33, 34, 35]);
+				assert.ok(result.OpenNodes instanceof Array);
+				assert.deepStrictEqual([...result.OpenNodes].sort(), [...[32, 33, 34, 35]].sort());
 			});
 		});
 	});

@@ -1,12 +1,14 @@
-import { readFileSync } from "fs";
+"use strict";
+import { readFileSync } from "node:fs";
+import type { AddressInfo } from "node:net";
 
-import { assert } from "console";
 import debugModule from "debug";
-import path, { dirname } from "path";
-import { exit } from "process";
+import { assert } from "node:console";
+import path, { dirname } from "node:path";
+import { exit } from "node:process";
+import { Server, TLSSocket, TlsOptions } from "node:tls";
+import { fileURLToPath } from "node:url";
 import { TimeoutError, timeout } from "promise-timeout";
-import { Server, TLSSocket, TlsOptions } from "tls";
-import { fileURLToPath } from "url";
 import {
 	GW_COMMON_STATUS,
 	GW_ERROR,
@@ -16,7 +18,6 @@ import {
 	GatewaySubState,
 	GroupType,
 	KLF200Protocol,
-	KLF200_PORT,
 	NodeVariation,
 	SLIPProtocol,
 	SceneInformationEntry,
@@ -354,9 +355,11 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 		}).unref();
 	});
 
-	server.listen(KLF200_PORT, HOST, () => {
+	// Start the server and listen on a random available port.
+	// That makes it possible to run multiple instances of the server without port conflicts.
+	server.listen(0, HOST, () => {
 		if (process.send !== undefined) {
-			process.send("ready");
+			process.send({ type: "ready", port: (server.address() as AddressInfo).port });
 		}
 	});
 

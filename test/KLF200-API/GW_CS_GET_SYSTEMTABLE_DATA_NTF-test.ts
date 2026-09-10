@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { ActuatorType, GW_CS_GET_SYSTEMTABLE_DATA_NTF, Manufacturer, PowerSaveMode } from "../../src";
 
 describe("KLF200-API", function () {
@@ -10,7 +10,7 @@ describe("KLF200-API", function () {
 			it("should create without error", function () {
 				// prettier-ignore
 				const data = Buffer.from([
-					16, 0x01, 0x02, 
+					16, 0x01, 0x02,
                     // Number of entries
                     1,
                     // Entry
@@ -23,13 +23,13 @@ describe("KLF200-API", function () {
                     0                       // Number of remaining entries
                 ]);
 
-				expect(() => new GW_CS_GET_SYSTEMTABLE_DATA_NTF(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_CS_GET_SYSTEMTABLE_DATA_NTF(data));
 			});
 
 			it("should return the correct number of entries", function () {
 				// prettier-ignore
 				const data = Buffer.from([
-					16, 0x01, 0x02, 
+					16, 0x01, 0x02,
                     // Number of entries
                     1,
                     // Entry
@@ -43,13 +43,13 @@ describe("KLF200-API", function () {
                 ]);
 
 				const result = new GW_CS_GET_SYSTEMTABLE_DATA_NTF(data);
-				expect(result.NumberOfEntries).to.equal(1);
+				assert.strictEqual(result.NumberOfEntries, 1);
 			});
 
 			it("should return the correct number of entries", function () {
 				// prettier-ignore
 				const data = Buffer.from([
-					16, 0x01, 0x02, 
+					16, 0x01, 0x02,
                     // Number of entries
                     1,
                     // Entry
@@ -63,13 +63,13 @@ describe("KLF200-API", function () {
                 ]);
 
 				const result = new GW_CS_GET_SYSTEMTABLE_DATA_NTF(data);
-				expect(result.RemainingNumberOfEntries).to.equal(0);
+				assert.strictEqual(result.RemainingNumberOfEntries, 0);
 			});
 
 			it("should return the entries", function () {
 				// prettier-ignore
 				const data = Buffer.from([
-					16, 0x01, 0x02, 
+					16, 0x01, 0x02,
                     // Number of entries
                     1,
                     // Entry
@@ -83,18 +83,18 @@ describe("KLF200-API", function () {
                 ]);
 
 				const result = new GW_CS_GET_SYSTEMTABLE_DATA_NTF(data);
-				expect(result.SystemTableEntries).to.be.an.instanceOf(Array);
+				assert.ok(result.SystemTableEntries instanceof Array);
 				const entry = result.SystemTableEntries[0];
-				expect(entry.SystemTableIndex).to.equal(0, "SystemTableIndex");
-				expect(entry.ActuatorAddress).to.equal(0x123456, "ActuatorAddress");
-				expect(entry.ActuatorType).to.equal(ActuatorType.WindowOpener, "ActuatorType");
-				expect(entry.ActuatorSubType).to.equal(1, "ActuatorSubType");
-				expect(entry.PowerSaveMode).to.equal(PowerSaveMode.AlwaysAlive, "PowerSaveMode");
-				expect(entry.ioMembership).to.equal(true, "ioMembership");
-				expect(entry.RFSupport).to.equal(true, "RFSupport");
-				expect(entry.ActuatorTurnaroundTime).to.equal(10, "ActuatorTurnaroundTime");
-				expect(entry.Manufacturer).to.equal(Manufacturer.VELUX, "Manufacturer");
-				expect(entry.BackboneReferenceNumber).to.equal(0x123456, "BackboneReferenceNumber");
+				assert.strictEqual(entry.SystemTableIndex, 0, "SystemTableIndex");
+				assert.strictEqual(entry.ActuatorAddress, 0x123456, "ActuatorAddress");
+				assert.strictEqual(entry.ActuatorType, ActuatorType.WindowOpener, "ActuatorType");
+				assert.strictEqual(entry.ActuatorSubType, 1, "ActuatorSubType");
+				assert.strictEqual(entry.PowerSaveMode, PowerSaveMode.AlwaysAlive, "PowerSaveMode");
+				assert.strictEqual(entry.ioMembership, true, "ioMembership");
+				assert.strictEqual(entry.RFSupport, true, "RFSupport");
+				assert.strictEqual(entry.ActuatorTurnaroundTime, 10, "ActuatorTurnaroundTime");
+				assert.strictEqual(entry.Manufacturer, Manufacturer.VELUX, "Manufacturer");
+				assert.strictEqual(entry.BackboneReferenceNumber, 0x123456, "BackboneReferenceNumber");
 			});
 
 			it("should return an empty array", function () {
@@ -107,7 +107,8 @@ describe("KLF200-API", function () {
 					0, // Number of remaining entries
 				]);
 				const result = new GW_CS_GET_SYSTEMTABLE_DATA_NTF(data);
-				expect(result.SystemTableEntries).to.be.an.instanceOf(Array).and.have.members([]);
+				assert.ok(result.SystemTableEntries instanceof Array);
+				assert.deepStrictEqual(result.SystemTableEntries, []);
 			});
 		});
 	});

@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_GET_SCENE_INFORMATION_NTF } from "../../src";
 
 describe("KLF200-API", function () {
@@ -9,7 +9,7 @@ describe("KLF200-API", function () {
 		describe("Constructor", function () {
 			// prettier-ignore
 			const data = Buffer.from([
-				78, 
+				78,
                 // Command
                 0x04, 0x11,
                 // SceneID
@@ -34,45 +34,44 @@ describe("KLF200-API", function () {
             ]);
 
 			it("should create without error", function () {
-				expect(() => new GW_GET_SCENE_INFORMATION_NTF(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_GET_SCENE_INFORMATION_NTF(data));
 			});
 
 			it("should return the scene ID", function () {
 				const result = new GW_GET_SCENE_INFORMATION_NTF(data);
-				expect(result.SceneID).to.equal(42);
+				assert.strictEqual(result.SceneID, 42);
 			});
 
 			it("should return the name", function () {
 				const result = new GW_GET_SCENE_INFORMATION_NTF(data);
-				expect(result.Name).to.equal("Dummy");
+				assert.strictEqual(result.Name, "Dummy");
 			});
 
 			it("should return the number of nodes", function () {
 				const result = new GW_GET_SCENE_INFORMATION_NTF(data);
-				expect(result.NumberOfNodes).to.equal(2);
+				assert.strictEqual(result.NumberOfNodes, 2);
 			});
 
 			it("should return the nodes", function () {
 				const result = new GW_GET_SCENE_INFORMATION_NTF(data);
-				expect(result.Nodes)
-					.to.be.instanceOf(Array)
-					.and.be.deep.equal([
-						{
-							NodeID: 1,
-							ParameterID: 0,
-							ParameterValue: 0xc400,
-						},
-						{
-							NodeID: 2,
-							ParameterID: 1,
-							ParameterValue: 0xc7ff,
-						},
-					]);
+				assert.ok(result.Nodes instanceof Array);
+				assert.deepStrictEqual(result.Nodes, [
+					{
+						NodeID: 1,
+						ParameterID: 0,
+						ParameterValue: 0xc400,
+					},
+					{
+						NodeID: 2,
+						ParameterID: 1,
+						ParameterValue: 0xc7ff,
+					},
+				]);
 			});
 
 			it("should return the number of remaining nodes", function () {
 				const result = new GW_GET_SCENE_INFORMATION_NTF(data);
-				expect(result.NumberOfRemainingNodes).to.equal(3);
+				assert.strictEqual(result.NumberOfRemainingNodes, 3);
 			});
 		});
 	});
