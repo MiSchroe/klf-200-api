@@ -12,102 +12,124 @@ const __filename = fileURLToPath(import.meta.url);
 
 const debug = debugModule(path.parse(__filename).name);
 
-describe.todo("KLF200-API", function () {
+describe("KLF200-API", function () {
 	describe("KLF200SocketProtocol", function () {
 		let serverPort: number = 0;
 		let server: net.Server;
-		before(function (_t, done) {
-			// Create a listening echo server, so that
+		before(async function () {
+			// Create a listening echo server
 			debug("Starting socket server...");
-			server = net.createServer((c) => {
-				debug("Client connected.");
-				c.on("end", () => {
-					debug("Client disconnected.");
+			await new Promise<void>((resolve, reject) => {
+				const errHandler = (err: Error): void => {
+					debug(`Server error: ${err.message}`);
+					reject(err);
+				};
+				let off: () => void;
+				server = net.createServer((c) => {
+					debug("Client connected.");
+					c.on("end", () => {
+						debug("Client disconnected.");
+					});
+					c.once("error", errHandler);
+					off = () => c.off("error", errHandler);
+					c.setNoDelay();
+					c.pipe(c);
 				});
-				c.setNoDelay();
-				c.pipe(c);
-			});
-			server.listen(() => {
-				serverPort = (server.address() as net.AddressInfo).port;
-				debug(`Server listens on port ${serverPort}.`);
-				done();
+
+				server.listen(() => {
+					serverPort = (server.address() as net.AddressInfo).port;
+					debug(`Server listens on port ${serverPort}.`);
+					// Remove the error handler once the server is successfully listening
+					if (off) off();
+					resolve();
+				});
 			});
 		});
 
-		after(function (_t, done) {
+		after(async function () {
 			// Tear down the echo server
-			if (server) {
-				debug("Stopping socket server...");
-				server.close(() => {
-					debug("Socket server stopped.");
-					done();
-				});
-			} else {
-				done();
-			}
+			await new Promise<void>((resolve) => {
+				if (server) {
+					debug("Stopping socket server...");
+					server.close(() => {
+						debug("Socket server stopped.");
+						resolve();
+					});
+				} else {
+					resolve();
+				}
+			});
 		});
 
 		let client: net.Socket;
-		beforeEach(function (_t, done) {
+		beforeEach(async function () {
 			// Start socket
-			debug("Connecting...");
-			client = net.connect(serverPort, undefined, () => {
-				client.setNoDelay(); // Write each packet without buffering -> split frames
-				done();
+			await new Promise<void>((resolve) => {
+				debug("Connecting...");
+				client = net.connect(serverPort, undefined, () => {
+					client.setNoDelay(); // Write each packet without buffering -> split frames
+					resolve();
+				});
 			});
 		});
 
-		afterEach(function (_t, done) {
+		afterEach(async function () {
 			// Stop socket
 			debug("Disconnecting...");
-			client.end(done);
+			await new Promise<void>((resolve) => client.end(resolve));
 		});
 
-		it("the socket should echo the request", function (_t, done) {
-			client.once("data", (data) => {
-				assert.strictEqual(data.toString(), "Test");
-				done();
+		it("the socket should echo the request", async function () {
+			await new Promise<void>((resolve) => {
+				client.once("data", (data) => {
+					assert.strictEqual(data.toString(), "Test");
+					resolve();
+				});
+				client.write("Test");
 			});
-			client.write("Test");
 		});
 
 		it("should create without error.", function () {
 			assert.doesNotThrow(() => new KLF200SocketProtocol(client));
 		});
 
-		it("should find GW_PASSWORD_ENTER_CFM frame (check raw data bytes).", function (_t, done) {
+		it("should find GW_PASSWORD_ENTER_CFM frame (check raw data bytes).", async function () {
 			const dataRaw = Buffer.from([0x04, 0x30, 0x01, 0x00]);
 			const data = SLIPProtocol.Encode(KLF200Protocol.Encode(dataRaw));
 
 			const result = new KLF200SocketProtocol(client);
-			result.onDataReceived((dataReceived) => {
-				try {
-					assert.deepStrictEqual(dataReceived, data);
-					done();
-				} catch (error) {
-					done(error);
-				}
+			await new Promise<void>((resolve, reject) => {
+				result.onDataReceived((dataReceived) => {
+					try {
+						assert.deepStrictEqual(dataReceived, data);
+						resolve();
+					} catch (error) {
+						reject(error);
+					}
+				});
+				client.write(data);
 			});
-			client.write(data);
 		});
 
-		it("should find GW_PASSWORD_ENTER_CFM frame (check resulting frame).", function (_t, done) {
+		it("should find GW_PASSWORD_ENTER_CFM frame (check resulting frame).", async function () {
 			const dataRaw = Buffer.from([0x04, 0x30, 0x01, 0x00]);
 			const data = SLIPProtocol.Encode(KLF200Protocol.Encode(dataRaw));
 
 			const result = new KLF200SocketProtocol(client);
-			result.on((dataReceived) => {
-				try {
-					assert.ok(dataReceived instanceof GW_PASSWORD_ENTER_CFM);
-					done();
-				} catch (error) {
-					done(error);
-				}
+			await new Promise<void>((resolve, reject) => {
+				result.on((dataReceived) => {
+					try {
+						assert.ok(dataReceived instanceof GW_PASSWORD_ENTER_CFM);
+						resolve();
+					} catch (error) {
+						reject(error);
+					}
+				});
+				client.write(data);
 			});
-			client.write(data);
 		});
 
-		it("should find GW_PASSWORD_ENTER_CFM frame (check split frame).", function (_t, done) {
+		it("should find GW_PASSWORD_ENTER_CFM frame (check split frame).", async function () {
 			const dataRaw = Buffer.from([0x04, 0x30, 0x01, 0x00]);
 			const data = SLIPProtocol.Encode(KLF200Protocol.Encode(dataRaw));
 			// Split the frame into 3 parts
@@ -116,29 +138,33 @@ describe.todo("KLF200-API", function () {
 			const data3 = data.subarray(2);
 
 			const result = new KLF200SocketProtocol(client);
-			result.on((dataReceived) => {
-				try {
-					assert.ok(dataReceived instanceof GW_PASSWORD_ENTER_CFM);
-					done();
-				} catch (error) {
-					done(error);
-				}
+			await new Promise<void>((resolve, reject) => {
+				result.on((dataReceived) => {
+					try {
+						assert.ok(dataReceived instanceof GW_PASSWORD_ENTER_CFM);
+						resolve();
+					} catch (error) {
+						reject(error);
+					}
+				});
+				client.write(data1, () => client.write(data2, () => client.write(data3)));
 			});
-			client.write(data1, () => client.write(data2, () => client.write(data3)));
 		});
 
-		it("should throw an error due to an unknown command ID.", function (_t, done) {
+		it("should throw an error due to an unknown command ID.", async function () {
 			const dataRaw = Buffer.from([0x04, 0xff, 0xff, 0x00]);
 			const data = SLIPProtocol.Encode(KLF200Protocol.Encode(dataRaw));
 
 			const result = new KLF200SocketProtocol(client);
-			result.on((_dataReceived) => {
-				done(new Error("Due to an unknown command this code shouldn't be reached."));
+			await new Promise<void>((resolve, reject) => {
+				result.on((_dataReceived) => {
+					reject(new Error("Due to an unknown command this code shouldn't be reached."));
+				});
+				result.onError((_error) => {
+					resolve();
+				});
+				client.write(data);
 			});
-			result.onError((_error) => {
-				done();
-			});
-			client.write(data);
 		});
 
 		it("should write the data using the protocol.", async function () {
