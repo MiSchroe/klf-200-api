@@ -2,11 +2,11 @@
 
 import debugModule from "debug";
 import assert from "node:assert/strict";
-import { EventEmitter } from "node:events";
 import { readFileSync } from "node:fs";
 import net from "node:net";
 import { dirname, join } from "node:path";
-import { after, afterEach, before, describe, it, mock } from "node:test";
+import { after, afterEach, before, describe, it } from "node:test";
+import { setImmediate } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { TimeoutError } from "promise-timeout";
 import { GW_ERROR, GW_GET_STATE_REQ, GW_PASSWORD_ENTER_REQ, GW_SET_UTC_REQ, KLF200SocketProtocol } from "../src";
@@ -21,12 +21,6 @@ const __dirname = dirname(__filename);
 const debug = debugModule(`connection-test`);
 
 const testHOST = "localhost";
-
-async function advanceTimersInRealEventLoopAsync(): Promise<void> {
-	await new Promise((resolve) => setImmediate(resolve));
-	mock.timers.runAll();
-	await Promise.resolve();
-}
 
 describe("connection", { timeout: 20000 }, function () {
 	let mockServerController: MockServerController | undefined;
@@ -110,8 +104,8 @@ describe("connection", { timeout: 20000 }, function () {
 			await assert.rejects(conn.loginAsync("velux123"), Error);
 		});
 
-		it.skip("should throw an error after timeout.", async function () {
-			mock.timers.enable({ apis: ["setTimeout"] });
+		it("should throw an error after timeout.", async function (t) {
+			t.mock.timers.enable({ apis: ["setTimeout"] });
 			try {
 				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
@@ -122,32 +116,39 @@ describe("connection", { timeout: 20000 }, function () {
 					// Overwrite port for parallel unit tests
 					port: mockServerController?.port ?? KLF200_PORT,
 				});
-				(conn as unknown as { initSocketAsync: () => Promise<void> }).initSocketAsync = async () => {
-					(conn as unknown as { sckt: EventEmitter }).sckt = new EventEmitter();
-				};
-				(conn as unknown as { sendFrameAsync: typeof conn.sendFrameAsync }).sendFrameAsync = async () =>
-					new Promise(() => {});
-				const loginPromise = conn.loginAsync("velux123", 1);
+				try {
+					await mockServerController?.sendCommand({
+						command: "SetFunction",
+						gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_REQ,
+						func: `return new Promise((resolve) => {
+							resolve([]);
+						});`,
+					});
+					const loginPromise = conn.loginAsync("velux123", 1);
 
-				/*
-					A lot of asynchronous stuff and I/O is happing during login.
-					The setTimeout function will be called only after several
-					loops of the NodeJS event loops have been run.
-					We will trigger a new round of the event loop
-					by calling setImmediate until we have a waiting mock timer.
-					The series of articles at
-					https://www.builder.io/blog/visual-guide-to-nodejs-event-loop
-					helped me a lot to understand what is going on
-					under the hood.
-				*/
-				for (let attempt = 0; attempt < 50; attempt++) {
-					await advanceTimersInRealEventLoopAsync();
+					/*
+						A lot of asynchronous stuff and I/O is happing during login.
+						The setTimeout function will be called only after several
+						loops of the NodeJS event loops have been run.
+						We will trigger a new round of the event loop
+						by calling setImmediate until we have a waiting mock timer.
+						The series of articles at
+						https://www.builder.io/blog/visual-guide-to-nodejs-event-loop
+						helped me a lot to understand what is going on
+						under the hood.
+					*/
+
+					// Wait for the KLF200 protocol to be ready
+					while (!conn.KLF200SocketProtocol) {
+						await setImmediate();
+					}
+					t.mock.timers.runAll();
+					await assert.rejects(loginPromise, TimeoutError);
+				} finally {
+					conn.KLF200SocketProtocol?.socket?.end();
 				}
-				mock.timers.runAll();
-				await assert.rejects(loginPromise, TimeoutError);
-				conn.KLF200SocketProtocol?.socket?.end();
 			} finally {
-				mock.timers.reset();
+				t.mock.timers.reset();
 			}
 		});
 
@@ -268,7 +269,7 @@ describe("connection", { timeout: 20000 }, function () {
 			await conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"));
 		});
 
-		it("should timeout on missing confirmation.", async function () {
+		it("should timeout on missing confirmation.", async function (t) {
 			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
@@ -283,7 +284,7 @@ describe("connection", { timeout: 20000 }, function () {
 				debug("Login...");
 				await conn.loginAsync("velux123");
 				debug("Send command...");
-				mock.timers.enable({ apis: ["setTimeout"] });
+				t.mock.timers.enable({ apis: ["setTimeout"] });
 				try {
 					await mockServerController?.sendCommand({
 						command: "SetFunction",
@@ -292,25 +293,7 @@ describe("connection", { timeout: 20000 }, function () {
 					});
 					debug("Send frame...");
 
-					/*
-						Usually, we would just expect the promise to be rejected.
-						Unfortunately, with the fake timers this would lead to a
-						PromiseRejectionHandledWarning from NodeJS.
-						To circumvent this, we will add a .then handler that
-						shouldn't be reached and an additional .catch handler
-						that should be called.
-					*/
-					let sendFrameTimeoutError: unknown;
-					const sendFramePromise = conn
-						.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 2)
-						.then(() => {
-							assert.strictEqual(true, false, "Should not be here.");
-						})
-						.catch((error) => {
-							sendFrameTimeoutError = error;
-							assert.ok(error instanceof TimeoutError);
-						});
-					debug("Wait for timeout...");
+					const sendFramePromise = conn.sendFrameAsync(new GW_PASSWORD_ENTER_REQ("velux123"), 2);
 
 					/*
 						A lot of asynchronous stuff and I/O is happing during login.
@@ -323,18 +306,16 @@ describe("connection", { timeout: 20000 }, function () {
 						helped me a lot to understand what is going on
 						under the hood.
 					*/
-					for (let attempt = 0; attempt < 20 && sendFrameTimeoutError === undefined; attempt++) {
-						await advanceTimersInRealEventLoopAsync();
-					}
-					assert.ok(sendFrameTimeoutError instanceof TimeoutError);
-					debug("Expect timeout...");
-					await sendFramePromise;
-					debug("Done.");
+
+					await setImmediate();
+					t.mock.timers.runAll();
+
+					await assert.rejects(sendFramePromise, TimeoutError);
 				} catch (error) {
 					debug(error);
 				} finally {
 					debug("Restore clock...");
-					mock.timers.reset();
+					t.mock.timers.reset();
 					debug("Done after restore clock.");
 				}
 			} catch (error) {
@@ -635,14 +616,14 @@ describe("connection", { timeout: 20000 }, function () {
 			});
 			await conn.loginAsync("velux123");
 			const sentDataSpy = t.mock.method(conn, "sendFrameAsync");
-			mock.timers.enable({ apis: ["setInterval"] });
+			t.mock.timers.enable({ apis: ["setInterval"] });
 
 			try {
 				conn.startKeepAlive();
 
-				mock.timers.tick(10 * 60 * 1000);
+				t.mock.timers.tick(10 * 60 * 1000);
 			} finally {
-				mock.timers.reset();
+				t.mock.timers.reset();
 			}
 
 			assert.strictEqual(sentDataSpy.mock.callCount(), 1);
@@ -663,21 +644,21 @@ describe("connection", { timeout: 20000 }, function () {
 			});
 			await conn.loginAsync("velux123");
 			const sentDataSpy = t.mock.method(conn, "sendFrameAsync");
-			mock.timers.enable({ apis: ["setInterval"] });
+			t.mock.timers.enable({ apis: ["setInterval"] });
 
 			try {
 				conn.startKeepAlive();
 
 				// Wait 5 minutes
-				mock.timers.tick(5 * 60 * 1000);
+				t.mock.timers.tick(5 * 60 * 1000);
 
 				// Send a message in between
 				await conn.sendFrameAsync(new GW_SET_UTC_REQ());
 
 				// Wait another 5 minutes
-				mock.timers.tick(5 * 60 * 1000);
+				t.mock.timers.tick(5 * 60 * 1000);
 			} finally {
-				mock.timers.reset();
+				t.mock.timers.reset();
 			}
 
 			assert.strictEqual(sentDataSpy.mock.callCount(), 1);
@@ -706,19 +687,19 @@ describe("connection", { timeout: 20000 }, function () {
 			await conn.loginAsync("velux123");
 			try {
 				const sentDataSpy = t.mock.method(conn, "sendFrameAsync");
-				mock.timers.enable({ apis: ["setInterval"] });
+				t.mock.timers.enable({ apis: ["setInterval"] });
 
 				try {
 					conn.startKeepAlive();
 					conn.startKeepAlive(); // Call again
 
 					// Wait 16 minutes
-					mock.timers.tick(16 * 60 * 1000);
+					t.mock.timers.tick(16 * 60 * 1000);
 
 					// sendFrameAsync should be called only once
 					assert.strictEqual(sentDataSpy.mock.callCount(), 1);
 				} finally {
-					mock.timers.reset();
+					t.mock.timers.reset();
 				}
 			} finally {
 				conn.stopKeepAlive();
@@ -739,18 +720,18 @@ describe("connection", { timeout: 20000 }, function () {
 			});
 			await conn.loginAsync("velux123");
 			const sentDataSpy = t.mock.method(conn, "sendFrameAsync");
-			mock.timers.enable({ apis: ["setInterval"] });
+			t.mock.timers.enable({ apis: ["setInterval"] });
 
 			try {
 				conn.startKeepAlive();
 
-				mock.timers.tick(5 * 60 * 1000);
+				t.mock.timers.tick(5 * 60 * 1000);
 
 				conn.stopKeepAlive();
 
-				mock.timers.tick(5 * 60 * 1000);
+				t.mock.timers.tick(5 * 60 * 1000);
 			} finally {
-				mock.timers.reset();
+				t.mock.timers.reset();
 			}
 
 			assert.strictEqual(sentDataSpy.mock.callCount(), 0);
