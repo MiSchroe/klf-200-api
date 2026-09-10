@@ -342,7 +342,7 @@ describe("products", { timeout: 20000 }, function () {
 		});
 
 		describe("addNodeAsync", function () {
-			it.todo("should throw on error frame.", async function (t) {
+			it("should throw on error frame.", async function (t) {
 				const conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
