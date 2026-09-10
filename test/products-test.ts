@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { after, afterEach, before, beforeEach, describe, it } from "node:test";
+import { after, afterEach, before, beforeEach, describe, it, mock } from "node:test";
 import { fileURLToPath } from "node:url";
 import {
 	ActuatorAlias,
@@ -2112,10 +2112,10 @@ addCommandAndLengthToBuffer(
 		});
 
 		describe("onNotificationHandler", function () {
-			let propertyChangedSpy: any;
+			let propertyChangedSpy: it.Mock<(...args: any[]) => undefined>;
 
-			beforeEach(function (t) {
-				propertyChangedSpy = t.mock.fn();
+			beforeEach(function () {
+				propertyChangedSpy = mock.fn();
 				product.propertyChangedEvent.on((event) => {
 					propertyChangedSpy(event);
 				});
