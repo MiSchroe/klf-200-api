@@ -47,6 +47,7 @@ jobs:
                   node-version: ${{ matrix.node-version }}
             - run: npm ci
             - run: npm run build --if-present
+            - run: mkdir -p ./coverage
             - run: npm test
             - name: Upload coverage reports to Codecov
               uses: codecov/codecov-action@v7
