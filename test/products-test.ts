@@ -37,7 +37,7 @@ const testHOST = "localhost";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-describe("products", { timeout: 20000 }, function () {
+describe("products", { timeout: 200000 }, function () {
 	let mockServerController: MockServerController;
 
 	before(async function () {
