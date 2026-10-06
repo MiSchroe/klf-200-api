@@ -2,13 +2,7 @@
 
 import debugModule from "debug";
 import "disposablestack/auto";
-import {
-	ConnectionOptions,
-	PeerCertificate,
-	TLSSocket,
-	checkServerIdentity as checkServerIdentityOriginal,
-	connect,
-} from "node:tls";
+import { ConnectionOptions, TLSSocket, connect } from "node:tls";
 import { timeout as promiseTimeout } from "promise-timeout";
 import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF.js";
 import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ.js";
@@ -840,8 +834,6 @@ export class Connection implements IConnection, AsyncDisposable {
 										// codeql[js/disabling-certificate-validation] -- The connection checks the CA and Gateway-Fingerprint.
 										rejectUnauthorized: false,
 										ca: [this.CA],
-										checkServerIdentity: (host: string, cert: PeerCertificate) =>
-											this.checkServerIdentity(host, cert),
 									},
 							() => {
 								debug("Secure connection established.");
@@ -992,11 +984,5 @@ export class Connection implements IConnection, AsyncDisposable {
 		this.klfProtocol = undefined;
 		this.sckt = undefined;
 		debug("Socket closed.");
-	}
-
-	private checkServerIdentity(host: string, cert: PeerCertificate): Error | undefined {
-		debug(`checkServerIdentity called for host ${host} with fingerprint ${cert.fingerprint}.`);
-		if (cert.fingerprint === this.fingerprint) return undefined;
-		else return checkServerIdentityOriginal(host, cert);
 	}
 }
