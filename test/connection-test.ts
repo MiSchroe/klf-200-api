@@ -799,6 +799,7 @@ describe("connection with expired certificate", { timeout: 20000 }, function () 
 
 		it("should fail when connecting to the mock server without the correct fingerprint", async function () {
 			await using conn = new Connection(testHOST, {
+				// codeql[js/disabling-certificate-validation] -- The connection checks the CA and Gateway-Fingerprint.
 				rejectUnauthorized: false,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "server-crt-outdated.pem")),
@@ -820,6 +821,7 @@ describe("connection with expired certificate", { timeout: 20000 }, function () 
 			await using conn = new Connection(
 				testHOST,
 				{
+					// codeql[js/disabling-certificate-validation] -- The connection checks the CA and Gateway-Fingerprint.
 					rejectUnauthorized: false,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "server-crt-outdated.pem")),

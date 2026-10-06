@@ -837,6 +837,7 @@ export class Connection implements IConnection, AsyncDisposable {
 										// or one whose only defect is that it has expired while its fingerprint
 										// still matches the pinned certificate. The shared VELUX certificate
 										// expired on 2026-07-12; every other authorization error is still rejected.
+										// codeql[js/disabling-certificate-validation] -- The connection checks the CA and Gateway-Fingerprint.
 										rejectUnauthorized: false,
 										ca: [this.CA],
 										checkServerIdentity: (host: string, cert: PeerCertificate) =>
