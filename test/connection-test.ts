@@ -215,6 +215,17 @@ describe("connection", { timeout: 20000 }, function () {
 			};
 			await function_under_test();
 		});
+
+		it("should throw an error when connecting with default connection options in unit test.", async function () {
+			await using conn = new Connection(testHOST);
+			await mockServerController?.sendCommand({
+				command: "SetConfirmation",
+				gatewayCommand: GatewayCommand.GW_PASSWORD_ENTER_REQ,
+				gatewayConfirmation: GatewayCommand.GW_PASSWORD_ENTER_CFM,
+				data: Buffer.from([GW_COMMON_STATUS.ERROR]).toString("base64"),
+			});
+			await assert.rejects(conn.loginAsync("velux123"), Error);
+		});
 	});
 
 	describe("logoutAsync", function () {
