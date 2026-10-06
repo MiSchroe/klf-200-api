@@ -9,9 +9,17 @@ import { after, afterEach, before, describe, it } from "node:test";
 import { setImmediate } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { TimeoutError } from "promise-timeout";
-import { GW_ERROR, GW_GET_STATE_REQ, GW_PASSWORD_ENTER_REQ, GW_SET_UTC_REQ, KLF200SocketProtocol } from "../src";
-import { GW_COMMON_STATUS, GatewayCommand, KLF200_PORT } from "../src/KLF200-API/common";
-import { Connection } from "../src/connection";
+import {
+	Connection,
+	GW_COMMON_STATUS,
+	GW_ERROR,
+	GW_GET_STATE_REQ,
+	GW_PASSWORD_ENTER_REQ,
+	GW_SET_UTC_REQ,
+	GatewayCommand,
+	KLF200SocketProtocol,
+	KLF200_PORT,
+} from "../src/index.js";
 import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
 import { MockServerController } from "./mocks/mockServerController.js";
 

@@ -27,7 +27,7 @@ import {
 	StatusType,
 	Velocity,
 	getNextSessionID,
-} from "../src";
+} from "../src/index.js";
 import { ArrayBuilder } from "./mocks/mockServer/ArrayBuilder.js";
 import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
 import { MockServerController } from "./mocks/mockServerController.js";

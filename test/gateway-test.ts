@@ -18,7 +18,7 @@ import {
 	GatewaySubState,
 	KLF200_PORT,
 	SoftwareVersion,
-} from "../src";
+} from "../src/index.js";
 import { CloseConnectionCommand, ResetCommand } from "./mocks/mockServer/commands.js";
 import { MockServerController } from "./mocks/mockServerController.js";
 
