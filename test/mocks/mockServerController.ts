@@ -46,31 +46,47 @@ export class MockServerController {
 	 */
 	public async sendCommand(command: Command): Promise<void> {
 		const commandWithGuid: CommandWithGuid = { ...command, CommandGuid: randomUUID() };
-		await timeout(
-			new Promise<void>((resolve, reject) => {
-				const onMessage = function (this: ChildProcess, message: AcknowledgeMessage): void {
-					debug(`In sendCommand onMessage handler. message: ${JSON.stringify(message)}`);
-					if (deepEqual(commandWithGuid.CommandGuid, message.originalCommandGuid)) {
-						this.off("message", onMessage);
-						switch (message.messageType) {
-							case "ERR":
-								reject(new Error(message.errorMessage));
-								break;
+		let cleanup = (): void => {};
+		try {
+			await timeout(
+				new Promise<void>((resolve, reject) => {
+					const onMessage = (message: AcknowledgeMessage): void => {
+						debug(`In sendCommand onMessage handler. message: ${JSON.stringify(message)}`);
+						if (deepEqual(commandWithGuid.CommandGuid, message.originalCommandGuid)) {
+							switch (message.messageType) {
+								case "ERR":
+									reject(new Error(message.errorMessage));
+									break;
 
-							case "ACK":
-								resolve();
-								break;
+								case "ACK":
+									resolve();
+									break;
 
-							default:
-								break;
+								default:
+									break;
+							}
 						}
-					}
-				};
-				this.serverProcess.on("message", onMessage);
-				this.serverProcess.send(commandWithGuid);
-			}),
-			10000,
-		);
+					};
+					const onDisconnect = (): void => {
+						reject(new Error("Mock server IPC channel disconnected."));
+					};
+					cleanup = (): void => {
+						this.serverProcess.off("message", onMessage);
+						this.serverProcess.off("disconnect", onDisconnect);
+					};
+					this.serverProcess.on("message", onMessage);
+					this.serverProcess.once("disconnect", onDisconnect);
+					this.serverProcess.send(commandWithGuid, (error) => {
+						if (error) {
+							reject(error);
+						}
+					});
+				}),
+				10000,
+			);
+		} finally {
+			cleanup();
+		}
 	}
 
 	async [Symbol.asyncDispose](): Promise<void> {

@@ -302,32 +302,28 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 
 				case "CloseConnection":
 					if (tlsSocket) {
+						const socket = tlsSocket;
 						debug("CloseConnection command received. Ending the socket.");
 						try {
 							await timeout(
 								// Try to end the "good" way:
 								new Promise<void>((resolve) => {
-									tlsSocket?.end(() => {
-										acknowledgeMessageACK(message);
-									});
-									tlsSocket = undefined;
-									resolve();
+									socket.end(resolve);
 								}),
 								1000,
 							);
 						} catch (error) {
 							if (error instanceof TimeoutError) {
 								// Otherwise destroy the socket after 1sec.
-								tlsSocket?.destroy();
-								tlsSocket = undefined;
-								acknowledgeMessageACK(message);
+								socket.destroy();
 							} else {
 								throw error;
 							}
+						} finally {
+							tlsSocket = undefined;
 						}
-					} else {
-						acknowledgeMessageACK(message);
 					}
+					acknowledgeMessageACK(message);
 					break;
 
 				default:

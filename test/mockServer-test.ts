@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import { ChildProcess } from "node:child_process";
 import { describe, it } from "node:test";
+import { ResetCommand } from "./mocks/mockServer/commands.js";
 import { MockServerController } from "./mocks/mockServerController.js";
 
 describe("mockServer", function () {
@@ -50,5 +51,36 @@ describe("mockServer", function () {
 			gatewayCommand: 0x01, // Example command
 			data: Buffer.from([0x00, 0x01]).toString("base64"),
 		});
+	});
+
+	it("should reject commands after the IPC channel has closed", { timeout: 20000 }, async function () {
+		const mockServer = await MockServerController.createMockServer();
+		await mockServer[Symbol.asyncDispose]();
+		const messageListeners = mockServer.serverProcess.listenerCount("message");
+		const disconnectListeners = mockServer.serverProcess.listenerCount("disconnect");
+
+		await assert.rejects(mockServer.sendCommand(ResetCommand), { code: "ERR_IPC_CHANNEL_CLOSED" });
+
+		assert.strictEqual(mockServer.serverProcess.listenerCount("message"), messageListeners);
+		assert.strictEqual(mockServer.serverProcess.listenerCount("disconnect"), disconnectListeners);
+	});
+
+	it("should reject pending commands when the IPC channel disconnects", { timeout: 20000 }, async function (t) {
+		await using mockServer = await MockServerController.createMockServer();
+		const messageListeners = mockServer.serverProcess.listenerCount("message");
+		const disconnectListeners = mockServer.serverProcess.listenerCount("disconnect");
+		t.mock.method(mockServer.serverProcess, "send", () => {
+			queueMicrotask(() => mockServer.serverProcess.emit("disconnect"));
+			return true;
+		});
+		try {
+			await assert.rejects(mockServer.sendCommand(ResetCommand), {
+				message: "Mock server IPC channel disconnected.",
+			});
+			assert.strictEqual(mockServer.serverProcess.listenerCount("message"), messageListeners);
+			assert.strictEqual(mockServer.serverProcess.listenerCount("disconnect"), disconnectListeners);
+		} finally {
+			t.mock.reset();
+		}
 	});
 });
