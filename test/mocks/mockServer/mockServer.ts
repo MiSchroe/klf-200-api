@@ -308,7 +308,12 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 							await timeout(
 								// Try to end the "good" way:
 								new Promise<void>((resolve) => {
-									socket.end(resolve);
+									if (socket.closed || socket.destroyed) {
+										resolve();
+									} else {
+										socket.once("close", () => resolve());
+										socket.destroy();
+									}
 								}),
 								1000,
 							);

@@ -814,6 +814,7 @@ export class Connection implements IConnection, AsyncDisposable {
 							debug(`loginErrorHandler called with error: ${error.message}`);
 							console.error(`loginErrorHandler: ${error.message}`);
 							this.sckt?.off("error", loginErrorHandler);
+							this.sckt?.destroy();
 							this.sckt = undefined;
 							reject(error);
 						};
@@ -877,6 +878,7 @@ export class Connection implements IConnection, AsyncDisposable {
 								} else {
 									// Reject promise
 									const err = this.sckt?.authorizationError;
+									this.sckt?.destroy();
 									this.sckt = undefined;
 									debug(`AuthorizationError: ${err!.message}`);
 									console.error(`AuthorizationError: ${err!.message}`);
