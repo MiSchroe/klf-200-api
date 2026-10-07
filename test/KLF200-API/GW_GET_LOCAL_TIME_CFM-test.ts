@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_GET_LOCAL_TIME_CFM } from "../../src";
 
 describe("KLF200-API", function () {
@@ -37,57 +37,57 @@ describe("KLF200-API", function () {
 				1, // DST
 			]);
 			it("should create without error", function () {
-				expect(() => new GW_GET_LOCAL_TIME_CFM(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_GET_LOCAL_TIME_CFM(data));
 			});
 
 			it("should return the UTC time", function () {
 				const result = new GW_GET_LOCAL_TIME_CFM(data);
-				expect(result.UTCTime).to.deep.equal(testDate);
+				assert.deepStrictEqual(result.UTCTime, testDate);
 			});
 
 			it("should return the seconds", function () {
 				const result = new GW_GET_LOCAL_TIME_CFM(data);
-				expect(result.Second).to.equal(testDate.getSeconds());
+				assert.strictEqual(result.Second, testDate.getSeconds());
 			});
 
 			it("should return the minutes", function () {
 				const result = new GW_GET_LOCAL_TIME_CFM(data);
-				expect(result.Minute).to.equal(testDate.getMinutes());
+				assert.strictEqual(result.Minute, testDate.getMinutes());
 			});
 
 			it("should return the hours", function () {
 				const result = new GW_GET_LOCAL_TIME_CFM(data);
-				expect(result.Hour).to.equal(testDate.getHours());
+				assert.strictEqual(result.Hour, testDate.getHours());
 			});
 
 			it("should return the day of month", function () {
 				const result = new GW_GET_LOCAL_TIME_CFM(data);
-				expect(result.DayOfMonth).to.equal(testDate.getDate());
+				assert.strictEqual(result.DayOfMonth, testDate.getDate());
 			});
 
 			it("should return the month", function () {
 				const result = new GW_GET_LOCAL_TIME_CFM(data);
-				expect(result.Month).to.equal(testDate.getMonth());
+				assert.strictEqual(result.Month, testDate.getMonth());
 			});
 
 			it("should return the year", function () {
 				const result = new GW_GET_LOCAL_TIME_CFM(data);
-				expect(result.Year).to.equal(testDate.getFullYear());
+				assert.strictEqual(result.Year, testDate.getFullYear());
 			});
 
 			it("should return the weekday", function () {
 				const result = new GW_GET_LOCAL_TIME_CFM(data);
-				expect(result.Weekday).to.equal(testDate.getDay());
+				assert.strictEqual(result.Weekday, testDate.getDay());
 			});
 
 			it("should return the day of year", function () {
 				const result = new GW_GET_LOCAL_TIME_CFM(data);
-				expect(result.DayOfYear).to.equal(testDateDOY);
+				assert.strictEqual(result.DayOfYear, testDateDOY);
 			});
 
 			it("should return the daylight saving flag", function () {
 				const result = new GW_GET_LOCAL_TIME_CFM(data);
-				expect(result.DaylightSavingFlag).to.equal(1);
+				assert.strictEqual(result.DaylightSavingFlag, 1);
 			});
 		});
 	});

@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_INITIALIZE_SCENE_NTF, InitializeSceneNotificationStatus } from "../../src";
 
 describe("KLF200-API", function () {
@@ -21,19 +21,21 @@ describe("KLF200-API", function () {
             ]);
 
 			it("should create without error", function () {
-				expect(() => new GW_INITIALIZE_SCENE_NTF(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_INITIALIZE_SCENE_NTF(data));
 			});
 
 			it("should return the status", function () {
 				const result = new GW_INITIALIZE_SCENE_NTF(data);
-				expect(result.Status).to.equal(InitializeSceneNotificationStatus.Error);
+				assert.strictEqual(result.Status, InitializeSceneNotificationStatus.Error);
 			});
 
 			it("should return the failed nodes", function () {
 				const result = new GW_INITIALIZE_SCENE_NTF(data);
-				expect(result.FailedNodes)
-					.to.be.instanceOf(Array)
-					.and.have.members([0, 8, 40, 48, 80, 88, 120, 128, 160, 168]);
+				assert.ok(result.FailedNodes instanceof Array);
+				assert.deepStrictEqual(
+					[...result.FailedNodes].sort(),
+					[...[0, 8, 40, 48, 80, 88, 120, 128, 160, 168]].sort(),
+				);
 			});
 		});
 	});

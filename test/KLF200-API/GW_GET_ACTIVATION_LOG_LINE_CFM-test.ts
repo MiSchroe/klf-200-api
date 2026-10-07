@@ -1,11 +1,8 @@
 "use strict";
 
-import { expect, use } from "chai";
-import datetime from "chai-datetime";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_GET_ACTIVATION_LOG_LINE_CFM, ParameterActive, RunStatus, StatusOwner, StatusReply } from "../../src";
-use(datetime);
-
 describe("KLF200-API", function () {
 	describe("GW_GET_ACTIVATION_LOG_LINE_CFM", function () {
 		describe("Constructor", function () {
@@ -33,7 +30,7 @@ describe("KLF200-API", function () {
                     0x12, 0x34, 0x56, 0x78
                 ]);
 
-				expect(() => new GW_GET_ACTIVATION_LOG_LINE_CFM(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_GET_ACTIVATION_LOG_LINE_CFM(data));
 			});
 
 			it("should return the correct property values", function () {
@@ -61,15 +58,15 @@ describe("KLF200-API", function () {
                 ]);
 
 				const result = new GW_GET_ACTIVATION_LOG_LINE_CFM(data);
-				expect(result.TimeStamp).to.equalDate(new Date(1546214400000));
-				expect(result.SessionID).to.equal(42);
-				expect(result.StatusOwner).to.equal(StatusOwner.Rain);
-				expect(result.NodeID).to.equal(17);
-				expect(result.NodeParameter).to.equal(ParameterActive.MP);
-				expect(result.ParameterValue).to.equal(0x1234);
-				expect(result.RunStatus).to.equal(RunStatus.ExecutionFailed);
-				expect(result.StatusReply).to.equal(StatusReply.ManuallyOperated);
-				expect(result.InformationCode).to.equal(0x12345678);
+				assert.deepStrictEqual(result.TimeStamp, new Date(1546214400000));
+				assert.strictEqual(result.SessionID, 42);
+				assert.strictEqual(result.StatusOwner, StatusOwner.Rain);
+				assert.strictEqual(result.NodeID, 17);
+				assert.strictEqual(result.NodeParameter, ParameterActive.MP);
+				assert.strictEqual(result.ParameterValue, 0x1234);
+				assert.strictEqual(result.RunStatus, RunStatus.ExecutionFailed);
+				assert.strictEqual(result.StatusReply, StatusReply.ManuallyOperated);
+				assert.strictEqual(result.InformationCode, 0x12345678);
 			});
 		});
 	});

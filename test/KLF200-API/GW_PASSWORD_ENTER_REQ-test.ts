@@ -1,11 +1,8 @@
 "use strict";
 
-import { expect, use } from "chai";
-import chaibytes from "chai-bytes";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_PASSWORD_ENTER_REQ } from "../../src/KLF200-API/GW_PASSWORD_ENTER_REQ";
-use(chaibytes);
-
 describe("KLF200-API", function () {
 	describe("GW_PASSWORD_ENTER_REQ", function () {
 		it("should return the provided password.", function () {
@@ -16,8 +13,8 @@ describe("KLF200-API", function () {
 			passwordBuffer.copy(expectedBuffer);
 
 			const result = new GW_PASSWORD_ENTER_REQ(password);
-			expect(result).to.be.instanceOf(GW_PASSWORD_ENTER_REQ);
-			expect(result.Data.subarray(3)).equalBytes(expectedBuffer);
+			assert.ok(result instanceof GW_PASSWORD_ENTER_REQ);
+			assert.deepStrictEqual(result.Data.subarray(3), Buffer.from(expectedBuffer));
 		});
 
 		it("should return the provided password, if the password length equals 32 bytes.", function () {
@@ -28,15 +25,15 @@ describe("KLF200-API", function () {
 			passwordBuffer.copy(expectedBuffer);
 
 			const result = new GW_PASSWORD_ENTER_REQ(password);
-			expect(result).to.be.instanceOf(GW_PASSWORD_ENTER_REQ);
-			expect(result.Data.subarray(3)).equalBytes(expectedBuffer);
+			assert.ok(result instanceof GW_PASSWORD_ENTER_REQ);
+			assert.deepStrictEqual(result.Data.subarray(3), Buffer.from(expectedBuffer));
 		});
 
 		it("should throw an exception if the password is to long.", function () {
 			// deepcode ignore NoHardcodedPasswords/test: Used in a test-case only
 			const password = "123456789012345678901234567890123"; //DevSkim: ignore DS117838,DS173237
 
-			expect(() => new GW_PASSWORD_ENTER_REQ(password)).to.throw();
+			assert.throws(() => new GW_PASSWORD_ENTER_REQ(password));
 		});
 	});
 });

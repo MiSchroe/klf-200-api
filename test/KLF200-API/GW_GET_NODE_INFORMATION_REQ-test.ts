@@ -1,23 +1,21 @@
 "use strict";
 
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_GET_NODE_INFORMATION_REQ } from "../../src";
-import { expect, use } from "chai";
-import "mocha";
-import chaibytes from "chai-bytes";
-use(chaibytes);
-
 describe("KLF200-API", function () {
 	describe("GW_GET_NODE_INFORMATION_REQ", function () {
 		const testNodeId = 42;
 		it("shouldn't throw an error on create", function () {
-			expect(() => new GW_GET_NODE_INFORMATION_REQ(testNodeId)).not.to.throw();
+			assert.doesNotThrow(() => new GW_GET_NODE_INFORMATION_REQ(testNodeId));
 		});
 
 		it("should write the correct node ID", function () {
 			const result = new GW_GET_NODE_INFORMATION_REQ(testNodeId);
-			expect(result).to.be.instanceOf(GW_GET_NODE_INFORMATION_REQ).that.has.property("Data");
+			assert.ok(result instanceof GW_GET_NODE_INFORMATION_REQ);
+			assert.ok("Data" in result);
 			const buff = result.Data;
-			expect(buff.readUInt8(3)).to.be.equal(testNodeId);
+			assert.strictEqual(buff.readUInt8(3), testNodeId);
 		});
 	});
 });

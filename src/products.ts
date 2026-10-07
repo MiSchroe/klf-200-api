@@ -1883,28 +1883,31 @@ export class Products implements Disposable {
 		);
 
 		const maxRetryTimestamp = Date.now() + 60_000; // Wait max. 60 seconds.
-		const retryIfNotBusy = async (): Promise<GW_GET_NODE_INFORMATION_CFM> => {
+		let getNodeInformation: GW_GET_NODE_INFORMATION_CFM;
+
+		while (true) {
 			if (Date.now() > maxRetryTimestamp) {
 				throw new Error("Can't read node information of added node after 60 seconds.");
 			}
+
 			try {
-				const getNodeInformation = await this.Connection.sendFrameAsync(
-					new GW_GET_NODE_INFORMATION_REQ(nodeID),
-				);
-				return getNodeInformation;
+				getNodeInformation = await this.Connection.sendFrameAsync(new GW_GET_NODE_INFORMATION_REQ(nodeID));
+				break;
 			} catch (error) {
 				if (
 					error instanceof Error &&
 					error.cause instanceof GW_ERROR_NTF &&
 					error.cause.ErrorNumber === GW_ERROR.Busy
 				) {
-					return await setImmediate(await retryIfNotBusy());
+					await setImmediate();
+					continue;
 				}
+
 				debug(`Error reading node information of added node: ${error as Error}`);
 				throw error;
 			}
-		};
-		const getNodeInformation = await setImmediate(await retryIfNotBusy());
+		}
+
 		if (getNodeInformation.Status !== GW_COMMON_STATUS.SUCCESS) {
 			return Promise.reject(new Error(getNodeInformation.getError()));
 		}

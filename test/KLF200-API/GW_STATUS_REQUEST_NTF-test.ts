@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { CommandOriginator, GW_STATUS_REQUEST_NTF, RunStatus, StatusOwner, StatusReply, StatusType } from "../../src";
 
 describe("KLF200-API", function () {
@@ -38,53 +38,52 @@ describe("KLF200-API", function () {
 					]);
 					describe("Constructor", function () {
 						it("should create without error", function () {
-							expect(() => new GW_STATUS_REQUEST_NTF(data)).not.to.throw();
+							assert.doesNotThrow(() => new GW_STATUS_REQUEST_NTF(data));
 						});
 
 						it("should return the session ID", function () {
 							const result = new GW_STATUS_REQUEST_NTF(data);
-							expect(result.SessionID).to.equal(0x4711);
+							assert.strictEqual(result.SessionID, 0x4711);
 						});
 
 						it("should return the status owner", function () {
 							const result = new GW_STATUS_REQUEST_NTF(data);
-							expect(result.StatusOwner).to.equal(StatusOwner.Rain);
+							assert.strictEqual(result.StatusOwner, StatusOwner.Rain);
 						});
 
 						it("should return the node ID", function () {
 							const result = new GW_STATUS_REQUEST_NTF(data);
-							expect(result.NodeID).to.equal(7);
+							assert.strictEqual(result.NodeID, 7);
 						});
 
 						it("should return the run status", function () {
 							const result = new GW_STATUS_REQUEST_NTF(data);
-							expect(result.RunStatus).to.equal(RunStatus.ExecutionActive);
+							assert.strictEqual(result.RunStatus, RunStatus.ExecutionActive);
 						});
 
 						it("should return the status reply Ok", function () {
 							const result = new GW_STATUS_REQUEST_NTF(data);
-							expect(result.StatusReply).to.equal(StatusReply.Ok);
+							assert.strictEqual(result.StatusReply, StatusReply.Ok);
 						});
 
 						it("should return the status type", function () {
 							const result = new GW_STATUS_REQUEST_NTF(data);
-							expect(result.StatusType).to.equal(statusType);
+							assert.strictEqual(result.StatusType, statusType);
 						});
 
 						it("should return the parameter data", function () {
 							const result = new GW_STATUS_REQUEST_NTF(data);
-							expect(result.ParameterData)
-								.to.be.instanceOf(Array)
-								.with.deep.members([
-									{
-										ID: 0,
-										Value: 0xc400,
-									},
-									{
-										ID: 1,
-										Value: 0xc3ff,
-									},
-								]);
+							assert.ok(result.ParameterData instanceof Array);
+							assert.deepStrictEqual(result.ParameterData, [
+								{
+									ID: 0,
+									Value: 0xc400,
+								},
+								{
+									ID: 1,
+									Value: 0xc3ff,
+								},
+							]);
 						});
 					});
 				});
@@ -129,62 +128,62 @@ describe("KLF200-API", function () {
 			]);
 			describe("Constructor", function () {
 				it("should create without error", function () {
-					expect(() => new GW_STATUS_REQUEST_NTF(data)).not.to.throw();
+					assert.doesNotThrow(() => new GW_STATUS_REQUEST_NTF(data));
 				});
 
 				it("should return the session ID", function () {
 					const result = new GW_STATUS_REQUEST_NTF(data);
-					expect(result.SessionID).to.equal(0x4711);
+					assert.strictEqual(result.SessionID, 0x4711);
 				});
 
 				it("should return the status owner", function () {
 					const result = new GW_STATUS_REQUEST_NTF(data);
-					expect(result.StatusOwner).to.equal(StatusOwner.Rain);
+					assert.strictEqual(result.StatusOwner, StatusOwner.Rain);
 				});
 
 				it("should return the node ID", function () {
 					const result = new GW_STATUS_REQUEST_NTF(data);
-					expect(result.NodeID).to.equal(7);
+					assert.strictEqual(result.NodeID, 7);
 				});
 
 				it("should return the run status", function () {
 					const result = new GW_STATUS_REQUEST_NTF(data);
-					expect(result.RunStatus).to.equal(RunStatus.ExecutionActive);
+					assert.strictEqual(result.RunStatus, RunStatus.ExecutionActive);
 				});
 
 				it("should return the status reply Ok", function () {
 					const result = new GW_STATUS_REQUEST_NTF(data);
-					expect(result.StatusReply).to.equal(StatusReply.Ok);
+					assert.strictEqual(result.StatusReply, StatusReply.Ok);
 				});
 
 				it("should return the status type", function () {
 					const result = new GW_STATUS_REQUEST_NTF(data);
-					expect(result.StatusType).to.equal(statusType);
+					assert.strictEqual(result.StatusType, statusType);
 				});
 
 				it("should return the target position", function () {
 					const result = new GW_STATUS_REQUEST_NTF(data);
-					expect(result.TargetPosition).to.equal(0xc400);
+					assert.strictEqual(result.TargetPosition, 0xc400);
 				});
 
 				it("should return the current position", function () {
 					const result = new GW_STATUS_REQUEST_NTF(data);
-					expect(result.CurrentPosition).to.equal(0xc3ff);
+					assert.strictEqual(result.CurrentPosition, 0xc3ff);
 				});
 
 				it("should return the remaining time", function () {
 					const result = new GW_STATUS_REQUEST_NTF(data);
-					expect(result.RemainingTime).to.equal(0x1234);
+					assert.strictEqual(result.RemainingTime, 0x1234);
 				});
 
 				it("should return the last master execution address", function () {
 					const result = new GW_STATUS_REQUEST_NTF(data);
-					expect(result.LastMasterExecutionAddress).to.equal(0x654321);
+					assert.strictEqual(result.LastMasterExecutionAddress, 0x654321);
 				});
 
 				it("should return the last command originator", function () {
 					const result = new GW_STATUS_REQUEST_NTF(data);
-					expect(result.LastCommandOriginator).to.equal(CommandOriginator.Rain);
+					assert.strictEqual(result.LastCommandOriginator, CommandOriginator.Rain);
 				});
 			});
 		});

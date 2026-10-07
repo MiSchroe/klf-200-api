@@ -1,6 +1,6 @@
 "use strict";
 
-import { IConnection } from "../src";
+import { IConnection } from "../src/index.js";
 
 export async function waitForNotificationHandler(conn: IConnection): Promise<void> {
 	await Promise.race([

@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import sinon from "sinon";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { Component } from "../../src/utils/PropertyChangedEvent";
 
 class MockComponent extends Component {
@@ -17,14 +17,14 @@ describe("utils", function () {
 			it("should return emit a PropertyChangedEvent", async function () {
 				const test = new MockComponent();
 				test.propertyChangedEvent.on((result) => {
-					expect(result).to.have.property("o");
-					expect(result).to.have.property(
-						"propertyName",
+					assert.ok("o" in result);
+					assert.strictEqual(
+						result.propertyName,
 						"TestProperty",
 						"Property propertyName is missing or has wrong value.",
 					);
-					expect(result).to.have.property(
-						"propertyValue",
+					assert.strictEqual(
+						result.propertyValue,
 						42,
 						"Property propertyValue is missing or has wrong value.",
 					);
@@ -33,17 +33,17 @@ describe("utils", function () {
 				await test.TestPropertyChangedEvent();
 			});
 
-			it("should return emit a PropertyChangedEvent only once", async function () {
+			it("should return emit a PropertyChangedEvent only once", async function (t) {
 				const test = new MockComponent();
-				const eventHandlerSpyOn = sinon.spy();
-				const eventHandlerSpyOnce = sinon.spy();
+				const eventHandlerSpyOn = t.mock.fn();
+				const eventHandlerSpyOnce = t.mock.fn();
 				test.propertyChangedEvent.on(eventHandlerSpyOn);
 				test.propertyChangedEvent.once(eventHandlerSpyOnce);
 				// Invoke the test twice
 				await test.TestPropertyChangedEvent();
 				await test.TestPropertyChangedEvent();
-				expect(eventHandlerSpyOn).to.be.calledTwice;
-				expect(eventHandlerSpyOnce).to.be.calledOnce;
+				assert.strictEqual(eventHandlerSpyOn.mock.callCount(), 2);
+				assert.strictEqual(eventHandlerSpyOnce.mock.callCount(), 1);
 			});
 		});
 	});

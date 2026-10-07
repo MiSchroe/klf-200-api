@@ -1,33 +1,31 @@
 "use strict";
 
-import { expect, use } from "chai";
-import chaibytes from "chai-bytes";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_SET_GROUP_INFORMATION_REQ, GroupType, readZString } from "../../src";
-use(chaibytes);
-
 describe("KLF200-API", function () {
 	describe("GW_SET_GROUP_INFORMATION_REQ", function () {
 		it("shouldn't throw an error on create", function () {
-			expect(
+			assert.doesNotThrow(
 				() => new GW_SET_GROUP_INFORMATION_REQ(42, 0x1234, "Dummy", GroupType.UserGroup, [0, 1, 2]),
-			).not.to.throw();
+			);
 		});
 
 		it("should write the correct default values", function () {
 			const result = new GW_SET_GROUP_INFORMATION_REQ(42, 0x1234, "Dummy", GroupType.UserGroup, [0, 1, 2]);
-			expect(result).to.be.instanceOf(GW_SET_GROUP_INFORMATION_REQ).that.has.property("Data");
+			assert.ok(result instanceof GW_SET_GROUP_INFORMATION_REQ);
+			assert.ok("Data" in result);
 			const buff = result.Data;
-			expect(buff.readUInt8(3)).to.be.equal(42, "GroupID wrong.");
-			expect(buff.readUInt16BE(4)).to.be.equal(0, "Order wrong.");
-			expect(buff.readUInt8(6)).to.be.equal(0, "Placement wrong.");
-			expect(readZString(buff.subarray(7, 67))).to.be.equal("Dummy", "Name wrong.");
-			expect(buff.readUInt8(71)).to.be.equal(0, "Velocity wrong.");
-			expect(buff.readUInt8(72)).to.be.equal(0, "NodeVariation wrong.");
-			expect(buff.readUInt8(73)).to.be.equal(GroupType.UserGroup, "GroupType wrong.");
-			expect(buff.readUInt8(74)).to.be.equal(3, "Number of nodes wrong.");
-			expect(buff.readUInt8(75)).to.be.equal(0b00000111, "Nodes wrong.");
-			expect(buff.readUInt16BE(100)).to.be.equal(0x1234, "Revision wrong.");
+			assert.strictEqual(buff.readUInt8(3), 42, "GroupID wrong.");
+			assert.strictEqual(buff.readUInt16BE(4), 0, "Order wrong.");
+			assert.strictEqual(buff.readUInt8(6), 0, "Placement wrong.");
+			assert.strictEqual(readZString(buff.subarray(7, 67)), "Dummy", "Name wrong.");
+			assert.strictEqual(buff.readUInt8(71), 0, "Velocity wrong.");
+			assert.strictEqual(buff.readUInt8(72), 0, "NodeVariation wrong.");
+			assert.strictEqual(buff.readUInt8(73), GroupType.UserGroup, "GroupType wrong.");
+			assert.strictEqual(buff.readUInt8(74), 3, "Number of nodes wrong.");
+			assert.strictEqual(buff.readUInt8(75), 0b00000111, "Nodes wrong.");
+			assert.strictEqual(buff.readUInt16BE(100), 0x1234, "Revision wrong.");
 		});
 	});
 });

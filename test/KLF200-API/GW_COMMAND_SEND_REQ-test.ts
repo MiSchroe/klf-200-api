@@ -1,31 +1,26 @@
 "use strict";
 
-import { expect, use } from "chai";
-import chaibytes from "chai-bytes";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_COMMAND_SEND_REQ, PriorityLevelInformation } from "../../src";
-use(chaibytes);
-
 describe("KLF200-API", function () {
 	describe("GW_COMMAND_SEND_REQ", function () {
 		it("shouldn't throw an error on create", function () {
-			expect(() => new GW_COMMAND_SEND_REQ(1, 0x4711)).not.to.throw();
+			assert.doesNotThrow(() => new GW_COMMAND_SEND_REQ(1, 0x4711));
 		});
 
 		it("should create the right object with default values", function () {
 			const result = new GW_COMMAND_SEND_REQ(1, 0x4711);
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("Nodes");
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("MainValue");
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("PriorityLevel", 3);
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("CommandOriginator", 1);
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("ParameterActive", 0);
-			expect(result)
-				.to.be.instanceOf(GW_COMMAND_SEND_REQ)
-				.that.has.property("FunctionalParameters")
-				.that.eqls([]);
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("PriorityLevelLock", 0);
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("PriorityLevels").that.eqls([]);
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("LockTime", Infinity);
+			assert.ok(result instanceof GW_COMMAND_SEND_REQ);
+			assert.ok("Nodes" in result);
+			assert.ok("MainValue" in result);
+			assert.strictEqual(result.PriorityLevel, 3);
+			assert.strictEqual(result.CommandOriginator, 1);
+			assert.strictEqual(result.ParameterActive, 0);
+			assert.deepStrictEqual(result.FunctionalParameters, []);
+			assert.strictEqual(result.PriorityLevelLock, 0);
+			assert.deepStrictEqual(result.PriorityLevels, []);
+			assert.strictEqual(result.LockTime, Infinity);
 		});
 
 		it("should write the priority levels at the right position", function () {
@@ -36,27 +31,28 @@ describe("KLF200-API", function () {
 				PriorityLevelInformation.KeepCurrent,
 				PriorityLevelInformation.Enable,
 			]);
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("Data");
+			assert.ok(result instanceof GW_COMMAND_SEND_REQ);
+			assert.ok("Data" in result);
 			const buff = result.Data;
-			expect(buff.readUInt16BE(66)).to.be.equal(0x1b40, `Data = ${buff.toString("hex")}`);
+			assert.strictEqual(buff.readUInt16BE(66), 0x1b40, `Data = ${buff.toString("hex")}`);
 		});
 
 		it("should throw an error at priority level value greater than 3", function () {
-			expect(
+			assert.throws(
 				// @ts-expect-error: error TS2322: Type '4' is not assignable to type 'PriorityLevelInformation'
 				() => new GW_COMMAND_SEND_REQ(1, 0x4711, undefined, undefined, undefined, undefined, undefined, [4]),
-			).to.throw();
+			);
 		});
 
 		it("should throw an error at priority level less than 0", function () {
-			expect(
+			assert.throws(
 				// @ts-expect-error: error TS2322: Type '-1' is not assignable to type 'PriorityLevelInformation'
 				() => new GW_COMMAND_SEND_REQ(1, 0x4711, undefined, undefined, undefined, undefined, undefined, [-1]),
-			).to.throw();
+			);
 		});
 
 		it("should throw an error at too many priority levels (more than 8)", function () {
-			expect(
+			assert.throws(
 				() =>
 					new GW_COMMAND_SEND_REQ(
 						1,
@@ -68,7 +64,7 @@ describe("KLF200-API", function () {
 						undefined,
 						[0, 1, 2, 3, 0, 1, 2, 3, 0],
 					),
-			).to.throw();
+			);
 		});
 
 		it("should write the functional parameter the right way", function () {
@@ -76,45 +72,49 @@ describe("KLF200-API", function () {
 				{ ID: 3, Value: 0x4711 },
 				{ ID: 10, Value: 0x4712 },
 			]);
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("Data");
+			assert.ok(result instanceof GW_COMMAND_SEND_REQ);
+			assert.ok("Data" in result);
 			const buff = result.Data;
-			expect(buff.readUInt8(8)).to.be.equal(0b00100000, "FPI1 is wrong");
-			expect(buff.readUInt8(9)).to.be.equal(0b01000000, "FPI2 is wrong");
-			expect(buff.readUInt16BE(16)).to.be.equal(
+			assert.strictEqual(buff.readUInt8(8), 0b00100000, "FPI1 is wrong");
+			assert.strictEqual(buff.readUInt8(9), 0b01000000, "FPI2 is wrong");
+			assert.strictEqual(
+				buff.readUInt16BE(16),
 				0x4711,
 				`Data = ${buff.toString("hex")}, Functional Parameter 3 is wrong`,
 			);
-			expect(buff.readUInt16BE(30)).to.be.equal(
+			assert.strictEqual(
+				buff.readUInt16BE(30),
 				0x4712,
 				`Data = ${buff.toString("hex")}, Functional Parameter 10 is wrong`,
 			);
 		});
 
 		it("should throw an error on invalid functional parameter ID", function () {
-			expect(
+			assert.throws(
 				() => new GW_COMMAND_SEND_REQ(1, 0x4711, undefined, undefined, undefined, [{ ID: 17, Value: 0x4711 }]),
-			).to.throw();
+			);
 		});
 
 		it("should write multiple nodes", function () {
 			const result = new GW_COMMAND_SEND_REQ([1, 2, 3], 0x4711);
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("Data");
+			assert.ok(result instanceof GW_COMMAND_SEND_REQ);
+			assert.ok("Data" in result);
 			const buff = result.Data;
-			expect(buff.readUInt8(44)).to.be.equal(3, "Number of nodes is wrong");
-			expect(buff.readUInt8(45)).to.be.equal(1, "Node 1 is wrong");
-			expect(buff.readUInt8(46)).to.be.equal(2, "Node 2 is wrong");
-			expect(buff.readUInt8(47)).to.be.equal(3, "Node 3 is wrong");
-			expect(buff.readUInt8(48)).to.be.equal(0, "Too many nodes written");
+			assert.strictEqual(buff.readUInt8(44), 3, "Number of nodes is wrong");
+			assert.strictEqual(buff.readUInt8(45), 1, "Node 1 is wrong");
+			assert.strictEqual(buff.readUInt8(46), 2, "Node 2 is wrong");
+			assert.strictEqual(buff.readUInt8(47), 3, "Node 3 is wrong");
+			assert.strictEqual(buff.readUInt8(48), 0, "Too many nodes written");
 		});
 
 		it("should throw an error if more than 20 nodes are provided", function () {
-			expect(
+			assert.throws(
 				() =>
 					new GW_COMMAND_SEND_REQ(
 						[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
 						0x4711,
 					),
-			).to.throw();
+			);
 		});
 	});
 });

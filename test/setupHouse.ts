@@ -11,7 +11,7 @@ import {
 	RunStatus,
 	StatusReply,
 	Velocity,
-} from "../src";
+} from "../src/index.js";
 import { Group } from "./mocks/mockServer/groups.js";
 import { Product } from "./mocks/mockServer/products.js";
 import { Scene } from "./mocks/mockServer/scenes.js";

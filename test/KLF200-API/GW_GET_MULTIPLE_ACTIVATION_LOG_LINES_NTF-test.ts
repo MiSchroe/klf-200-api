@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import {
 	GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF,
 	ParameterActive,
@@ -16,7 +16,7 @@ describe("KLF200-API", function () {
 			const testDate = new Date(2019, 6, 9, 12, 34, 56);
 			// prettier-ignore
 			const data = Buffer.from([
-				20, 0x05, 0x08, 
+				20, 0x05, 0x08,
                 // Timestamp
                 ((testDate.valueOf() / 1000) >>> 24) & 0xff,
                 ((testDate.valueOf() / 1000) >>> 16) & 0xff,
@@ -41,52 +41,52 @@ describe("KLF200-API", function () {
             ]);
 
 			it("should create without error", function () {
-				expect(() => new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data));
 			});
 
 			it("should return the timestamp", function () {
 				const result = new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data);
-				expect(result.TimeStamp).to.deep.equal(testDate);
+				assert.deepStrictEqual(result.TimeStamp, testDate);
 			});
 
 			it("should return the session ID", function () {
 				const result = new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data);
-				expect(result.SessionID).to.equal(0x4711);
+				assert.strictEqual(result.SessionID, 0x4711);
 			});
 
 			it("should return the status ID", function () {
 				const result = new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data);
-				expect(result.StatusOwner).to.equal(StatusOwner.Rain);
+				assert.strictEqual(result.StatusOwner, StatusOwner.Rain);
 			});
 
 			it("should return the node ID", function () {
 				const result = new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data);
-				expect(result.NodeID).to.equal(42);
+				assert.strictEqual(result.NodeID, 42);
 			});
 
 			it("should return the node parameter FP1", function () {
 				const result = new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data);
-				expect(result.NodeParameter).to.equal(ParameterActive.FP1);
+				assert.strictEqual(result.NodeParameter, ParameterActive.FP1);
 			});
 
 			it("should return the parameter value", function () {
 				const result = new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data);
-				expect(result.ParameterValue).to.equal(0xc4ef);
+				assert.strictEqual(result.ParameterValue, 0xc4ef);
 			});
 
 			it("should return the run status", function () {
 				const result = new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data);
-				expect(result.RunStatus).to.equal(RunStatus.ExecutionActive);
+				assert.strictEqual(result.RunStatus, RunStatus.ExecutionActive);
 			});
 
 			it("should return the status reply", function () {
 				const result = new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data);
-				expect(result.StatusReply).to.equal(StatusReply.Ok);
+				assert.strictEqual(result.StatusReply, StatusReply.Ok);
 			});
 
 			it("should return the information code", function () {
 				const result = new GW_GET_MULTIPLE_ACTIVATION_LOG_LINES_NTF(data);
-				expect(result.InformationCode).to.equal(0x87654321);
+				assert.strictEqual(result.InformationCode, 0x87654321);
 			});
 		});
 	});

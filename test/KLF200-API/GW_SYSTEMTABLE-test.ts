@@ -1,6 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import {
 	ActuatorAlias,
 	ActuatorType,
@@ -143,7 +144,7 @@ describe("GW_SYSTEMTABLE", function () {
 				16,
 			)}`, function () {
 				const result = splitActuatorType(testCase.InputValue);
-				expect(result).to.eql(testCase.ExpectedResult);
+				assert.deepStrictEqual(result, testCase.ExpectedResult);
 			});
 		}
 	});
@@ -153,68 +154,68 @@ describe("GW_SYSTEMTABLE", function () {
 			const testData = Buffer.from([0x04, 0x12, 0x34, 0x56, 0x01, 0x01, 0x9d, 0x01, 0x00, 0x00, 0x00]);
 			const result = new SystemTableDataEntry(testData);
 
-			expect(result).to.be.instanceOf(SystemTableDataEntry);
-			expect(result).to.have.property("SystemTableIndex", 4);
-			expect(result).to.have.property("ActuatorAddress", 0x123456);
-			expect(result).to.have.property("ActuatorType", ActuatorType.WindowOpener);
-			expect(result).to.have.property("ActuatorSubType", 1);
-			expect(result).to.have.property("PowerSaveMode", PowerSaveMode.LowPowerMode);
-			expect(result).to.have.property("ioMembership", true);
-			expect(result).to.have.property("RFSupport", true);
-			expect(result).to.have.property("ActuatorTurnaroundTime", 20);
-			expect(result).to.have.property("Manufacturer", Manufacturer.VELUX);
-			expect(result).to.have.property("BackboneReferenceNumber", 0);
+			assert.ok(result instanceof SystemTableDataEntry);
+			assert.strictEqual(result.SystemTableIndex, 4);
+			assert.strictEqual(result.ActuatorAddress, 0x123456);
+			assert.strictEqual(result.ActuatorType, ActuatorType.WindowOpener);
+			assert.strictEqual(result.ActuatorSubType, 1);
+			assert.strictEqual(result.PowerSaveMode, PowerSaveMode.LowPowerMode);
+			assert.strictEqual(result.ioMembership, true);
+			assert.strictEqual(result.RFSupport, true);
+			assert.strictEqual(result.ActuatorTurnaroundTime, 20);
+			assert.strictEqual(result.Manufacturer, Manufacturer.VELUX);
+			assert.strictEqual(result.BackboneReferenceNumber, 0);
 		});
 
 		it("should create a SystemTableDataEntry object with the ActuatorTurnaroundTime set to 5", function () {
 			const testData = Buffer.from([0x04, 0x12, 0x34, 0x56, 0x01, 0x01, 0x1d, 0x01, 0x00, 0x00, 0x00]);
 			const result = new SystemTableDataEntry(testData);
 
-			expect(result).to.be.instanceOf(SystemTableDataEntry);
-			expect(result).to.have.property("SystemTableIndex", 4);
-			expect(result).to.have.property("ActuatorAddress", 0x123456);
-			expect(result).to.have.property("ActuatorType", ActuatorType.WindowOpener);
-			expect(result).to.have.property("ActuatorSubType", 1);
-			expect(result).to.have.property("PowerSaveMode", PowerSaveMode.LowPowerMode);
-			expect(result).to.have.property("ioMembership", true);
-			expect(result).to.have.property("RFSupport", true);
-			expect(result).to.have.property("ActuatorTurnaroundTime", 5);
-			expect(result).to.have.property("Manufacturer", Manufacturer.VELUX);
-			expect(result).to.have.property("BackboneReferenceNumber", 0);
+			assert.ok(result instanceof SystemTableDataEntry);
+			assert.strictEqual(result.SystemTableIndex, 4);
+			assert.strictEqual(result.ActuatorAddress, 0x123456);
+			assert.strictEqual(result.ActuatorType, ActuatorType.WindowOpener);
+			assert.strictEqual(result.ActuatorSubType, 1);
+			assert.strictEqual(result.PowerSaveMode, PowerSaveMode.LowPowerMode);
+			assert.strictEqual(result.ioMembership, true);
+			assert.strictEqual(result.RFSupport, true);
+			assert.strictEqual(result.ActuatorTurnaroundTime, 5);
+			assert.strictEqual(result.Manufacturer, Manufacturer.VELUX);
+			assert.strictEqual(result.BackboneReferenceNumber, 0);
 		});
 
 		it("should create a SystemTableDataEntry object with the ActuatorTurnaroundTime set to 10", function () {
 			const testData = Buffer.from([0x04, 0x12, 0x34, 0x56, 0x01, 0x01, 0x5d, 0x01, 0x00, 0x00, 0x00]);
 			const result = new SystemTableDataEntry(testData);
 
-			expect(result).to.be.instanceOf(SystemTableDataEntry);
-			expect(result).to.have.property("SystemTableIndex", 4);
-			expect(result).to.have.property("ActuatorAddress", 0x123456);
-			expect(result).to.have.property("ActuatorType", ActuatorType.WindowOpener);
-			expect(result).to.have.property("ActuatorSubType", 1);
-			expect(result).to.have.property("PowerSaveMode", PowerSaveMode.LowPowerMode);
-			expect(result).to.have.property("ioMembership", true);
-			expect(result).to.have.property("RFSupport", true);
-			expect(result).to.have.property("ActuatorTurnaroundTime", 10);
-			expect(result).to.have.property("Manufacturer", Manufacturer.VELUX);
-			expect(result).to.have.property("BackboneReferenceNumber", 0);
+			assert.ok(result instanceof SystemTableDataEntry);
+			assert.strictEqual(result.SystemTableIndex, 4);
+			assert.strictEqual(result.ActuatorAddress, 0x123456);
+			assert.strictEqual(result.ActuatorType, ActuatorType.WindowOpener);
+			assert.strictEqual(result.ActuatorSubType, 1);
+			assert.strictEqual(result.PowerSaveMode, PowerSaveMode.LowPowerMode);
+			assert.strictEqual(result.ioMembership, true);
+			assert.strictEqual(result.RFSupport, true);
+			assert.strictEqual(result.ActuatorTurnaroundTime, 10);
+			assert.strictEqual(result.Manufacturer, Manufacturer.VELUX);
+			assert.strictEqual(result.BackboneReferenceNumber, 0);
 		});
 
 		it("should create a SystemTableDataEntry object with the ActuatorTurnaroundTime set to 40", function () {
 			const testData = Buffer.from([0x04, 0x12, 0x34, 0x56, 0x01, 0x01, 0xdd, 0x01, 0x00, 0x00, 0x00]);
 			const result = new SystemTableDataEntry(testData);
 
-			expect(result).to.be.instanceOf(SystemTableDataEntry);
-			expect(result).to.have.property("SystemTableIndex", 4);
-			expect(result).to.have.property("ActuatorAddress", 0x123456);
-			expect(result).to.have.property("ActuatorType", ActuatorType.WindowOpener);
-			expect(result).to.have.property("ActuatorSubType", 1);
-			expect(result).to.have.property("PowerSaveMode", PowerSaveMode.LowPowerMode);
-			expect(result).to.have.property("ioMembership", true);
-			expect(result).to.have.property("RFSupport", true);
-			expect(result).to.have.property("ActuatorTurnaroundTime", 40);
-			expect(result).to.have.property("Manufacturer", Manufacturer.VELUX);
-			expect(result).to.have.property("BackboneReferenceNumber", 0);
+			assert.ok(result instanceof SystemTableDataEntry);
+			assert.strictEqual(result.SystemTableIndex, 4);
+			assert.strictEqual(result.ActuatorAddress, 0x123456);
+			assert.strictEqual(result.ActuatorType, ActuatorType.WindowOpener);
+			assert.strictEqual(result.ActuatorSubType, 1);
+			assert.strictEqual(result.PowerSaveMode, PowerSaveMode.LowPowerMode);
+			assert.strictEqual(result.ioMembership, true);
+			assert.strictEqual(result.RFSupport, true);
+			assert.strictEqual(result.ActuatorTurnaroundTime, 40);
+			assert.strictEqual(result.Manufacturer, Manufacturer.VELUX);
+			assert.strictEqual(result.BackboneReferenceNumber, 0);
 		});
 	});
 
@@ -222,9 +223,9 @@ describe("GW_SYSTEMTABLE", function () {
 		it("should return an ActuatorAlias object", function () {
 			const result = new ActuatorAlias(0xd803, 0xba00);
 
-			expect(result).to.be.instanceOf(ActuatorAlias);
-			expect(result).to.have.property("AliasType", 0xd803);
-			expect(result).to.have.property("AliasValue", 0xba00);
+			assert.ok(result instanceof ActuatorAlias);
+			assert.strictEqual(result.AliasType, 0xd803);
+			assert.strictEqual(result.AliasValue, 0xba00);
 		});
 	});
 });

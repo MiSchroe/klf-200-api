@@ -1,8 +1,7 @@
 "use strict";
 
-import { expect, use } from "chai";
-import chaiBytes from "chai-bytes";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import {
 	GW_SET_UTC_CFM,
 	IGW_FRAME_RCV_CTOR,
@@ -20,8 +19,6 @@ import {
 	GW_HOUSE_STATUS_MONITOR_DISABLE_CFM,
 	GW_CLEAR_ACTIVATION_LOG_CFM,
 } from "../../src";
-
-use(chaiBytes);
 
 type confirmationListEntryType = {
 	ConfirmationClass: IGW_FRAME_RCV_CTOR;
@@ -50,12 +47,12 @@ describe("KLF200-API", function () {
 		for (const confirmationTestCase of simpleConfirmations) {
 			describe(confirmationTestCase.ConfirmationClass.name, function () {
 				it("should create the class without error", function () {
-					expect(
+					assert.doesNotThrow(
 						() =>
 							new confirmationTestCase.ConfirmationClass(
 								Buffer.from(confirmationTestCase.ConfirmationBytes),
 							),
-					).not.to.throw();
+					);
 				});
 			});
 		}

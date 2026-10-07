@@ -1,12 +1,10 @@
 "use strict";
 
-import { expect, use } from "chai";
-import chaibytes from "chai-bytes";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { getNextSessionID } from "../../src/KLF200-API/GW_COMMAND";
 import { GW_ERROR_NTF } from "../../src/KLF200-API/GW_ERROR_NTF";
 import { GW_FRAME, GW_FRAME_COMMAND_REQ, GW_FRAME_REQ, readZString } from "../../src/KLF200-API/common";
-
-use(chaibytes);
 
 describe("common", function () {
 	describe("GW_FRAME", function () {
@@ -23,25 +21,28 @@ describe("common", function () {
 		class GW_REBOOT_REQ_ERROR extends GW_REBOOT_REQ {}
 
 		it("subclass should create successfully", function () {
-			expect(() => new GW_REBOOT_REQ()).not.to.throw();
+			assert.doesNotThrow(() => new GW_REBOOT_REQ());
 		});
 
 		it("should contain the right command", function () {
 			const result = new GW_REBOOT_REQ();
 
-			expect(result).to.be.instanceOf(GW_REBOOT_REQ).that.has.property("Command", 0x0001);
+			assert.ok(result instanceof GW_REBOOT_REQ);
+			assert.strictEqual(result.Command, 0x0001);
 		});
 
 		it("should have an offset value of 3", function () {
 			const result = new GW_REBOOT_REQ();
 
-			expect(result).to.be.instanceOf(GW_REBOOT_REQ).that.has.property("Offset", 3);
+			assert.ok(result instanceof GW_REBOOT_REQ);
+			assert.strictEqual(result.Offset, 3);
 		});
 
 		it("unknown subclass should have an undefined command.", function () {
 			const result = new GW_REBOOT_REQ_ERROR();
 
-			expect(result).to.be.instanceOf(GW_REBOOT_REQ_ERROR).that.has.property("Command", undefined);
+			assert.ok(result instanceof GW_REBOOT_REQ_ERROR);
+			assert.strictEqual(result.Command, undefined);
 		});
 	});
 
@@ -57,15 +58,16 @@ describe("common", function () {
 		}
 
 		it("subclass should create successfully", function () {
-			expect(() => new GW_REBOOT_REQ(0)).not.to.throw();
+			assert.doesNotThrow(() => new GW_REBOOT_REQ(0));
 		});
 
 		it("should contain the right data", function () {
 			const expectedData = [0x03, 0x00, 0x01];
 			const result = new GW_REBOOT_REQ(0);
 
-			expect(result).to.be.instanceOf(GW_REBOOT_REQ).that.has.property("Data");
-			expect(result.Data).to.equalBytes(expectedData);
+			assert.ok(result instanceof GW_REBOOT_REQ);
+			assert.ok("Data" in result);
+			assert.deepStrictEqual(result.Data, Buffer.from(expectedData));
 		});
 
 		it("should contain the right data after realloc with CopyData = undefined", function () {
@@ -74,8 +76,9 @@ describe("common", function () {
 			result.Data.writeUInt8(1, 3);
 			result.AllocBuffer(2);
 
-			expect(result).to.be.instanceOf(GW_REBOOT_REQ).that.has.property("Data");
-			expect(result.Data).to.equalBytes(expectedData);
+			assert.ok(result instanceof GW_REBOOT_REQ);
+			assert.ok("Data" in result);
+			assert.deepStrictEqual(result.Data, Buffer.from(expectedData));
 		});
 
 		it("should contain the right data after realloc with CopyData = true", function () {
@@ -84,8 +87,9 @@ describe("common", function () {
 			result.Data.writeUInt8(1, 3);
 			result.AllocBuffer(2, true);
 
-			expect(result).to.be.instanceOf(GW_REBOOT_REQ).that.has.property("Data");
-			expect(result.Data).to.equalBytes(expectedData);
+			assert.ok(result instanceof GW_REBOOT_REQ);
+			assert.ok("Data" in result);
+			assert.deepStrictEqual(result.Data, Buffer.from(expectedData));
 		});
 
 		it("should contain the right data after realloc with CopyData = false", function () {
@@ -94,8 +98,9 @@ describe("common", function () {
 			result.Data.writeUInt8(1, 3);
 			result.AllocBuffer(2, false);
 
-			expect(result).to.be.instanceOf(GW_REBOOT_REQ).that.has.property("Data");
-			expect(result.Data).to.equalBytes(expectedData);
+			assert.ok(result instanceof GW_REBOOT_REQ);
+			assert.ok("Data" in result);
+			assert.deepStrictEqual(result.Data, Buffer.from(expectedData));
 		});
 
 		it("should contain the right data after realloc with CopyData = undefined and new length 0", function () {
@@ -104,8 +109,9 @@ describe("common", function () {
 			result.Data.writeUInt8(1, 3);
 			result.AllocBuffer(0);
 
-			expect(result).to.be.instanceOf(GW_REBOOT_REQ).that.has.property("Data");
-			expect(result.Data).to.equalBytes(expectedData);
+			assert.ok(result instanceof GW_REBOOT_REQ);
+			assert.ok("Data" in result);
+			assert.deepStrictEqual(result.Data, Buffer.from(expectedData));
 		});
 	});
 
@@ -117,14 +123,15 @@ describe("common", function () {
 		}
 
 		it("subclass should create successfully", function () {
-			expect(() => new GW_COMMAND_SEND_REQ()).not.to.throw();
+			assert.doesNotThrow(() => new GW_COMMAND_SEND_REQ());
 		});
 
 		it("should contain a SessionID", function () {
 			const result = new GW_COMMAND_SEND_REQ();
 			const expectedSessionID = getNextSessionID() - 1;
 
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("SessionID", expectedSessionID);
+			assert.ok(result instanceof GW_COMMAND_SEND_REQ);
+			assert.strictEqual(result.SessionID, expectedSessionID);
 		});
 
 		it("should increment the SessionID with each new request", function () {
@@ -132,25 +139,27 @@ describe("common", function () {
 			const result = new GW_COMMAND_SEND_REQ();
 			const expectedSessionID = getNextSessionID() - 1;
 
-			expect(result).to.be.instanceOf(GW_COMMAND_SEND_REQ).that.has.property("SessionID", expectedSessionID);
-			expect(result.SessionID).to.be.greaterThan(initialInstance.SessionID);
+			assert.ok(result instanceof GW_COMMAND_SEND_REQ);
+			assert.strictEqual(result.SessionID, expectedSessionID);
+			assert.ok(result.SessionID > initialInstance.SessionID);
 		});
 	});
 
 	describe("GW_FRAME_RCV", function () {
 		it("subclass should create successfully", function () {
-			expect(() => new GW_ERROR_NTF(Buffer.from([0x04, 0x00, 0x00, 0x07]))).not.to.throw();
+			assert.doesNotThrow(() => new GW_ERROR_NTF(Buffer.from([0x04, 0x00, 0x00, 0x07])));
 		});
 
 		it("Data should contain payload only", function () {
 			const result = new GW_ERROR_NTF(Buffer.from([0x04, 0x00, 0x00, 0x07]));
 
-			expect(result).to.be.instanceOf(GW_ERROR_NTF).that.has.property("Data");
-			expect(result.Data).to.equalBytes([0x07]);
+			assert.ok(result instanceof GW_ERROR_NTF);
+			assert.ok("Data" in result);
+			assert.deepStrictEqual(result.Data, Buffer.from([0x07]));
 		});
 
 		it("subclass should throw on creation on wrong input data", function () {
-			expect(() => new GW_ERROR_NTF(Buffer.from([0x04, 0x00, 0x01, 0x07]))).to.throw();
+			assert.throws(() => new GW_ERROR_NTF(Buffer.from([0x04, 0x00, 0x01, 0x07])));
 		});
 	});
 
@@ -159,7 +168,7 @@ describe("common", function () {
 			const inputBuffer = Buffer.alloc(10);
 			const result = readZString(inputBuffer);
 
-			expect(result).to.equal("");
+			assert.strictEqual(result, "");
 		});
 
 		it("should return the string until the first 0, even if the buffer is larger", function () {
@@ -167,21 +176,21 @@ describe("common", function () {
 			inputBuffer.write("42", 0);
 			const result = readZString(inputBuffer);
 
-			expect(result).to.equal("42");
+			assert.strictEqual(result, "42");
 		});
 
 		it("should return the string if the buffer is filled completely", function () {
 			const inputBuffer = Buffer.from("42");
 			const result = readZString(inputBuffer);
 
-			expect(result).to.equal("42");
+			assert.strictEqual(result, "42");
 		});
 
 		it("should return the sliced string if the buffer is filled longer, but sliced", function () {
 			const inputBuffer = Buffer.from("4242");
 			const result = readZString(inputBuffer.subarray(0, 2));
 
-			expect(result).to.equal("42");
+			assert.strictEqual(result, "42");
 		});
 	});
 });

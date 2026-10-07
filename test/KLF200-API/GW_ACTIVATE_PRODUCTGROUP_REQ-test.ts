@@ -1,32 +1,27 @@
 "use strict";
 
-import { expect, use } from "chai";
-import chaibytes from "chai-bytes";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_ACTIVATE_PRODUCTGROUP_REQ, PriorityLevelInformation } from "../../src";
-use(chaibytes);
-
 describe("KLF200-API", function () {
 	describe("GW_ACTIVATE_PRODUCTGROUP_REQ", function () {
 		it("shouldn't throw an error on create", function () {
-			expect(() => new GW_ACTIVATE_PRODUCTGROUP_REQ(1, 0x4711)).not.to.throw();
+			assert.doesNotThrow(() => new GW_ACTIVATE_PRODUCTGROUP_REQ(1, 0x4711));
 		});
 
 		it("should create the right object with default values", function () {
 			const result = new GW_ACTIVATE_PRODUCTGROUP_REQ(1, 0x4711);
-			expect(result).to.be.instanceOf(GW_ACTIVATE_PRODUCTGROUP_REQ).that.has.property("SessionID");
-			expect(result).to.be.instanceOf(GW_ACTIVATE_PRODUCTGROUP_REQ).that.has.property("GroupID", 1);
-			expect(result).to.be.instanceOf(GW_ACTIVATE_PRODUCTGROUP_REQ).that.has.property("Position", 0x4711);
-			expect(result).to.be.instanceOf(GW_ACTIVATE_PRODUCTGROUP_REQ).that.has.property("PriorityLevel", 3);
-			expect(result).to.be.instanceOf(GW_ACTIVATE_PRODUCTGROUP_REQ).that.has.property("CommandOriginator", 1);
-			expect(result).to.be.instanceOf(GW_ACTIVATE_PRODUCTGROUP_REQ).that.has.property("ParameterActive", 0);
-			expect(result).to.be.instanceOf(GW_ACTIVATE_PRODUCTGROUP_REQ).that.has.property("Velocity", 0);
-			expect(result).to.be.instanceOf(GW_ACTIVATE_PRODUCTGROUP_REQ).that.has.property("PriorityLevelLock", 0);
-			expect(result)
-				.to.be.instanceOf(GW_ACTIVATE_PRODUCTGROUP_REQ)
-				.that.has.property("PriorityLevels")
-				.that.eqls([]);
-			expect(result).to.be.instanceOf(GW_ACTIVATE_PRODUCTGROUP_REQ).that.has.property("LockTime", Infinity);
+			assert.ok(result instanceof GW_ACTIVATE_PRODUCTGROUP_REQ);
+			assert.ok("SessionID" in result);
+			assert.strictEqual(result.GroupID, 1);
+			assert.strictEqual(result.Position, 0x4711);
+			assert.strictEqual(result.PriorityLevel, 3);
+			assert.strictEqual(result.CommandOriginator, 1);
+			assert.strictEqual(result.ParameterActive, 0);
+			assert.strictEqual(result.Velocity, 0);
+			assert.strictEqual(result.PriorityLevelLock, 0);
+			assert.deepStrictEqual(result.PriorityLevels, []);
+			assert.strictEqual(result.LockTime, Infinity);
 		});
 
 		it("should write the priority levels at the right position", function () {
@@ -46,13 +41,14 @@ describe("KLF200-API", function () {
 					PriorityLevelInformation.Enable,
 				],
 			);
-			expect(result).to.be.instanceOf(GW_ACTIVATE_PRODUCTGROUP_REQ).that.has.property("Data");
+			assert.ok(result instanceof GW_ACTIVATE_PRODUCTGROUP_REQ);
+			assert.ok("Data" in result);
 			const buff = result.Data;
-			expect(buff.readUInt16BE(13)).to.be.equal(0x1b40, `Data = ${buff.toString("hex")}`);
+			assert.strictEqual(buff.readUInt16BE(13), 0x1b40, `Data = ${buff.toString("hex")}`);
 		});
 
 		it("should throw an error at priority level value greater than 3", function () {
-			expect(
+			assert.throws(
 				() =>
 					new GW_ACTIVATE_PRODUCTGROUP_REQ(
 						1,
@@ -67,11 +63,11 @@ describe("KLF200-API", function () {
 							4,
 						],
 					),
-			).to.throw();
+			);
 		});
 
 		it("should throw an error at priority level less than 0", function () {
-			expect(
+			assert.throws(
 				() =>
 					new GW_ACTIVATE_PRODUCTGROUP_REQ(
 						1,
@@ -86,11 +82,11 @@ describe("KLF200-API", function () {
 							-1,
 						],
 					),
-			).to.throw();
+			);
 		});
 
 		it("should throw an error at too many priority levels (more than 8)", function () {
-			expect(
+			assert.throws(
 				() =>
 					new GW_ACTIVATE_PRODUCTGROUP_REQ(
 						1,
@@ -102,7 +98,7 @@ describe("KLF200-API", function () {
 						undefined,
 						[0, 1, 2, 3, 0, 1, 2, 3, 0],
 					),
-			).to.throw();
+			);
 		});
 	});
 });

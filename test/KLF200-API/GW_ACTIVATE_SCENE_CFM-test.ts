@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_ACTIVATE_SCENE_CFM, ActivateSceneStatus } from "../../src";
 
 describe("KLF200-API", function () {
@@ -9,19 +9,19 @@ describe("KLF200-API", function () {
 		describe("Constructor", function () {
 			it("should create without error", function () {
 				const data = Buffer.from([0x06, 0x04, 0x13, 0x00, 0x47, 0x11]);
-				expect(() => new GW_ACTIVATE_SCENE_CFM(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_ACTIVATE_SCENE_CFM(data));
 			});
 
 			it("should return the session ID", function () {
 				const data = Buffer.from([0x06, 0x04, 0x13, 0x00, 0x47, 0x11]);
 				const result = new GW_ACTIVATE_SCENE_CFM(data);
-				expect(result.SessionID).to.equal(0x4711);
+				assert.strictEqual(result.SessionID, 0x4711);
 			});
 
 			it("should return the status", function () {
 				const data = Buffer.from([0x06, 0x04, 0x13, 0x00, 0x47, 0x11]);
 				const result = new GW_ACTIVATE_SCENE_CFM(data);
-				expect(result.Status).to.equal(ActivateSceneStatus.OK);
+				assert.strictEqual(result.Status, ActivateSceneStatus.OK);
 			});
 		});
 
@@ -29,25 +29,25 @@ describe("KLF200-API", function () {
 			it("should return 'No error.'", function () {
 				const data = Buffer.from([0x06, 0x04, 0x13, 0x00, 0x47, 0x11]);
 				const result = new GW_ACTIVATE_SCENE_CFM(data);
-				expect(result.getError()).to.equal("No error.");
+				assert.strictEqual(result.getError(), "No error.");
 			});
 
 			it("should return 'Invalid parameter.'", function () {
 				const data = Buffer.from([0x06, 0x04, 0x13, 0x01, 0x47, 0x11]);
 				const result = new GW_ACTIVATE_SCENE_CFM(data);
-				expect(result.getError()).to.equal("Invalid parameter.");
+				assert.strictEqual(result.getError(), "Invalid parameter.");
 			});
 
 			it("should return 'Request rejected.'", function () {
 				const data = Buffer.from([0x06, 0x04, 0x13, 0x02, 0x47, 0x11]);
 				const result = new GW_ACTIVATE_SCENE_CFM(data);
-				expect(result.getError()).to.equal("Request rejected.");
+				assert.strictEqual(result.getError(), "Request rejected.");
 			});
 
 			it("should return 'Unknown error.'", function () {
 				const data = Buffer.from([0x06, 0x04, 0x13, 0xff, 0x47, 0x11]);
 				const result = new GW_ACTIVATE_SCENE_CFM(data);
-				expect(result.getError()).to.equal("Unknown error 255.");
+				assert.strictEqual(result.getError(), "Unknown error 255.");
 			});
 		});
 	});

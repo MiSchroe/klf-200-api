@@ -1,9 +1,9 @@
 "use strict";
 
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GatewayCommand } from "../../src/KLF200-API/common";
-import { GW_ERROR_NTF, GW_ERROR } from "../../src/KLF200-API/GW_ERROR_NTF";
-import { expect } from "chai";
-import "mocha";
+import { GW_ERROR, GW_ERROR_NTF } from "../../src/KLF200-API/GW_ERROR_NTF";
 
 describe("KLF200-API", function () {
 	describe("GW_ERROR_NTF", function () {
@@ -15,8 +15,8 @@ describe("KLF200-API", function () {
 			buff.writeUInt8(error, 3);
 
 			const result = new GW_ERROR_NTF(buff);
-			expect(result).to.be.instanceOf(GW_ERROR_NTF);
-			expect(result.ErrorNumber).equals(error);
+			assert.ok(result instanceof GW_ERROR_NTF);
+			assert.strictEqual(result.ErrorNumber, error);
 		});
 
 		it("should return a valid zero error number.", function () {
@@ -27,8 +27,8 @@ describe("KLF200-API", function () {
 			buff.writeUInt8(error, 3);
 
 			const result = new GW_ERROR_NTF(buff);
-			expect(result).to.be.instanceOf(GW_ERROR_NTF);
-			expect(result.ErrorNumber).equals(error);
+			assert.ok(result instanceof GW_ERROR_NTF);
+			assert.strictEqual(result.ErrorNumber, error);
 		});
 
 		it("should return the unknown error number.", function () {
@@ -39,8 +39,8 @@ describe("KLF200-API", function () {
 			buff.writeUInt8(error, 3);
 
 			const result = new GW_ERROR_NTF(buff);
-			expect(result).to.be.instanceOf(GW_ERROR_NTF);
-			expect(result.ErrorNumber).equals(error);
+			assert.ok(result instanceof GW_ERROR_NTF);
+			assert.strictEqual(result.ErrorNumber, error);
 		});
 
 		it("should return the unknown error number, if the provided error number is not known.", function () {
@@ -51,8 +51,8 @@ describe("KLF200-API", function () {
 			buff.writeUInt8(error, 3);
 
 			const result = new GW_ERROR_NTF(buff);
-			expect(result).to.be.instanceOf(GW_ERROR_NTF);
-			expect(result.ErrorNumber).equals(GW_ERROR.UnknonwErrorCode);
+			assert.ok(result instanceof GW_ERROR_NTF);
+			assert.strictEqual(result.ErrorNumber, GW_ERROR.UnknonwErrorCode);
 		});
 
 		it("should throw an exception if the command isn't matching", function () {
@@ -62,7 +62,7 @@ describe("KLF200-API", function () {
 			buff.writeUInt16BE(GatewayCommand.GW_ACTIVATE_SCENE_CFM, 1); // Just take some other command
 			buff.writeUInt8(error, 3);
 
-			expect(() => new GW_ERROR_NTF(buff)).to.throw();
+			assert.throws(() => new GW_ERROR_NTF(buff));
 		});
 
 		describe("getError()", function () {
@@ -84,9 +84,9 @@ describe("KLF200-API", function () {
 					buff.writeUInt8(error, 3);
 
 					const result = new GW_ERROR_NTF(buff);
-					expect(result).to.be.instanceOf(GW_ERROR_NTF);
-					expect(result.ErrorNumber).equals(error);
-					expect(result.getError()).equals(errorCodeAndMessage.ErrorMessage);
+					assert.ok(result instanceof GW_ERROR_NTF);
+					assert.strictEqual(result.ErrorNumber, error);
+					assert.strictEqual(result.getError(), errorCodeAndMessage.ErrorMessage);
 				});
 			});
 		});

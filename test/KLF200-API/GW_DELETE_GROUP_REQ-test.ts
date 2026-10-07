@@ -1,22 +1,20 @@
 "use strict";
 
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_DELETE_GROUP_REQ } from "../../src";
-import { expect, use } from "chai";
-import "mocha";
-import chaibytes from "chai-bytes";
-use(chaibytes);
-
 describe("KLF200-API", function () {
 	describe("GW_DELETE_GROUP_REQ", function () {
 		it("shouldn't throw an error on create", function () {
-			expect(() => new GW_DELETE_GROUP_REQ(42)).not.to.throw();
+			assert.doesNotThrow(() => new GW_DELETE_GROUP_REQ(42));
 		});
 
 		it("should write the group id at the right position", function () {
 			const result = new GW_DELETE_GROUP_REQ(42);
-			expect(result).to.be.instanceOf(GW_DELETE_GROUP_REQ).that.has.property("Data");
+			assert.ok(result instanceof GW_DELETE_GROUP_REQ);
+			assert.ok("Data" in result);
 			const buff = result.Data;
-			expect(buff.readUInt8(3)).to.be.equal(42);
+			assert.strictEqual(buff.readUInt8(3), 42);
 		});
 	});
 });

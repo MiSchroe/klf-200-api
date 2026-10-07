@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_NODE_INFORMATION_CHANGED_NTF, NodeVariation } from "../../src";
 
 describe("KLF200-API", function () {
@@ -30,32 +30,32 @@ describe("KLF200-API", function () {
             ]);
 
 			it("should create without error", function () {
-				expect(() => new GW_NODE_INFORMATION_CHANGED_NTF(data)).not.to.throw();
+				assert.doesNotThrow(() => new GW_NODE_INFORMATION_CHANGED_NTF(data));
 			});
 
 			it("should return the node ID", function () {
 				const result = new GW_NODE_INFORMATION_CHANGED_NTF(data);
-				expect(result.NodeID).to.equal(1);
+				assert.strictEqual(result.NodeID, 1);
 			});
 
 			it("should return the order", function () {
 				const result = new GW_NODE_INFORMATION_CHANGED_NTF(data);
-				expect(result.Order).to.equal(2);
+				assert.strictEqual(result.Order, 2);
 			});
 
 			it("should return the placement", function () {
 				const result = new GW_NODE_INFORMATION_CHANGED_NTF(data);
-				expect(result.Placement).to.equal(3);
+				assert.strictEqual(result.Placement, 3);
 			});
 
 			it("should return the name", function () {
 				const result = new GW_NODE_INFORMATION_CHANGED_NTF(data);
-				expect(result.Name).to.equal("Dummy");
+				assert.strictEqual(result.Name, "Dummy");
 			});
 
 			it("should return the node variation", function () {
 				const result = new GW_NODE_INFORMATION_CHANGED_NTF(data);
-				expect(result.NodeVariation).to.equal(NodeVariation.Kip);
+				assert.strictEqual(result.NodeVariation, NodeVariation.Kip);
 			});
 		});
 	});

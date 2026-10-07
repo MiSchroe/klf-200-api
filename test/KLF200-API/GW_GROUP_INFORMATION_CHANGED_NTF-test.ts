@@ -1,7 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
-import "mocha";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import { GW_GROUP_INFORMATION_CHANGED_NTF, GroupType, NodeVariation, Velocity } from "../../src";
 
 describe("KLF200-API", function () {
@@ -10,7 +10,7 @@ describe("KLF200-API", function () {
 			describe("Change type = deleted", function () {
 				// prettier-ignore
 				const data = Buffer.from([
-					5, 0x02, 0x24, 
+					5, 0x02, 0x24,
                     // Change type
                     0,  // Deleted
                     // Group ID
@@ -18,52 +18,52 @@ describe("KLF200-API", function () {
                 ]);
 
 				it("should create without error", function () {
-					expect(() => new GW_GROUP_INFORMATION_CHANGED_NTF(data)).not.to.throw();
+					assert.doesNotThrow(() => new GW_GROUP_INFORMATION_CHANGED_NTF(data));
 				});
 
 				it("should return the group ID", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.GroupID).to.equal(1);
+					assert.strictEqual(result.GroupID, 1);
 				});
 
 				it("should return an empty order", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.Order).to.be.undefined;
+					assert.strictEqual(result.Order, undefined);
 				});
 
 				it("should return an empty placement", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.Placement).to.be.undefined;
+					assert.strictEqual(result.Placement, undefined);
 				});
 
 				it("should return an empty name", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.Name).to.be.undefined;
+					assert.strictEqual(result.Name, undefined);
 				});
 
 				it("should return an empty velocity", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.Velocity).to.be.undefined;
+					assert.strictEqual(result.Velocity, undefined);
 				});
 
 				it("should return an empty node variation", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.NodeVariation).to.be.undefined;
+					assert.strictEqual(result.NodeVariation, undefined);
 				});
 
 				it("should return an empty group type", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.GroupType).to.be.undefined;
+					assert.strictEqual(result.GroupType, undefined);
 				});
 
 				it("should return an empty nodes", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.Nodes).to.be.undefined;
+					assert.strictEqual(result.Nodes, undefined);
 				});
 
 				it("should return an empty revision", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.Revision).to.be.undefined;
+					assert.strictEqual(result.Revision, undefined);
 				});
 			});
 
@@ -107,47 +107,48 @@ describe("KLF200-API", function () {
 				]);
 
 				it("should create without error", function () {
-					expect(() => new GW_GROUP_INFORMATION_CHANGED_NTF(data)).not.to.throw();
+					assert.doesNotThrow(() => new GW_GROUP_INFORMATION_CHANGED_NTF(data));
 				});
 
 				it("should return the group ID", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.GroupID).to.equal(1);
+					assert.strictEqual(result.GroupID, 1);
 				});
 
 				it("should return the order", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.Order).to.equal(2);
+					assert.strictEqual(result.Order, 2);
 				});
 
 				it("should return the placement", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.Placement).to.equal(3);
+					assert.strictEqual(result.Placement, 3);
 				});
 
 				it("should return the name", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.Name).to.equal("Dummy");
+					assert.strictEqual(result.Name, "Dummy");
 				});
 
 				it("should return the velocity", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.Velocity).to.equal(Velocity.Default);
+					assert.strictEqual(result.Velocity, Velocity.Default);
 				});
 
 				it("should return the node variation", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.NodeVariation).to.equal(NodeVariation.Kip);
+					assert.strictEqual(result.NodeVariation, NodeVariation.Kip);
 				});
 
 				it("should return the group type", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.GroupType).to.equal(GroupType.UserGroup);
+					assert.strictEqual(result.GroupType, GroupType.UserGroup);
 				});
 
 				it("should return the nodes", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.Nodes).to.be.instanceOf(Array).and.have.members([0, 1]);
+					assert.ok(result.Nodes instanceof Array);
+					assert.deepStrictEqual([...result.Nodes].sort(), [...[0, 1]].sort());
 				});
 
 				it("should return the empty nodes list if not User Group", function () {
@@ -155,12 +156,13 @@ describe("KLF200-API", function () {
 					// Change group type
 					data2.writeUInt8(GroupType.House, 74);
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data2);
-					expect(result.Nodes).to.be.instanceOf(Array).and.have.members([]);
+					assert.ok(result.Nodes instanceof Array);
+					assert.deepStrictEqual([...result.Nodes].sort(), [...[]].sort());
 				});
 
 				it("should return the revision", function () {
 					const result = new GW_GROUP_INFORMATION_CHANGED_NTF(data);
-					expect(result.Revision).to.equal(0x4711);
+					assert.strictEqual(result.Revision, 0x4711);
 				});
 			});
 		});

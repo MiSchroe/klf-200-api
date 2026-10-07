@@ -2,13 +2,7 @@
 
 import debugModule from "debug";
 import "disposablestack/auto";
-import {
-	ConnectionOptions,
-	PeerCertificate,
-	TLSSocket,
-	checkServerIdentity as checkServerIdentityOriginal,
-	connect,
-} from "node:tls";
+import { ConnectionOptions, TLSSocket, connect } from "node:tls";
 import { timeout as promiseTimeout } from "promise-timeout";
 import { GW_ERROR_NTF } from "./KLF200-API/GW_ERROR_NTF.js";
 import { GW_GET_STATE_REQ } from "./KLF200-API/GW_GET_STATE_REQ.js";
@@ -347,6 +341,13 @@ export class Connection implements IConnection, AsyncDisposable {
 	 * @param connectionOptions Options that will be provided to the connect method of the TLS socket.
 	 */
 	constructor(host: string, connectionOptions: ConnectionOptions);
+	/**
+	 * Creates a new connection object that connect to the given host.
+	 * @param host Host name or IP address of the KLF-200 interface.
+	 * @param connectionOptions Options that will be provided to the connect method of the TLS socket.
+	 * @param fingerprint The fingerprint of the certificate. This parameter is optional.
+	 */
+	constructor(host: string, connectionOptions: ConnectionOptions, fingerprint?: string);
 	constructor(host: string, CAorConnectionOptions?: Buffer | ConnectionOptions, fingerprint?: string) {
 		debug(`Creating Connection instance for host: ${host}`);
 		this.host = host;
@@ -664,6 +665,12 @@ export class Connection implements IConnection, AsyncDisposable {
 					`sendFrameAsync error occurred: ${typeof error === "string" ? error : JSON.stringify(error)} with frame sent: ${stringifyFrame(frame)}.`,
 				);
 				reject!(error);
+				// Prevent an unhandled rejection warning for notificationHandler, since its rejection is discarded in favor of the one below.
+				try {
+					await notificationHandler;
+				} catch {
+					/* We know, that this rejection is already handled below. */
+				}
 				return Promise.reject(error as Error);
 			}
 		} catch (error) {
@@ -807,6 +814,7 @@ export class Connection implements IConnection, AsyncDisposable {
 							debug(`loginErrorHandler called with error: ${error.message}`);
 							console.error(`loginErrorHandler: ${error.message}`);
 							this.sckt?.off("error", loginErrorHandler);
+							this.sckt?.destroy();
 							this.sckt = undefined;
 							reject(error);
 						};
@@ -824,10 +832,9 @@ export class Connection implements IConnection, AsyncDisposable {
 										// or one whose only defect is that it has expired while its fingerprint
 										// still matches the pinned certificate. The shared VELUX certificate
 										// expired on 2026-07-12; every other authorization error is still rejected.
+										// codeql[js/disabling-certificate-validation] -- The connection checks the CA and Gateway-Fingerprint.
 										rejectUnauthorized: false,
 										ca: [this.CA],
-										checkServerIdentity: (host: string, cert: PeerCertificate) =>
-											this.checkServerIdentity(host, cert),
 									},
 							() => {
 								debug("Secure connection established.");
@@ -871,6 +878,7 @@ export class Connection implements IConnection, AsyncDisposable {
 								} else {
 									// Reject promise
 									const err = this.sckt?.authorizationError;
+									this.sckt?.destroy();
 									this.sckt = undefined;
 									debug(`AuthorizationError: ${err!.message}`);
 									console.error(`AuthorizationError: ${err!.message}`);
@@ -978,11 +986,5 @@ export class Connection implements IConnection, AsyncDisposable {
 		this.klfProtocol = undefined;
 		this.sckt = undefined;
 		debug("Socket closed.");
-	}
-
-	private checkServerIdentity(host: string, cert: PeerCertificate): Error | undefined {
-		debug(`checkServerIdentity called for host ${host} with fingerprint ${cert.fingerprint}.`);
-		if (cert.fingerprint === this.fingerprint) return undefined;
-		else return checkServerIdentityOriginal(host, cert);
 	}
 }

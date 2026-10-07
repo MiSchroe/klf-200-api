@@ -1,29 +1,28 @@
 "use strict";
 
-import { GW_CS_DISCOVER_NODES_REQ, ActuatorType } from "../../src";
-import { expect, use } from "chai";
-import "mocha";
-import chaibytes from "chai-bytes";
-use(chaibytes);
-
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import { ActuatorType, GW_CS_DISCOVER_NODES_REQ } from "../../src";
 describe("KLF200-API", function () {
 	describe("GW_CS_DISCOVER_NODES_REQ", function () {
 		it("shouldn't throw an error on create", function () {
-			expect(() => new GW_CS_DISCOVER_NODES_REQ()).not.to.throw();
+			assert.doesNotThrow(() => new GW_CS_DISCOVER_NODES_REQ());
 		});
 
 		it("should write the node type at the right position", function () {
 			const result = new GW_CS_DISCOVER_NODES_REQ(ActuatorType.Blind);
-			expect(result).to.be.instanceOf(GW_CS_DISCOVER_NODES_REQ).that.has.property("Data");
+			assert.ok(result instanceof GW_CS_DISCOVER_NODES_REQ);
+			assert.ok("Data" in result);
 			const buff = result.Data;
-			expect(buff.readUInt8(3)).to.be.equal(ActuatorType.Blind);
+			assert.strictEqual(buff.readUInt8(3), ActuatorType.Blind);
 		});
 
 		it("should default to ActuatorType.NO_TYPE for node type", function () {
 			const result = new GW_CS_DISCOVER_NODES_REQ();
-			expect(result).to.be.instanceOf(GW_CS_DISCOVER_NODES_REQ).that.has.property("NodeType");
+			assert.ok(result instanceof GW_CS_DISCOVER_NODES_REQ);
+			assert.ok("NodeType" in result);
 			const actuatorType = result.NodeType;
-			expect(actuatorType).to.be.equal(ActuatorType.NO_TYPE);
+			assert.strictEqual(actuatorType, ActuatorType.NO_TYPE);
 		});
 	});
 });
