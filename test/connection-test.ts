@@ -30,7 +30,7 @@ const debug = debugModule(`connection-test`);
 
 const testHOST = "localhost";
 
-describe("connection", { timeout: 20000 }, function () {
+describe("connection", function () {
 	let mockServerController: MockServerController | undefined;
 
 	before(async function () {
@@ -772,7 +772,7 @@ describe("connection", { timeout: 20000 }, function () {
 	});
 });
 
-describe("connection with expired certificate", { timeout: 20000 }, function () {
+describe("connection with expired certificate", function () {
 	let mockServerController: MockServerController | undefined;
 
 	before(async function () {

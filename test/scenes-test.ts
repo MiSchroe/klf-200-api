@@ -27,7 +27,7 @@ const testHOST = "localhost";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-describe("scenes", { timeout: 20000 }, function () {
+describe("scenes", function () {
 	let mockServerController: MockServerController;
 
 	before(async function () {
@@ -46,7 +46,7 @@ describe("scenes", { timeout: 20000 }, function () {
 	describe("Scenes class", function () {
 		describe("createScenesAsync", function () {
 			it("should create without error with 2 scenes.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -85,7 +85,7 @@ describe("scenes", { timeout: 20000 }, function () {
 			});
 
 			it("should throw an error on invalid frames.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -110,7 +110,7 @@ describe("scenes", { timeout: 20000 }, function () {
 			});
 
 			it("should create without error with no scenes.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -132,7 +132,7 @@ describe("scenes", { timeout: 20000 }, function () {
 
 		describe("findByName", function () {
 			it("should find scene 'Dummy 1'.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -156,7 +156,7 @@ describe("scenes", { timeout: 20000 }, function () {
 
 		describe("onChangedScene", function () {
 			it("should change scene ID #1.", async function (t) {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -195,7 +195,7 @@ describe("scenes", { timeout: 20000 }, function () {
 
 		describe("onRemovedScene", function () {
 			it("should remove scene ID #1.", async function (t) {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -233,7 +233,7 @@ describe("scenes", { timeout: 20000 }, function () {
 
 		describe("onAddedScene", function () {
 			it("should call the notification in onAddedScene once.", async function (t) {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -270,7 +270,7 @@ describe("scenes", { timeout: 20000 }, function () {
 		describe("Scene class", function () {
 			describe("runAsync", function () {
 				it("should run scene ID #1.", async function (t) {
-					const conn = new Connection(testHOST, {
+					await using conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -298,7 +298,7 @@ describe("scenes", { timeout: 20000 }, function () {
 				});
 
 				it("should run scene ID #1 and set to stop after notification.", async function (t) {
-					const conn = new Connection(testHOST, {
+					await using conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -336,7 +336,7 @@ describe("scenes", { timeout: 20000 }, function () {
 				});
 
 				it("should throw an error on an error frame.", async function () {
-					const conn = new Connection(testHOST, {
+					await using conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -363,7 +363,7 @@ describe("scenes", { timeout: 20000 }, function () {
 				});
 
 				it("should throw an error on request rejected.", async function () {
-					const conn = new Connection(testHOST, {
+					await using conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -393,7 +393,7 @@ describe("scenes", { timeout: 20000 }, function () {
 
 			describe("stopAsync", function () {
 				it("should stop scene ID #1.", async function (t) {
-					const conn = new Connection(testHOST, {
+					await using conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -421,7 +421,7 @@ describe("scenes", { timeout: 20000 }, function () {
 				});
 
 				it("should throw an error on an error frame.", async function () {
-					const conn = new Connection(testHOST, {
+					await using conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -448,7 +448,7 @@ describe("scenes", { timeout: 20000 }, function () {
 				});
 
 				it("should throw an error on request rejected.", async function () {
-					const conn = new Connection(testHOST, {
+					await using conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -478,7 +478,7 @@ describe("scenes", { timeout: 20000 }, function () {
 
 			describe("refreshAsync", function () {
 				it("should refresh scene ID #1.", async function (t) {
-					const conn = new Connection(testHOST, {
+					await using conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -513,7 +513,7 @@ describe("scenes", { timeout: 20000 }, function () {
 				});
 
 				it("should throw an error on an error frame.", async function () {
-					const conn = new Connection(testHOST, {
+					await using conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -540,7 +540,7 @@ describe("scenes", { timeout: 20000 }, function () {
 				});
 
 				it("should throw an error on request rejected.", async function () {
-					const conn = new Connection(testHOST, {
+					await using conn = new Connection(testHOST, {
 						rejectUnauthorized: true,
 						requestCert: true,
 						ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),

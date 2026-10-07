@@ -27,7 +27,7 @@ const testHOST = "localhost";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-describe("groups", { timeout: 20000 }, function () {
+describe("groups", function () {
 	let mockServerController: MockServerController;
 
 	before(async function () {
@@ -46,7 +46,7 @@ describe("groups", { timeout: 20000 }, function () {
 	describe("groups class", function () {
 		describe("createGroupsAsync (default)", function () {
 			it("should create without error with 2 groups.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -67,7 +67,7 @@ describe("groups", { timeout: 20000 }, function () {
 			});
 
 			it("should throw an error on invalid frames.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -92,7 +92,7 @@ describe("groups", { timeout: 20000 }, function () {
 			});
 
 			it("should create without error without groups.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -117,7 +117,7 @@ describe("groups", { timeout: 20000 }, function () {
 			});
 
 			it("should create groups of type 'User'.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -146,7 +146,7 @@ describe("groups", { timeout: 20000 }, function () {
 			});
 
 			it("should throw an error when the connection is unavailable", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -160,7 +160,7 @@ describe("groups", { timeout: 20000 }, function () {
 			});
 
 			it("should handle no groups returned by the gateway", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -169,16 +169,20 @@ describe("groups", { timeout: 20000 }, function () {
 					// Overwrite port for parallel unit tests
 					port: mockServerController?.port ?? KLF200_PORT,
 				});
-				await conn.loginAsync("velux123");
-				await mockServerController.sendCommand(ResetCommand);
-				const result = await Groups.createGroupsAsync(conn);
-				assert.strictEqual(result.Groups.length, 0);
+				try {
+					await conn.loginAsync("velux123");
+					await mockServerController.sendCommand(ResetCommand);
+					const result = await Groups.createGroupsAsync(conn);
+					assert.strictEqual(result.Groups.length, 0);
+				} finally {
+					await conn.logoutAsync();
+				}
 			});
 		});
 
 		describe("createGroupsAsync (rooms)", function () {
 			it("should create without error with 2 groups.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -204,7 +208,7 @@ describe("groups", { timeout: 20000 }, function () {
 			});
 
 			it("should create groups of type 'Room'.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -235,7 +239,7 @@ describe("groups", { timeout: 20000 }, function () {
 
 		describe("createGroupsAsync (house)", function () {
 			it("should create without error with 1 group.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -261,7 +265,7 @@ describe("groups", { timeout: 20000 }, function () {
 			});
 
 			it("should create groups of type 'House'.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -293,7 +297,7 @@ describe("groups", { timeout: 20000 }, function () {
 		describe("findByName", function () {
 			it("should find group 'Group 1'.", async function () {
 				const expectedGroupName = "Group 1";
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -317,7 +321,7 @@ describe("groups", { timeout: 20000 }, function () {
 
 		describe("onNotificationHandler", function () {
 			it("should remove 1 group.", async function (t) {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -372,7 +376,7 @@ describe("groups", { timeout: 20000 }, function () {
 					GroupType: GroupType.UserGroup,
 					Nodes: [0, 2],
 				};
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -430,7 +434,7 @@ describe("groups", { timeout: 20000 }, function () {
 
 			it("should add 1 group.", async function (t) {
 				const expectedGroup = { GroupID: 55, Name: "Group 55", Order: 1 };
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -489,7 +493,7 @@ describe("groups", { timeout: 20000 }, function () {
 
 		describe("[Symbol.dispose]", function () {
 			it("should clean up resources", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -498,10 +502,14 @@ describe("groups", { timeout: 20000 }, function () {
 					// Overwrite port for parallel unit tests
 					port: mockServerController?.port ?? KLF200_PORT,
 				});
-				await conn.loginAsync("velux123");
-				const groups = await Groups.createGroupsAsync(conn);
-				groups[Symbol.dispose]();
-				assert.strictEqual(groups.Groups.length, 0);
+				try {
+					await conn.loginAsync("velux123");
+					const groups = await Groups.createGroupsAsync(conn);
+					groups[Symbol.dispose]();
+					assert.strictEqual(groups.Groups.length, 0);
+				} finally {
+					await conn.logoutAsync();
+				}
 			});
 		});
 	});
@@ -526,6 +534,10 @@ describe("groups", { timeout: 20000 }, function () {
 			await setupHouseMockup(mockServerController);
 			groups = await Groups.createGroupsAsync(conn);
 			group = groups.Groups[51]; // Use the group 51 for all tests
+		});
+
+		afterEach(async () => {
+			await conn?.logoutAsync();
 		});
 
 		describe("Name", function () {

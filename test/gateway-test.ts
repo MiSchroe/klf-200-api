@@ -26,7 +26,7 @@ const testHOST = "localhost";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-describe("Gateway", { timeout: 20000 }, function () {
+describe("Gateway", function () {
 	let mockServerController: MockServerController;
 
 	before(async function () {
@@ -44,7 +44,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("constructor", function () {
 		it("should create without error.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -72,7 +72,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("changePasswordAsync", function () {
 		it("should return true due to status.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -91,7 +91,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("should return false due to status.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -116,7 +116,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -141,7 +141,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("should throw an error when the new password exceeds 32 characters", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -161,7 +161,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("should accept a new password exactly 32 characters long", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -181,7 +181,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("should throw an error when the old password is empty", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -206,7 +206,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("should throw an error when the new password is empty", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -233,7 +233,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("getVersionAsync", function () {
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -264,7 +264,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 				ProductGroup: 14,
 				ProductType: 3,
 			};
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -289,7 +289,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("getProtocolVersionAsync", function () {
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -318,7 +318,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 				MajorVersion: 0x1234,
 				MinorVersion: 0x5678,
 			};
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -346,7 +346,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("getStateAsync", function () {
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -375,7 +375,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 				GatewayState: GatewayState.GatewayMode_WithActuatorNodes,
 				SubState: GatewaySubState.RunningCommand,
 			};
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -403,7 +403,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("setUTCDateTimeAsync", function () {
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -428,7 +428,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("shouldn't throw an error.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -450,7 +450,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 	describe("setTimeZoneAsync", function () {
 		const tz = ":GMT+1:GMT+2:0060:(1994)040102-0:110102-0";
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -475,7 +475,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("shouldn't throw an error.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -494,7 +494,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("should throw an error due to status.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -521,7 +521,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("rebootAsync", function () {
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -546,7 +546,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("shouldn't throw an error.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -567,7 +567,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("factoryResetAsync", function () {
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -592,7 +592,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("shouldn't throw an error.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -613,7 +613,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("leaveLearnStateAsync", function () {
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -638,7 +638,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("shouldn't throw an error.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -659,7 +659,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("getNetworkSettingsAsync", function () {
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -690,7 +690,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 				DefaultGateway: "9.10.11.12",
 				DHCP: false,
 			};
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -724,7 +724,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 				DefaultGateway: "0.0.0.0",
 				DHCP: true,
 			};
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -754,7 +754,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("setNetworkSettingsAsync", function () {
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -779,7 +779,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("shouldn't throw an error (DHCP).", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -804,7 +804,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("shouldn't throw an error (non-DHCP).", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -829,7 +829,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("should throw an error when invalid IP addresses are provided", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -851,7 +851,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("should throw an error when DHCP is true but additional parameters are provided", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -881,7 +881,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("enableHouseStatusMonitorAsync", function () {
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -906,7 +906,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("shouldn't throw an error.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -925,7 +925,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("should handle multiple calls to enableHouseStatusMonitorAsync gracefully", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -947,7 +947,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 
 	describe("disableHouseStatusMonitorAsync", function () {
 		it("should throw an error due to an error frame received.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -972,7 +972,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("shouldn't throw an error.", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -991,7 +991,7 @@ describe("Gateway", { timeout: 20000 }, function () {
 		});
 
 		it("should handle multiple calls to disableHouseStatusMonitorAsync gracefully", async function () {
-			const conn = new Connection(testHOST, {
+			await using conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),

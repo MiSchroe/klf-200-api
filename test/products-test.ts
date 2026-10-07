@@ -37,7 +37,7 @@ const testHOST = "localhost";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-describe("products", { timeout: 200000 }, function () {
+describe("products", function () {
 	let mockServerController: MockServerController;
 
 	before(async function () {
@@ -56,7 +56,7 @@ describe("products", { timeout: 200000 }, function () {
 	describe("Products class", function () {
 		describe("createProductsAsync", function () {
 			it("should create without error with 4 products.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -77,7 +77,7 @@ describe("products", { timeout: 200000 }, function () {
 			});
 
 			it("should throw an error on invalid frames.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -102,7 +102,7 @@ describe("products", { timeout: 200000 }, function () {
 			});
 
 			it("should create without error without products.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -124,7 +124,7 @@ describe("products", { timeout: 200000 }, function () {
 
 		describe("findByName", function () {
 			it("should find product 'Window 2'.", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -148,7 +148,7 @@ describe("products", { timeout: 200000 }, function () {
 
 		describe("requestStatusAsync", function () {
 			it("should send a command request", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -168,7 +168,7 @@ describe("products", { timeout: 200000 }, function () {
 			});
 
 			it("should reject on error status", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -200,7 +200,7 @@ describe("products", { timeout: 200000 }, function () {
 			});
 
 			it("should reject on error frame", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -343,7 +343,7 @@ describe("products", { timeout: 200000 }, function () {
 
 		describe("addNodeAsync", function () {
 			it("should throw on error frame.", async function (t) {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -463,7 +463,7 @@ describe("products", { timeout: 200000 }, function () {
 
 		describe("[Symbol.dispose]", function () {
 			it("should clean up resources", async function () {
-				const conn = new Connection(testHOST, {
+				await using conn = new Connection(testHOST, {
 					rejectUnauthorized: true,
 					requestCert: true,
 					ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
@@ -487,7 +487,7 @@ describe("products", { timeout: 200000 }, function () {
 		let products: Products;
 		let product: Product;
 		beforeEach(async () => {
-			conn = conn = new Connection(testHOST, {
+			conn = new Connection(testHOST, {
 				rejectUnauthorized: true,
 				requestCert: true,
 				ca: readFileSync(join(__dirname, "mocks/mockServer", "ca-crt.pem")),
