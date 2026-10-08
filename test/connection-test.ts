@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 import debugModule from "debug";
 import assert from "node:assert/strict";
@@ -29,6 +29,48 @@ const __dirname = dirname(__filename);
 const debug = debugModule(`connection-test`);
 
 const testHOST = "localhost";
+
+const LOGIN_GUARD_MS = 3000;
+const NOT_SETTLED = Symbol("not settled");
+
+// Resolves with the rejection reason, "resolved", or NOT_SETTLED when the promise hangs.
+async function settleOrGuard(promise: Promise<unknown>): Promise<unknown> {
+	let timer: NodeJS.Timeout | undefined;
+	try {
+		return await Promise.race([
+			promise.then(
+				() => "resolved",
+				(error: unknown) => error,
+			),
+			new Promise<symbol>((resolve) => {
+				timer = setTimeout(() => resolve(NOT_SETTLED), LOGIN_GUARD_MS);
+			}),
+		]);
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
+async function startTcpServer(
+	onConnection: (socket: net.Socket) => void,
+): Promise<{ port: number; close: () => Promise<void> }> {
+	const sockets = new Set<net.Socket>();
+	const server = net.createServer((socket) => {
+		sockets.add(socket);
+		socket.on("error", () => {});
+		onConnection(socket);
+	});
+	await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+	return {
+		port: (server.address() as net.AddressInfo).port,
+		close: async (): Promise<void> => {
+			for (const socket of sockets) {
+				socket.destroy();
+			}
+			await new Promise<void>((resolve) => server.close(() => resolve()));
+		},
+	};
+}
 
 describe("connection", function () {
 	let mockServerController: MockServerController | undefined;
@@ -157,6 +199,45 @@ describe("connection", function () {
 				}
 			} finally {
 				t.mock.timers.reset();
+			}
+		});
+
+		it("should reject with a timeout when the TLS handshake never completes.", async function () {
+			// Accepts the TCP connection but never answers the TLS ClientHello.
+			const stalledServer = await startTcpServer(() => {});
+			try {
+				await using conn = new Connection("127.0.0.1", {
+					rejectUnauthorized: true,
+					port: stalledServer.port,
+				});
+				const result = await settleOrGuard(conn.loginAsync("velux123", 1));
+				assert.notStrictEqual(
+					result,
+					NOT_SETTLED,
+					`loginAsync did not settle within ${LOGIN_GUARD_MS}ms although the timeout was 1s.`,
+				);
+				assert.ok(result instanceof TimeoutError, `Expected a TimeoutError but got: ${String(result)}`);
+			} finally {
+				await stalledServer.close();
+			}
+		});
+
+		it("should reject when the socket is closed before the TLS handshake completes.", async function () {
+			const closingServer = await startTcpServer((socket) => socket.destroy());
+			try {
+				await using conn = new Connection("127.0.0.1", {
+					rejectUnauthorized: true,
+					port: closingServer.port,
+				});
+				const result = await settleOrGuard(conn.loginAsync("velux123", 1));
+				assert.notStrictEqual(
+					result,
+					NOT_SETTLED,
+					`loginAsync did not settle within ${LOGIN_GUARD_MS}ms after the socket was closed.`,
+				);
+				assert.ok(result instanceof Error, `Expected loginAsync to reject but got: ${String(result)}`);
+			} finally {
+				await closingServer.close();
 			}
 		});
 
