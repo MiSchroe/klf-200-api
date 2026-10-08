@@ -4,8 +4,7 @@
 	Placeholder for the next version (at the beginning of the line):
 	## __WORK IN PROGRESS__
 -->
-
-## **WORK IN PROGRESS**
+## 8.0.0 (2026-10-08)
 
 - [#221](https://github.com/MiSchroe/klf-200-api/issues/221) Fix Connection.loginAsync sometimes never resolves/rejects (even with timeout).
 - [#274](https://github.com/MiSchroe/klf-200-api/issues/274) Convert mocha unit tests to node:test.
