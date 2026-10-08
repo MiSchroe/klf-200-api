@@ -396,7 +396,7 @@ export class Connection implements IConnection, AsyncDisposable {
 	private async _loginAsync(password: string, timeout: number): Promise<void> {
 		debug(`Logging in to host (_loginAsync): ${this.host}`);
 		using stack = new DisposableStack();
-		await this.initSocketAsync();
+		await this.initSocketAsync(timeout);
 		this.klfProtocol = new KLF200SocketProtocol(<TLSSocket>this.sckt);
 		stack.defer(() => {
 			this.klfProtocol = undefined;
@@ -416,7 +416,7 @@ export class Connection implements IConnection, AsyncDisposable {
 	 * Logs in to the KLF interface by sending the GW_PASSWORD_ENTER_REQ.
 	 *
 	 * @param {string} password The password needed for login. The factory default password is velux123.
-	 * @param {number} [timeout=60] A timeout in seconds. After the timeout the returned promise will be rejected.
+	 * @param {number} [timeout=60] A timeout in seconds. It is applied to establishing the TLS connection and again to the password confirmation. After the timeout the returned promise will be rejected.
 	 * @returns {Promise<void>} Returns a promise that resolves to true on success or rejects with the errors.
 	 */
 	public async loginAsync(password: string, timeout: number = 60): Promise<void> {
@@ -802,14 +802,21 @@ export class Connection implements IConnection, AsyncDisposable {
 		}
 	}
 
-	private async initSocketAsync(): Promise<void> {
+	private async initSocketAsync(timeout: number): Promise<void> {
 		debug(`initSocketAsync called for host: ${this.host}`);
 		await using stack = new AsyncDisposableStack();
 		try {
 			if (this.sckt === undefined) {
 				debug("Creating new socket...");
-				await new Promise<void>((resolve, reject) => {
+				let connected = false;
+				const connectPromise = new Promise<void>((resolve, reject) => {
 					try {
+						const rejectIfNotConnected = (): void => {
+							if (!connected) {
+								reject(new Error("Socket closed before the TLS connection was established."));
+							}
+						};
+
 						const loginErrorHandler = (error: Error): void => {
 							debug(`loginErrorHandler called with error: ${error.message}`);
 							console.error(`loginErrorHandler: ${error.message}`);
@@ -874,6 +881,7 @@ export class Connection implements IConnection, AsyncDisposable {
 										);
 										this.sckt = undefined;
 									});
+									connected = true;
 									resolve();
 								} else {
 									// Reject promise
@@ -892,6 +900,7 @@ export class Connection implements IConnection, AsyncDisposable {
 
 						const closeEventHandler = (): void => {
 							// Socket has been closed -> clean up everything
+							rejectIfNotConnected();
 							this.socketClosedEventHandler();
 						};
 						this.sckt?.on("close", closeEventHandler);
@@ -907,6 +916,7 @@ export class Connection implements IConnection, AsyncDisposable {
 
 						// React to end events:
 						const endEventHandler = (): void => {
+							rejectIfNotConnected();
 							if (this.sckt?.allowHalfOpen) {
 								this.sckt?.end(() => {
 									this.socketClosedEventHandler();
@@ -934,6 +944,7 @@ export class Connection implements IConnection, AsyncDisposable {
 						reject(error as Error);
 					}
 				});
+				await promiseTimeout(connectPromise, timeout * 1000);
 				this._disposableStack.use(stack.move());
 			} else {
 				debug("Socket already exists.");
@@ -941,6 +952,9 @@ export class Connection implements IConnection, AsyncDisposable {
 			}
 		} catch (error) {
 			console.error(`initSocketAsync outer catch: ${JSON.stringify(error)}`);
+			// A timed-out connect leaves the half-open socket behind.
+			this.sckt?.destroy();
+			this.sckt = undefined;
 			return Promise.reject(error as Error);
 		}
 	}

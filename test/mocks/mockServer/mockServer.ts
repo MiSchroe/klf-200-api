@@ -24,8 +24,8 @@ import {
 	StatusType,
 	Velocity,
 	readZString,
-} from "../../../src";
-import { bitArrayToArray } from "../../../src/utils/BitArray";
+} from "../../../src/index.js";
+import { bitArrayToArray } from "../../../src/utils/BitArray.js";
 import { ArrayBuilder } from "./ArrayBuilder.js";
 import { AcknowledgeMessage, CommandWithGuid } from "./commands.js";
 import { Gateway } from "./gateway.js";
@@ -1191,7 +1191,7 @@ const debug = debugModule(`${path.parse(__filename).name}:server`);
 					groupType === GroupType.All ||
 					groupType === GroupType.House ||
 					groupType !== group?.GroupType ||
-					revision !== group.Revision
+					revision !== group?.Revision
 				) {
 					return [addCommandAndLengthToBuffer(GatewayCommand.GW_SET_GROUP_INFORMATION_CFM, [1, groupId])];
 				} else {
