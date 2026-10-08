@@ -7,6 +7,9 @@
 
 ## **WORK IN PROGRESS**
 
+- [#221](https://github.com/MiSchroe/klf-200-api/issues/221) Fix Connection.loginAsync sometimes never resolves/rejects (even with timeout).
+- [#274](https://github.com/MiSchroe/klf-200-api/issues/274) Convert mocha unit tests to node:test.
+
 ### **BREAKING CHANGES:**
 
 - [#194](https://github.com/MiSchroe/klf-200-api/issues/194) Remove support for CJS. This is a pure ESM module now.
